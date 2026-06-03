@@ -631,13 +631,15 @@
     <!-- Navbar -->
     <nav class="nav-top" id="navbar">
         <a class="nav-brand" href="{{ url_for('landing') }}">
-            <div class="nav-brand-icon"><i class="fas fa-hospital-alt"></i></div>
+            <div class="nav-brand-icon">
+                <img src="{{ url_for('static', filename='assets/hospital_logo.png') }}" alt="Logo" style="width:32px; height:32px; object-fit:contain; border-radius:6px;">
+            </div>
             <div class="nav-brand-text">HealthCare <span>Plus</span></div>
         </a>
         <div class="nav-links">
             <a href="#features" class="nav-link-item">Features</a>
             <a href="#how-it-works" class="nav-link-item">How It Works</a>
-            <a href="#" class="nav-link-item" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')" style="color:var(--amber) !important;"><i class="fas fa-download me-1"></i> App</a>
+            <a href="{{ url_for('static', filename='app/HealthCare_Plus.apk') }}" class="nav-link-item" download style="color:var(--amber) !important;"><i class="fas fa-download me-1"></i> App</a>
             <a href="{{ url_for('login') }}" class="nav-link-item btn-nav-login">Login</a>
             <a href="{{ url_for('signup') }}" class="nav-link-item btn-nav-signup">Get Started</a>
         </div>
@@ -664,20 +666,20 @@
                 <a href="{{ url_for('login') }}" class="btn-hero-secondary">
                     <i class="fas fa-sign-in-alt"></i> Doctor Login
                 </a>
-                <a href="#" class="btn-hero-secondary" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')" style="border-color: rgba(16,185,129,0.3); color: #34d399; background: rgba(16,185,129,0.05);">
+                <a href="{{ url_for('static', filename='app/HealthCare_Plus.apk') }}" class="btn-hero-secondary" download style="border-color: rgba(16,185,129,0.3); color: #34d399; background: rgba(16,185,129,0.05);">
                     <i class="fas fa-download"></i> Download App
                 </a>
             </div>
             <!-- Mobile App Download Badges -->
             <div class="mt-4 d-flex flex-wrap gap-3">
-                <a href="#" class="app-download-btn" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')">
+                <a href="{{ url_for('static', filename='app/HealthCare_Plus.ipa') }}" class="app-download-btn" download>
                     <i class="fab fa-apple app-btn-icon"></i>
                     <span class="app-btn-text">
                         <span class="app-btn-sub">Download on the</span>
                         <span class="app-btn-title">App Store</span>
                     </span>
                 </a>
-                <a href="#" class="app-download-btn" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')">
+                <a href="{{ url_for('static', filename='app/HealthCare_Plus.apk') }}" class="app-download-btn" download>
                     <i class="fab fa-google-play app-btn-icon"></i>
                     <span class="app-btn-text">
                         <span class="app-btn-sub">Get it on</span>
@@ -898,14 +900,14 @@
                 </a>
             </div>
             <div class="mt-4 d-flex justify-content-center flex-wrap gap-3">
-                <a href="#" class="app-download-btn" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')">
+                <a href="{{ url_for('static', filename='app/HealthCare_Plus.ipa') }}" class="app-download-btn" download>
                     <i class="fab fa-apple app-btn-icon"></i>
                     <span class="app-btn-text">
                         <span class="app-btn-sub">Download on the</span>
                         <span class="app-btn-title">App Store</span>
                     </span>
                 </a>
-                <a href="#" class="app-download-btn" onclick="alert('Downloading HealthCare Plus Mobile App installer (Android APK/iOS client)...')">
+                <a href="{{ url_for('static', filename='app/HealthCare_Plus.apk') }}" class="app-download-btn" download>
                     <i class="fab fa-google-play app-btn-icon"></i>
                     <span class="app-btn-text">
                         <span class="app-btn-sub">Get it on</span>
