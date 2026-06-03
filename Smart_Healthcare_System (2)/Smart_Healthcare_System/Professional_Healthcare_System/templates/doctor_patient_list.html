@@ -137,6 +137,23 @@
 .export-row {
     display: flex; gap: 10px; margin-left: auto;
 }
+
+@media (max-width: 768px) {
+    .search-input {
+        width: 100% !important;
+    }
+    .sel-filter {
+        width: 100% !important;
+    }
+    .export-row {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    .export-row a {
+        width: 100% !important;
+        justify-content: center;
+    }
+}
 </style>
 {% endblock %}
 

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appointments — HealthCare Plus{% endblock %}
+{% block page_title %}<i class="fas fa-calendar-check me-2" style="color:var(--accent);"></i>Manage Scheduled Appointments{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-controls-row {
+    display: flex; gap: 14px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap;
+}
+
+.search-input-admin {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: 'Inter', sans-serif;
+    width: 300px;
+}
+.search-input-admin:focus {
+    outline: none;
+    border-color: rgba(59,130,246,0.4);
+    background: rgba(59,130,246,0.04);
+}
+
+.admin-card-table {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+
+.admin-card-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.admin-card-table thead th {
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 14px 16px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.admin-card-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+}
+.admin-card-table tbody tr:last-child td { border-bottom: none; }
+.admin-card-table tbody tr:hover td { background: rgba(59,130,246,0.02); }
+
+.status-chip-admin {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-block;
+}
+.status-pending { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.status-confirmed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.status-completed { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.status-cancelled { background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3); }
+
+.btn-admin-action {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-delete { background: rgba(244,63,94,0.15); color: #fb7185; border-color: rgba(244,63,94,0.3); }
+.btn-delete:hover { background: rgba(244,63,94,0.25); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-controls-row fade-in-up">
+    <div>
+        <input type="text" class="search-input-admin" id="apptSearch" placeholder="🔍  Search patient, doctor, type, status..." onkeyup="filterAppointments()">
+    </div>
+</div>
+
+<!-- Appointments Table Card -->
+<div class="admin-card-table fade-in-up">
+    <div style="padding:16px 20px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">
+            <i class="fas fa-calendar-check me-2" style="color:var(--accent);"></i>
+            System Booked Appointments Registry
+        </span>
+        <span style="font-size:0.78rem; color:var(--text-secondary);" id="apptCountText">
+            Showing {{ appointments | length }} records
+        </span>
+    </div>
+    
+    <div style="overflow-x:auto;">
+        <table class="table mb-0" id="apptsTable">
+            <thead>
+                <tr>
+                    <th>Appt ID</th>
+                    <th>Patient Name</th>
+                    <th>Doctor Name</th>
+                    <th>Appt Date</th>
+                    <th>Appt Time</th>
+                    <th>Appt Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in appointments %}
+                <tr data-search="{{ a.patient_name | lower }} {{ a.doctor_name | lower }} {{ a.appt_type | lower }} {{ a.status | lower }}">
+                    <td style="color:var(--text-secondary);">#APP-{{ a.id }}</td>
+                    <td><strong>{{ a.patient_name }}</strong></td>
+                    <td>Dr. {{ a.doctor_name }}</td>
+                    <td>{{ a.appt_date }}</td>
+                    <td>{{ a.appt_time }}</td>
+                    <td>{{ a.appt_type | replace('_', ' ') | title }}</td>
+                    <td>
+                        <span class="status-chip-admin {% if a.status == 'pending' %}status-pending{% elif a.status == 'confirmed' %}status-confirmed{% elif a.status == 'completed' %}status-completed{% else %}status-cancelled{% endif %}">
+                            {{ a.status | upper }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <!-- Delete Appointment -->
+                            <form action="{{ url_for('admin_delete_appointment', appt_id=a.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete/remove this appointment record?')">
+                                <button type="submit" class="btn-admin-action btn-delete">
+                                    <i class="fas fa-trash-alt"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterAppointments() {
+    const q = document.getElementById('apptSearch').value.toLowerCase();
+    let count = 0;
+    document.querySelectorAll('#apptsTable tbody tr').forEach(row => {
+        const text = row.dataset.search;
+        if (!q || text.includes(q)) {
+            row.style.display = '';
+            count++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    document.getElementById('apptCountText').textContent = `Showing ${count} records`;
+}
+</script>
+{% endblock %}

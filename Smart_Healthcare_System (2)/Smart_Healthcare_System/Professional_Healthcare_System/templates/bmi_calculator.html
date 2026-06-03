@@ -30,6 +30,16 @@
         padding: 35px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         margin-bottom: 28px;
+        color: #1e293b;
+    }
+    .bmi-card h5, .bmi-card h6 {
+        color: #1e293b;
+    }
+    .bmi-card .text-muted {
+        color: #64748b !important;
+    }
+    .bmi-card strong {
+        color: #0f172a;
     }
 
     .bmi-input {
@@ -39,11 +49,14 @@
         width: 100%;
         font-size: 0.95rem;
         transition: all 0.3s;
+        color: #1e293b;
+        background-color: #ffffff;
     }
     .bmi-input:focus {
         border-color: #7c3aed;
         box-shadow: 0 0 0 4px rgba(124,58,237,0.12);
         outline: none;
+        color: #1e293b;
     }
 
     .btn-calc-bmi {
@@ -67,6 +80,9 @@
         padding: 30px;
         text-align: center;
         margin-bottom: 24px;
+    }
+    .bmi-result-box .text-muted {
+        color: #475569 !important;
     }
     .bmi-value {
         font-size: 4rem;
@@ -103,6 +119,68 @@
         align-items: center;
         gap: 8px;
     }
+    
+    /* Breakfast (Green) */
+    .diet-plan-card.breakfast {
+        background: #f0fdf4;
+        color: #166534;
+    }
+    .diet-plan-card.breakfast h6 {
+        color: #166534;
+    }
+    .diet-plan-card.breakfast .food-item {
+        color: #14532d;
+    }
+
+    /* Lunch (Blue) */
+    .diet-plan-card.lunch {
+        background: #eff6ff;
+        color: #1e40af;
+    }
+    .diet-plan-card.lunch h6 {
+        color: #1e40af;
+    }
+    .diet-plan-card.lunch .food-item {
+        color: #1e3a8a;
+    }
+
+    /* Snacks (Amber) */
+    .diet-plan-card.snacks {
+        background: #fffbeb;
+        color: #854d0e;
+    }
+    .diet-plan-card.snacks h6 {
+        color: #854d0e;
+    }
+    .diet-plan-card.snacks .food-item {
+        color: #78350f;
+    }
+
+    /* Dinner (Purple) */
+    .diet-plan-card.dinner {
+        background: #fdf4ff;
+        color: #6b21a8;
+    }
+    .diet-plan-card.dinner h6 {
+        color: #6b21a8;
+    }
+    .diet-plan-card.dinner .food-item {
+        color: #581c87;
+    }
+
+    /* Avoid (Red) */
+    .diet-plan-card.avoid {
+        background: #fff1f2;
+        color: #991b1b;
+    }
+    .diet-plan-card.avoid h6 {
+        color: #991b1b;
+    }
+    .diet-plan-card.avoid .food-item {
+        color: #7f1d1d;
+        background: rgba(239, 68, 68, 0.08);
+    }
+
     .food-item {
         display: flex;
         align-items: center;
@@ -128,6 +206,13 @@
         border-radius: 12px;
         margin-bottom: 10px;
         background: #f8faff;
+        color: #1e293b;
+    }
+    .tip-item .fw-600 {
+        color: #0f172a;
+    }
+    .tip-item .text-muted {
+        color: #64748b !important;
     }
     .tip-icon {
         font-size: 1.4rem;
@@ -148,19 +233,19 @@
     <h4 class="fw-bold mb-4" style="color:#4c1d95;"><i class="fas fa-ruler-combined me-2"></i>Enter Your Measurements</h4>
     <form method="POST" action="{{ url_for('calculate_bmi') }}">
         <div class="row g-3">
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-6 col-12">
                 <label class="fw-600 text-dark mb-2 d-block">📏 Height (cm)</label>
                 <input type="number" class="bmi-input" name="height_cm" placeholder="e.g., 170" min="50" max="300" step="0.1" required value="{{ form_data.height_cm if form_data else '' }}">
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-6 col-12">
                 <label class="fw-600 text-dark mb-2 d-block">⚖️ Weight (kg)</label>
                 <input type="number" class="bmi-input" name="weight_kg" placeholder="e.g., 70" min="1" max="300" step="0.1" required value="{{ form_data.weight_kg if form_data else '' }}">
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-6 col-12">
                 <label class="fw-600 text-dark mb-2 d-block">🎂 Age</label>
                 <input type="number" class="bmi-input" name="age" placeholder="{{ patient.age }}" min="1" max="120" value="{{ form_data.age if form_data else patient.age }}">
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-6 col-12">
                 <label class="fw-600 text-dark mb-2 d-block">🏃 Activity Level</label>
                 <select class="bmi-input" name="activity_level">
                     <option value="sedentary" {% if form_data and form_data.activity_level == 'sedentary' %}selected{% endif %}>😴 Sedentary</option>
@@ -244,7 +329,7 @@
             
             <div class="row g-3">
                 <div class="col-md-6">
-                    <div class="diet-plan-card" style="background:#f0fdf4;">
+                    <div class="diet-plan-card breakfast">
                         <h6><span>🌅</span> Breakfast</h6>
                         {% for item in bmi_result.diet_plan.breakfast %}
                         <div class="food-item"><span>✅</span> {{ item }}</div>
@@ -252,7 +337,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="diet-plan-card" style="background:#eff6ff;">
+                    <div class="diet-plan-card lunch">
                         <h6><span>☀️</span> Lunch</h6>
                         {% for item in bmi_result.diet_plan.lunch %}
                         <div class="food-item"><span>✅</span> {{ item }}</div>
@@ -260,7 +345,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="diet-plan-card" style="background:#fffbeb;">
+                    <div class="diet-plan-card snacks">
                         <h6><span>🍎</span> Snacks</h6>
                         {% for item in bmi_result.diet_plan.snacks %}
                         <div class="food-item"><span>✅</span> {{ item }}</div>
@@ -268,7 +353,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="diet-plan-card" style="background:#fdf4ff;">
+                    <div class="diet-plan-card dinner">
                         <h6><span>🌙</span> Dinner</h6>
                         {% for item in bmi_result.diet_plan.dinner %}
                         <div class="food-item"><span>✅</span> {{ item }}</div>
@@ -278,10 +363,10 @@
             </div>
 
             <!-- Foods to Avoid -->
-            <div class="diet-plan-card mt-3" style="background:#fff1f2;">
+            <div class="diet-plan-card avoid mt-3">
                 <h6><span>🚫</span> Foods to Avoid</h6>
                 {% for item in bmi_result.diet_plan.avoid %}
-                <div class="food-item" style="background:rgba(239,68,68,0.08);"><span>❌</span> {{ item }}</div>
+                <div class="food-item"><span>❌</span> {{ item }}</div>
                 {% endfor %}
             </div>
         </div>

@@ -3,6 +3,7 @@
 {% block title %}Emergency SOS - HealthCare Plus{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -269,6 +270,65 @@
     </p>
 </div>
 
+<!-- Live Ambulance Tracking Module -->
+<div class="card glass-card mb-4" id="ambulanceTrackingCard">
+    <div class="card-body p-4">
+        <h4 class="fw-bold mb-3" style="color:#fb7185;"><i class="fas fa-map-marker-alt me-2"></i>Live Emergency Ambulance Tracking</h4>
+        
+        <div id="trackingPortal" class="text-center py-4">
+            <div style="font-size:3.5rem; margin-bottom:15px;">🚑</div>
+            <h5 class="fw-bold text-light">Emergency Dispatch System</h5>
+            <p class="text-muted mx-auto" style="max-width:500px; font-size:0.9rem;">
+                Need emergency transport? Click below to request an emergency ambulance. The system will automatically detect your city <strong>({{ patient.city }})</strong>, dispatch the nearest hospital vehicle, and track its route live on the map.
+            </p>
+            <button class="btn btn-lg btn-danger px-4 py-2 mt-2" onclick="startAmbulanceSimulation()" style="background:#dc2626; border:none; border-radius:10px; font-weight:600; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">
+                🚨 Request Emergency Ambulance Dispatch
+            </button>
+        </div>
+
+        <div id="trackingActive" class="d-none">
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <!-- Map Container -->
+                    <div id="ambulanceMap" style="height: 350px; border-radius: 15px; border: 2px solid var(--glass-border); background: #0f172a; position: relative; z-index: 1;"></div>
+                </div>
+                <div class="col-lg-4">
+                    <!-- Live Console Info -->
+                    <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                        <h6 class="text-uppercase tracking-wider text-muted mb-2" style="letter-spacing:1px; font-weight:700; font-size:0.75rem;">Live Status</h6>
+                        <div class="d-flex align-items-center gap-2 my-2">
+                            <span class="status-dot bg-danger"></span>
+                            <strong id="liveStatusText" class="text-danger" style="font-size:1.1rem;">Ambulance Dispatched</strong>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Estimated Arrival (ETA)</small>
+                            <strong id="liveETA" class="text-light" style="font-size:1.4rem;">4 mins</strong>
+                        </div>
+                        <hr style="border-color: var(--glass-border);">
+                        <h6 class="text-uppercase tracking-wider text-muted mb-3" style="letter-spacing:1px; font-weight:700; font-size:0.75rem;">Paramedic Team Details</h6>
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div style="width:48px; height:48px; border-radius:50%; background: linear-gradient(135deg, var(--accent), var(--cyan)); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🧑‍✈️</div>
+                            <div>
+                                <strong class="text-light d-block">Rajesh Kumar</strong>
+                                <small class="text-muted">Primary Paramedic & Driver</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Vehicle No:</span>
+                            <strong class="text-light">MH-12-EM-9911</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Dispatch Hospital:</span>
+                            <strong class="text-light" id="dispatchHospitalName">Local Emergency Clinic</strong>
+                        </div>
+                        <a href="tel:+919876543210" class="btn btn-call w-100 mt-2"><i class="fas fa-phone-alt"></i> Call Driver</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Emergency Numbers -->
     <div class="col-md-6">
@@ -401,6 +461,120 @@ function showFirstAid(section) {
     document.querySelectorAll('.first-aid-tab').forEach(el => el.classList.remove('active'));
     document.getElementById(section).classList.add('active');
     event.target.classList.add('active');
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = null;
+var ambulanceMarker = null;
+var routePolyline = null;
+var simulationInterval = null;
+
+function startAmbulanceSimulation() {
+    // Hide dispatch screen, show map screen
+    document.getElementById('trackingPortal').classList.add('d-none');
+    document.getElementById('trackingActive').classList.remove('d-none');
+
+    // Hospital and Patient locations based on city
+    var userCity = "{{ patient.city }}";
+    var startLat, startLng, endLat, endLng;
+    var hospitalName = "Local General Hospital";
+
+    if (userCity === 'Delhi') {
+        startLat = 28.5726; startLng = 77.2032; // Safdarjung
+        endLat = 28.5672; endLng = 77.2100; // AIIMS Patient
+        hospitalName = "Safdarjung Emergency Centre";
+    } else if (userCity === 'Mumbai') {
+        startLat = 19.0080; startLng = 72.8420; // KEM Area
+        endLat = 19.0176; endLng = 72.8562; // Patient in Parel
+        hospitalName = "KEM Trauma Care";
+    } else if (userCity === 'Bengaluru' || userCity === 'Bangalore') {
+        startLat = 12.9800; startLng = 77.6050;
+        endLat = 12.9716; endLng = 77.5946;
+        hospitalName = "Manipal Hospital Emergency";
+    } else if (userCity === 'Pune') {
+        startLat = 18.5290; startLng = 73.8640;
+        endLat = 18.5204; endLng = 73.8567;
+        hospitalName = "Sassoon General Trauma";
+    } else {
+        // Default: Mumbai coordinates
+        startLat = 19.0080; startLng = 72.8420;
+        endLat = 19.0176; endLng = 72.8562;
+        hospitalName = "City General Hospital Dispatch";
+    }
+
+    document.getElementById('dispatchHospitalName').textContent = hospitalName;
+
+    // Initialize Leaflet Map
+    map = L.map('ambulanceMap').setView([startLat, startLng], 14);
+
+    // Dark themed Map Tiles (CartoDB Positron Dark)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Patient icon (Heart/SOS Red marker)
+    var patientMarker = L.marker([endLat, endLng]).addTo(map)
+        .bindPopup("<b>You (Emergency Location)</b>").openPopup();
+
+    // Generate Path points
+    var pathPoints = [];
+    var segments = 10;
+    for (var i = 0; i <= segments; i++) {
+        var t = i / segments;
+        var lat = startLat + (endLat - startLat) * t;
+        var lng = startLng + (endLng - startLng) * t;
+        // Add minor jitter to look like streets
+        if (i > 0 && i < segments) {
+            lat += (Math.random() - 0.5) * 0.001;
+            lng += (Math.random() - 0.5) * 0.001;
+        }
+        pathPoints.push([lat, lng]);
+    }
+
+    // Add polyline
+    routePolyline = L.polyline(pathPoints, {color: '#ef4444', weight: 4, dashArray: '5, 10'}).addTo(map);
+
+    // Custom Ambulance Icon
+    var ambulanceIcon = L.divIcon({
+        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.8));">🚑</div>',
+        className: 'ambulance-map-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+
+    ambulanceMarker = L.marker([startLat, startLng], {icon: ambulanceIcon}).addTo(map);
+
+    var currentStep = 0;
+    var totalSteps = pathPoints.length;
+
+    simulationInterval = setInterval(function() {
+        currentStep++;
+        if (currentStep >= totalSteps) {
+            clearInterval(simulationInterval);
+            ambulanceMarker.setLatLng([endLat, endLng]);
+            document.getElementById('liveStatusText').textContent = "Arrived";
+            document.getElementById('liveStatusText').className = "text-success";
+            document.querySelector('#trackingActive .status-dot').className = "status-dot bg-success";
+            document.getElementById('liveETA').textContent = "Arrived";
+            patientMarker.bindPopup("<b>Ambulance has arrived!</b> Please meet the paramedic team.").openPopup();
+            return;
+        }
+
+        var nextLatLng = pathPoints[currentStep];
+        ambulanceMarker.setLatLng(nextLatLng);
+        map.panTo(nextLatLng);
+
+        // Update ETA
+        var etaMinutes = Math.ceil((totalSteps - currentStep) * 0.5);
+        document.getElementById('liveETA').textContent = etaMinutes + " min" + (etaMinutes > 1 ? "s" : "");
+        if (etaMinutes <= 2) {
+            document.getElementById('liveStatusText').textContent = "En Route - Arriving Soon";
+        }
+    }, 3000);
 }
 </script>
 {% endblock %}

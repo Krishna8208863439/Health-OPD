@@ -182,6 +182,21 @@
 }
 .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; color: var(--accent); }
 .empty-state h4 { color: var(--text-primary); margin-bottom: 8px; }
+
+@media (max-width: 768px) {
+    .stats-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .appt-filter-bar input {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+@media (max-width: 480px) {
+    .stats-summary {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 {% endblock %}
 

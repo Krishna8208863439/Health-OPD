@@ -236,6 +236,12 @@
                             <span class="details-label"><i class="fas fa-user-md"></i> Advice:</span>
                             <span>{{ pred.doctor_advice[:150] }}{% if pred.doctor_advice|length > 150 %}...{% endif %}</span>
                         </div>
+                        {% if pred.doctor_name %}
+                        <div class="details-row">
+                            <span class="details-label"><i class="fas fa-user-md"></i> Assigned Doctor:</span>
+                            <span>{{ pred.doctor_name }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="col-md-4 text-end">

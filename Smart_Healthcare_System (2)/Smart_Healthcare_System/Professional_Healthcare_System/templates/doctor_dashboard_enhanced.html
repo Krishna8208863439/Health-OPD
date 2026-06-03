@@ -454,6 +454,33 @@
 }
 .welcome-banner p { font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
 
+.welcome-banner-actions {
+    position: absolute;
+    top: 50%;
+    right: 32px;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 992px) {
+    .welcome-banner {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    .welcome-banner-actions {
+        position: relative;
+        top: 0; right: 0;
+        transform: none;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+}
+
 @media (max-width: 768px) {
     .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
@@ -471,7 +498,7 @@
         <h2>👋 Welcome back, Dr. {{ doctor.full_name }}</h2>
         <p><i class="fas fa-clock me-1"></i> Dashboard last updated: <span id="lastUpdated">Just now</span> &bull; Auto-refreshes every 30 seconds</p>
     </div>
-    <div style="position:absolute; top:50%; right:32px; transform:translateY(-50%); display:flex; gap:10px;">
+    <div class="welcome-banner-actions">
         <a href="{{ url_for('doctor_appointments') }}" style="background:rgba(59,130,246,0.2); border:1px solid rgba(59,130,246,0.4); color:var(--accent-light); padding:10px 18px; border-radius:10px; font-size:0.82rem; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">
             <i class="fas fa-calendar-check"></i> Appointments
         </a>

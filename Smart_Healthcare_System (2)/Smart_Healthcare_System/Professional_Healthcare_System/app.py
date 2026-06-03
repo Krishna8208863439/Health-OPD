@@ -103,6 +103,12 @@ def init_db():
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )
     """)
+    
+    # Alter predictions to add doctor_name if not exists
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN doctor_name TEXT DEFAULT 'Dr. Amit Sharma, MD'")
+    except Exception:
+        pass
 
     # === NEW FEATURE TABLES ===
 
@@ -178,6 +184,16 @@ def init_db():
     )
     """)
     
+    # Seed default admin if not exists
+    admin_user = cur.execute("SELECT * FROM users WHERE username = 'admin' OR email = 'admin@healthcare.com'").fetchone()
+    if not admin_user:
+        admin_pass = generate_password_hash("admin123")
+        cur.execute("""
+            INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, role, city)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, ("admin", "admin@healthcare.com", admin_pass, "System Administrator", 35, "Other", "1234567890", "Main Office", "admin", "Delhi"))
+        conn.commit()
+    
     conn.commit()
     conn.close()
 
@@ -220,7 +236,7 @@ def role_required(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated or current_user.role != role:
-                flash('Access denied. Doctor privileges required.', 'danger')
+                flash(f'Access denied. {role.capitalize()} privileges required.', 'danger')
                 return redirect(url_for('index'))
             return f(*args, **kwargs)
         return decorated_function
@@ -322,6 +338,13 @@ def generate_pdf(patient, prediction_data):
     c.setFont("Helvetica", 11)
     c.drawString(420, y_pos - 48, f"PT-{str(patient.id).zfill(6)}")
     
+    # Assigned Doctor
+    doctor_name = prediction_data.get('doctor_name', 'Dr. Amit Sharma, MD')
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(320, y_pos - 66, "Assigned Doctor:")
+    c.setFont("Helvetica", 11)
+    c.drawString(420, y_pos - 66, doctor_name)
+    
     # Diagnosis Results
     y_pos -= 110
     c.setFillColor(primary_color)
@@ -406,6 +429,20 @@ def generate_pdf(patient, prediction_data):
     if line:
         c.drawString(50, y_pos, line)
     
+    # Signature Box
+    y_pos -= 45
+    if y_pos < 120:
+        y_pos = 120
+    c.setLineWidth(1)
+    c.setStrokeColor(colors.HexColor('#cbd5e1'))
+    c.line(380, y_pos, 540, y_pos)
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(380, y_pos - 14, doctor_name)
+    c.setFont("Helvetica-Oblique", 8)
+    c.setFillColor(colors.HexColor('#64748b'))
+    c.drawString(380, y_pos - 24, "Authorized Medical Signature")
+    
     # Footer
     c.setFillColor(primary_color)
     c.rect(0, 0, width, 60, fill=True, stroke=False)
@@ -423,7 +460,9 @@ def generate_pdf(patient, prediction_data):
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        if current_user.role == 'doctor':
+        if current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        elif current_user.role == 'doctor':
             return redirect(url_for('doctor_dashboard'))
         return redirect(url_for('patient_dashboard'))
     return render_template('landing.html')
@@ -498,7 +537,9 @@ def login():
             login_user(user_obj)
             flash(f'Welcome back, {user["full_name"]}!', 'success')
             
-            if user['role'] == 'doctor':
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'doctor':
                 return redirect(url_for('doctor_dashboard'))
             return redirect(url_for('patient_dashboard'))
         else:
@@ -599,6 +640,15 @@ def predict():
     
     medicines = MEDICINE_DATABASE.get(disease, {}).get(severity, ["Consult Doctor"])
     
+    # Assign Doctor Name
+    try:
+        doctor_row = cur.execute("SELECT full_name FROM users WHERE role = 'doctor' ORDER BY RANDOM() LIMIT 1").fetchone()
+        doctor_name = doctor_row['full_name'] if doctor_row else "Dr. Amit Sharma, MD"
+    except Exception:
+        doctor_name = "Dr. Amit Sharma, MD"
+    if not doctor_name.startswith("Dr. "):
+        doctor_name = "Dr. " + doctor_name
+    
     doctor_advice = {
         "LOW": "Monitor symptoms at home. Stay hydrated, get adequate rest. Consult if symptoms worsen.",
         "MEDIUM": "Consult a doctor within 24 hours. Follow prescribed medications and monitor closely.",
@@ -616,7 +666,8 @@ def predict():
         'probability': prob,
         'medicines': ', '.join(medicines),
         'hospitals': ', '.join([h['name'] for h in hospitals_list[:5]]),
-        'doctor_advice': doctor_advice[severity]
+        'doctor_advice': doctor_advice[severity],
+        'doctor_name': doctor_name
     }
     
     pdf_filename = generate_pdf(current_user, prediction_data)
@@ -626,12 +677,12 @@ def predict():
     cur.execute("""
         INSERT INTO predictions (patient_id, patient_name, patient_age, disease, risk_percentage, 
                                health_risk_score, health_risk_category, severity, probability, 
-                               symptoms, symptom_count, medicines, hospitals, doctor_advice, pdf_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               symptoms, symptom_count, medicines, hospitals, doctor_advice, pdf_path, doctor_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (current_user.id, current_user.full_name, current_user.age, disease, risk, 
           health_risk['score'], health_risk['category'], prediction_data['severity'], prob, 
           str(symptoms), symptom_count, prediction_data['medicines'], 
-          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename))
+          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name))
     conn.commit()
     conn.close()
     
@@ -1500,6 +1551,210 @@ def doctor_pending_count():
     count = cur.execute("SELECT COUNT(*) FROM appointments WHERE status = 'pending'").fetchone()[0] or 0
     conn.close()
     return jsonify({'count': count})
+
+
+# =============================================
+# FEATURE 8: ADMINISTRATIVE PORTAL
+# =============================================
+
+@app.route('/admin-dashboard')
+@login_required
+@role_required('admin')
+def admin_dashboard():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # KPI statistics
+    total_patients = cur.execute("SELECT COUNT(*) FROM users WHERE role = 'patient'").fetchone()[0] or 0
+    total_doctors = cur.execute("SELECT COUNT(*) FROM users WHERE role = 'doctor'").fetchone()[0] or 0
+    total_admins = cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'").fetchone()[0] or 0
+    total_diagnoses = cur.execute("SELECT COUNT(*) FROM predictions").fetchone()[0] or 0
+    total_appointments = cur.execute("SELECT COUNT(*) FROM appointments").fetchone()[0] or 0
+    total_prescriptions = cur.execute("SELECT COUNT(*) FROM prescriptions").fetchone()[0] or 0
+    
+    # Recent users
+    recent_users = cur.execute("""
+        SELECT id, username, email, full_name, role, city 
+        FROM users 
+        ORDER BY id DESC LIMIT 5
+    """).fetchall()
+    
+    # Recent diagnostic cases
+    recent_cases = cur.execute("""
+        SELECT patient_name, disease, severity, health_risk_score, timestamp 
+        FROM predictions 
+        ORDER BY timestamp DESC LIMIT 5
+    """).fetchall()
+
+    # Disease frequency for chart analytics
+    disease_stats = cur.execute("""
+        SELECT disease, COUNT(*) as count 
+        FROM predictions 
+        GROUP BY disease 
+        ORDER BY count DESC LIMIT 5
+    """).fetchall()
+    
+    disease_labels = [row['disease'] for row in disease_stats]
+    disease_counts = [row['count'] for row in disease_stats]
+    
+    conn.close()
+    
+    stats = {
+        'total_patients': total_patients,
+        'total_doctors': total_doctors,
+        'total_admins': total_admins,
+        'total_diagnoses': total_diagnoses,
+        'total_appointments': total_appointments,
+        'total_prescriptions': total_prescriptions,
+        'recent_users': recent_users,
+        'recent_cases': recent_cases,
+        'disease_labels': disease_labels,
+        'disease_counts': disease_counts
+    }
+    
+    return render_template('admin_dashboard.html', stats=stats)
+
+
+@app.route('/admin/users')
+@login_required
+@role_required('admin')
+def admin_users():
+    conn = get_db()
+    cur = conn.cursor()
+    users = cur.execute("SELECT * FROM users ORDER BY id DESC").fetchall()
+    conn.close()
+    return render_template('admin_users.html', users=users)
+
+
+@app.route('/admin/users/save', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_save_user():
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    full_name = request.form.get('full_name')
+    age = request.form.get('age') or 30
+    gender = request.form.get('gender') or 'Other'
+    contact = request.form.get('contact') or ''
+    address = request.form.get('address') or ''
+    city = request.form.get('city') or 'Default'
+    role = request.form.get('role', 'patient')
+    
+    if not username or not email or not password or not full_name:
+        flash('All primary fields are required!', 'danger')
+        return redirect(url_for('admin_users'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    
+    existing = cur.execute("SELECT * FROM users WHERE email = ? OR username = ?", (email, username)).fetchone()
+    if existing:
+        flash('Username or email already exists!', 'danger')
+        conn.close()
+        return redirect(url_for('admin_users'))
+        
+    pwd_hash = generate_password_hash(password)
+    cur.execute("""
+        INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, city, role)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (username, email, pwd_hash, full_name, age, gender, contact, address, city, role))
+    conn.commit()
+    conn.close()
+    flash(f'Account for {full_name} created successfully as {role.capitalize()}!', 'success')
+    return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/users/<int:user_id>/role', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_change_role(user_id):
+    new_role = request.form.get('role')
+    if new_role not in ['patient', 'doctor', 'admin']:
+        flash('Invalid role!', 'danger')
+        return redirect(url_for('admin_users'))
+        
+    if user_id == current_user.id:
+        flash('You cannot modify your own administrative role!', 'danger')
+        return redirect(url_for('admin_users'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    conn.commit()
+    conn.close()
+    flash('User role updated successfully!', 'success')
+    return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_user(user_id):
+    if user_id == current_user.id:
+        flash('You cannot delete your own administrative account!', 'danger')
+        return redirect(url_for('admin_users'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    flash('User account deleted successfully from the system!', 'success')
+    return redirect(url_for('admin_users'))
+
+
+@app.route('/admin/predictions')
+@login_required
+@role_required('admin')
+def admin_predictions():
+    conn = get_db()
+    cur = conn.cursor()
+    preds = cur.execute("SELECT * FROM predictions ORDER BY timestamp DESC").fetchall()
+    conn.close()
+    return render_template('admin_predictions.html', predictions=preds)
+
+
+@app.route('/admin/predictions/<int:pred_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_prediction(pred_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM predictions WHERE id = ?", (pred_id,))
+    conn.commit()
+    conn.close()
+    flash('Diagnostic medical record deleted successfully!', 'success')
+    return redirect(url_for('admin_predictions'))
+
+
+@app.route('/admin/appointments')
+@login_required
+@role_required('admin')
+def admin_appointments():
+    conn = get_db()
+    cur = conn.cursor()
+    appts = cur.execute("""
+        SELECT a.*, u.full_name as patient_name 
+        FROM appointments a 
+        JOIN users u ON a.patient_id = u.id 
+        ORDER BY a.appt_date DESC, a.appt_time DESC
+    """).fetchall()
+    conn.close()
+    return render_template('admin_appointments.html', appointments=appts)
+
+
+@app.route('/admin/appointments/<int:appt_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_appointment(appt_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM appointments WHERE id = ?", (appt_id,))
+    conn.commit()
+    conn.close()
+    flash('Appointment deleted successfully!', 'success')
+    return redirect(url_for('admin_appointments'))
 
 
 if __name__ == '__main__':
