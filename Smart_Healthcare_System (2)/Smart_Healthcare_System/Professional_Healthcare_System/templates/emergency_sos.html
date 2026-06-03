@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency SOS - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .sos-hero {
+        background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 50%, #f87171 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+    .sos-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; left: -60px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+    .sos-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -40px; right: -40px;
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    /* Pulsing SOS Button */
+    .sos-btn-wrap {
+        position: relative;
+        display: inline-block;
+        margin: 20px auto;
+    }
+    @keyframes pulse-ring {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+    .sos-pulse {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.3);
+        animation: pulse-ring 1.5s ease-out infinite;
+    }
+    .sos-pulse:nth-child(2) { animation-delay: 0.5s; }
+    .sos-pulse:nth-child(3) { animation-delay: 1s; }
+
+    .sos-main-btn {
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: white;
+        color: #dc2626;
+        border: 5px solid rgba(255,255,255,0.5);
+        font-size: 1.4rem;
+        font-weight: 800;
+        cursor: pointer;
+        position: relative;
+        z-index: 10;
+        transition: all 0.3s;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        text-decoration: none;
+    }
+    .sos-main-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+        color: #dc2626;
+    }
+    .sos-main-btn .sos-icon { font-size: 2.5rem; }
+
+    /* Info Cards */
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
+        color: #000000 !important;
+    }
+    .info-card h5 {
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    /* Emergency Contact Cards */
+    .contact-card {
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        border: 2px solid transparent;
+    }
+    .contact-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        border-color: #dc2626;
+        text-decoration: none;
+    }
+    .contact-icon {
+        width: 56px; height: 56px;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+    .contact-card .cname { font-weight: 700; color: #111827 !important; font-size: 1rem; }
+    .contact-card .cnum { color: #dc2626 !important; font-weight: 700; font-size: 1.15rem; }
+    .contact-card .cdesc { color: #475569 !important; font-size: 0.82rem; }
+
+    /* Nearby Hospitals */
+    .hospital-sos-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s;
+        background: white;
+    }
+    .hospital-sos-card:hover { border-color: #dc2626; background: #fff1f2; }
+    .hospital-sos-card .fw-bold { color: #000000 !important; }
+    .hospital-sos-card .text-muted { color: #475569 !important; }
+    .hospital-sos-card div { color: #000000 !important; }
+
+    .btn-call {
+        background: #dc2626;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-call:hover {
+        background: #b91c1c;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .btn-maps {
+        background: #1d4ed8;
+        color: white;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-maps:hover {
+        background: #1e40af;
+        color: white;
+    }
+
+    /* Emergency Checklist */
+    .checklist-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: #f8faff;
+        color: #000000 !important;
+    }
+    .checklist-item .fw-600 {
+        color: #000000 !important;
+        font-weight: 700;
+    }
+    .checklist-item .text-muted {
+        color: #475569 !important;
+    }
+    .checklist-item span {
+        color: #dc2626 !important;
+        font-weight: 700;
+        margin-right: 6px;
+    }
+    .step-num {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: #dc2626;
+        color: white !important;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    /* First Aid Tips */
+    .first-aid-tab {
+        border: none;
+        background: #f1f5f9;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #475569;
+        transition: all 0.3s;
+    }
+    .first-aid-tab:hover {
+        background: #e2e8f0;
+    }
+    .first-aid-tab.active {
+        background: #dc2626;
+        color: white;
+    }
+    .first-aid-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .first-aid-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero with SOS Button -->
+<div class="sos-hero">
+    <h2 class="fw-bold mb-1 position-relative" style="z-index:10;"><i class="fas fa-exclamation-triangle me-2"></i>Emergency SOS</h2>
+    <p class="opacity-75 mb-4 position-relative" style="z-index:10;">In case of emergency, press the SOS button or call emergency services</p>
+
+    <div class="sos-btn-wrap d-flex align-items-center justify-content-center position-relative" style="height:200px;">
+        <div class="sos-pulse"></div>
+        <div class="sos-pulse"></div>
+        <div class="sos-pulse"></div>
+        <a href="tel:112" class="sos-main-btn">
+            <span class="sos-icon">🆘</span>
+            <span>SOS</span>
+            <span style="font-size:0.75rem; font-weight:500; color:#6b7280;">Tap to Call 112</span>
+        </a>
+    </div>
+    <p class="mt-2 opacity-75 position-relative" style="z-index:10; font-size:0.9rem;">
+        <i class="fas fa-info-circle me-1"></i>This button will call emergency services (112)
+    </p>
+</div>
+
+<div class="row g-4">
+    <!-- Emergency Numbers -->
+    <div class="col-md-6">
+        <div class="info-card">
+            <h5 style="color:#dc2626;"><i class="fas fa-phone-volume me-2"></i>Emergency Hotlines</h5>
+            {% set contacts = [
+                {'name': 'National Emergency', 'num': '112', 'desc': 'Police, Fire, Medical – All in one', 'emoji': '🆘', 'bg': '#fff1f2'},
+                {'name': 'Ambulance (Medical)', 'num': '108', 'desc': 'Free ambulance services across India', 'emoji': '🚑', 'bg': '#fef3c7'},
+                {'name': 'Police', 'num': '100', 'desc': 'Law enforcement emergency', 'emoji': '👮', 'bg': '#dbeafe'},
+                {'name': 'Fire Brigade', 'num': '101', 'desc': 'Fire emergency and rescue', 'emoji': '🚒', 'bg': '#ffedd5'},
+                {'name': 'Women Helpline', 'num': '1091', 'desc': 'National women safety helpline', 'emoji': '👩', 'bg': '#fce7f3'},
+                {'name': 'Disaster Management', 'num': '1070', 'desc': 'NDMA disaster relief helpline', 'emoji': '🏥', 'bg': '#d1fae5'}
+            ] %}
+            {% for c in contacts %}
+            <a href="tel:{{ c.num }}" class="contact-card" style="background:{{ c.bg }};">
+                <div class="contact-icon" style="background:white;">{{ c.emoji }}</div>
+                <div>
+                    <div class="cname">{{ c.name }}</div>
+                    <div class="cnum">📞 {{ c.num }}</div>
+                    <div class="cdesc">{{ c.desc }}</div>
+                </div>
+                <i class="fas fa-chevron-right ms-auto text-muted"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Nearby Hospitals + What To Do -->
+    <div class="col-md-6">
+        <div class="info-card">
+            <h5 style="color:#1d4ed8;"><i class="fas fa-hospital me-2"></i>Nearest Emergency Hospitals</h5>
+            {% set hospitals = [
+                {'name': 'AIIMS Hospital', 'addr': 'Ansari Nagar, New Delhi', 'phone': '011-26588500', 'dist': '0.8 km'},
+                {'name': 'Safdarjung Hospital', 'addr': 'Ansari Nagar West, Delhi', 'phone': '011-26707444', 'dist': '1.2 km'},
+                {'name': 'Ram Manohar Lohia Hospital', 'addr': 'Baba Kharak Singh Marg, Delhi', 'phone': '011-23365525', 'dist': '2.4 km'},
+                {'name': 'Max Super Speciality Hospital', 'addr': 'Saket, New Delhi', 'phone': '011-26515050', 'dist': '3.1 km'},
+                {'name': 'Apollo Hospital', 'addr': 'Sarita Vihar, Delhi', 'phone': '011-71791090', 'dist': '4.6 km'}
+            ] %}
+            {% for h in hospitals %}
+            <div class="hospital-sos-card">
+                <div>
+                    <div class="fw-bold text-dark">🏥 {{ h.name }}</div>
+                    <div class="text-muted" style="font-size:0.85rem;"><i class="fas fa-map-marker-alt me-1"></i>{{ h.addr }}</div>
+                    <div style="color:#6b7280; font-size:0.82rem; margin-top:4px;"><i class="fas fa-walking me-1"></i>~{{ h.dist }}</div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="tel:{{ h.phone }}" class="btn-call"><i class="fas fa-phone"></i>Call</a>
+                    <a href="https://www.google.com/maps/search/{{ h.name | urlencode }}" target="_blank" class="btn-maps"><i class="fas fa-map"></i>Maps</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Checklist & First Aid -->
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <div class="info-card">
+            <h5 style="color:#dc2626;"><i class="fas fa-clipboard-list me-2"></i>What To Do In An Emergency</h5>
+            {% set steps = [
+                {'title': 'Stay Calm', 'text': 'Take a deep breath. Panic wastes precious time.'},
+                {'title': 'Call 112', 'text': 'Give your exact location and describe the emergency clearly.'},
+                {'title': 'Don\'t Move the Patient', 'text': 'Unless in immediate danger, avoid moving an injured person.'},
+                {'title': 'Apply Basic First Aid', 'text': 'Control bleeding with pressure, perform CPR if needed.'},
+                {'title': 'Wait for Help', 'text': 'Stay on the line with emergency services until help arrives.'},
+                {'title': 'Clear the Area', 'text': 'Ensure access for emergency vehicles and personnel.'}
+            ] %}
+            {% for step in steps %}
+            <div class="checklist-item">
+                <div class="step-num">{{ loop.index }}</div>
+                <div>
+                    <div class="fw-600">{{ step.title }}</div>
+                    <small class="text-muted">{{ step.text }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="info-card">
+            <h5 style="color:#dc2626;"><i class="fas fa-first-aid me-2"></i>Quick First Aid Guide</h5>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="first-aid-tab active" onclick="showFirstAid('cpr')">🫀 CPR</button>
+                <button class="first-aid-tab" onclick="showFirstAid('choking')">😮 Choking</button>
+                <button class="first-aid-tab" onclick="showFirstAid('bleeding')">🩸 Bleeding</button>
+                <button class="first-aid-tab" onclick="showFirstAid('burns')">🔥 Burns</button>
+                <button class="first-aid-tab" onclick="showFirstAid('fracture')">🦴 Fracture</button>
+            </div>
+
+            <div id="cpr" class="first-aid-content active">
+                <div class="checklist-item"><span>1.</span> Check if the person is responsive – tap shoulder, shout.</div>
+                <div class="checklist-item"><span>2.</span> Call 112 immediately or ask someone else to call.</div>
+                <div class="checklist-item"><span>3.</span> Begin chest compressions – push hard at center of chest, 30 times.</div>
+                <div class="checklist-item"><span>4.</span> Give 2 rescue breaths (if trained to do so).</div>
+                <div class="checklist-item"><span>5.</span> Continue until help arrives or person recovers.</div>
+            </div>
+            <div id="choking" class="first-aid-content">
+                <div class="checklist-item"><span>1.</span> Ask "Are you choking?" – If they can't speak or breathe, act immediately.</div>
+                <div class="checklist-item"><span>2.</span> Bend them forward and give 5 firm back blows between shoulder blades.</div>
+                <div class="checklist-item"><span>3.</span> If ineffective, give 5 abdominal thrusts (Heimlich maneuver).</div>
+                <div class="checklist-item"><span>4.</span> Alternate back blows and abdominal thrusts until object is expelled.</div>
+            </div>
+            <div id="bleeding" class="first-aid-content">
+                <div class="checklist-item"><span>1.</span> Apply firm, direct pressure with a clean cloth or bandage.</div>
+                <div class="checklist-item"><span>2.</span> Do not remove the cloth if it gets soaked – add more on top.</div>
+                <div class="checklist-item"><span>3.</span> Elevate the injured area above heart level if possible.</div>
+                <div class="checklist-item"><span>4.</span> Seek medical help if bleeding doesn't stop within 10 minutes.</div>
+            </div>
+            <div id="burns" class="first-aid-content">
+                <div class="checklist-item"><span>1.</span> Cool the burn under cool running water for at least 10 minutes.</div>
+                <div class="checklist-item"><span>2.</span> Do NOT apply ice, butter, toothpaste, or any cream.</div>
+                <div class="checklist-item"><span>3.</span> Cover loosely with a clean, non-fluffy material.</div>
+                <div class="checklist-item"><span>4.</span> Seek medical help for burns larger than a palm size.</div>
+            </div>
+            <div id="fracture" class="first-aid-content">
+                <div class="checklist-item"><span>1.</span> Do not try to straighten the bone – immobilize as found.</div>
+                <div class="checklist-item"><span>2.</span> Support above and below the suspected fracture.</div>
+                <div class="checklist-item"><span>3.</span> Apply ice packs wrapped in cloth to reduce swelling.</div>
+                <div class="checklist-item"><span>4.</span> Call for emergency medical help immediately.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showFirstAid(section) {
+    document.querySelectorAll('.first-aid-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.first-aid-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(section).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

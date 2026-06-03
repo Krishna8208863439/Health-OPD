@@ -1,181 +1,709 @@
 {% extends "base.html" %}
 
-{% block title %}Doctor Dashboard - Analytics{% endblock %}
+{% block title %}Doctor Dashboard — HealthCare Plus{% endblock %}
+{% block page_title %}<i class="fas fa-chart-line me-2" style="color:var(--accent);"></i>Doctor Analytics Dashboard{% endblock %}
 
 {% block extra_css %}
 <style>
-    .dashboard-header {
-        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-        color: white;
-        padding: 30px;
-        border-radius: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .stat-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-        transition: all 0.3s;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-    
-    .stat-icon {
-        font-size: 2.5rem;
-        margin-bottom: 15px;
-    }
-    
-    .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 5px;
-    }
-    
-    .stat-label {
-        color: #6B7280;
-        font-size: 0.95rem;
-    }
-    
-    .chart-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    
-    .high-risk-table {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-    
-    .risk-badge {
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    
-    .risk-low {
-        background: #D1FAE5;
-        color: #065F46;
-    }
-    
-    .risk-moderate {
-        background: #FEF3C7;
-        color: #92400E;
-    }
-    
-    .risk-high {
-        background: #FEE2E2;
-        color: #991B1B;
-    }
-    
-    .risk-critical {
-        background: #7F1D1D;
-        color: white;
-    }
+/* ====== DOCTOR DASHBOARD STYLES ====== */
+
+/* Animated KPI Cards */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+}
+
+.kpi-card.blue::before { background: linear-gradient(90deg, var(--accent), var(--cyan)); }
+.kpi-card.green::before { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.kpi-card.red::before { background: linear-gradient(90deg, var(--rose), #fb7185); }
+.kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+.kpi-card.violet::before { background: linear-gradient(90deg, var(--violet), #a78bfa); }
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.kpi-card:hover.blue { border-color: rgba(59,130,246,0.4); box-shadow: 0 12px 40px rgba(59,130,246,0.15); }
+.kpi-card:hover.green { border-color: rgba(16,185,129,0.4); box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
+.kpi-card:hover.red { border-color: rgba(244,63,94,0.4); box-shadow: 0 12px 40px rgba(244,63,94,0.15); }
+.kpi-card:hover.amber { border-color: rgba(245,158,11,0.4); box-shadow: 0 12px 40px rgba(245,158,11,0.15); }
+.kpi-card:hover.violet { border-color: rgba(139,92,246,0.4); box-shadow: 0 12px 40px rgba(139,92,246,0.15); }
+
+.kpi-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+.kpi-card.blue .kpi-icon { background: rgba(59,130,246,0.15); color: var(--accent); }
+.kpi-card.green .kpi-icon { background: rgba(16,185,129,0.15); color: var(--emerald); }
+.kpi-card.red .kpi-icon { background: rgba(244,63,94,0.15); color: var(--rose); }
+.kpi-card.amber .kpi-icon { background: rgba(245,158,11,0.15); color: var(--amber); }
+.kpi-card.violet .kpi-icon { background: rgba(139,92,246,0.15); color: var(--violet); }
+
+.kpi-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.kpi-card.blue .kpi-value { color: var(--accent-light); }
+.kpi-card.green .kpi-value { color: #6ee7b7; }
+.kpi-card.red .kpi-value { color: #fda4af; }
+.kpi-card.amber .kpi-value { color: #fcd34d; }
+.kpi-card.violet .kpi-value { color: #c4b5fd; }
+
+.kpi-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.kpi-trend {
+    position: absolute;
+    top: 18px; right: 16px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+.trend-up { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+.trend-down { background: rgba(244,63,94,0.15); color: #fda4af; }
+
+/* Pulsing critical badge */
+.critical-pulse {
+    animation: criticalPulse 2s infinite;
+}
+@keyframes criticalPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(244,63,94,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(244,63,94,0); }
+}
+
+/* Chart Sections */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.charts-grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px;
+}
+.chart-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.chart-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.chart-card-title i { color: var(--accent); font-size: 0.85rem; }
+
+.chart-period-btn {
+    background: none;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.chart-period-btn:hover, .chart-period-btn.active {
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.4);
+    color: var(--accent-light);
+}
+
+/* Live Feed */
+.live-feed-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 28px;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--emerald);
+    font-weight: 600;
+}
+.live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--emerald);
+    animation: livePulse 1.5s infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.feed-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--glass-border);
+    transition: all 0.2s;
+}
+.feed-item:last-child { border-bottom: none; padding-bottom: 0; }
+.feed-item:hover { padding-left: 4px; }
+
+.feed-avatar {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.feed-avatar.high { background: rgba(244,63,94,0.15); color: #fda4af; }
+.feed-avatar.medium { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.feed-avatar.low { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+
+.feed-info { flex: 1; min-width: 0; }
+.feed-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.feed-disease { font-size: 0.78rem; color: var(--text-secondary); }
+
+.feed-badge {
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.feed-badge.high { background: rgba(244,63,94,0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+.feed-badge.medium { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.feed-badge.low { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+
+.feed-time { font-size: 0.7rem; color: var(--text-secondary); white-space: nowrap; }
+
+/* Risk Score Progress */
+.risk-bar-wrap {
+    margin-top: 6px;
+}
+.risk-bar-track {
+    height: 4px;
+    background: var(--glass);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.risk-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+/* High Risk Table */
+.patient-table-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+
+.patient-table-card .table {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.patient-table-card .table thead th {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--glass-border);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 14px 16px;
+    white-space: nowrap;
+}
+
+.patient-table-card .table tbody td {
+    border-color: var(--glass-border);
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+.patient-table-card .table tbody tr:hover td {
+    background: rgba(255,255,255,0.02);
+}
+
+/* Score badge */
+.score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.score-critical { background: rgba(127,29,29,0.5); color: #fca5a5; border: 1px solid rgba(244,63,94,0.4); }
+.score-high { background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3); }
+.score-moderate { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.score-low { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+
+/* Quick Actions */
+.actions-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.action-quick-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.action-quick-btn:hover {
+    color: var(--text-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.action-quick-btn i { font-size: 1.4rem; }
+.action-quick-btn span { font-size: 0.78rem; font-weight: 600; }
+
+/* Section Header */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.section-title i { color: var(--accent); }
+
+.view-all-btn {
+    font-size: 0.75rem;
+    color: var(--accent-light);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: gap 0.2s;
+}
+.view-all-btn:hover { color: var(--accent); gap: 8px; }
+
+/* Disease stat bars */
+.disease-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.82rem;
+}
+.disease-bar-name { width: 120px; color: var(--text-primary); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.disease-bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+.disease-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--cyan)); transition: width 1.2s ease; }
+.disease-bar-count { width: 28px; text-align: right; color: var(--text-secondary); font-weight: 600; }
+
+/* Age distribution mini chart */
+.age-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+}
+.age-label { width: 72px; color: var(--text-secondary); }
+.age-bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+.age-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+.age-count { width: 28px; text-align: right; color: var(--text-primary); font-weight: 600; }
+
+/* Search & Export Row */
+.search-bar {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    width: 100%;
+    transition: all 0.2s;
+}
+.search-bar:focus {
+    outline: none;
+    border-color: rgba(59,130,246,0.4);
+    background: rgba(59,130,246,0.05);
+}
+.search-bar::placeholder { color: var(--text-secondary); }
+
+.export-btn {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: #6ee7b7;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.export-btn:hover {
+    background: rgba(16,185,129,0.25);
+    color: #34d399;
+}
+
+/* Loading spinner */
+.spinner-sm {
+    width: 16px; height: 16px;
+    border: 2px solid var(--glass-border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Welcome banner */
+.welcome-banner {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(6,182,212,0.08) 100%);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+}
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.welcome-banner h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.welcome-banner p { font-size: 0.875rem; color: var(--text-secondary); margin: 0; }
+
+@media (max-width: 768px) {
+    .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-header">
-    <h2><i class="fas fa-chart-line"></i> Admin Analytics Dashboard</h2>
-    <p class="mb-0">Welcome, Dr. {{ doctor.full_name }}</p>
-</div>
-
-<!-- Key Statistics -->
-<div class="row">
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon" style="color: #3B82F6;">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="stat-value">{{ stats.total_patients }}</div>
-            <div class="stat-label">Total Patients</div>
-        </div>
+<!-- Welcome Banner -->
+<div class="welcome-banner fade-in-up">
+    <div style="position:relative; z-index:1;">
+        <h2>👋 Welcome back, Dr. {{ doctor.full_name }}</h2>
+        <p><i class="fas fa-clock me-1"></i> Dashboard last updated: <span id="lastUpdated">Just now</span> &bull; Auto-refreshes every 30 seconds</p>
     </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon" style="color: #10B981;">
-                <i class="fas fa-calendar-day"></i>
-            </div>
-            <div class="stat-value">{{ stats.today_count }}</div>
-            <div class="stat-label">Today's Patients</div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon" style="color: #EF4444;">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="stat-value">{{ stats.high_risk }}</div>
-            <div class="stat-label">High Risk Cases</div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card text-center">
-            <div class="stat-icon" style="color: #F59E0B;">
-                <i class="fas fa-heartbeat"></i>
-            </div>
-            <div class="stat-value">{{ stats.avg_risk_score }}</div>
-            <div class="stat-label">Avg Risk Score</div>
-        </div>
+    <div style="position:absolute; top:50%; right:32px; transform:translateY(-50%); display:flex; gap:10px;">
+        <a href="{{ url_for('doctor_appointments') }}" style="background:rgba(59,130,246,0.2); border:1px solid rgba(59,130,246,0.4); color:var(--accent-light); padding:10px 18px; border-radius:10px; font-size:0.82rem; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-calendar-check"></i> Appointments
+        </a>
+        <a href="{{ url_for('doctor_prescriptions') }}" style="background:rgba(139,92,246,0.2); border:1px solid rgba(139,92,246,0.4); color:#c4b5fd; padding:10px 18px; border-radius:10px; font-size:0.82rem; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-file-prescription"></i> Prescriptions
+        </a>
+        <a href="{{ url_for('doctor_export_csv') }}" class="export-btn">
+            <i class="fas fa-download"></i> Export CSV
+        </a>
     </div>
 </div>
 
-<!-- Charts Row 1 -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h5><i class="fas fa-disease"></i> Most Common Diseases</h5>
-            <canvas id="diseaseChart"></canvas>
-        </div>
+<!-- KPI Cards -->
+<div class="kpi-grid fade-in-up">
+    <div class="kpi-card blue">
+        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+        <div class="kpi-value" data-target="{{ stats.total_patients }}">0</div>
+        <div class="kpi-label">Total Patients</div>
+        <span class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> All time</span>
     </div>
-    
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h5><i class="fas fa-chart-pie"></i> Severity Distribution</h5>
-            <canvas id="severityChart"></canvas>
-        </div>
+    <div class="kpi-card green">
+        <div class="kpi-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="kpi-value" data-target="{{ stats.today_count }}">0</div>
+        <div class="kpi-label">Today's Patients</div>
+        <span class="kpi-trend trend-up"><i class="fas fa-circle"></i> Live</span>
+    </div>
+    <div class="kpi-card red critical-pulse">
+        <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="kpi-value" data-target="{{ stats.high_risk }}">0</div>
+        <div class="kpi-label">High Risk Cases</div>
+        <span class="kpi-trend trend-down"><i class="fas fa-arrow-up"></i> Critical</span>
+    </div>
+    <div class="kpi-card amber">
+        <div class="kpi-icon"><i class="fas fa-heartbeat"></i></div>
+        <div class="kpi-value" data-target="{{ stats.avg_risk_score }}" data-decimal="1">0</div>
+        <div class="kpi-label">Avg Risk Score</div>
+        <span class="kpi-trend {% if stats.avg_risk_score > 50 %}trend-down{% else %}trend-up{% endif %}">
+            <i class="fas fa-chart-line"></i> Score
+        </span>
+    </div>
+    <div class="kpi-card violet">
+        <div class="kpi-icon"><i class="fas fa-file-medical"></i></div>
+        <div class="kpi-value" data-target="{{ stats.total_predictions }}">0</div>
+        <div class="kpi-label">Total Diagnoses</div>
+        <span class="kpi-trend trend-up"><i class="fas fa-database"></i> Records</span>
     </div>
 </div>
 
-<!-- Charts Row 2 -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h5><i class="fas fa-users"></i> Age-wise Distribution</h5>
-            <canvas id="ageChart"></canvas>
+<!-- Quick Action Buttons -->
+<div class="actions-row fade-in-up">
+    <a href="{{ url_for('doctor_appointments') }}" class="action-quick-btn" style="border-color:rgba(59,130,246,0.3);">
+        <i class="fas fa-calendar-check" style="color:var(--accent);"></i>
+        <span>Manage Appointments</span>
+    </a>
+    <a href="{{ url_for('doctor_prescriptions') }}" class="action-quick-btn" style="border-color:rgba(139,92,246,0.3);">
+        <i class="fas fa-file-prescription" style="color:var(--violet);"></i>
+        <span>Write Prescription</span>
+    </a>
+    <a href="{{ url_for('doctor_patient_list') }}" class="action-quick-btn" style="border-color:rgba(6,182,212,0.3);">
+        <i class="fas fa-users" style="color:var(--cyan);"></i>
+        <span>Patient Records</span>
+    </a>
+    <a href="{{ url_for('doctor_export_csv') }}" class="action-quick-btn" style="border-color:rgba(16,185,129,0.3);">
+        <i class="fas fa-file-csv" style="color:var(--emerald);"></i>
+        <span>Export Data</span>
+    </a>
+</div>
+
+<!-- Charts Row 1: Monthly Trend (wide) + Severity Donut -->
+<div class="charts-grid-3 fade-in-up">
+    <!-- Monthly Trend -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <div class="chart-card-title">
+                <i class="fas fa-chart-area"></i> Patient Volume Trend
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button class="chart-period-btn active" onclick="switchPeriod('monthly', this)">Monthly</button>
+                <button class="chart-period-btn" onclick="switchPeriod('daily', this)">7 Days</button>
+            </div>
+        </div>
+        <canvas id="trendChart" height="110"></canvas>
+    </div>
+
+    <!-- Severity Donut -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <div class="chart-card-title">
+                <i class="fas fa-chart-pie"></i> Severity Split
+            </div>
+        </div>
+        <canvas id="severityChart" height="130"></canvas>
+        <div id="severityLegend" style="margin-top:12px; display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+</div>
+
+<!-- Charts Row 2: Disease Distribution + Age Distribution -->
+<div class="charts-grid fade-in-up">
+    <!-- Disease Bar Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <div class="chart-card-title">
+                <i class="fas fa-disease"></i> Disease Distribution
+            </div>
+        </div>
+        <canvas id="diseaseChart" height="200"></canvas>
+    </div>
+
+    <!-- Age Distribution -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <div class="chart-card-title">
+                <i class="fas fa-users"></i> Age Group Distribution
+            </div>
+        </div>
+        <canvas id="ageChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Live Patient Feed + Disease Stats -->
+<div class="charts-grid fade-in-up">
+    <!-- Live Feed -->
+    <div class="live-feed-card" style="margin-bottom:0;">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-rss"></i> Live Patient Feed
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="live-indicator">
+                    <div class="live-dot"></div> LIVE
+                </div>
+                <a href="{{ url_for('doctor_patient_list') }}" class="view-all-btn">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        <div id="liveFeed">
+            {% if stats.recent_cases %}
+                {% for case in stats.recent_cases[:8] %}
+                <div class="feed-item">
+                    <div class="feed-avatar {% if 'HIGH' in case.severity %}high{% elif 'MEDIUM' in case.severity %}medium{% else %}low{% endif %}">
+                        {{ case.patient_name[0] | upper }}
+                    </div>
+                    <div class="feed-info">
+                        <div class="feed-name">{{ case.patient_name }}</div>
+                        <div class="feed-disease">{{ case.disease }} &bull; Age {{ case.patient_age }}</div>
+                        <div class="risk-bar-wrap">
+                            <div class="risk-bar-track">
+                                <div class="risk-bar-fill" style="width:{{ case.risk_percentage }}%; background:{% if 'HIGH' in case.severity %}linear-gradient(90deg,#f43f5e,#fb7185){% elif 'MEDIUM' in case.severity %}linear-gradient(90deg,#f59e0b,#fbbf24){% else %}linear-gradient(90deg,#10b981,#34d399){% endif %};"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                        <span class="feed-badge {% if 'HIGH' in case.severity %}high{% elif 'MEDIUM' in case.severity %}medium{% else %}low{% endif %}">
+                            {% if 'HIGH' in case.severity %}🔴 HIGH{% elif 'MEDIUM' in case.severity %}🟡 MED{% else %}🟢 LOW{% endif %}
+                        </span>
+                        <span class="feed-time">{{ case.timestamp[:10] if case.timestamp else '' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align:center; padding:40px 0; color:var(--text-secondary);">
+                    <i class="fas fa-inbox" style="font-size:2rem; margin-bottom:12px; display:block;"></i>
+                    No recent cases yet.
+                </div>
+            {% endif %}
         </div>
     </div>
-    
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h5><i class="fas fa-calendar-week"></i> Daily Patient Trend (Last 7 Days)</h5>
-            <canvas id="dailyChart"></canvas>
+
+    <!-- Disease Stats Bars -->
+    <div class="chart-card" style="margin-bottom:0;">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i> Top Diseases
+            </div>
+        </div>
+        {% if stats.disease_stats %}
+            {% set max_count = stats.disease_stats[0][1] %}
+            {% for row in stats.disease_stats[:8] %}
+            <div class="disease-bar">
+                <div class="disease-bar-name" title="{{ row[0] }}">{{ row[0] }}</div>
+                <div class="disease-bar-track">
+                    <div class="disease-bar-fill" style="width:{{ (row[1] / max_count * 100) | round(1) }}%;"></div>
+                </div>
+                <div class="disease-bar-count">{{ row[1] }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align:center; padding:20px 0; color:var(--text-secondary);">No data yet.</div>
+        {% endif %}
+
+        <!-- Age distribution mini-stats -->
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--glass-border);">
+            <div class="section-title" style="margin-bottom:12px; font-size:0.82rem;">
+                <i class="fas fa-child"></i> Age Groups
+            </div>
+            {% set age_colors = ['#3b82f6','#06b6d4','#10b981','#f59e0b','#8b5cf6'] %}
+            {% for row in stats.age_disease_stats | groupby(0) | list %}
+                {% set age_group = row.grouper %}
+                {% set count = row.list | length %}
+            {% endfor %}
+            {% for row in stats.severity_stats %}
+            <div class="age-stat-row">
+                <div class="age-label">{{ row[0] or 'N/A' }}</div>
+                <div class="age-bar-track">
+                    <div class="age-bar-fill" style="width:{{ [(row[1] / [stats.total_predictions, 1] | max * 100) | round, 100] | min }}%; background:{% if 'High' in (row[0] or '') %}var(--rose){% elif 'Medium' in (row[0] or '') %}var(--amber){% else %}var(--emerald){% endif %};"></div>
+                </div>
+                <div class="age-count">{{ row[1] }}</div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>
 
 <!-- High Risk Patients Table -->
-<div class="high-risk-table">
-    <h5><i class="fas fa-user-injured"></i> High-Risk Patients (Score ≥ 60)</h5>
+<div class="patient-table-card fade-in-up" style="margin-top:28px;">
+    <div style="padding:20px 22px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div class="section-title">
+            <i class="fas fa-user-injured"></i> High-Risk Patients (Score ≥ 60)
+            <span style="background:rgba(244,63,94,0.15); color:#fb7185; border:1px solid rgba(244,63,94,0.3); border-radius:10px; padding:2px 8px; font-size:0.72rem;">
+                {{ stats.high_risk_patients | length }} patients
+            </span>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="text" class="search-bar" id="tableSearch" placeholder="🔍  Search patients..." style="width:220px;" onkeyup="filterTable()">
+        </div>
+    </div>
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table" id="patientsTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Patient Name</th>
                     <th>Age</th>
                     <th>Disease</th>
@@ -187,16 +715,38 @@
             <tbody>
                 {% for patient in stats.high_risk_patients %}
                 <tr>
-                    <td><strong>{{ patient.patient_name }}</strong></td>
-                    <td>{{ patient.patient_age }}</td>
-                    <td>{{ patient.disease }}</td>
-                    <td><strong>{{ patient.health_risk_score }}</strong></td>
+                    <td style="color:var(--text-secondary);">{{ loop.index }}</td>
                     <td>
-                        <span class="risk-badge {% if patient.health_risk_score >= 80 %}risk-critical{% elif patient.health_risk_score >= 60 %}risk-high{% endif %}">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:30px; height:30px; border-radius:8px; background:rgba(244,63,94,0.15); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; color:#fda4af;">
+                                {{ patient.patient_name[0] | upper }}
+                            </div>
+                            <strong>{{ patient.patient_name }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ patient.patient_age }} yrs</td>
+                    <td>{{ patient.disease }}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:36px; height:36px; border-radius:50%; background:conic-gradient({% if patient.health_risk_score >= 80 %}#f43f5e{% elif patient.health_risk_score >= 60 %}#f59e0b{% else %}#10b981{% endif %} {{ patient.health_risk_score * 3.6 }}deg, rgba(255,255,255,0.05) 0deg); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:800; color:var(--text-primary);">
+                                {{ patient.health_risk_score }}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="score-badge {% if patient.health_risk_score >= 80 %}score-critical{% elif patient.health_risk_score >= 60 %}score-high{% else %}score-moderate{% endif %}">
+                            {% if patient.health_risk_score >= 80 %}🔴{% elif patient.health_risk_score >= 60 %}🟠{% else %}🟡{% endif %}
                             {{ patient.health_risk_category }}
                         </span>
                     </td>
-                    <td>{{ patient.timestamp[:10] }}</td>
+                    <td style="color:var(--text-secondary);">{{ patient.timestamp[:10] if patient.timestamp else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:40px; color:var(--text-secondary);">
+                        <i class="fas fa-shield-alt" style="font-size:2rem; margin-bottom:12px; display:block; color:var(--emerald);"></i>
+                        No high-risk patients — all looking good! 🎉
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -204,111 +754,271 @@
     </div>
 </div>
 
-<!-- Age-wise Disease Distribution -->
-<div class="chart-card mt-4">
-    <h5><i class="fas fa-chart-bar"></i> Age-wise Disease Distribution</h5>
-    <div class="table-responsive">
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Age Group</th>
-                    <th>Disease</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in stats.age_disease_stats[:20] %}
-                <tr>
-                    <td><strong>{{ row[0] }}</strong></td>
-                    <td>{{ row[1] }}</td>
-                    <td><span class="badge bg-primary">{{ row[2] }}</span></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Fetch analytics data
+// ============================================
+// ANIMATED COUNTER
+// ============================================
+function animateCounter(el) {
+    const target = parseFloat(el.dataset.target) || 0;
+    const isDecimal = !!el.dataset.decimal;
+    const duration = 1500;
+    const step = target / (duration / 16);
+    let current = 0;
+
+    const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        el.textContent = isDecimal ? current.toFixed(1) : Math.floor(current);
+    }, 16);
+}
+
+document.querySelectorAll('.kpi-value[data-target]').forEach(animateCounter);
+
+// ============================================
+// CHART.JS GLOBAL DEFAULTS
+// ============================================
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+const COLORS = {
+    blue: { bg: 'rgba(59,130,246,0.2)', border: '#3b82f6', light: '#60a5fa' },
+    green: { bg: 'rgba(16,185,129,0.2)', border: '#10b981', light: '#34d399' },
+    red: { bg: 'rgba(244,63,94,0.2)', border: '#f43f5e', light: '#fb7185' },
+    amber: { bg: 'rgba(245,158,11,0.2)', border: '#f59e0b', light: '#fbbf24' },
+    violet: { bg: 'rgba(139,92,246,0.2)', border: '#8b5cf6', light: '#a78bfa' },
+    cyan: { bg: 'rgba(6,182,212,0.2)', border: '#06b6d4', light: '#22d3ee' },
+};
+
+let trendChart, severityChart, diseaseChart, ageChart;
+
+// ============================================
+// FETCH ANALYTICS & BUILD CHARTS
+// ============================================
 fetch('/analytics-data')
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
-        // Disease Chart
-        new Chart(document.getElementById('diseaseChart'), {
-            type: 'bar',
-            data: {
-                labels: data.diseases.labels,
-                datasets: [{
-                    label: 'Cases',
-                    data: data.diseases.data,
-                    backgroundColor: '#3B82F6'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false }
-                }
+        buildTrendChart(data);
+        buildSeverityChart(data);
+        buildDiseaseChart(data);
+        buildAgeChart(data);
+        document.getElementById('lastUpdated').textContent = 'Just now';
+    })
+    .catch(err => console.warn('Analytics fetch error:', err));
+
+function buildTrendChart(data) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(59,130,246,0.3)');
+    gradient.addColorStop(1, 'rgba(59,130,246,0)');
+
+    trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.monthly.labels,
+            datasets: [{
+                label: 'Patients',
+                data: data.monthly.data,
+                borderColor: '#3b82f6',
+                backgroundColor: gradient,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#1e293b',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 } } },
+                y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 }, stepSize: 1 }, beginAtZero: true }
             }
-        });
-        
-        // Severity Chart
-        new Chart(document.getElementById('severityChart'), {
-            type: 'doughnut',
-            data: {
-                labels: data.severity.labels,
-                datasets: [{
-                    data: data.severity.data,
-                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
-        
-        // Age Chart
-        new Chart(document.getElementById('ageChart'), {
-            type: 'bar',
-            data: {
-                labels: data.age.labels,
-                datasets: [{
-                    label: 'Patients',
-                    data: data.age.data,
-                    backgroundColor: '#8B5CF6'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
-        
-        // Daily Chart
-        new Chart(document.getElementById('dailyChart'), {
-            type: 'line',
-            data: {
-                labels: data.daily.labels,
-                datasets: [{
-                    label: 'Patients',
-                    data: data.daily.data,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
+        }
     });
+}
+
+function buildSeverityChart(data) {
+    const ctx = document.getElementById('severityChart').getContext('2d');
+    const total = data.severity.data.reduce((a,b) => a+b, 0);
+    const colors = ['#10b981', '#f59e0b', '#f43f5e'];
+    const labels = data.severity.labels;
+
+    severityChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data.severity.data,
+                backgroundColor: colors.map(c => c + '33'),
+                borderColor: colors,
+                borderWidth: 2,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.raw} (${((ctx.raw/total)*100).toFixed(1)}%)`
+                    }
+                }
+            }
+        }
+    });
+
+    // Custom legend
+    const legend = document.getElementById('severityLegend');
+    labels.forEach((label, i) => {
+        const pct = total > 0 ? ((data.severity.data[i] / total) * 100).toFixed(1) : 0;
+        legend.innerHTML += `
+            <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.78rem;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:${colors[i]};flex-shrink:0;"></div>
+                    <span style="color:var(--text-secondary);">${label}</span>
+                </div>
+                <span style="color:var(--text-primary); font-weight:600;">${data.severity.data[i]} <span style="color:var(--text-secondary); font-weight:400;">(${pct}%)</span></span>
+            </div>`;
+    });
+}
+
+function buildDiseaseChart(data) {
+    const ctx = document.getElementById('diseaseChart').getContext('2d');
+    const barColors = [
+        '#3b82f6','#06b6d4','#10b981','#8b5cf6','#f59e0b',
+        '#f43f5e','#ec4899','#14b8a6','#6366f1','#84cc16'
+    ];
+    diseaseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.diseases.labels,
+            datasets: [{
+                data: data.diseases.data,
+                backgroundColor: barColors.map(c => c + '33'),
+                borderColor: barColors,
+                borderWidth: 2,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 30 } },
+                y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', stepSize: 1 }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+function buildAgeChart(data) {
+    const ctx = document.getElementById('ageChart').getContext('2d');
+    ageChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.age.labels,
+            datasets: [{
+                label: 'Patients',
+                data: data.age.data,
+                backgroundColor: ['rgba(59,130,246,0.25)','rgba(6,182,212,0.25)','rgba(16,185,129,0.25)','rgba(245,158,11,0.25)','rgba(139,92,246,0.25)'],
+                borderColor: ['#3b82f6','#06b6d4','#10b981','#f59e0b','#8b5cf6'],
+                borderWidth: 2,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', stepSize: 1 }, beginAtZero: true },
+                y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } }
+            }
+        }
+    });
+}
+
+// ============================================
+// PERIOD SWITCH (Monthly / Daily)
+// ============================================
+function switchPeriod(period, btn) {
+    document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    fetch('/analytics-data')
+        .then(r => r.json())
+        .then(data => {
+            const newLabels = period === 'monthly' ? data.monthly.labels : data.daily.labels;
+            const newData = period === 'monthly' ? data.monthly.data : data.daily.data;
+            trendChart.data.labels = newLabels;
+            trendChart.data.datasets[0].data = newData;
+            trendChart.data.datasets[0].label = period === 'monthly' ? 'Monthly Patients' : 'Daily Patients';
+            trendChart.update();
+        });
+}
+
+// ============================================
+// LIVE FEED AUTO-REFRESH (30s)
+// ============================================
+let feedRefreshInterval = setInterval(() => {
+    fetch('/doctor/live-feed')
+        .then(r => r.json())
+        .then(cases => {
+            const feed = document.getElementById('liveFeed');
+            if (!feed || !cases.length) return;
+            let html = '';
+            cases.forEach(c => {
+                const sev = c.severity.includes('HIGH') ? 'high' : c.severity.includes('MEDIUM') ? 'medium' : 'low';
+                const badge = c.severity.includes('HIGH') ? '🔴 HIGH' : c.severity.includes('MEDIUM') ? '🟡 MED' : '🟢 LOW';
+                const riskColor = sev === 'high' ? '#f43f5e,#fb7185' : sev === 'medium' ? '#f59e0b,#fbbf24' : '#10b981,#34d399';
+                html += `<div class="feed-item">
+                    <div class="feed-avatar ${sev}">${c.patient_name[0].toUpperCase()}</div>
+                    <div class="feed-info">
+                        <div class="feed-name">${c.patient_name}</div>
+                        <div class="feed-disease">${c.disease} &bull; Age ${c.patient_age}</div>
+                        <div class="risk-bar-wrap"><div class="risk-bar-track"><div class="risk-bar-fill" style="width:${c.risk_percentage}%; background:linear-gradient(90deg,${riskColor});"></div></div></div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                        <span class="feed-badge ${sev}">${badge}</span>
+                        <span class="feed-time">${c.timestamp ? c.timestamp.substring(0,10) : ''}</span>
+                    </div>
+                </div>`;
+            });
+            feed.innerHTML = html;
+            document.getElementById('lastUpdated').textContent = 'Just now';
+        })
+        .catch(() => {});
+}, 30000);
+
+// ============================================
+// TABLE SEARCH FILTER
+// ============================================
+function filterTable() {
+    const q = document.getElementById('tableSearch').value.toLowerCase();
+    document.querySelectorAll('#patientsTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+
+// ============================================
+// STAGGER ANIMATIONS
+// ============================================
+document.querySelectorAll('.fade-in-up').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.08}s`;
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.opacity = '1'; }, i * 80);
+});
 </script>
 {% endblock %}

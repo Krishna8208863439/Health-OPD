@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}BMI & Nutrition Calculator - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .bmi-hero {
+        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 60%, #a78bfa 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .bmi-hero::before {
+        content: '';
+        position: absolute; top: -50px; right: -50px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .bmi-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 28px;
+    }
+
+    .bmi-input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        width: 100%;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    .bmi-input:focus {
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 4px rgba(124,58,237,0.12);
+        outline: none;
+    }
+
+    .btn-calc-bmi {
+        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        color: white;
+        border: none;
+        padding: 14px 50px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-calc-bmi:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(124,58,237,0.4);
+        color: white;
+    }
+
+    .bmi-result-box {
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .bmi-value {
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .bmi-category {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    .bmi-scale {
+        display: flex;
+        border-radius: 20px;
+        overflow: hidden;
+        height: 12px;
+        margin: 16px 0;
+    }
+    .bmi-scale-segment {
+        flex: 1;
+        position: relative;
+    }
+
+    .diet-plan-card {
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 16px;
+    }
+    .diet-plan-card h6 {
+        font-weight: 700;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .food-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: rgba(255,255,255,0.7);
+        font-size: 0.9rem;
+    }
+
+    .nutrition-ring {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+
+    .tip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: #f8faff;
+    }
+    .tip-icon {
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="bmi-hero">
+    <h2 class="fw-bold mb-1"><i class="fas fa-calculator me-2"></i>BMI & Nutrition Calculator</h2>
+    <p class="mb-0 opacity-75">Calculate your Body Mass Index and get personalized diet recommendations</p>
+</div>
+
+<!-- Calculator Form -->
+<div class="bmi-card">
+    <h4 class="fw-bold mb-4" style="color:#4c1d95;"><i class="fas fa-ruler-combined me-2"></i>Enter Your Measurements</h4>
+    <form method="POST" action="{{ url_for('calculate_bmi') }}">
+        <div class="row g-3">
+            <div class="col-md-3 col-6">
+                <label class="fw-600 text-dark mb-2 d-block">📏 Height (cm)</label>
+                <input type="number" class="bmi-input" name="height_cm" placeholder="e.g., 170" min="50" max="300" step="0.1" required value="{{ form_data.height_cm if form_data else '' }}">
+            </div>
+            <div class="col-md-3 col-6">
+                <label class="fw-600 text-dark mb-2 d-block">⚖️ Weight (kg)</label>
+                <input type="number" class="bmi-input" name="weight_kg" placeholder="e.g., 70" min="1" max="300" step="0.1" required value="{{ form_data.weight_kg if form_data else '' }}">
+            </div>
+            <div class="col-md-3 col-6">
+                <label class="fw-600 text-dark mb-2 d-block">🎂 Age</label>
+                <input type="number" class="bmi-input" name="age" placeholder="{{ patient.age }}" min="1" max="120" value="{{ form_data.age if form_data else patient.age }}">
+            </div>
+            <div class="col-md-3 col-6">
+                <label class="fw-600 text-dark mb-2 d-block">🏃 Activity Level</label>
+                <select class="bmi-input" name="activity_level">
+                    <option value="sedentary" {% if form_data and form_data.activity_level == 'sedentary' %}selected{% endif %}>😴 Sedentary</option>
+                    <option value="light" {% if form_data and form_data.activity_level == 'light' %}selected{% endif %}>🚶 Lightly Active</option>
+                    <option value="moderate" {% if form_data and form_data.activity_level == 'moderate' %}selected{% endif %}>🏊 Moderately Active</option>
+                    <option value="active" {% if form_data and form_data.activity_level == 'active' %}selected{% endif %}>🏋️ Very Active</option>
+                    <option value="extreme" {% if form_data and form_data.activity_level == 'extreme' %}selected{% endif %}>⚡ Extremely Active</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">🎯 Health Goal</label>
+                <select class="bmi-input" name="health_goal">
+                    <option value="lose_weight">📉 Lose Weight</option>
+                    <option value="maintain">⚖️ Maintain Weight</option>
+                    <option value="gain_muscle">💪 Gain Muscle</option>
+                    <option value="improve_health">❤️ Improve Overall Health</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">🍽️ Diet Preference</label>
+                <select class="bmi-input" name="diet_preference">
+                    <option value="balanced">🥗 Balanced (All Foods)</option>
+                    <option value="vegetarian">🥦 Vegetarian</option>
+                    <option value="vegan">🌱 Vegan</option>
+                    <option value="low_carb">🥩 Low Carb / Keto</option>
+                    <option value="high_protein">💪 High Protein</option>
+                </select>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-calc-bmi">
+                <i class="fas fa-calculator me-2"></i>Calculate BMI & Get Diet Plan
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if bmi_result %}
+<!-- BMI Result -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="bmi-result-box" style="background: {{ bmi_result.bg_color }};">
+            <div class="bmi-value" style="color: {{ bmi_result.color }};">{{ bmi_result.bmi }}</div>
+            <div class="bmi-category" style="color: {{ bmi_result.color }};">{{ bmi_result.category }}</div>
+            <div class="mt-3 text-muted" style="font-size:0.9rem;">{{ bmi_result.description }}</div>
+        </div>
+
+        <!-- BMI Scale -->
+        <div class="bmi-card">
+            <h6 class="fw-bold mb-3">BMI Scale</h6>
+            <div class="bmi-scale">
+                <div class="bmi-scale-segment" style="background:#3b82f6;" title="Underweight (<18.5)"></div>
+                <div class="bmi-scale-segment" style="background:#10b981;" title="Normal (18.5-24.9)"></div>
+                <div class="bmi-scale-segment" style="background:#f59e0b;" title="Overweight (25-29.9)"></div>
+                <div class="bmi-scale-segment" style="background:#ef4444;" title="Obese (≥30)"></div>
+            </div>
+            <div class="d-flex justify-content-between" style="font-size:0.75rem; color:#6b7280;">
+                <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+            </div>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Ideal Weight Range:</span>
+                    <strong>{{ bmi_result.ideal_weight_min }} – {{ bmi_result.ideal_weight_max }} kg</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted">Daily Calories:</span>
+                    <strong>{{ bmi_result.calories }} kcal</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Daily Water:</span>
+                    <strong>{{ bmi_result.water_intake }} L</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Diet Plan -->
+        <div class="bmi-card">
+            <h5 class="fw-bold mb-4" style="color:#4c1d95;"><i class="fas fa-utensils me-2"></i>Personalized Diet Plan</h5>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="diet-plan-card" style="background:#f0fdf4;">
+                        <h6><span>🌅</span> Breakfast</h6>
+                        {% for item in bmi_result.diet_plan.breakfast %}
+                        <div class="food-item"><span>✅</span> {{ item }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="diet-plan-card" style="background:#eff6ff;">
+                        <h6><span>☀️</span> Lunch</h6>
+                        {% for item in bmi_result.diet_plan.lunch %}
+                        <div class="food-item"><span>✅</span> {{ item }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="diet-plan-card" style="background:#fffbeb;">
+                        <h6><span>🍎</span> Snacks</h6>
+                        {% for item in bmi_result.diet_plan.snacks %}
+                        <div class="food-item"><span>✅</span> {{ item }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="diet-plan-card" style="background:#fdf4ff;">
+                        <h6><span>🌙</span> Dinner</h6>
+                        {% for item in bmi_result.diet_plan.dinner %}
+                        <div class="food-item"><span>✅</span> {{ item }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foods to Avoid -->
+            <div class="diet-plan-card mt-3" style="background:#fff1f2;">
+                <h6><span>🚫</span> Foods to Avoid</h6>
+                {% for item in bmi_result.diet_plan.avoid %}
+                <div class="food-item" style="background:rgba(239,68,68,0.08);"><span>❌</span> {{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Health Tips -->
+        <div class="bmi-card">
+            <h5 class="fw-bold mb-3" style="color:#4c1d95;"><i class="fas fa-lightbulb me-2"></i>Health Recommendations</h5>
+            {% for tip in bmi_result.tips %}
+            <div class="tip-item">
+                <span class="tip-icon">{{ tip.icon }}</span>
+                <div>
+                    <div class="fw-600">{{ tip.title }}</div>
+                    <small class="text-muted">{{ tip.text }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

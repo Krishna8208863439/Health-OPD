@@ -11,9 +11,15 @@
     
     .signup-card {
         background: white;
+        color: #1e293b !important;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         padding: 40px;
+    }
+    
+    .signup-card label {
+        color: #334155 !important;
+        font-weight: 500;
     }
     
     .signup-header {
@@ -23,12 +29,12 @@
     
     .signup-header i {
         font-size: 3.5rem;
-        color: var(--primary-blue);
+        color: var(--accent);
         margin-bottom: 15px;
     }
     
     .signup-header h2 {
-        color: var(--primary-blue);
+        color: var(--accent);
         font-weight: 700;
     }
     
@@ -36,15 +42,23 @@
         border-radius: 10px;
         padding: 12px;
         border: 2px solid #E5E7EB;
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+    
+    .form-control::placeholder {
+        color: #94a3b8 !important;
     }
     
     .form-control:focus, .form-select:focus {
-        border-color: var(--accent-blue);
+        border-color: var(--accent);
         box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        background-color: #ffffff !important;
+        color: #1e293b !important;
     }
     
     .btn-signup {
-        background: var(--success-green);
+        background: var(--emerald);
         color: white;
         border: none;
         padding: 12px;
@@ -65,8 +79,12 @@
         margin-top: 20px;
     }
     
+    .login-link p {
+        color: #475569 !important;
+    }
+    
     .login-link a {
-        color: var(--accent-blue);
+        color: var(--accent);
         text-decoration: none;
         font-weight: 600;
     }
@@ -144,6 +162,12 @@
                 <label class="form-label"><i class="fas fa-city"></i> City</label>
                 <select class="form-select" name="city">
                     <option value="Default">Other/Not Listed</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Kolkata">Kolkata</option>
                     <option value="New York">New York</option>
                     <option value="Los Angeles">Los Angeles</option>
                     <option value="Chicago">Chicago</option>
@@ -152,7 +176,7 @@
             </div>
             
             <hr class="my-4">
-            <h5 class="text-center mb-3" style="color: var(--primary-blue);">
+            <h5 class="text-center mb-3" style="color: var(--accent);">
                 <i class="fas fa-heartbeat"></i> Lifestyle Information (Optional)
             </h5>
             

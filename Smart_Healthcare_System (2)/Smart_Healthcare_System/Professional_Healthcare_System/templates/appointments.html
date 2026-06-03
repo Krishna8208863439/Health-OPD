@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .appt-hero {
+        background: linear-gradient(135deg, #065f46 0%, #059669 50%, #34d399 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .appt-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .appt-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+
+    .form-section-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .styled-input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        width: 100%;
+    }
+    .styled-input:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 4px rgba(5,150,105,0.1);
+        outline: none;
+    }
+    .styled-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .doctor-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+    .doctor-card:hover {
+        border-color: #059669;
+        background: #f0fdf4;
+        transform: translateY(-2px);
+    }
+    .doctor-card input[type="radio"] {
+        position: absolute;
+        top: 12px; right: 12px;
+    }
+    .doctor-card .doc-avatar {
+        width: 48px; height: 48px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+    .doctor-card .doc-name { font-weight: 700; color: #111827; }
+    .doctor-card .doc-spec { font-size: 0.85rem; color: #6b7280; }
+    .doctor-card .doc-avail { font-size: 0.8rem; color: #059669; font-weight: 500; margin-top: 6px; }
+
+    .time-slot {
+        display: inline-block;
+        padding: 8px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        margin: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    .time-slot:hover {
+        border-color: #059669;
+        background: #f0fdf4;
+        color: #059669;
+    }
+    .time-slot input[type="radio"] { display: none; }
+    .time-slot.selected {
+        background: #059669;
+        color: white;
+        border-color: #059669;
+    }
+
+    .btn-book {
+        background: linear-gradient(135deg, #065f46, #059669);
+        color: white;
+        border: none;
+        padding: 14px 50px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-book:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(5,150,105,0.4);
+        color: white;
+    }
+
+    .appt-item {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        margin-bottom: 16px;
+        border-left: 4px solid #059669;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: all 0.3s;
+    }
+    .appt-item:hover { transform: translateX(4px); }
+    .appt-item.pending { border-left-color: #f59e0b; }
+    .appt-item.confirmed { border-left-color: #059669; }
+    .appt-item.cancelled { border-left-color: #ef4444; opacity: 0.7; }
+    .appt-item.completed { border-left-color: #6b7280; }
+
+    .appt-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-confirmed { background: #d1fae5; color: #065f46; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-completed { background: #f3f4f6; color: #374151; }
+
+    .btn-cancel-appt {
+        background: #fee2e2;
+        color: #991b1b;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-cancel-appt:hover {
+        background: #ef4444;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="appt-hero">
+    <h2 class="fw-bold mb-1"><i class="fas fa-calendar-check me-2"></i>Appointment Booking</h2>
+    <p class="mb-0 opacity-75">Schedule a consultation with our specialist doctors</p>
+</div>
+
+<!-- Booking Form -->
+<div class="appt-card">
+    <h4 class="fw-bold mb-4" style="color:#065f46;"><i class="fas fa-plus-circle me-2"></i>Book New Appointment</h4>
+    <form method="POST" action="{{ url_for('book_appointment') }}">
+        <div class="row g-4">
+            <div class="col-12">
+                <p class="form-section-title">Select Doctor</p>
+                <div class="row g-3">
+                    {% set doctors = [
+                        {'id': 'dr_general', 'name': 'Dr. Rajesh Kumar', 'spec': 'General Physician', 'avail': 'Mon, Wed, Fri – 9AM to 5PM', 'emoji': '👨‍⚕️', 'bg': '#dbeafe'},
+                        {'id': 'dr_cardio', 'name': 'Dr. Priya Sharma', 'spec': 'Cardiologist', 'avail': 'Tue, Thu – 10AM to 4PM', 'emoji': '❤️', 'bg': '#fce7f3'},
+                        {'id': 'dr_neuro', 'name': 'Dr. Amit Patel', 'spec': 'Neurologist', 'avail': 'Mon, Fri – 11AM to 3PM', 'emoji': '🧠', 'bg': '#ede9fe'},
+                        {'id': 'dr_ortho', 'name': 'Dr. Meena Iyer', 'spec': 'Orthopedist', 'avail': 'Wed, Sat – 9AM to 2PM', 'emoji': '🦴', 'bg': '#fef3c7'},
+                        {'id': 'dr_pulmo', 'name': 'Dr. Kiran Rao', 'spec': 'Pulmonologist', 'avail': 'Tue, Thu, Sat – 8AM to 1PM', 'emoji': '🫁', 'bg': '#d1fae5'},
+                        {'id': 'dr_gastro', 'name': 'Dr. Sunita Nair', 'spec': 'Gastroenterologist', 'avail': 'Mon, Wed, Fri – 2PM to 6PM', 'emoji': '💊', 'bg': '#fee2e2'}
+                    ] %}
+                    {% for doc in doctors %}
+                    <div class="col-md-4 col-6">
+                        <label class="doctor-card d-block w-100">
+                            <input type="radio" name="doctor_name" value="{{ doc.name }} ({{ doc.spec }})" required>
+                            <div class="doc-avatar" style="background:{{ doc.bg }};">{{ doc.emoji }}</div>
+                            <div class="doc-name">{{ doc.name }}</div>
+                            <div class="doc-spec">{{ doc.spec }}</div>
+                            <div class="doc-avail"><i class="fas fa-clock me-1"></i>{{ doc.avail }}</div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <p class="form-section-title">Appointment Details</p>
+                <div class="mb-3">
+                    <label class="styled-label">Appointment Date</label>
+                    <input type="date" class="styled-input" name="appt_date" required min="{{ today }}">
+                </div>
+                <div class="mb-3">
+                    <label class="styled-label">Preferred Time</label>
+                    <select class="styled-input" name="appt_time" required>
+                        <option value="">-- Select Time --</option>
+                        <option value="09:00 AM">09:00 AM</option>
+                        <option value="09:30 AM">09:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="02:00 PM">02:00 PM</option>
+                        <option value="02:30 PM">02:30 PM</option>
+                        <option value="03:00 PM">03:00 PM</option>
+                        <option value="03:30 PM">03:30 PM</option>
+                        <option value="04:00 PM">04:00 PM</option>
+                        <option value="04:30 PM">04:30 PM</option>
+                        <option value="05:00 PM">05:00 PM</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="styled-label">Appointment Type</label>
+                    <select class="styled-input" name="appt_type" required>
+                        <option value="consultation">🩺 General Consultation</option>
+                        <option value="followup">🔄 Follow-up Visit</option>
+                        <option value="emergency">🚨 Emergency</option>
+                        <option value="checkup">✅ Routine Check-up</option>
+                        <option value="test_review">📋 Test Report Review</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <p class="form-section-title">Health Concerns</p>
+                <div class="mb-3">
+                    <label class="styled-label">Primary Concern / Symptoms</label>
+                    <textarea class="styled-input" name="notes" rows="5" placeholder="Describe your symptoms or reason for visit..." style="resize:vertical;"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="styled-label">Current Medications (if any)</label>
+                    <input type="text" class="styled-input" name="current_medications" placeholder="e.g., Metformin, Aspirin...">
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-book">
+                <i class="fas fa-calendar-check me-2"></i> Confirm Appointment
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- My Appointments -->
+<div class="appt-card">
+    <h4 class="fw-bold mb-4" style="color:#065f46;"><i class="fas fa-list me-2"></i>My Appointments</h4>
+    {% if appointments %}
+        {% for appt in appointments %}
+        <div class="appt-item {{ appt.status }}">
+            <div>
+                <div class="fw-bold text-dark">{{ appt.doctor_name }}</div>
+                <div class="text-muted" style="font-size:0.9rem;">
+                    <i class="fas fa-calendar me-1"></i>{{ appt.appt_date }} at {{ appt.appt_time }}
+                    &nbsp;|&nbsp;
+                    <i class="fas fa-tag me-1"></i>{{ appt.appt_type | title }}
+                </div>
+                {% if appt.notes %}
+                <div class="text-muted mt-1" style="font-size:0.85rem;"><i class="fas fa-comment me-1"></i>{{ appt.notes[:80] }}{% if appt.notes|length > 80 %}...{% endif %}</div>
+                {% endif %}
+            </div>
+            <div class="d-flex flex-column align-items-end gap-2">
+                <span class="appt-badge badge-{{ appt.status }}">
+                    {% if appt.status == 'pending' %}⏳ Pending
+                    {% elif appt.status == 'confirmed' %}✅ Confirmed
+                    {% elif appt.status == 'cancelled' %}❌ Cancelled
+                    {% else %}✔️ Completed{% endif %}
+                </span>
+                {% if appt.status in ['pending', 'confirmed'] %}
+                <form method="POST" action="{{ url_for('cancel_appointment', appt_id=appt.id) }}" style="display:inline;">
+                    <button type="submit" class="btn-cancel-appt" onclick="return confirm('Cancel this appointment?')">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+            <p>No appointments booked yet. Schedule your first consultation above!</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Highlight selected doctor card
+document.querySelectorAll('.doctor-card input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.doctor-card').forEach(c => c.style.background = '');
+        this.closest('.doctor-card').style.background = '#f0fdf4';
+        this.closest('.doctor-card').style.borderColor = '#059669';
+    });
+});
+</script>
+{% endblock %}

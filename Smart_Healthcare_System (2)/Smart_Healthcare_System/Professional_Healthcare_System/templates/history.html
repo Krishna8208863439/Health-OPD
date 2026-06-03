@@ -10,8 +10,9 @@
     }
     
     .history-header {
-        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-        color: white;
+        background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.1));
+        border: 1px solid rgba(59,130,246,0.3);
+        color: var(--text-primary);
         padding: 40px;
         border-radius: 15px;
         margin-bottom: 30px;
@@ -21,130 +22,156 @@
     .history-header i {
         font-size: 3.5rem;
         margin-bottom: 15px;
+        color: var(--accent-light);
     }
     
     .patient-summary {
         background: white;
+        border: 1px solid #e2e8f0;
+        color: #1e293b !important;
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         margin-bottom: 30px;
+    }
+    .patient-summary h4 {
+        color: #000000 !important;
+    }
+    .patient-summary p {
+        color: #1e293b !important;
+    }
+    .patient-summary strong {
+        color: #000000 !important;
     }
     
     .history-card {
         background: white;
+        border: 1px solid #e2e8f0;
+        color: #1e293b !important;
         border-radius: 15px;
         padding: 25px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         margin-bottom: 20px;
-        border-left: 5px solid var(--accent-blue);
+        border-left: 5px solid var(--accent);
         transition: all 0.3s;
     }
     
     .history-card:hover {
-        transform: translateX(10px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        transform: translateX(8px);
+        border-color: var(--accent);
+        box-shadow: 0 15px 40px rgba(59,130,246,0.1);
     }
     
     .history-card.high {
-        border-left-color: var(--danger-red);
+        border-left-color: var(--rose);
     }
     
     .history-card.medium {
-        border-left-color: var(--warning-orange);
+        border-left-color: var(--amber);
     }
     
     .history-card.low {
-        border-left-color: var(--success-green);
+        border-left-color: var(--emerald);
     }
     
     .disease-name {
-        color: var(--primary-blue);
+        color: #000000 !important;
         font-size: 1.5rem;
         font-weight: 700;
         margin-bottom: 10px;
     }
     
     .timestamp {
-        color: #6B7280;
+        color: #475569 !important;
         font-size: 0.9rem;
         margin-bottom: 15px;
     }
     
     .severity-badge {
         display: inline-block;
-        padding: 8px 20px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-weight: 600;
         margin-right: 10px;
+        font-size: 0.8rem;
     }
     
     .severity-badge.high {
-        background: var(--danger-red);
-        color: white;
+        background: rgba(244,63,94,0.15);
+        color: #f43f5e;
+        border: 1px solid rgba(244,63,94,0.3);
     }
     
     .severity-badge.medium {
-        background: var(--warning-orange);
-        color: white;
+        background: rgba(245,158,11,0.15);
+        color: #d97706;
+        border: 1px solid rgba(245,158,11,0.3);
     }
     
     .severity-badge.low {
-        background: var(--success-green);
-        color: white;
+        background: rgba(16,185,129,0.15);
+        color: #059669;
+        border: 1px solid rgba(16,185,129,0.3);
     }
     
     .risk-badge {
         display: inline-block;
-        padding: 8px 20px;
+        padding: 6px 16px;
         border-radius: 20px;
-        background: #E5E7EB;
-        color: #374151;
+        background: #f1f5f9;
+        color: #1e293b;
         font-weight: 600;
+        font-size: 0.8rem;
+        border: 1px solid #cbd5e1;
     }
     
     .details-section {
         margin-top: 20px;
         padding-top: 20px;
-        border-top: 2px solid #E5E7EB;
+        border-top: 1px solid #e2e8f0;
     }
     
     .details-row {
         margin-bottom: 10px;
+        color: #1e293b !important;
     }
     
     .details-label {
         font-weight: 600;
-        color: var(--primary-blue);
+        color: #000000 !important;
         margin-right: 10px;
     }
     
     .btn-download {
-        background: var(--danger-red);
-        color: white;
-        border: none;
+        background: rgba(244,63,94,0.15);
+        color: #fb7185;
+        border: 1px solid rgba(244,63,94,0.3);
         padding: 10px 20px;
         border-radius: 8px;
         font-weight: 600;
         transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
     }
     
     .btn-download:hover {
-        background: #DC2626;
+        background: rgba(244,63,94,0.25);
+        color: white;
         transform: translateY(-2px);
     }
     
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        background: white;
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
         border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
     
     .empty-state i {
         font-size: 5rem;
-        color: #D1D5DB;
+        color: var(--text-secondary);
         margin-bottom: 20px;
     }
 </style>

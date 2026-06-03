@@ -19,11 +19,12 @@ def create_hospital_logo():
     # Horizontal bar
     draw.rectangle([50, 85, 150, 115], fill=cross_color)
     
-    # Save the logo
-    logo_path = os.path.join('static', 'assets', 'hospital_logo.png')
+    # Save the logo using absolute path
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(BASE_DIR, 'static', 'assets', 'hospital_logo.png')
     os.makedirs(os.path.dirname(logo_path), exist_ok=True)
     img.save(logo_path)
-    print(f"✓ Hospital logo created at {logo_path}")
+    print(f"[OK] Hospital logo created at {logo_path}")
 
 if __name__ == '__main__':
     create_hospital_logo()

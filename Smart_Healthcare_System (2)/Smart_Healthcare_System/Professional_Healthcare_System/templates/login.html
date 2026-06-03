@@ -11,9 +11,15 @@
     
     .login-card {
         background: white;
+        color: #1e293b !important;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         padding: 40px;
+    }
+    
+    .login-card label {
+        color: #334155 !important;
+        font-weight: 500;
     }
     
     .login-header {
@@ -23,12 +29,12 @@
     
     .login-header i {
         font-size: 4rem;
-        color: var(--primary-blue);
+        color: var(--accent);
         margin-bottom: 15px;
     }
     
     .login-header h2 {
-        color: var(--primary-blue);
+        color: var(--accent);
         font-weight: 700;
     }
     
@@ -36,15 +42,23 @@
         border-radius: 10px;
         padding: 12px;
         border: 2px solid #E5E7EB;
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+    
+    .form-control::placeholder {
+        color: #94a3b8 !important;
     }
     
     .form-control:focus {
-        border-color: var(--accent-blue);
+        border-color: var(--accent);
         box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        background-color: #ffffff !important;
+        color: #1e293b !important;
     }
     
     .btn-login {
-        background: var(--primary-blue);
+        background: var(--accent);
         color: white;
         border: none;
         padding: 12px;
@@ -55,7 +69,7 @@
     }
     
     .btn-login:hover {
-        background: var(--accent-blue);
+        background: var(--accent-light);
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
     }
@@ -65,8 +79,12 @@
         margin-top: 20px;
     }
     
+    .signup-link p {
+        color: #475569 !important;
+    }
+    
     .signup-link a {
-        color: var(--accent-blue);
+        color: var(--accent);
         text-decoration: none;
         font-weight: 600;
     }

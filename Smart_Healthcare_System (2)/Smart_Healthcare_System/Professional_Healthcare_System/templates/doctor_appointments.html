@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Management — HealthCare Plus{% endblock %}
+{% block page_title %}<i class="fas fa-calendar-check me-2" style="color:var(--accent);"></i>Appointment Management{% endblock %}
+
+{% block extra_css %}
+<style>
+.appt-filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 24px;
+}
+.filter-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.4);
+    color: var(--accent-light);
+}
+.filter-btn.pending.active { background: rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.4); color:#fcd34d; }
+.filter-btn.confirmed.active { background: rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.4); color:#6ee7b7; }
+.filter-btn.cancelled.active { background: rgba(244,63,94,0.15); border-color:rgba(244,63,94,0.3); color:#fda4af; }
+
+.appt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+}
+
+.appt-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.appt-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 16px 0 0 16px;
+}
+.appt-card.pending::before { background: var(--amber); }
+.appt-card.confirmed::before { background: var(--emerald); }
+.appt-card.completed::before { background: var(--accent); }
+.appt-card.cancelled::before { background: var(--rose); }
+
+.appt-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    border-color: rgba(59,130,246,0.2);
+}
+
+.appt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.appt-patient {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.appt-avatar {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent-light);
+    border: 1px solid rgba(59,130,246,0.3);
+}
+
+.appt-name { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+.appt-type { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+
+.status-chip {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.status-chip.pending { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.status-chip.confirmed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.status-chip.completed { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.status-chip.cancelled { background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3); }
+
+.appt-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.appt-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.appt-detail-item i { color: var(--accent); font-size: 0.72rem; width: 12px; }
+.appt-detail-item strong { color: var(--text-primary); }
+
+.appt-notes {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    min-height: 40px;
+    font-style: italic;
+}
+
+.appt-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.appt-action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+.btn-confirm { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
+.btn-confirm:hover { background: rgba(16,185,129,0.25); }
+.btn-complete { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+.btn-complete:hover { background: rgba(59,130,246,0.25); }
+.btn-cancel { background: rgba(244,63,94,0.1); color: #fda4af; border-color: rgba(244,63,94,0.2); }
+.btn-cancel:hover { background: rgba(244,63,94,0.2); }
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.summary-item {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+.summary-num { font-size: 1.8rem; font-weight: 800; }
+.summary-label { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--text-secondary);
+    grid-column: 1/-1;
+}
+.empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; color: var(--accent); }
+.empty-state h4 { color: var(--text-primary); margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Summary -->
+<div class="stats-summary fade-in-up">
+    <div class="summary-item">
+        <div class="summary-num" style="color:var(--amber);">{{ appointments | selectattr('status', 'equalto', 'pending') | list | length }}</div>
+        <div class="summary-label">⏳ Pending</div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-num" style="color:var(--emerald);">{{ appointments | selectattr('status', 'equalto', 'confirmed') | list | length }}</div>
+        <div class="summary-label">✅ Confirmed</div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-num" style="color:var(--accent-light);">{{ appointments | selectattr('status', 'equalto', 'completed') | list | length }}</div>
+        <div class="summary-label">🏁 Completed</div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-num" style="color:var(--rose);">{{ appointments | selectattr('status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="summary-label">❌ Cancelled</div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="appt-filter-bar fade-in-up">
+    <button class="filter-btn active" onclick="filterAppts('all', this)">All ({{ appointments | length }})</button>
+    <button class="filter-btn pending" onclick="filterAppts('pending', this)">Pending</button>
+    <button class="filter-btn confirmed" onclick="filterAppts('confirmed', this)">Confirmed</button>
+    <button class="filter-btn" onclick="filterAppts('completed', this)">Completed</button>
+    <button class="filter-btn cancelled" onclick="filterAppts('cancelled', this)">Cancelled</button>
+    <input type="text" placeholder="🔍  Search patient..." style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:8px; padding:8px 14px; color:var(--text-primary); font-size:0.8rem; font-family:'Inter',sans-serif; outline:none; margin-left:auto; width:200px;" onkeyup="searchAppts(this.value)">
+</div>
+
+<!-- Appointments Grid -->
+<div class="appt-grid fade-in-up" id="apptGrid">
+    {% if appointments %}
+        {% for appt in appointments %}
+        <div class="appt-card {{ appt.status }}" data-status="{{ appt.status }}" data-search="{{ appt.patient_name | lower }} {{ appt.doctor_name | lower }} {{ appt.appt_type | lower }}">
+            <div class="appt-header">
+                <div class="appt-patient">
+                    <div class="appt-avatar">{{ appt.patient_name[0] | upper }}</div>
+                    <div>
+                        <div class="appt-name">{{ appt.patient_name }}</div>
+                        <div class="appt-type"><i class="fas fa-tag me-1"></i>{{ appt.appt_type | replace('_', ' ') | title }}</div>
+                    </div>
+                </div>
+                <span class="status-chip {{ appt.status }}">
+                    {% if appt.status == 'pending' %}⏳ Pending
+                    {% elif appt.status == 'confirmed' %}✅ Confirmed
+                    {% elif appt.status == 'completed' %}🏁 Done
+                    {% else %}❌ Cancelled{% endif %}
+                </span>
+            </div>
+
+            <div class="appt-details">
+                <div class="appt-detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <strong>{{ appt.appt_date }}</strong>
+                </div>
+                <div class="appt-detail-item">
+                    <i class="fas fa-clock"></i>
+                    <strong>{{ appt.appt_time }}</strong>
+                </div>
+                <div class="appt-detail-item">
+                    <i class="fas fa-user-md"></i>
+                    Dr. {{ appt.doctor_name }}
+                </div>
+                <div class="appt-detail-item">
+                    <i class="fas fa-id-badge"></i>
+                    #{{ appt.id }}
+                </div>
+            </div>
+
+            {% if appt.notes %}
+            <div class="appt-notes">
+                <i class="fas fa-sticky-note me-1"></i> {{ appt.notes }}
+            </div>
+            {% endif %}
+
+            {% if appt.current_medications %}
+            <div class="appt-notes" style="border-color:rgba(245,158,11,0.2); background:rgba(245,158,11,0.05);">
+                <i class="fas fa-pills me-1" style="color:var(--amber);"></i> Medications: {{ appt.current_medications }}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            {% if appt.status not in ['cancelled', 'completed'] %}
+            <div class="appt-actions">
+                {% if appt.status == 'pending' %}
+                <form action="{{ url_for('doctor_update_appointment', appt_id=appt.id) }}" method="POST" style="flex:1; display:contents;">
+                    <input type="hidden" name="status" value="confirmed">
+                    <button type="submit" class="appt-action-btn btn-confirm">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                </form>
+                {% endif %}
+                {% if appt.status == 'confirmed' %}
+                <form action="{{ url_for('doctor_update_appointment', appt_id=appt.id) }}" method="POST" style="flex:1; display:contents;">
+                    <input type="hidden" name="status" value="completed">
+                    <button type="submit" class="appt-action-btn btn-complete">
+                        <i class="fas fa-flag-checkered"></i> Mark Done
+                    </button>
+                </form>
+                {% endif %}
+                <form action="{{ url_for('doctor_update_appointment', appt_id=appt.id) }}" method="POST" style="flex:1; display:contents;">
+                    <input type="hidden" name="status" value="cancelled">
+                    <button type="submit" class="appt-action-btn btn-cancel" onclick="return confirm('Cancel this appointment?')">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div style="font-size:0.78rem; color:var(--text-secondary); text-align:center; padding:8px 0;">
+                <i class="fas fa-info-circle me-1"></i>
+                {% if appt.status == 'completed' %}Appointment completed on {{ appt.appt_date }}
+                {% else %}This appointment was cancelled{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <h4>No Appointments Yet</h4>
+        <p>Patient appointments will appear here once they book via the patient portal.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterAppts(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.appt-card').forEach(card => {
+        card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+    });
+}
+function searchAppts(q) {
+    const lq = q.toLowerCase();
+    document.querySelectorAll('.appt-card').forEach(card => {
+        card.style.display = card.dataset.search.includes(lq) ? '' : 'none';
+    });
+}
+document.querySelectorAll('.fade-in-up').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.07}s`;
+});
+</script>
+{% endblock %}

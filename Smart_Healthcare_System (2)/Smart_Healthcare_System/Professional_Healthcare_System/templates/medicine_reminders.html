@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Medicine Reminders - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .reminder-hero {
+        background: linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #fb923c 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .reminder-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .reminder-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 28px;
+    }
+
+    .med-input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    .med-input:focus {
+        border-color: #ea580c;
+        box-shadow: 0 0 0 4px rgba(234,88,12,0.12);
+        outline: none;
+    }
+
+    .btn-add-reminder {
+        background: linear-gradient(135deg, #7c2d12, #ea580c);
+        color: white;
+        border: none;
+        padding: 14px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-add-reminder:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(234,88,12,0.4);
+        color: white;
+    }
+
+    .reminder-item {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-left: 5px solid #ea580c;
+        transition: all 0.3s;
+    }
+    .reminder-item:hover { transform: translateX(4px); }
+    .reminder-item.inactive { border-left-color: #d1d5db; opacity: 0.6; }
+
+    .med-pill-icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        background: #fff7ed;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+
+    .reminder-time-badge {
+        background: #fff7ed;
+        color: #c2410c;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .freq-badge {
+        background: #f3f4f6;
+        color: #374151;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .btn-toggle {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .btn-toggle.active { background: #fee2e2; color: #991b1b; }
+    .btn-toggle.inactive { background: #d1fae5; color: #065f46; }
+
+    .btn-delete-rem {
+        background: none;
+        border: none;
+        color: #9ca3af;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: color 0.2s;
+        padding: 6px;
+    }
+    .btn-delete-rem:hover { color: #ef4444; }
+
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .schedule-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .schedule-label:hover { border-color: #ea580c; background: #fff7ed; }
+    .schedule-label input { accent-color: #ea580c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="reminder-hero">
+    <h2 class="fw-bold mb-1"><i class="fas fa-bell me-2"></i>Medicine Reminders</h2>
+    <p class="mb-0 opacity-75">Never miss a dose — set up personalized medication schedules</p>
+</div>
+
+<!-- Add Reminder Form -->
+<div class="reminder-card">
+    <h4 class="fw-bold mb-4" style="color:#c2410c;"><i class="fas fa-plus-circle me-2"></i>Add New Reminder</h4>
+    <form method="POST" action="{{ url_for('add_reminder') }}">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">💊 Medicine Name</label>
+                <input type="text" class="med-input" name="medicine_name" placeholder="e.g., Paracetamol 500mg" required>
+            </div>
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">📋 Dosage</label>
+                <input type="text" class="med-input" name="dosage" placeholder="e.g., 1 tablet after meals" required>
+            </div>
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">⏰ Reminder Time</label>
+                <input type="time" class="med-input" name="reminder_time" required>
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">🔄 Frequency</label>
+                <select class="med-input" name="frequency" required>
+                    <option value="daily">Every Day</option>
+                    <option value="twice_daily">Twice Daily</option>
+                    <option value="thrice_daily">Thrice Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="alternate">Alternate Days</option>
+                    <option value="custom">Custom Days</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-600 text-dark mb-2 d-block">📅 Start Date</label>
+                <input type="date" class="med-input" name="start_date" value="{{ today }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-600 text-dark mb-2 d-block">📅 End Date (Optional)</label>
+                <input type="date" class="med-input" name="end_date">
+            </div>
+            <div class="col-12">
+                <label class="fw-600 text-dark mb-2 d-block">📝 Notes / Instructions</label>
+                <input type="text" class="med-input" name="instructions" placeholder="e.g., Take with water, avoid on empty stomach...">
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-add-reminder">
+                <i class="fas fa-bell me-2"></i>Set Reminder
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Active Reminders -->
+<div class="reminder-card">
+    <h4 class="fw-bold mb-4" style="color:#c2410c;"><i class="fas fa-list me-2"></i>My Medicine Schedule</h4>
+    {% if reminders %}
+        {% for rem in reminders %}
+        <div class="reminder-item {% if not rem.is_active %}inactive{% endif %}">
+            <div class="med-pill-icon">💊</div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark">{{ rem.medicine_name }}</div>
+                <div class="text-muted" style="font-size:0.9rem;">{{ rem.dosage }}</div>
+                {% if rem.instructions %}
+                <div class="text-muted mt-1" style="font-size:0.82rem;"><i class="fas fa-info-circle me-1"></i>{{ rem.instructions }}</div>
+                {% endif %}
+                <div class="mt-2 d-flex flex-wrap gap-2">
+                    <span class="reminder-time-badge"><i class="fas fa-clock me-1"></i>{{ rem.reminder_time }}</span>
+                    <span class="freq-badge">{{ rem.frequency | replace('_', ' ') | title }}</span>
+                    {% if rem.end_date %}
+                    <span class="freq-badge text-danger"><i class="fas fa-calendar-times me-1"></i>Until {{ rem.end_date }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-2">
+                <form method="POST" action="{{ url_for('toggle_reminder', rem_id=rem.id) }}" style="display:inline;">
+                    <button type="submit" class="btn-toggle {% if rem.is_active %}active{% else %}inactive{% endif %}">
+                        {% if rem.is_active %}<i class="fas fa-pause me-1"></i>Pause{% else %}<i class="fas fa-play me-1"></i>Activate{% endif %}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('delete_reminder', rem_id=rem.id) }}" style="display:inline;">
+                    <button type="submit" class="btn-delete-rem" onclick="return confirm('Delete this reminder?')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-bell-slash fa-3x mb-3"></i>
+            <p>No medicine reminders set. Add your first medication schedule above!</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Notification Tips -->
+<div class="reminder-card" style="background: linear-gradient(135deg, #fff7ed, #ffedd5);">
+    <h5 class="fw-bold mb-3" style="color:#c2410c;"><i class="fas fa-lightbulb me-2"></i>Medication Tips</h5>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="d-flex align-items-start gap-3">
+                <span style="font-size:1.5rem;">💧</span>
+                <div>
+                    <div class="fw-600">Stay Hydrated</div>
+                    <small class="text-muted">Always take tablets with a full glass of water</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex align-items-start gap-3">
+                <span style="font-size:1.5rem;">⏰</span>
+                <div>
+                    <div class="fw-600">Be Consistent</div>
+                    <small class="text-muted">Take medicines at the same time every day</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex align-items-start gap-3">
+                <span style="font-size:1.5rem;">🚫</span>
+                <div>
+                    <div class="fw-600">Never Skip</div>
+                    <small class="text-muted">Missing doses reduces medication effectiveness</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

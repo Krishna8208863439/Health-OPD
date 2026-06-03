@@ -36,16 +36,22 @@
     }
     
     .result-card {
-        background: white;
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary) !important;
         border-radius: 20px;
         padding: 30px;
         margin-bottom: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .result-card h4, .result-card h2 {
+        color: var(--text-primary) !important;
     }
     
     .hospital-card {
-        background: white;
-        border: 2px solid #E5E7EB;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--glass-border);
         border-radius: 15px;
         padding: 20px;
         margin-bottom: 15px;
@@ -53,9 +59,9 @@
     }
     
     .hospital-card:hover {
-        border-color: var(--accent-blue);
+        border-color: rgba(59,130,246,0.3);
         transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     
     .hospital-badge {
@@ -68,35 +74,169 @@
     }
     
     .badge-government {
-        background: #DBEAFE;
-        color: #1E40AF;
+        background: rgba(59,130,246,0.2);
+        color: #93c5fd;
+        border: 1px solid rgba(59,130,246,0.3);
     }
     
     .badge-private {
-        background: #FEF3C7;
-        color: #92400E;
+        background: rgba(245,158,11,0.2);
+        color: #fcd34d;
+        border: 1px solid rgba(245,158,11,0.3);
     }
     
     .btn-maps {
-        background: #4285F4;
-        color: white;
-        border: none;
+        background: rgba(59,130,246,0.15);
+        border: 1px solid rgba(59,130,246,0.3);
+        color: #93c5fd;
         padding: 8px 15px;
         border-radius: 8px;
         font-size: 0.9rem;
         margin-right: 10px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
     
     .btn-maps:hover {
-        background: #357AE8;
+        background: rgba(59,130,246,0.25);
+        color: white;
     }
     
     .recommendation-item {
         padding: 12px;
-        background: #F9FAFB;
+        background: rgba(255,255,255,0.03);
         border-left: 4px solid {{ health_risk.color }};
         margin-bottom: 10px;
         border-radius: 5px;
+    }
+    
+    /* Interactive Treatment timeline & Dosage Planner */
+    .dosage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .dosage-time-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .dosage-time-card:hover {
+        background: rgba(59,130,246,0.1);
+        border-color: rgba(59,130,246,0.3);
+    }
+    .dosage-time-card.taken {
+        background: rgba(16,185,129,0.15);
+        border-color: rgba(16,185,129,0.4);
+        color: #34d399;
+    }
+    .dosage-icon {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .recovery-timeline {
+        position: relative;
+        padding-left: 30px;
+        margin: 20px 0;
+    }
+    .recovery-timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px; top: 0; bottom: 0;
+        width: 2px;
+        background: rgba(255,255,255,0.1);
+    }
+    .timeline-node {
+        position: relative;
+        margin-bottom: 24px;
+    }
+    .timeline-node::before {
+        content: '';
+        position: absolute;
+        left: -27px; top: 4px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: var(--text-secondary);
+        border: 2px solid #0f172a;
+        z-index: 2;
+    }
+    .timeline-node.completed::before {
+        background: var(--emerald);
+    }
+    .timeline-node.active::before {
+        background: var(--accent);
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+    }
+    .timeline-header {
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+    .timeline-desc {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* AI Assistant Styles */
+    .ai-chat-box {
+        background: rgba(15,23,42,0.4);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 14px;
+    }
+    .ai-message {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .ai-avatar {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--cyan));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem;
+        color: white;
+        flex-shrink: 0;
+    }
+    .ai-bubble {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        max-width: 85%;
+    }
+    .ai-chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .ai-chip-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 0.78rem;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .ai-chip-btn:hover {
+        background: rgba(59,130,246,0.15);
+        border-color: rgba(59,130,246,0.3);
+        color: var(--accent-light);
     }
 </style>
 {% endblock %}
@@ -160,11 +300,88 @@
         <div class="row">
             {% for medicine in medicines %}
             <div class="col-md-6 mb-2">
-                <div class="p-3 bg-light rounded">
-                    <i class="fas fa-capsules text-success"></i> {{ medicine }}
+                <div class="p-3 rounded" style="background: rgba(255,255,255,0.02) !important; border: 1px solid var(--glass-border); color: var(--text-primary);">
+                    <i class="fas fa-capsules text-success" style="color:var(--emerald) !important;"></i> {{ medicine }}
                 </div>
             </div>
             {% endfor %}
+        </div>
+    </div>
+
+    <!-- Interactive Medicine Dosage & Schedule Tracker -->
+    <div class="result-card">
+        <h4><i class="fas fa-calendar-alt" style="color:var(--accent);"></i> Interactive Medicine Dosage Planner</h4>
+        <p class="text-muted mb-3" style="font-size: 0.8rem; color: var(--text-secondary) !important;">Tap each interval below to log your dose intake for today.</p>
+        <div class="dosage-grid">
+            <div class="dosage-time-card" onclick="toggleDose(this)">
+                <span class="dosage-icon">🌅</span>
+                <strong>Morning</strong>
+                <div style="font-size:0.75rem; margin-top:4px; color: var(--text-secondary);">After Breakfast</div>
+            </div>
+            <div class="dosage-time-card" onclick="toggleDose(this)">
+                <span class="dosage-icon">☀️</span>
+                <strong>Afternoon</strong>
+                <div style="font-size:0.75rem; margin-top:4px; color: var(--text-secondary);">Post Lunch</div>
+            </div>
+            <div class="dosage-time-card" onclick="toggleDose(this)">
+                <span class="dosage-icon">🌇</span>
+                <strong>Evening</strong>
+                <div style="font-size:0.75rem; margin-top:4px; color: var(--text-secondary);">Evening Snack</div>
+            </div>
+            <div class="dosage-time-card" onclick="toggleDose(this)">
+                <span class="dosage-icon">🌙</span>
+                <strong>Night</strong>
+                <div style="font-size:0.75rem; margin-top:4px; color: var(--text-secondary);">Before Bed</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Interactive Recovery Timeline -->
+        <div class="col-md-6">
+            <div class="result-card">
+                <h4><i class="fas fa-tasks" style="color:var(--cyan);"></i> Patient Recovery Path</h4>
+                <div class="recovery-timeline">
+                    <div class="timeline-node completed">
+                        <div class="timeline-header">Step 1: Symptom Analysis Logged</div>
+                        <div class="timeline-desc">Assessed with {{ prediction.risk_percentage }}% risk score for {{ prediction.disease }}.</div>
+                    </div>
+                    <div class="timeline-node active">
+                        <div class="timeline-header">Step 2: Start Treatment Plan</div>
+                        <div class="timeline-desc">Initiate the suggested medication schedule and follow doctor advice.</div>
+                    </div>
+                    <div class="timeline-node">
+                        <div class="timeline-header">Step 3: Track Health Vitals Daily</div>
+                        <div class="timeline-desc">Monitor temperature, pulse, and oxygen saturation inside patient vitals portal.</div>
+                    </div>
+                    <div class="timeline-node">
+                        <div class="timeline-header">Step 4: Clinical Consultation</div>
+                        <div class="timeline-desc">If symptoms do not improve within 3-5 days, book an appointment with our doctors.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Chat Widget -->
+        <div class="col-md-6">
+            <div class="result-card">
+                <h4><i class="fas fa-robot" style="color:var(--violet);"></i> Virtual AI Health Assistant</h4>
+                <div class="ai-chat-box">
+                    <div id="aiChatMessages" style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                        <div class="ai-message">
+                            <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                            <div class="ai-bubble">
+                                Hello! I'm your virtual medical assistant. I've compiled answers regarding your predicted diagnosis of <strong>{{ prediction.disease }}</strong>. Select one of the quick questions below to learn more!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-chips">
+                        <button class="ai-chip-btn" onclick="askAI('symptoms')">What are common symptoms?</button>
+                        <button class="ai-chip-btn" onclick="askAI('diet')">What diet changes are recommended?</button>
+                        <button class="ai-chip-btn" onclick="askAI('doctor')">When should I see a doctor?</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -176,18 +393,18 @@
             <div class="hospital-card">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h5 class="mb-2">{{ hospital.name }}</h5>
+                        <h5 class="mb-2" style="color:var(--text-primary);">{{ hospital.name }}</h5>
                         <span class="hospital-badge {% if hospital.type == 'Government' %}badge-government{% else %}badge-private{% endif %}">
                             {{ hospital.type }}
                         </span>
                         {% for spec in hospital.specialty[:3] %}
-                        <span class="badge bg-info text-dark">{{ spec }}</span>
+                        <span class="badge bg-info text-dark" style="background-color: rgba(6,182,212,0.2) !important; color:#22d3ee !important; border:1px solid rgba(6,182,212,0.3); font-weight:600;">{{ spec }}</span>
                         {% endfor %}
-                        <p class="mt-2 mb-1"><i class="fas fa-map-marker-alt"></i> {{ hospital.address }}</p>
-                        <p class="mb-1"><i class="fas fa-phone"></i> {{ hospital.phone }}</p>
-                        <p class="mb-0">
+                        <p class="mt-2 mb-1" style="color:var(--text-secondary);"><i class="fas fa-map-marker-alt" style="color:var(--accent);"></i> {{ hospital.address }}</p>
+                        <p class="mb-1" style="color:var(--text-secondary);"><i class="fas fa-phone"></i> {{ hospital.phone }}</p>
+                        <p class="mb-0" style="color:var(--text-secondary);">
                             <i class="fas fa-route"></i> {{ hospital.distance }} km away
-                            <i class="fas fa-star text-warning ms-3"></i> {{ hospital.rating }}/5.0
+                            <i class="fas fa-star text-warning ms-3" style="color:var(--amber) !important;"></i> {{ hospital.rating }}/5.0
                         </p>
                     </div>
                 </div>
@@ -202,18 +419,66 @@
             </div>
             {% endfor %}
         {% else %}
-            <p class="text-muted">No hospitals found matching your criteria. Try adjusting filters.</p>
+            <p class="text-muted" style="color:var(--text-secondary) !important;">No hospitals found matching your criteria. Try adjusting filters.</p>
         {% endif %}
     </div>
     
     <!-- Download PDF -->
     <div class="text-center">
-        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg">
+        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg" style="background:var(--emerald); border:none; box-shadow:0 4px 15px rgba(16,185,129,0.3); font-weight:600;">
             <i class="fas fa-download"></i> Download Medical Report (PDF)
         </a>
-        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary btn-lg ms-2">
+        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary btn-lg ms-2" style="background:var(--accent); border:none; box-shadow:0 4px 15px rgba(59,130,246,0.3); font-weight:600;">
             <i class="fas fa-home"></i> Back to Dashboard
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleDose(card) {
+        card.classList.toggle('taken');
+        const isTaken = card.classList.contains('taken');
+        if (isTaken) {
+            card.style.transform = "scale(0.95)";
+            setTimeout(() => card.style.transform = "", 150);
+        }
+    }
+
+    const AI_RESPONSES = {
+        symptoms: "Common symptoms for <strong>{{ prediction.disease }}</strong> include the symptoms you reported. Standard clinical presentations typically consist of mild to moderate fatigue, localized discomfort, and fever or cold-like symptoms. If you experience chest pain, short breathing, or persistent fever, notify your physician.",
+        diet: "While recovering from <strong>{{ prediction.disease }}</strong>, focus on hot liquids, plenty of clean water, fresh fruit juices, and light non-processed vegetables. Avoid heavy dairy, spicy foods, alcohol, and excessive sugar to help your immune system recover faster.",
+        doctor: "Given a severity assessment of <strong>{{ prediction.severity }}</strong>, you should monitor symptoms closely. If they worsen or don't begin resolving in 48-72 hours, please schedule a virtual or physical visit with a certified doctor."
+    };
+
+    function askAI(topic) {
+        const chat = document.getElementById('aiChatMessages');
+        let userMsg = "";
+        if (topic === 'symptoms') userMsg = "What are common symptoms?";
+        else if (topic === 'diet') userMsg = "What diet changes are recommended?";
+        else if (topic === 'doctor') userMsg = "When should I see a doctor?";
+
+        // Append user question
+        chat.innerHTML += `
+            <div class="ai-message" style="justify-content: flex-end;">
+                <div class="ai-bubble user-bubble">${userMsg}</div>
+            </div>
+        `;
+
+        // Scroll chat
+        chat.scrollTop = chat.scrollHeight;
+
+        // Type response
+        setTimeout(() => {
+            chat.innerHTML += `
+                <div class="ai-message">
+                    <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="ai-bubble">${AI_RESPONSES[topic]}</div>
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+        }, 400);
+    }
+</script>
 {% endblock %}

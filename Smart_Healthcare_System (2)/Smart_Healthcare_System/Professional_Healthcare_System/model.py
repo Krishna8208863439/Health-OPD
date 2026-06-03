@@ -27,6 +27,6 @@ def train_model():
     )
     
     accuracy = model.score(X_test, y_test)
-    print(f"✓ Model trained successfully with accuracy: {accuracy:.2%}")
+    print(f"[OK] Model trained successfully with accuracy: {accuracy:.2%}")
     
     return model, disease_map, accuracy

@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Notes & Prescriptions - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+
+    .rx-hero {
+        background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 60%, #38bdf8 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .rx-hero::before {
+        content: '';
+        position: absolute; top: -50px; right: -50px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+    }
+
+    .rx-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 28px;
+    }
+
+    .rx-input {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    .rx-input:focus {
+        border-color: #0369a1;
+        box-shadow: 0 0 0 4px rgba(3,105,161,0.12);
+        outline: none;
+    }
+
+    .btn-save-rx {
+        background: linear-gradient(135deg, #0c4a6e, #0369a1);
+        color: white;
+        border: none;
+        padding: 14px 50px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-save-rx:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(3,105,161,0.4);
+        color: white;
+    }
+
+    /* Prescription Card */
+    .prescription-card {
+        border-radius: 20px;
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s;
+    }
+    .prescription-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    .rx-card-header {
+        background: linear-gradient(135deg, #0c4a6e, #0369a1);
+        color: white;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .rx-card-body {
+        padding: 20px 24px;
+        background: white;
+    }
+
+    .med-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: #f8faff;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .med-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        background: #0369a1;
+        flex-shrink: 0;
+    }
+
+    .patient-search-result {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    .patient-search-result:hover {
+        border-color: #0369a1;
+        background: #f0f9ff;
+    }
+
+    .filter-btn {
+        padding: 6px 18px;
+        border: 2px solid #e5e7eb;
+        border-radius: 20px;
+        background: white;
+        color: #6b7280;
+        font-weight: 500;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+        border-color: #0369a1;
+        background: #0369a1;
+        color: white;
+    }
+
+    .add-med-btn {
+        background: #f0f9ff;
+        border: 2px dashed #0369a1;
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        color: #0369a1;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+    .add-med-btn:hover { background: #e0f2fe; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="rx-hero">
+    <h2 class="fw-bold mb-1"><i class="fas fa-prescription me-2"></i>Doctor Notes & Prescriptions</h2>
+    <p class="mb-0 opacity-75">Write and manage patient prescriptions, notes and instructions</p>
+</div>
+
+<!-- Write Prescription -->
+<div class="rx-card">
+    <h4 class="fw-bold mb-4" style="color:#0c4a6e;"><i class="fas fa-pen-nib me-2"></i>Write New Prescription</h4>
+    <form method="POST" action="{{ url_for('save_prescription') }}" id="rxForm">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">👤 Patient Name / ID</label>
+                <input type="text" class="rx-input" name="patient_name_search" id="patientSearch" 
+                       placeholder="Search patient name or ID..." autocomplete="off"
+                       list="patientList" required>
+                <datalist id="patientList">
+                    {% for p in all_patients %}
+                    <option value="{{ p.full_name }} (ID: {{ p.id }})">{{ p.email }}</option>
+                    {% endfor %}
+                </datalist>
+                <input type="hidden" name="patient_id" id="patientIdField">
+            </div>
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">🩺 Diagnosis</label>
+                <input type="text" class="rx-input" name="diagnosis" placeholder="e.g., Viral Fever, Hypertension..." required>
+            </div>
+            <div class="col-md-4">
+                <label class="fw-600 text-dark mb-2 d-block">📅 Follow-up Date</label>
+                <input type="date" class="rx-input" name="followup_date" min="{{ today }}">
+            </div>
+        </div>
+
+        <!-- Medications -->
+        <div class="mb-4">
+            <label class="fw-bold text-dark mb-3 d-block">💊 Medications</label>
+            <div id="medicationsList">
+                <div class="row g-2 medication-row mb-2">
+                    <div class="col-md-3"><input type="text" class="rx-input" name="med_name[]" placeholder="Medicine name" required></div>
+                    <div class="col-md-2"><input type="text" class="rx-input" name="med_dosage[]" placeholder="Dosage (e.g. 500mg)"></div>
+                    <div class="col-md-2">
+                        <select class="rx-input" name="med_frequency[]">
+                            <option value="once_daily">Once Daily</option>
+                            <option value="twice_daily">Twice Daily</option>
+                            <option value="thrice_daily">Thrice Daily</option>
+                            <option value="as_needed">As Needed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2"><input type="text" class="rx-input" name="med_duration[]" placeholder="Duration (e.g. 5 days)"></div>
+                    <div class="col-md-3"><input type="text" class="rx-input" name="med_instructions[]" placeholder="Instructions (e.g. after meals)"></div>
+                </div>
+            </div>
+            <div class="add-med-btn" onclick="addMedication()">
+                <i class="fas fa-plus me-2"></i>Add Another Medication
+            </div>
+        </div>
+
+        <!-- Doctor Notes -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">📋 Clinical Notes</label>
+                <textarea class="rx-input" name="clinical_notes" rows="4" placeholder="Patient symptoms, examination findings, observations..."></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">⚠️ Special Instructions</label>
+                <textarea class="rx-input" name="special_instructions" rows="4" placeholder="Dietary restrictions, lifestyle advice, precautions..."></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">🔬 Tests Ordered</label>
+                <input type="text" class="rx-input" name="tests_ordered" placeholder="e.g., CBC, LFT, Chest X-Ray...">
+            </div>
+            <div class="col-md-6">
+                <label class="fw-600 text-dark mb-2 d-block">🔴 Severity Assessment</label>
+                <select class="rx-input" name="severity_assessment" required>
+                    <option value="mild">🟢 Mild – Outpatient care</option>
+                    <option value="moderate">🟡 Moderate – Monitoring needed</option>
+                    <option value="severe">🔴 Severe – Hospitalization advised</option>
+                    <option value="critical">⚫ Critical – Immediate intervention</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-save-rx">
+                <i class="fas fa-save me-2"></i>Save Prescription
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Prescriptions List -->
+<div class="rx-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0" style="color:#0c4a6e;"><i class="fas fa-list me-2"></i>All Prescriptions</h4>
+        <div class="d-flex gap-2">
+            <button class="filter-btn active" onclick="filterRx('all', this)">All</button>
+            <button class="filter-btn" onclick="filterRx('mild', this)">🟢 Mild</button>
+            <button class="filter-btn" onclick="filterRx('moderate', this)">🟡 Moderate</button>
+            <button class="filter-btn" onclick="filterRx('severe', this)">🔴 Severe</button>
+        </div>
+    </div>
+
+    {% if prescriptions %}
+        {% for rx in prescriptions %}
+        <div class="prescription-card" data-severity="{{ rx.severity_assessment }}">
+            <div class="rx-card-header">
+                <div>
+                    <div class="fw-bold fs-5">{{ rx.patient_name }}</div>
+                    <div class="opacity-75" style="font-size:0.85rem;">Diagnosis: {{ rx.diagnosis }}</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold">{{ rx.timestamp[:10] }}</div>
+                    <span class="badge {% if rx.severity_assessment == 'mild' %}bg-success{% elif rx.severity_assessment == 'moderate' %}bg-warning text-dark{% elif rx.severity_assessment == 'severe' %}bg-danger{% else %}bg-dark{% endif %} mt-1">
+                        {{ rx.severity_assessment | title }}
+                    </span>
+                </div>
+            </div>
+            <div class="rx-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="fw-600 mb-2 text-dark">💊 Medications:</div>
+                        {% if rx.medications %}
+                            {% for med in rx.medications.split('|') %}
+                            <div class="med-row"><div class="med-dot"></div>{{ med.strip() }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if rx.clinical_notes %}
+                        <div class="fw-600 mb-2 text-dark">📋 Notes:</div>
+                        <p class="text-muted" style="font-size:0.9rem;">{{ rx.clinical_notes }}</p>
+                        {% endif %}
+                        {% if rx.special_instructions %}
+                        <div class="fw-600 mb-2 text-dark">⚠️ Instructions:</div>
+                        <p class="text-muted" style="font-size:0.9rem;">{{ rx.special_instructions }}</p>
+                        {% endif %}
+                        {% if rx.followup_date %}
+                        <div class="mt-2"><span class="badge bg-info">📅 Follow-up: {{ rx.followup_date }}</span></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-file-prescription fa-3x mb-3"></i>
+            <p>No prescriptions written yet. Create your first prescription above!</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function addMedication() {
+    const container = document.getElementById('medicationsList');
+    const row = document.createElement('div');
+    row.className = 'row g-2 medication-row mb-2';
+    row.innerHTML = `
+        <div class="col-md-3"><input type="text" class="rx-input" name="med_name[]" placeholder="Medicine name" required></div>
+        <div class="col-md-2"><input type="text" class="rx-input" name="med_dosage[]" placeholder="Dosage"></div>
+        <div class="col-md-2">
+            <select class="rx-input" name="med_frequency[]">
+                <option value="once_daily">Once Daily</option>
+                <option value="twice_daily">Twice Daily</option>
+                <option value="thrice_daily">Thrice Daily</option>
+                <option value="as_needed">As Needed</option>
+            </select>
+        </div>
+        <div class="col-md-2"><input type="text" class="rx-input" name="med_duration[]" placeholder="Duration"></div>
+        <div class="col-md-2"><input type="text" class="rx-input" name="med_instructions[]" placeholder="Instructions"></div>
+        <div class="col-md-1"><button type="button" onclick="this.closest('.medication-row').remove()" class="btn btn-sm btn-danger mt-1">✕</button></div>
+    `;
+    container.appendChild(row);
+}
+
+function filterRx(severity, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.prescription-card').forEach(card => {
+        if (severity === 'all' || card.dataset.severity === severity) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

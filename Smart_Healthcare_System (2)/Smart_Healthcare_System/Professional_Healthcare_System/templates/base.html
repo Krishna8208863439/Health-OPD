@@ -4,158 +4,604 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}HealthCare Plus Medical Center{% endblock %}</title>
+    <meta name="description" content="Smart AI-powered healthcare system with disease prediction, patient management, and advanced analytics.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-blue: #1E3A8A;
-            --accent-blue: #3B82F6;
-            --success-green: #10B981;
-            --warning-orange: #F59E0B;
-            --danger-red: #EF4444;
-            --light-bg: #F3F4F6;
-            --white: #FFFFFF;
+            --primary: #0f172a;
+            --primary-800: #1e293b;
+            --primary-700: #334155;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --accent-glow: rgba(59,130,246,0.3);
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --violet: #8b5cf6;
+            --sidebar-w: 260px;
+            --glass: rgba(255,255,255,0.05);
+            --glass-border: rgba(255,255,255,0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --card-bg: rgba(30,41,59,0.9);
+            --surface: #1e293b;
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        
-        .navbar {
-            background: var(--primary-blue) !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
         }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--white) !important;
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: var(--sidebar-w);
+            background: rgba(15,23,42,0.95);
+            border-right: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
-        
-        .navbar-brand i {
-            color: var(--accent-blue);
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--primary-700); border-radius: 2px; }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        .nav-link {
-            color: rgba(255,255,255,0.9) !important;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .nav-link:hover {
-            color: var(--white) !important;
-            transform: translateY(-2px);
-        }
-        
-        .btn-logout {
-            background: var(--danger-red);
+
+        .brand-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
             color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 5px;
-            transition: all 0.3s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px var(--accent-glow);
         }
-        
-        .btn-logout:hover {
-            background: #DC2626;
+
+        .brand-text h6 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .brand-text span {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        /* Live clock */
+        .sidebar-clock {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            text-align: center;
+        }
+        .clock-time {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-light);
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+        .clock-date {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Nav */
+        .sidebar-nav { padding: 16px 12px; flex: 1; }
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            padding: 8px 10px 6px;
+            margin-top: 4px;
+        }
+
+        .nav-item-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .nav-item-link:hover {
+            background: var(--glass);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .nav-item-link.active {
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(6,182,212,0.1));
+            color: var(--accent-light);
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        .nav-item-link.active .nav-icon {
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Doctor profile in sidebar */
+        .sidebar-profile {
+            padding: 16px 20px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-avatar {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--violet));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .profile-info { flex: 1; min-width: 0; }
+        .profile-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .profile-role {
+            font-size: 0.68rem;
+            color: var(--accent-light);
+        }
+
+        .btn-logout-sidebar {
+            background: rgba(244,63,94,0.15);
+            border: 1px solid rgba(244,63,94,0.3);
+            color: #fb7185;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-logout-sidebar:hover {
+            background: rgba(244,63,94,0.25);
+            color: #f43f5e;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            padding: 0;
+        }
+
+        /* Top bar */
+        .topbar {
+            background: rgba(15,23,42,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+        .topbar-badge {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--emerald);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
+        }
+
+        /* ===== PAGE CONTENT AREA ===== */
+        .page-content { padding: 28px; }
+
+        /* ===== CARDS ===== */
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(59,130,246,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             transform: translateY(-2px);
         }
-        
+
+        /* ===== ALERTS ===== */
         .alert {
             border-radius: 10px;
             border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.875rem;
         }
-        
-        .container-main {
-            margin-top: 30px;
-            margin-bottom: 30px;
+
+        .alert-success {
+            background: rgba(16,185,129,0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16,185,129,0.3);
         }
-        
+        .alert-danger {
+            background: rgba(244,63,94,0.15);
+            color: #fda4af;
+            border: 1px solid rgba(244,63,94,0.3);
+        }
+        .alert-info {
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+        .alert-warning {
+            background: rgba(245,158,11,0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+
+        /* ===== FOOTER ===== */
         .footer {
-            background: var(--primary-blue);
-            color: white;
-            padding: 20px 0;
-            margin-top: 50px;
+            background: rgba(15,23,42,0.8);
+            border-top: 1px solid var(--glass-border);
+            padding: 20px 28px;
             text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-left: var(--sidebar-w);
         }
+
+        /* ===== MOBILE HAMBURGER ===== */
+        .hamburger {
+            display: none;
+            background: none;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content, .footer {
+                margin-left: 0;
+            }
+            .hamburger { display: block; }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--primary); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-700); border-radius: 3px; }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up { animation: fadeInUp 0.5s ease forwards; }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        {% block extra_css %}{% endblock %}
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-hospital"></i> HealthCare Plus
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.role == 'doctor' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('doctor_dashboard') }}">
-                            <i class="fas fa-chart-line"></i> Dashboard
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('patient_dashboard') }}">
-                            <i class="fas fa-home"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('symptom_entry') }}">
-                            <i class="fas fa-notes-medical"></i> Check Symptoms
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('history') }}">
-                            <i class="fas fa-history"></i> History
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="fas fa-user-circle"></i> {{ current_user.full_name }}
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-logout" href="{{ url_for('logout') }}">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
-                </ul>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-hospital-alt"></i>
+            </div>
+            <div class="brand-text">
+                <h6>HealthCare Plus</h6>
+                <span>Medical Center</span>
             </div>
         </div>
-    </nav>
+
+        <!-- Live Clock -->
+        <div class="sidebar-clock">
+            <div class="clock-time" id="liveClock">--:--:--</div>
+            <div class="clock-date" id="liveDate">Loading...</div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav">
+            {% if current_user.role == 'doctor' %}
+            <div class="nav-section-label">Main</div>
+            <a href="{{ url_for('doctor_dashboard') }}" class="nav-item-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                Dashboard
+            </a>
+            <a href="{{ url_for('doctor_prescriptions') }}" class="nav-item-link {% if request.endpoint == 'doctor_prescriptions' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-file-prescription"></i></span>
+                Prescriptions
+            </a>
+            <a href="{{ url_for('doctor_appointments') }}" class="nav-item-link {% if request.endpoint == 'doctor_appointments' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                Appointments
+                <span id="apptBadge" style="margin-left:auto; background:rgba(244,63,94,0.2); color:#fb7185; border:1px solid rgba(244,63,94,0.3); border-radius:10px; padding:2px 7px; font-size:0.7rem; display:none;"></span>
+            </a>
+
+            <div class="nav-section-label" style="margin-top:12px;">Analytics</div>
+            <a href="{{ url_for('doctor_patient_list') }}" class="nav-item-link {% if request.endpoint == 'doctor_patient_list' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-users"></i></span>
+                Patient List
+            </a>
+
+            {% else %}
+            <div class="nav-section-label">Main</div>
+            <a href="{{ url_for('patient_dashboard') }}" class="nav-item-link {% if request.endpoint == 'patient_dashboard' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-home"></i></span>
+                Dashboard
+            </a>
+            <a href="{{ url_for('symptom_entry') }}" class="nav-item-link {% if request.endpoint == 'symptom_entry' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-stethoscope"></i></span>
+                Check Symptoms
+            </a>
+            <a href="{{ url_for('history') }}" class="nav-item-link {% if request.endpoint == 'history' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-history"></i></span>
+                History
+            </a>
+
+            <div class="nav-section-label" style="margin-top:12px;">Health Tools</div>
+            <a href="{{ url_for('vitals_tracker') }}" class="nav-item-link {% if request.endpoint == 'vitals_tracker' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-heartbeat"></i></span>
+                Vitals Tracker
+            </a>
+            <a href="{{ url_for('appointments') }}" class="nav-item-link {% if request.endpoint == 'appointments' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
+                Appointments
+            </a>
+            <a href="{{ url_for('medicine_reminders') }}" class="nav-item-link {% if request.endpoint == 'medicine_reminders' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-pills"></i></span>
+                Medicine Reminders
+            </a>
+            <a href="{{ url_for('calculate_bmi') }}" class="nav-item-link {% if request.endpoint == 'calculate_bmi' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-weight"></i></span>
+                BMI Calculator
+            </a>
+
+            <div class="nav-section-label" style="margin-top:12px;">Account</div>
+            <a href="{{ url_for('edit_profile') }}" class="nav-item-link {% if request.endpoint == 'edit_profile' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-user-edit"></i></span>
+                Edit Profile
+            </a>
+            <a href="{{ url_for('emergency_sos') }}" class="nav-item-link" style="color:#fb7185;">
+                <span class="nav-icon"><i class="fas fa-ambulance"></i></span>
+                Emergency SOS
+            </a>
+            {% endif %}
+        </nav>
+
+        <!-- Profile footer -->
+        <div class="sidebar-profile">
+            <div class="profile-avatar">
+                {{ current_user.full_name[0] | upper }}
+            </div>
+            <div class="profile-info">
+                <div class="profile-name">{{ current_user.full_name }}</div>
+                <div class="profile-role">{{ 'Doctor' if current_user.role == 'doctor' else 'Patient' }}</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-logout-sidebar" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </aside>
     {% endif %}
 
-    <div class="container container-main">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    <i class="fas fa-info-circle"></i> {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Main Content -->
+    <div class="main-content" {% if not current_user.is_authenticated %}style="margin-left:0;"{% endif %}>
+        {% if current_user.is_authenticated %}
+        <!-- Topbar -->
+        <div class="topbar">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <button class="hamburger" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-title">{% block page_title %}HealthCare Plus{% endblock %}</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-badge">
+                    <div class="status-dot"></div>
+                    System Online
                 </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                <div class="topbar-badge" style="color: var(--text-primary);">
+                    <i class="fas fa-user-circle" style="color:var(--accent);"></i>
+                    {{ current_user.full_name }}
+                </div>
+                <a href="{{ url_for('logout') }}" class="topbar-badge" style="color: #fb7185; text-decoration: none; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.1); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        {% endif %}
 
-        {% block content %}{% endblock %}
+        <!-- Flash Messages -->
+        <div style="padding: 0 28px; margin-top: 16px;">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1);"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
     </div>
 
-    <div class="footer">
-        <p><i class="fas fa-hospital"></i> HealthCare Plus Medical Center &copy; 2026</p>
-        <p>24/7 Emergency Services | <i class="fas fa-phone"></i> +1-800-HEALTH-911</p>
-    </div>
+    {% if current_user.is_authenticated %}
+    <!-- Footer -->
+    <footer class="footer">
+        <span><i class="fas fa-hospital-alt me-2" style="color:var(--accent);"></i>HealthCare Plus Medical Center &copy; 2026</span>
+        &nbsp;&bull;&nbsp;
+        <span>24/7 Emergency: <strong style="color:var(--rose);">+1-800-HEALTH-911</strong></span>
+    </footer>
+    {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Live Clock (12-hour format with AM/PM)
+        function updateClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('liveClock');
+            const dateEl = document.getElementById('liveDate');
+            if (!timeEl) return;
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const h = String(hours).padStart(2, '0');
+            timeEl.textContent = `${h}:${minutes}:${seconds} ${ampm}`;
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            dateEl.textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Mobile sidebar
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('sidebarOverlay');
+            sb.classList.toggle('open');
+            ov.classList.toggle('show');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        // Appointment badge for doctors
+        {% if current_user.is_authenticated and current_user.role == 'doctor' %}
+        fetch('/doctor/pending-count')
+            .then(r => r.json())
+            .then(d => {
+                if (d.count > 0) {
+                    const b = document.getElementById('apptBadge');
+                    if (b) { b.textContent = d.count; b.style.display = 'inline'; }
+                }
+            }).catch(() => {});
+        {% endif %}
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block title %}Health Vitals Tracker - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body { font-family: 'Inter', sans-serif; }
+
+    .vitals-hero {
+        background: linear-gradient(135deg, #0f2c6b 0%, #1d4ed8 50%, #0ea5e9 100%);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .vitals-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px; right: -50px;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+    .vitals-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30px; right: 80px;
+        width: 120px; height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+
+    .vitals-form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .vitals-form-card h4 {
+        color: #000000 !important;
+    }
+
+    .vital-input-group {
+        background: #f8faff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 2px solid #e8f0fe;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    .vital-input-group:hover {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+    }
+    .vital-input-group label {
+        font-weight: 600;
+        color: #000000 !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .vital-input-group .icon-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+    .vital-input-group input, .vital-input-group select {
+        background-color: #ffffff !important;
+        border: 2px solid #e5e7eb !important;
+        color: #000000 !important;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .vital-input-group input:focus, .vital-input-group select:focus {
+        background-color: #ffffff !important;
+        border-color: #3B82F6 !important;
+        color: #000000 !important;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+        outline: none;
+    }
+    .vital-input-group select option {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+    .vital-input-group small {
+        color: #475569 !important;
+    }
+
+    .btn-log-vitals {
+        background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+        color: white;
+        border: none;
+        padding: 14px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+        letter-spacing: 0.5px;
+    }
+    .btn-log-vitals:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(29,78,216,0.4);
+        color: white;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
+    }
+    .chart-card h5 {
+        font-weight: 700;
+        color: #000000 !important;
+        margin-bottom: 20px;
+    }
+
+    .vitals-history-table {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+    }
+    .vitals-history-table h5 {
+        color: #000000 !important;
+    }
+    .vitals-history-table table {
+        border-radius: 12px;
+        overflow: hidden;
+        color: #000000 !important;
+    }
+    .vitals-history-table thead {
+        background: linear-gradient(135deg, #1e3a8a, #3B82F6);
+        color: white;
+    }
+    .vitals-history-table thead th {
+        border: none;
+        padding: 14px 16px;
+        font-weight: 600;
+    }
+    .vitals-history-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: background 0.2s;
+        color: #000000 !important;
+    }
+    .vitals-history-table tbody tr:hover {
+        background: #f8faff;
+    }
+    .vitals-history-table td {
+        color: #000000 !important;
+    }
+    .vitals-history-table td small {
+        color: #475569 !important;
+    }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .stat-pill.normal { background: #d1fae5; color: #065f46; }
+    .stat-pill.warning { background: #fef3c7; color: #92400e; }
+    .stat-pill.danger { background: #fee2e2; color: #991b1b; }
+
+    .mini-stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+    }
+    .mini-stat-card .icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+    }
+    .mini-stat-card .label { font-size: 0.85rem; color: #475569 !important; font-weight: 600; }
+    .mini-stat-card .value { font-size: 1.5rem; font-weight: 800; color: #000000 !important; }
+    .mini-stat-card .unit { font-size: 0.75rem; color: #475569 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="vitals-hero">
+    <h2 class="fw-bold mb-1"><i class="fas fa-heartbeat me-2"></i>Health Vitals Tracker</h2>
+    <p class="mb-0 opacity-75">Monitor your daily health metrics and track trends over time</p>
+</div>
+
+<!-- Log Vitals Form -->
+<div class="vitals-form-card">
+    <h4 class="fw-bold text-primary mb-4"><i class="fas fa-plus-circle me-2"></i>Log Today's Vitals</h4>
+    <form method="POST" action="{{ url_for('log_vitals') }}">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#dbeafe;"><i class="fas fa-tint" style="color:#2563eb;"></i></div>
+                    <label for="bp_systolic"><i class="fas fa-heart-pulse"></i> Blood Pressure</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" class="form-control" name="bp_systolic" id="bp_systolic" placeholder="Systolic" min="60" max="250" required>
+                        <input type="number" class="form-control" name="bp_diastolic" placeholder="Diastolic" min="40" max="150" required>
+                    </div>
+                    <small class="text-muted">mmHg (e.g., 120/80)</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#fce7f3;"><i class="fas fa-heartbeat" style="color:#db2777;"></i></div>
+                    <label for="pulse"><i class="fas fa-pulse"></i> Pulse Rate</label>
+                    <input type="number" class="form-control w-100" name="pulse" id="pulse" placeholder="e.g., 72" min="30" max="200" required>
+                    <small class="text-muted">Beats per minute</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#fef3c7;"><i class="fas fa-thermometer-half" style="color:#d97706;"></i></div>
+                    <label for="temperature"><i class="fas fa-temperature-high"></i> Temperature</label>
+                    <input type="number" class="form-control w-100" name="temperature" id="temperature" placeholder="e.g., 98.6" min="90" max="110" step="0.1" required>
+                    <small class="text-muted">°F</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#d1fae5;"><i class="fas fa-weight" style="color:#059669;"></i></div>
+                    <label for="weight"><i class="fas fa-weight-hanging"></i> Weight</label>
+                    <input type="number" class="form-control w-100" name="weight" id="weight" placeholder="e.g., 70" min="10" max="300" step="0.1" required>
+                    <small class="text-muted">Kilograms</small>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#ede9fe;"><i class="fas fa-lungs" style="color:#7c3aed;"></i></div>
+                    <label for="oxygen_saturation"><i class="fas fa-lungs"></i> Oxygen Saturation</label>
+                    <input type="number" class="form-control w-100" name="oxygen_saturation" id="oxygen_saturation" placeholder="e.g., 98" min="70" max="100" step="0.1">
+                    <small class="text-muted">SpO2 %</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#fee2e2;"><i class="fas fa-tint" style="color:#dc2626;"></i></div>
+                    <label for="blood_glucose"><i class="fas fa-vials"></i> Blood Glucose</label>
+                    <input type="number" class="form-control w-100" name="blood_glucose" id="blood_glucose" placeholder="e.g., 100" min="40" max="500">
+                    <small class="text-muted">mg/dL (fasting)</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="vital-input-group">
+                    <div class="icon-circle" style="background:#f0fdf4;"><i class="fas fa-smile" style="color:#16a34a;"></i></div>
+                    <label><i class="fas fa-comment-medical"></i> How are you feeling?</label>
+                    <select class="form-select w-100" name="feeling">
+                        <option value="excellent">😊 Excellent</option>
+                        <option value="good" selected>🙂 Good</option>
+                        <option value="fair">😐 Fair</option>
+                        <option value="poor">😞 Poor</option>
+                        <option value="very_poor">😢 Very Poor</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-log-vitals">
+                <i class="fas fa-save me-2"></i> Save Today's Vitals
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if vitals_history %}
+<!-- Latest Stats -->
+{% set latest = vitals_history[0] %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="mini-stat-card">
+            <div class="icon" style="background:#dbeafe;"><i class="fas fa-heartbeat" style="color:#2563eb;"></i></div>
+            <div>
+                <div class="label">Latest Blood Pressure</div>
+                <div class="value">{{ latest.bp_systolic }}/{{ latest.bp_diastolic }}</div>
+                <div class="unit">mmHg</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat-card">
+            <div class="icon" style="background:#fce7f3;"><i class="fas fa-heart" style="color:#db2777;"></i></div>
+            <div>
+                <div class="label">Pulse Rate</div>
+                <div class="value">{{ latest.pulse }}</div>
+                <div class="unit">bpm</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat-card">
+            <div class="icon" style="background:#fef3c7;"><i class="fas fa-thermometer-half" style="color:#d97706;"></i></div>
+            <div>
+                <div class="label">Temperature</div>
+                <div class="value">{{ latest.temperature }}</div>
+                <div class="unit">°F</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h5><i class="fas fa-chart-line me-2 text-primary"></i>Blood Pressure Trend</h5>
+            <canvas id="bpChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h5><i class="fas fa-chart-area me-2 text-danger"></i>Pulse & Weight Trend</h5>
+            <canvas id="pulseWeightChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Vitals History Table -->
+<div class="vitals-history-table mt-2">
+    <h5 class="fw-bold text-primary mb-4"><i class="fas fa-history me-2"></i>Vitals History</h5>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>BP (mmHg)</th>
+                    <th>Pulse (bpm)</th>
+                    <th>Temp (°F)</th>
+                    <th>Weight (kg)</th>
+                    <th>SpO2 (%)</th>
+                    <th>Glucose (mg/dL)</th>
+                    <th>Feeling</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vitals_history %}
+                <tr>
+                    <td><small class="text-muted">{{ v.logged_at }}</small></td>
+                    <td>
+                        <span class="stat-pill {% if v.bp_systolic > 140 or v.bp_diastolic > 90 %}danger{% elif v.bp_systolic > 120 %}warning{% else %}normal{% endif %}">
+                            {{ v.bp_systolic }}/{{ v.bp_diastolic }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="stat-pill {% if v.pulse > 100 or v.pulse < 60 %}warning{% else %}normal{% endif %}">
+                            {{ v.pulse }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="stat-pill {% if v.temperature > 100.4 %}danger{% elif v.temperature > 99 %}warning{% else %}normal{% endif %}">
+                            {{ v.temperature }}
+                        </span>
+                    </td>
+                    <td>{{ v.weight }}</td>
+                    <td>
+                        {% if v.oxygen_saturation %}
+                        <span class="stat-pill {% if v.oxygen_saturation < 95 %}danger{% elif v.oxygen_saturation < 97 %}warning{% else %}normal{% endif %}">
+                            {{ v.oxygen_saturation }}%
+                        </span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if v.blood_glucose %}
+                        <span class="stat-pill {% if v.blood_glucose > 126 %}danger{% elif v.blood_glucose > 100 %}warning{% else %}normal{% endif %}">
+                            {{ v.blood_glucose }}
+                        </span>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if v.feeling == 'excellent' %}😊 Excellent
+                        {% elif v.feeling == 'good' %}🙂 Good
+                        {% elif v.feeling == 'fair' %}😐 Fair
+                        {% elif v.feeling == 'poor' %}😞 Poor
+                        {% else %}😢 Very Poor{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const vitalsData = {{ vitals_chart_data | tojson }};
+
+// Blood Pressure Chart
+new Chart(document.getElementById('bpChart'), {
+    type: 'line',
+    data: {
+        labels: vitalsData.dates,
+        datasets: [
+            {
+                label: 'Systolic',
+                data: vitalsData.systolic,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239,68,68,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ef4444',
+                pointRadius: 5
+            },
+            {
+                label: 'Diastolic',
+                data: vitalsData.diastolic,
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59,130,246,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#3B82F6',
+                pointRadius: 5
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { display: true } },
+        scales: {
+            y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Pulse & Weight Chart
+new Chart(document.getElementById('pulseWeightChart'), {
+    type: 'line',
+    data: {
+        labels: vitalsData.dates,
+        datasets: [
+            {
+                label: 'Pulse (bpm)',
+                data: vitalsData.pulse,
+                borderColor: '#db2777',
+                backgroundColor: 'rgba(219,39,119,0.1)',
+                tension: 0.4,
+                yAxisID: 'y',
+                pointBackgroundColor: '#db2777',
+                pointRadius: 5
+            },
+            {
+                label: 'Weight (kg)',
+                data: vitalsData.weight,
+                borderColor: '#059669',
+                backgroundColor: 'rgba(5,150,105,0.1)',
+                tension: 0.4,
+                yAxisID: 'y1',
+                pointBackgroundColor: '#059669',
+                pointRadius: 5
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: { legend: { display: true } },
+        scales: {
+            y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(0,0,0,0.05)' } },
+            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+
+{% else %}
+<div class="vitals-form-card text-center py-5">
+    <div style="font-size:5rem; margin-bottom:20px;">📊</div>
+    <h4 class="fw-bold" style="color: #000000 !important;">No vitals logged yet</h4>
+    <p style="color: #475569 !important;">Start tracking your health by logging your first vitals above!</p>
+</div>
+{% endif %}
+
+{% endblock %}

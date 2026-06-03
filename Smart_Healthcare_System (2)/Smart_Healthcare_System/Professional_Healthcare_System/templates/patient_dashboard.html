@@ -5,16 +5,19 @@
 {% block extra_css %}
 <style>
     .dashboard-card {
-        background: white;
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         margin-bottom: 30px;
     }
     
     .welcome-section {
-        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
-        color: white;
+        background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.1));
+        border: 1px solid rgba(59,130,246,0.3);
+        color: var(--text-primary);
         border-radius: 15px;
         padding: 40px;
         margin-bottom: 30px;
@@ -26,18 +29,21 @@
     }
     
     .action-card {
-        background: white;
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
         border-radius: 15px;
         padding: 30px;
         text-align: center;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         transition: all 0.3s;
         height: 100%;
     }
     
     .action-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transform: translateY(-8px);
+        border-color: var(--accent);
+        box-shadow: 0 15px 40px rgba(59,130,246,0.15);
     }
     
     .action-card i {
@@ -46,15 +52,15 @@
     }
     
     .action-card.primary i {
-        color: var(--accent-blue);
+        color: var(--accent-light);
     }
     
     .action-card.success i {
-        color: var(--success-green);
+        color: var(--emerald);
     }
     
     .action-card h3 {
-        color: var(--primary-blue);
+        color: var(--text-primary);
         font-weight: 600;
         margin-bottom: 15px;
     }
@@ -65,16 +71,24 @@
         font-weight: 600;
         border: none;
         transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
     }
     
     .btn-action.primary {
-        background: var(--accent-blue);
+        background: var(--accent);
         color: white;
+    }
+    .btn-action.primary:hover {
+        background: var(--accent-light);
     }
     
     .btn-action.success {
-        background: var(--success-green);
+        background: var(--emerald);
         color: white;
+    }
+    .btn-action.success:hover {
+        background: #34d399;
     }
     
     .btn-action:hover {
@@ -83,30 +97,35 @@
     }
     
     .recent-predictions {
-        background: white;
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
     
     .prediction-item {
-        border-left: 4px solid var(--accent-blue);
+        border-left: 4px solid var(--accent);
         padding: 15px;
         margin-bottom: 15px;
-        background: #F9FAFB;
+        background: rgba(255,255,255,0.02);
         border-radius: 8px;
+        border-top: 1px solid var(--glass-border);
+        border-right: 1px solid var(--glass-border);
+        border-bottom: 1px solid var(--glass-border);
     }
     
     .prediction-item.high {
-        border-left-color: var(--danger-red);
+        border-left-color: var(--rose);
     }
     
     .prediction-item.medium {
-        border-left-color: var(--warning-orange);
+        border-left-color: var(--amber);
     }
     
     .prediction-item.low {
-        border-left-color: var(--success-green);
+        border-left-color: var(--emerald);
     }
 </style>
 {% endblock %}
@@ -118,6 +137,7 @@
     <p><i class="fas fa-envelope"></i> {{ patient.email }} | <i class="fas fa-phone"></i> {{ patient.contact or 'Not provided' }}</p>
 </div>
 
+<!-- Primary Action Cards -->
 <div class="row mb-4">
     <div class="col-md-6 mb-3">
         <div class="action-card primary">
@@ -129,7 +149,6 @@
             </a>
         </div>
     </div>
-    
     <div class="col-md-6 mb-3">
         <div class="action-card success">
             <i class="fas fa-history"></i>
@@ -139,6 +158,65 @@
                 <i class="fas fa-file-medical"></i> View History
             </a>
         </div>
+    </div>
+</div>
+
+<!-- New Feature Cards -->
+<h4 class="fw-bold mb-3" style="color:var(--text-primary);"><i class="fas fa-star me-2" style="color:var(--accent);"></i>Health Management Tools</h4>
+<div class="row mb-4 g-3">
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('vitals_tracker') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">📊</div>
+                <h6 class="fw-bold" style="color:var(--text-primary);">Vitals Tracker</h6>
+                <small style="color:var(--text-secondary);">Log BP, pulse, weight & more</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('appointments') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">📅</div>
+                <h6 class="fw-bold" style="color:var(--text-primary);">Book Appointment</h6>
+                <small style="color:var(--text-secondary);">Schedule doctor consultations</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('medicine_reminders') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">💊</div>
+                <h6 class="fw-bold" style="color:var(--text-primary);">Medicine Reminders</h6>
+                <small style="color:var(--text-secondary);">Never miss a dose</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('calculate_bmi') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">🏋️</div>
+                <h6 class="fw-bold" style="color:var(--text-primary);">BMI Calculator</h6>
+                <small style="color:var(--text-secondary);">BMI + personalized diet plan</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('edit_profile') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">👤</div>
+                <h6 class="fw-bold" style="color:var(--text-primary);">Edit Profile</h6>
+                <small style="color:var(--text-secondary);">Update health info & contact</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-6">
+        <a href="{{ url_for('emergency_sos') }}" class="text-decoration-none text-light">
+            <div class="action-card" style="padding:20px; text-align:center; border-color: rgba(244,63,94,0.3);">
+                <div style="font-size:2.5rem; margin-bottom:10px;">🆘</div>
+                <h6 class="fw-bold" style="color:#fb7185;">Emergency SOS</h6>
+                <small style="color:var(--text-secondary);">Hotlines & first aid guide</small>
+            </div>
+        </a>
     </div>
 </div>
 
