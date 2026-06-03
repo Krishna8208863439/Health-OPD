@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthCare Plus — AI-Powered Medical Intelligence</title>
     <meta name="description" content="HealthCare Plus is an advanced AI-powered healthcare system offering disease prediction, patient management, digital prescriptions, and real-time analytics.">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HealthCare+">
+    <link rel="apple-touch-icon" href="/static/assets/pwa_icon_192.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1009,6 +1016,177 @@
     const style = document.createElement('style');
     style.textContent = '@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.3} }';
     document.head.appendChild(style);
+    </script>
+
+    <!-- PWA Install Modal -->
+    <div class="modal fade" id="pwaInstallModal" tabindex="-1" aria-labelledby="pwaInstallModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card" style="background: rgba(30, 41, 59, 0.95); border: 1px solid var(--glass-border); color: #f1f5f9; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 20px;">
+                <div class="modal-header" style="border-bottom: 1px solid var(--glass-border); padding: 20px;">
+                    <h5 class="modal-title fw-bold" id="pwaInstallModalLabel">
+                        <i class="fas fa-mobile-alt me-2" style="color: #6366f1;"></i> Install HealthCare Plus App
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1); opacity: 0.8;"></button>
+                </div>
+                <div class="modal-body" style="padding: 24px;">
+                    <div class="text-center mb-4">
+                        <img src="/static/assets/pwa_icon_192.png" alt="App Icon" style="width: 80px; height: 80px; border-radius: 18px; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3); border: 2px solid var(--glass-border);">
+                        <h4 class="fw-bold mt-3 mb-1">HealthCare Plus PWA</h4>
+                        <p class="text-muted" style="font-size: 0.85rem; color: #94a3b8;">Lightweight, instant updates, and offline access</p>
+                    </div>
+
+                    <p style="font-size: 0.9rem; line-height: 1.6; color: #94a3b8;" class="text-center mb-4">
+                        You don't need a heavy app store download! Install HealthCare Plus as a Progressive Web App (PWA) directly to your home screen.
+                    </p>
+
+                    <!-- Dynamic Install Button for Chrome/Android -->
+                    <div id="pwaInstallPrompt" class="d-none text-center mb-4">
+                        <button id="pwaInstallBtn" class="btn btn-primary w-100 py-3 fw-bold" style="border-radius: 12px; font-size: 1rem; background: #6366f1; border: none; transition: all 0.3s; color: white;">
+                            <i class="fas fa-download me-2"></i> Install App Now
+                        </button>
+                        <div class="my-3 text-muted" style="font-size: 0.8rem; color: #94a3b8;">— OR FOLLOW MANUAL STEPS —</div>
+                    </div>
+
+                    <!-- Tabs for iOS and Android instructions -->
+                    <ul class="nav nav-pills nav-fill mb-3" id="pwaTabs" role="tablist" style="background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px;">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-2" id="android-tab" data-bs-toggle="tab" data-bs-target="#android-instructions" type="button" role="tab" aria-controls="android-instructions" aria-selected="true" style="border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #fff;">
+                                <i class="fab fa-android me-1"></i> Android
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-2" id="ios-tab" data-bs-toggle="tab" data-bs-target="#ios-instructions" type="button" role="tab" aria-controls="ios-instructions" aria-selected="false" style="border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #fff;">
+                                <i class="fab fa-apple me-1"></i> iOS (iPhone)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="pwaTabsContent" style="padding-top: 10px;">
+                        <!-- Android Instructions -->
+                        <div class="tab-pane fade show active" id="android-instructions" role="tabpanel" aria-labelledby="android-tab">
+                            <div class="d-flex align-items-start mb-3">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">1</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Open in Chrome</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Open this website in Google Chrome on your phone.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start mb-3">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">2</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Tap Menu</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Tap the three dots (<i class="fas fa-ellipsis-v"></i>) in the top-right corner.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">3</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Install App</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong> from the menu.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- iOS Instructions -->
+                        <div class="tab-pane fade" id="ios-instructions" role="tabpanel" aria-labelledby="ios-tab">
+                            <div class="d-flex align-items-start mb-3">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">1</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Open Safari</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Open this website in Safari on your iPhone.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start mb-3">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">2</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Tap Share</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Tap the <strong>Share</strong> button (<i class="fas fa-share-square"></i>) in the bottom navigation bar.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <span class="badge me-3 px-2 py-2" style="background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: white;">3</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #f1f5f9;">Add to Home Screen</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.8rem; color: #94a3b8;">Scroll down and select <strong>"Add to Home Screen"</strong>, then tap <strong>Add</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--glass-border); padding: 15px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; font-size: 0.85rem; color: white;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Style Tweaks -->
+    <style>
+        #pwaTabs .nav-link {
+            color: #94a3b8;
+            border: none;
+            background: transparent;
+            transition: all 0.3s;
+        }
+        #pwaTabs .nav-link.active {
+            background: #6366f1 !important;
+            color: white !important;
+        }
+        #pwaInstallBtn:hover {
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            background: #818cf8 !important;
+        }
+    </style>
+
+    <!-- PWA Installation Script -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('[PWA] Service Worker registered', reg))
+                    .catch(err => console.log('[PWA] Service Worker registration failed', err));
+            });
+        }
+
+        // Intercept beforeinstallprompt for Chrome/Edge/Android
+        let deferredPrompt;
+        const installPromptArea = document.getElementById('pwaInstallPrompt');
+        const installBtn = document.getElementById('pwaInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installPromptArea) {
+                installPromptArea.classList.remove('d-none');
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`[PWA] User response to install prompt: ${outcome}`);
+                deferredPrompt = null;
+                if (installPromptArea) {
+                    installPromptArea.classList.add('d-none');
+                }
+            });
+        }
+
+        // Intercept all download buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            const installButtons = document.querySelectorAll('.app-download-btn, [href*="HealthCare_Plus.apk"], [href*="HealthCare_Plus.ipa"]');
+            installButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pwaModal = new bootstrap.Modal(document.getElementById('pwaInstallModal'));
+                    pwaModal.show();
+                });
+            });
+        });
     </script>
 </body>
 </html>

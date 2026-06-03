@@ -1,0 +1,22 @@
+{
+  "name": "HealthCare Plus Medical Center",
+  "short_name": "HealthCare+",
+  "description": "Smart AI-powered healthcare system with disease prediction, vitals tracking, and medical history.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/assets/pwa_icon_192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/assets/pwa_icon_512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

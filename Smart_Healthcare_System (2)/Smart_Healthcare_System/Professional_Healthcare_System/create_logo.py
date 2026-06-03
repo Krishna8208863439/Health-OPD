@@ -25,6 +25,27 @@ def create_hospital_logo():
     os.makedirs(os.path.dirname(logo_path), exist_ok=True)
     img.save(logo_path)
     print(f"[OK] Hospital logo created at {logo_path}")
+    
+    # Save PWA icons
+    try:
+        # Use Resampling if available, fallback to ANTIALIAS for older Pillow versions
+        try:
+            resample_method = Image.Resampling.LANCZOS
+        except AttributeError:
+            resample_method = Image.ANTIALIAS
+            
+        icon_192 = img.resize((192, 192), resample_method)
+        icon_192_path = os.path.join(BASE_DIR, 'static', 'assets', 'pwa_icon_192.png')
+        icon_192.save(icon_192_path)
+        print(f"[OK] PWA 192x192 icon created at {icon_192_path}")
+
+        icon_512 = img.resize((512, 512), resample_method)
+        icon_512_path = os.path.join(BASE_DIR, 'static', 'assets', 'pwa_icon_512.png')
+        icon_512.save(icon_512_path)
+        print(f"[OK] PWA 512x512 icon created at {icon_512_path}")
+    except Exception as e:
+        print(f"[Error] Failed to generate PWA icons: {e}")
 
 if __name__ == '__main__':
     create_hospital_logo()
+

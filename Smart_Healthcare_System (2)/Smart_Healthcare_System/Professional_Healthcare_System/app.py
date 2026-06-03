@@ -456,6 +456,15 @@ def generate_pdf(patient, prediction_data):
     c.save()
     return filename
 
+# PWA Routes
+@app.route('/service-worker.js')
+def service_worker():
+    return send_file(os.path.join(BASE_DIR, 'static', 'service-worker.js'), mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def manifest():
+    return send_file(os.path.join(BASE_DIR, 'static', 'manifest.json'), mimetype='application/json')
+
 # Routes
 @app.route('/')
 def index():
