@@ -1,0 +1,289 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║          🏥 HEALTHCARE SYSTEM - NEW FEATURES                        ║
+║          Run Instructions                                            ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+📋 QUICK START
+═══════════════════════════════════════════════════════════════════════
+
+1️⃣  INSTALL DEPENDENCIES
+   ─────────────────────────────────────────────────────────────────
+   Open terminal in this folder and run:
+   
+   pip install -r requirements.txt
+   
+   This will install:
+   - Flask (web framework)
+   - Flask-Login (authentication)
+   - pandas (data processing)
+   - scikit-learn (ML model)
+   - reportlab (PDF generation)
+   - Pillow (image processing)
+
+
+2️⃣  TEST NEW FEATURES (Optional but Recommended)
+   ─────────────────────────────────────────────────────────────────
+   Run the test script to verify everything works:
+   
+   python test_new_features.py
+   
+   You should see:
+   ✅ Risk Calculator Tests Passed!
+   ✅ Hospital Finder Tests Passed!
+   ✅ Integration Tests Passed!
+   ✅ ALL TESTS PASSED SUCCESSFULLY!
+
+
+3️⃣  START THE APPLICATION
+   ─────────────────────────────────────────────────────────────────
+   Run the main application:
+   
+   python app.py
+   
+   You should see:
+   ✓ Model trained successfully with accuracy: XX%
+   * Running on http://127.0.0.1:5002
+
+
+4️⃣  OPEN IN BROWSER
+   ─────────────────────────────────────────────────────────────────
+   Open your web browser and go to:
+   
+   http://localhost:5002
+   
+   Or click the link in the terminal
+
+
+5️⃣  TEST THE NEW FEATURES
+   ─────────────────────────────────────────────────────────────────
+   
+   A. CREATE PATIENT ACCOUNT:
+      • Click "Sign Up"
+      • Fill in details
+      • Select City: "New York"
+      • Set Lifestyle:
+        - Smoking: No
+        - Blood Pressure: Normal
+        - Blood Sugar: Normal
+      • Click "Create Account"
+   
+   B. TEST SYMPTOM ASSESSMENT:
+      • Login with your account
+      • Click "New Symptom Assessment"
+      • Select symptoms (e.g., fever, cough, chest pain)
+      • Set Hospital Preferences:
+        - Type: Private
+        - Max Distance: 5 km
+      • Click "Analyze Symptoms"
+   
+   C. VIEW RESULTS:
+      • See your Health Risk Score (0-100)
+      • View risk category and color
+      • Read personalized recommendations
+      • Check recommended hospitals
+      • Click "View on Maps" for any hospital
+      • Click "Get Directions" to navigate
+      • Download PDF report
+   
+   D. CREATE DOCTOR ACCOUNT:
+      • Sign up with Role: Doctor
+      • Login to see Analytics Dashboard
+      • View all charts and statistics
+      • Check high-risk patients table
+      • Review age-wise disease distribution
+
+
+═══════════════════════════════════════════════════════════════════════
+📚 DOCUMENTATION
+═══════════════════════════════════════════════════════════════════════
+
+Read these files for more information:
+
+1. IMPLEMENTATION_SUMMARY.md
+   → Complete overview of all features implemented
+
+2. NEW_FEATURES.md
+   → Detailed documentation (13 sections)
+
+3. QUICK_START_NEW_FEATURES.md
+   → Quick start guide with examples
+
+4. FEATURES_VISUAL_GUIDE.md
+   → Visual guide showing what features look like
+
+5. README.md
+   → General system documentation
+
+
+═══════════════════════════════════════════════════════════════════════
+✅ NEW FEATURES CHECKLIST
+═══════════════════════════════════════════════════════════════════════
+
+✓ Health Risk Score (0-100)
+  - Age factor
+  - Symptoms count
+  - Disease severity
+  - Past history
+  - Lifestyle factors (smoking, BP, sugar)
+
+✓ Hospital Finder
+  - Filter by Government/Private
+  - Filter by Specialty
+  - Filter by Distance
+  - Static hospital data (city-wise)
+  - Google Maps integration
+
+✓ Admin Analytics Dashboard
+  - Most common diseases chart
+  - Daily patient count
+  - High-risk patients table
+  - Age-wise disease distribution
+  - Interactive charts
+
+
+═══════════════════════════════════════════════════════════════════════
+🎯 TEST SCENARIOS
+═══════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: High-Risk Patient
+─────────────────────────────────────────────────────────────────────
+Patient: 65 years, smoker, high BP, high sugar
+Symptoms: 7 symptoms (fever, cough, chest pain, etc.)
+Expected Risk Score: 80-100 (Critical Risk 🚨)
+Expected Hospitals: Emergency departments
+Expected Recommendations: Immediate medical attention
+
+SCENARIO 2: Low-Risk Patient
+─────────────────────────────────────────────────────────────────────
+Patient: 25 years, non-smoker, normal vitals
+Symptoms: 2 symptoms (cold, throat pain)
+Expected Risk Score: 20-35 (Low/Moderate Risk 🟢🟡)
+Expected Hospitals: Primary care clinics
+Expected Recommendations: Monitor at home
+
+SCENARIO 3: Hospital Filtering
+─────────────────────────────────────────────────────────────────────
+City: New York
+Filter: Private hospitals within 5 km
+Expected: Mount Sinai, NewYork-Presbyterian, Lenox Hill
+Should NOT show: Government hospitals or distant hospitals
+
+
+═══════════════════════════════════════════════════════════════════════
+🔧 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════
+
+PROBLEM: Dependencies not installing
+SOLUTION: Make sure you have Python 3.8+ installed
+          Try: pip install --upgrade pip
+          Then: pip install -r requirements.txt
+
+PROBLEM: Port 5002 already in use
+SOLUTION: Change port in app.py (last line):
+          app.run(debug=True, port=5003)
+
+PROBLEM: Database errors
+SOLUTION: Delete healthcare_system.db file
+          Restart the application (it will recreate)
+
+PROBLEM: Charts not showing
+SOLUTION: Check internet connection (Chart.js loads from CDN)
+          Clear browser cache
+          Try different browser
+
+PROBLEM: Google Maps not opening
+SOLUTION: Check if popup blocker is enabled
+          Allow popups for localhost
+          Try right-click → Open in new tab
+
+
+═══════════════════════════════════════════════════════════════════════
+📊 SAMPLE DATA
+═══════════════════════════════════════════════════════════════════════
+
+Cities with Hospital Data:
+• New York (4 hospitals)
+• Los Angeles (3 hospitals)
+• Chicago (2 hospitals)
+• Houston (2 hospitals)
+• Other cities (2 default hospitals)
+
+Diseases in System:
+• Pneumonia
+• Common Cold
+• Influenza
+• Bronchitis
+• Asthma
+• Migraine
+• Gastroenteritis
+• Stomach Infection
+• Hypertension
+• Diabetes
+
+
+═══════════════════════════════════════════════════════════════════════
+🎨 FEATURES OVERVIEW
+═══════════════════════════════════════════════════════════════════════
+
+FOR PATIENTS:
+✓ Enhanced signup with lifestyle info
+✓ Symptom entry with hospital filters
+✓ Health risk score (0-100) with color coding
+✓ Personalized health recommendations
+✓ Hospital finder with Google Maps
+✓ One-click directions to hospitals
+✓ PDF report download
+
+FOR DOCTORS:
+✓ Analytics dashboard with 4 key metrics
+✓ Most common diseases chart
+✓ Severity distribution chart
+✓ Age-wise distribution chart
+✓ Daily patient trend chart
+✓ High-risk patients table (score ≥ 60)
+✓ Age-wise disease distribution table
+
+
+═══════════════════════════════════════════════════════════════════════
+🚀 DEPLOYMENT NOTES
+═══════════════════════════════════════════════════════════════════════
+
+For Production Deployment:
+1. Set DEBUG = False in app.py
+2. Use a production WSGI server (gunicorn, waitress)
+3. Set up HTTPS
+4. Use environment variables for secrets
+5. Set up proper database (PostgreSQL, MySQL)
+6. Configure proper logging
+7. Set up monitoring and alerts
+
+
+═══════════════════════════════════════════════════════════════════════
+📞 SUPPORT
+═══════════════════════════════════════════════════════════════════════
+
+For questions or issues:
+1. Check the documentation files
+2. Run test_new_features.py to verify setup
+3. Review error messages in terminal
+4. Check browser console for JavaScript errors
+
+
+═══════════════════════════════════════════════════════════════════════
+
+🎉 ENJOY THE NEW FEATURES!
+
+All requested features have been implemented and tested:
+✅ Health Risk Score (0-100)
+✅ Hospital Finder with Google Maps
+✅ Admin Analytics Dashboard
+✅ Enhanced User Profiles
+✅ Comprehensive Documentation
+
+Version: 2.0
+Status: Production Ready
+Last Updated: January 2026
+
+═══════════════════════════════════════════════════════════════════════

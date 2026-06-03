@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, #0052A3 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,102,204,0.3);
+    }
+    
+    .stat-card h3 {
+        font-size: 42px;
+        margin: 10px 0;
+        font-weight: bold;
+    }
+    
+    .stat-card p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 16px;
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px;">
+    <h1 style="color: var(--primary-blue); margin-bottom: 10px;">👨‍⚕️ Doctor Dashboard</h1>
+    <p style="color: #6C757D;">Welcome, Dr. {{ doctor.full_name }}</p>
+</div>
+
+<!-- Statistics Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <div class="stat-card">
+        <p>Total Patients</p>
+        <h3>{{ stats.total_patients }}</h3>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, var(--secondary-green) 0%, #1e7e34 100%);">
+        <p>Total Predictions</p>
+        <h3>{{ stats.total_predictions }}</h3>
+    </div>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, var(--warning-yellow) 0%, #e0a800 100%);">
+        <p>Active Cases</p>
+        <h3>{{ stats.recent_predictions|length }}</h3>
+    </div>
+</div>
+
+<!-- Charts -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <div class="chart-container">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px;">Disease Distribution</h3>
+        <canvas id="diseaseChart"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px;">Severity Levels</h3>
+        <canvas id="severityChart"></canvas>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h3 style="color: var(--primary-blue); margin-bottom: 20px;">Predictions Timeline (Last 30 Days)</h3>
+    <canvas id="timelineChart"></canvas>
+</div>
+
+<!-- Recent Predictions -->
+<div class="card">
+    <div class="card-header">
+        📊 Recent Patient Predictions
+    </div>
+    
+    {% if stats.recent_predictions %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--light-gray);">
+                    <th style="padding: 15px; text-align: left;">Patient Name</th>
+                    <th style="padding: 15px; text-align: left;">Age</th>
+                    <th style="padding: 15px; text-align: left;">Disease</th>
+                    <th style="padding: 15px; text-align: left;">Risk %</th>
+                    <th style="padding: 15px; text-align: left;">Severity</th>
+                    <th style="padding: 15px; text-align: left;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pred in stats.recent_predictions %}
+                <tr style="border-bottom: 1px solid var(--light-gray);">
+                    <td style="padding: 15px; font-weight: 600;">{{ pred.full_name }}</td>
+                    <td style="padding: 15px;">{{ pred.age }}</td>
+                    <td style="padding: 15px;">{{ pred.disease }}</td>
+                    <td style="padding: 15px;">{{ pred.risk_percentage }}%</td>
+                    <td style="padding: 15px;">
+                        {% if 'LOW' in pred.severity %}
+                        <span class="severity-badge severity-low">{{ pred.severity }}</span>
+                        {% elif 'MEDIUM' in pred.severity %}
+                        <span class="severity-badge severity-medium">{{ pred.severity }}</span>
+                        {% else %}
+                        <span class="severity-badge severity-high">{{ pred.severity }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px;">{{ pred.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="text-align: center; padding: 30px; color: #6C757D;">No predictions yet</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Disease Distribution Chart
+    const diseaseCtx = document.getElementById('diseaseChart').getContext('2d');
+    new Chart(diseaseCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ stats.disease_distribution.keys()|list|tojson }},
+            datasets: [{
+                data: {{ stats.disease_distribution.values()|list|tojson }},
+                backgroundColor: [
+                    '#0066CC', '#28A745', '#FFC107', '#DC3545', '#6C757D',
+                    '#17A2B8', '#E83E8C', '#6610F2', '#FD7E14', '#20C997'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Severity Chart
+    const severityCtx = document.getElementById('severityChart').getContext('2d');
+    new Chart(severityCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ stats.severity_distribution.keys()|list|tojson }},
+            datasets: [{
+                data: {{ stats.severity_distribution.values()|list|tojson }},
+                backgroundColor: ['#28A745', '#FFC107', '#DC3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Timeline Chart
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: {{ stats.timeline.keys()|list|tojson }},
+            datasets: [{
+                label: 'Predictions',
+                data: {{ stats.timeline.values()|list|tojson }},
+                borderColor: '#0066CC',
+                backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

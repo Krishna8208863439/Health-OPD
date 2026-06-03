@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnosis Result - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .health-risk-card {
+        background: linear-gradient(135deg, {{ health_risk.color }}, {{ health_risk.color }}dd);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+    
+    .risk-score-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: white;
+        color: {{ health_risk.color }};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 20px auto;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .hospital-card {
+        background: white;
+        border: 2px solid #E5E7EB;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+    
+    .hospital-card:hover {
+        border-color: var(--accent-blue);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .hospital-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+    
+    .badge-government {
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+    
+    .badge-private {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+    
+    .btn-maps {
+        background: #4285F4;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-right: 10px;
+    }
+    
+    .btn-maps:hover {
+        background: #357AE8;
+    }
+    
+    .recommendation-item {
+        padding: 12px;
+        background: #F9FAFB;
+        border-left: 4px solid {{ health_risk.color }};
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <!-- Health Risk Score Card -->
+    <div class="health-risk-card">
+        <h2>{{ health_risk.icon }} Health Risk Assessment</h2>
+        <div class="risk-score-circle">
+            {{ health_risk.score }}
+        </div>
+        <h3>{{ health_risk.category }}</h3>
+        <p class="mb-0">Based on age, symptoms, disease severity, history, and lifestyle factors</p>
+    </div>
+    
+    <div class="row">
+        <!-- Disease Prediction -->
+        <div class="col-md-6">
+            <div class="result-card">
+                <h4><i class="fas fa-disease"></i> Predicted Disease</h4>
+                <h2 class="text-primary">{{ prediction.disease }}</h2>
+                <hr>
+                <p><strong>Severity:</strong> {{ prediction.severity }}</p>
+                <p><strong>Risk Percentage:</strong> {{ prediction.risk_percentage }}%</p>
+                <p><strong>Confidence:</strong> {{ (prediction.probability * 100)|round(1) }}%</p>
+            </div>
+        </div>
+        
+        <!-- Patient Info -->
+        <div class="col-md-6">
+            <div class="result-card">
+                <h4><i class="fas fa-user"></i> Patient Information</h4>
+                <p><strong>Name:</strong> {{ patient.full_name }}</p>
+                <p><strong>Age:</strong> {{ patient.age }} years</p>
+                <p><strong>City:</strong> {{ patient.city }}</p>
+                <p><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations -->
+    <div class="result-card">
+        <h4><i class="fas fa-clipboard-list"></i> Health Recommendations</h4>
+        {% for rec in recommendations %}
+        <div class="recommendation-item">
+            {{ rec }}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Doctor's Advice -->
+    <div class="result-card">
+        <h4><i class="fas fa-user-md"></i> Doctor's Advice</h4>
+        <p>{{ prediction.doctor_advice }}</p>
+    </div>
+    
+    <!-- Medicines -->
+    <div class="result-card">
+        <h4><i class="fas fa-pills"></i> Recommended Medicines</h4>
+        <div class="row">
+            {% for medicine in medicines %}
+            <div class="col-md-6 mb-2">
+                <div class="p-3 bg-light rounded">
+                    <i class="fas fa-capsules text-success"></i> {{ medicine }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Hospitals with Google Maps -->
+    <div class="result-card">
+        <h4><i class="fas fa-hospital"></i> Recommended Hospitals Near You</h4>
+        {% if hospitals %}
+            {% for hospital in hospitals %}
+            <div class="hospital-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-2">{{ hospital.name }}</h5>
+                        <span class="hospital-badge {% if hospital.type == 'Government' %}badge-government{% else %}badge-private{% endif %}">
+                            {{ hospital.type }}
+                        </span>
+                        {% for spec in hospital.specialty[:3] %}
+                        <span class="badge bg-info text-dark">{{ spec }}</span>
+                        {% endfor %}
+                        <p class="mt-2 mb-1"><i class="fas fa-map-marker-alt"></i> {{ hospital.address }}</p>
+                        <p class="mb-1"><i class="fas fa-phone"></i> {{ hospital.phone }}</p>
+                        <p class="mb-0">
+                            <i class="fas fa-route"></i> {{ hospital.distance }} km away
+                            <i class="fas fa-star text-warning ms-3"></i> {{ hospital.rating }}/5.0
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ get_maps_url(hospital) }}" target="_blank" class="btn btn-maps">
+                        <i class="fas fa-map-marked-alt"></i> View on Maps
+                    </a>
+                    <a href="{{ get_directions_url(hospital) }}" target="_blank" class="btn btn-maps">
+                        <i class="fas fa-directions"></i> Get Directions
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No hospitals found matching your criteria. Try adjusting filters.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Download PDF -->
+    <div class="text-center">
+        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg">
+            <i class="fas fa-download"></i> Download Medical Report (PDF)
+        </a>
+        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary btn-lg ms-2">
+            <i class="fas fa-home"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

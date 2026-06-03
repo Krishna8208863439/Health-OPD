@@ -1,0 +1,38 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<h2>Admin Dashboard</h2>
+<p>Model Accuracy: {{accuracy}}%</p>
+
+<canvas id="diseaseChart"></canvas>
+<canvas id="severityChart"></canvas>
+
+<script>
+new Chart(document.getElementById("diseaseChart"), {
+ type: "bar",
+ data: {
+  labels: {{ disease_data | map(attribute=0) | list | safe }},
+  datasets: [{ data: {{ disease_data | map(attribute=1) | list | safe }} }]
+ }
+});
+
+new Chart(document.getElementById("severityChart"), {
+ type: "pie",
+ data: {
+  labels: {{ severity_data | map(attribute=0) | list | safe }},
+  datasets: [{ data: {{ severity_data | map(attribute=1) | list | safe }} }]
+ }
+});
+</script>
+
+<h3>Patient History</h3>
+<table border="1">
+<tr><th>Date</th><th>Disease</th><th>Risk</th><th>Severity</th></tr>
+{% for h in history %}
+<tr>
+<td>{{h[1]}}</td>
+<td>{{h[2]}}</td>
+<td>{{h[3]}}</td>
+<td>{{h[4]}}</td>
+</tr>
+{% endfor %}
+</table>

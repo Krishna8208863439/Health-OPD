@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnosis Result - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        margin-bottom: 30px;
+    }
+    
+    .result-header {
+        text-align: center;
+        padding: 30px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .result-header i {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+    
+    .patient-details {
+        background: #F9FAFB;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        border-left: 5px solid var(--accent-blue);
+    }
+    
+    .diagnosis-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .diagnosis-box h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    
+    .risk-indicator {
+        display: inline-block;
+        padding: 15px 30px;
+        border-radius: 50px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 15px;
+    }
+    
+    .risk-low {
+        background: var(--success-green);
+    }
+    
+    .risk-medium {
+        background: var(--warning-orange);
+    }
+    
+    .risk-high {
+        background: var(--danger-red);
+    }
+    
+    .info-section {
+        margin-bottom: 30px;
+    }
+    
+    .info-section h4 {
+        color: var(--primary-blue);
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-section h4 i {
+        margin-right: 10px;
+        color: var(--accent-blue);
+    }
+    
+    .medicine-list, .hospital-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .medicine-list li, .hospital-list li {
+        background: #F9FAFB;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        border-left: 4px solid var(--accent-blue);
+        display: flex;
+        align-items: center;
+    }
+    
+    .medicine-list li i, .hospital-list li i {
+        margin-right: 10px;
+        color: var(--accent-blue);
+    }
+    
+    .advice-box {
+        background: #FEF3C7;
+        border-left: 5px solid var(--warning-orange);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .advice-box i {
+        color: var(--warning-orange);
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-download {
+        background: var(--danger-red);
+        color: white;
+    }
+    
+    .btn-download:hover {
+        background: #DC2626;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-history {
+        background: var(--accent-blue);
+        color: white;
+    }
+    
+    .btn-history:hover {
+        background: var(--primary-blue);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-new {
+        background: var(--success-green);
+        color: white;
+    }
+    
+    .btn-new:hover {
+        background: #059669;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <div class="result-header">
+        <i class="fas fa-file-medical-alt"></i>
+        <h1>Diagnosis Report</h1>
+        <p>AI-Powered Disease Prediction Results</p>
+    </div>
+    
+    <div class="result-card">
+        <div class="patient-details">
+            <h5><i class="fas fa-user"></i> Patient Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ patient.full_name }}</p>
+                    <p><strong>Age:</strong> {{ patient.age }} years</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
+                    <p><strong>Date:</strong> {{ prediction.get('timestamp', 'Today') }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="diagnosis-box">
+            <h3>Predicted Disease</h3>
+            <h2>{{ prediction.disease }}</h2>
+            <p class="mb-0">Risk Percentage: {{ prediction.risk_percentage }}%</p>
+            <div class="risk-indicator {% if 'HIGH' in prediction.severity %}risk-high{% elif 'MEDIUM' in prediction.severity %}risk-medium{% else %}risk-low{% endif %}">
+                {{ prediction.severity }}
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h4><i class="fas fa-pills"></i> Recommended Medicines</h4>
+            <ul class="medicine-list">
+                {% for medicine in medicines %}
+                <li>
+                    <i class="fas fa-capsules"></i>
+                    <span>{{ medicine }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="info-section">
+            <h4><i class="fas fa-hospital"></i> Recommended Hospitals</h4>
+            <ul class="hospital-list">
+                {% for hospital in hospitals %}
+                <li>
+                    <i class="fas fa-hospital-alt"></i>
+                    <span>{{ hospital }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="advice-box">
+            <h5><i class="fas fa-user-md"></i> Doctor's Advice</h5>
+            <p class="mb-0">{{ prediction.doctor_advice }}</p>
+        </div>
+        
+        <div class="action-buttons">
+            {% if pdf_file %}
+            <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-action btn-download">
+                <i class="fas fa-file-pdf"></i> Download PDF Report
+            </a>
+            {% endif %}
+            <a href="{{ url_for('history') }}" class="btn btn-action btn-history">
+                <i class="fas fa-history"></i> View History
+            </a>
+            <a href="{{ url_for('symptom_entry') }}" class="btn btn-action btn-new">
+                <i class="fas fa-plus"></i> New Diagnosis
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

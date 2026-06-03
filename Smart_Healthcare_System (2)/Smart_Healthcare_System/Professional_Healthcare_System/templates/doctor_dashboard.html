@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-header h1 {
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    .stat-card.primary i {
+        color: var(--accent-blue);
+    }
+    
+    .stat-card.success i {
+        color: var(--success-green);
+    }
+    
+    .stat-card.danger i {
+        color: var(--danger-red);
+    }
+    
+    .stat-card.warning i {
+        color: var(--warning-orange);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #6B7280;
+        font-weight: 500;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .chart-card h4 {
+        color: var(--primary-blue);
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .recent-cases-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .case-item {
+        padding: 15px;
+        border-left: 4px solid var(--accent-blue);
+        background: #F9FAFB;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .case-item.high {
+        border-left-color: var(--danger-red);
+    }
+    
+    .case-item.medium {
+        border-left-color: var(--warning-orange);
+    }
+    
+    .case-item.low {
+        border-left-color: var(--success-green);
+    }
+    
+    .case-patient {
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 5px;
+    }
+    
+    .case-disease {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .case-time {
+        font-size: 0.85rem;
+        color: #6B7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1><i class="fas fa-user-md"></i> Doctor Dashboard</h1>
+    <p class="lead">Welcome, Dr. {{ doctor.full_name }}</p>
+    <p><i class="fas fa-envelope"></i> {{ doctor.email }}</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card primary">
+            <i class="fas fa-users"></i>
+            <div class="stat-number">{{ stats.total_patients }}</div>
+            <div class="stat-label">Total Patients</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stat-card success">
+            <i class="fas fa-file-medical"></i>
+            <div class="stat-number">{{ stats.total_predictions }}</div>
+            <div class="stat-label">Total Diagnoses</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stat-card danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="stat-number">{{ stats.high_risk }}</div>
+            <div class="stat-label">High Risk Cases</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stat-card warning">
+            <i class="fas fa-chart-line"></i>
+            <div class="stat-number">{{ ((stats.high_risk / stats.total_predictions * 100) if stats.total_predictions > 0 else 0)|round(1) }}%</div>
+            <div class="stat-label">Critical Rate</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="chart-card">
+            <h4><i class="fas fa-chart-pie"></i> Disease Distribution</h4>
+            <canvas id="diseaseChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="chart-card">
+            <h4><i class="fas fa-chart-bar"></i> Severity Analysis</h4>
+            <canvas id="severityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="chart-card">
+            <h4><i class="fas fa-chart-line"></i> Monthly Trends</h4>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="recent-cases-card">
+    <h4><i class="fas fa-clock"></i> Recent Cases</h4>
+    
+    {% if stats.recent_cases %}
+        {% for case in stats.recent_cases %}
+        <div class="case-item {% if 'HIGH' in case.severity %}high{% elif 'MEDIUM' in case.severity %}medium{% else %}low{% endif %}">
+            <div class="case-patient">
+                <i class="fas fa-user"></i> {{ case.patient_name }} ({{ case.patient_age }} years)
+            </div>
+            <div class="case-disease">
+                <i class="fas fa-disease"></i> {{ case.disease }}
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge {% if 'HIGH' in case.severity %}bg-danger{% elif 'MEDIUM' in case.severity %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ case.severity }}
+                    </span>
+                    <span class="badge bg-secondary">Risk: {{ case.risk_percentage }}%</span>
+                </div>
+                <div class="case-time">
+                    <i class="fas fa-calendar"></i> {{ case.timestamp }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>No cases recorded yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Fetch analytics data
+    fetch('/analytics-data')
+        .then(response => response.json())
+        .then(data => {
+            // Disease Distribution Chart
+            const diseaseCtx = document.getElementById('diseaseChart').getContext('2d');
+            new Chart(diseaseCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.diseases.labels,
+                    datasets: [{
+                        data: data.diseases.data,
+                        backgroundColor: [
+                            '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                            '#EC4899', '#14B8A6', '#F97316', '#6366F1', '#84CC16'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Severity Analysis Chart
+            const severityCtx = document.getElementById('severityChart').getContext('2d');
+            new Chart(severityCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.severity.labels,
+                    datasets: [{
+                        label: 'Number of Cases',
+                        data: data.severity.data,
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Trends Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: data.monthly.labels,
+                    datasets: [{
+                        label: 'Diagnoses per Month',
+                        data: data.monthly.data,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

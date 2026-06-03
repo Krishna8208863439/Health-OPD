@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result - HealthCare Plus{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="card-header" style="margin: 0; border: none; padding: 0;">
+            📋 Prediction Results
+        </div>
+        <div style="text-align: right;">
+            <p style="margin: 0; font-size: 18px; font-weight: 600; color: var(--primary-blue);">{{ patient.full_name }}</p>
+            <p style="margin: 0; font-size: 14px; color: #6C757D;">Age: {{ patient.age }} years</p>
+        </div>
+    </div>
+    
+    <!-- Disease Information -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+        <h2 style="margin: 0 0 10px 0; font-size: 28px;">{{ prediction.disease }}</h2>
+        <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+            <div>
+                <p style="margin: 0; opacity: 0.9;">Risk Level</p>
+                <p style="margin: 0; font-size: 32px; font-weight: bold;">{{ prediction.risk_percentage }}%</p>
+            </div>
+            <div>
+                <p style="margin: 0; opacity: 0.9;">Severity</p>
+                <p style="margin: 0; font-size: 24px; font-weight: bold;">{{ prediction.severity }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Medicines -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 15px;">💊 Recommended Medicines</h3>
+        <div style="background: #F8F9FA; padding: 20px; border-radius: 8px; border-left: 4px solid var(--secondary-green);">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for medicine in medicines %}
+                <li style="padding: 10px 0; border-bottom: 1px solid #DEE2E6;">
+                    <span style="color: var(--secondary-green); margin-right: 10px;">✓</span>
+                    {{ medicine }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Hospital Recommendations -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 15px;">🏥 Hospital Recommendations</h3>
+        <div style="background: #F8F9FA; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary-blue);">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for hospital in hospitals %}
+                <li style="padding: 10px 0; border-bottom: 1px solid #DEE2E6;">
+                    <span style="color: var(--primary-blue); margin-right: 10px;">🏥</span>
+                    {{ hospital }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Doctor's Advice -->
+    <div style="margin-bottom: 30px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 15px;">👨‍⚕️ Doctor's Advice</h3>
+        <div style="background: #FFF3CD; padding: 20px; border-radius: 8px; border-left: 4px solid var(--warning-yellow);">
+            <p style="margin: 0; color: #856404;">{{ prediction.doctor_advice }}</p>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
+            📥 Download PDF Report
+        </a>
+        <a href="{{ url_for('symptom_entry') }}" class="btn btn-primary">
+            🔄 New Prediction
+        </a>
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">
+            📜 View History
+        </a>
+    </div>
+</div>
+
+<!-- Auto-download PDF -->
+<script>
+    // Auto-download PDF after 2 seconds
+    setTimeout(function() {
+        window.location.href = "{{ url_for('download_pdf', filename=pdf_file) }}";
+    }, 2000);
+</script>
+{% endblock %}

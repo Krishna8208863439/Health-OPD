@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Medical History - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .history-header {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .history-header i {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .patient-summary {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .history-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border-left: 5px solid var(--accent-blue);
+        transition: all 0.3s;
+    }
+    
+    .history-card:hover {
+        transform: translateX(10px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .history-card.high {
+        border-left-color: var(--danger-red);
+    }
+    
+    .history-card.medium {
+        border-left-color: var(--warning-orange);
+    }
+    
+    .history-card.low {
+        border-left-color: var(--success-green);
+    }
+    
+    .disease-name {
+        color: var(--primary-blue);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .timestamp {
+        color: #6B7280;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+    
+    .severity-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+    
+    .severity-badge.high {
+        background: var(--danger-red);
+        color: white;
+    }
+    
+    .severity-badge.medium {
+        background: var(--warning-orange);
+        color: white;
+    }
+    
+    .severity-badge.low {
+        background: var(--success-green);
+        color: white;
+    }
+    
+    .risk-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 20px;
+        background: #E5E7EB;
+        color: #374151;
+        font-weight: 600;
+    }
+    
+    .details-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #E5E7EB;
+    }
+    
+    .details-row {
+        margin-bottom: 10px;
+    }
+    
+    .details-label {
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-right: 10px;
+    }
+    
+    .btn-download {
+        background: var(--danger-red);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-download:hover {
+        background: #DC2626;
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #D1D5DB;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <i class="fas fa-history"></i>
+        <h1>Medical History</h1>
+        <p>Complete record of your diagnoses and treatments</p>
+    </div>
+    
+    <div class="patient-summary">
+        <h4><i class="fas fa-user-circle"></i> Patient Profile</h4>
+        <div class="row">
+            <div class="col-md-3">
+                <p><strong>Name:</strong> {{ patient.full_name }}</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Age:</strong> {{ patient.age }} years</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Total Records:</strong> {{ predictions|length }}</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if predictions %}
+        {% for pred in predictions %}
+        <div class="history-card {% if 'HIGH' in pred.severity %}high{% elif 'MEDIUM' in pred.severity %}medium{% else %}low{% endif %}">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="disease-name">
+                        <i class="fas fa-disease"></i> {{ pred.disease }}
+                    </div>
+                    <div class="timestamp">
+                        <i class="fas fa-calendar-alt"></i> {{ pred.timestamp }}
+                    </div>
+                    <div class="mb-3">
+                        <span class="severity-badge {% if 'HIGH' in pred.severity %}high{% elif 'MEDIUM' in pred.severity %}medium{% else %}low{% endif %}">
+                            {{ pred.severity }}
+                        </span>
+                        <span class="risk-badge">
+                            Risk: {{ pred.risk_percentage }}%
+                        </span>
+                    </div>
+                    
+                    <div class="details-section">
+                        <div class="details-row">
+                            <span class="details-label"><i class="fas fa-pills"></i> Medicines:</span>
+                            <span>{{ pred.medicines[:100] }}{% if pred.medicines|length > 100 %}...{% endif %}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="details-label"><i class="fas fa-hospital"></i> Hospitals:</span>
+                            <span>{{ pred.hospitals[:100] }}{% if pred.hospitals|length > 100 %}...{% endif %}</span>
+                        </div>
+                        <div class="details-row">
+                            <span class="details-label"><i class="fas fa-user-md"></i> Advice:</span>
+                            <span>{{ pred.doctor_advice[:150] }}{% if pred.doctor_advice|length > 150 %}...{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if pred.pdf_path %}
+                    <a href="{{ url_for('download_pdf', filename=pred.pdf_path) }}" class="btn btn-download">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>No Medical Records Found</h3>
+            <p class="text-muted">You haven't had any diagnoses yet.</p>
+            <a href="{{ url_for('symptom_entry') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-stethoscope"></i> Start Your First Diagnosis
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

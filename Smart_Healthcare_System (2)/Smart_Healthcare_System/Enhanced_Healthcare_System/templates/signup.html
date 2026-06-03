@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - HealthCare Plus{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto;">
+    <div class="card">
+        <div class="card-header">
+            📝 Create Your Account
+        </div>
+        
+        <form method="POST" action="{{ url_for('signup') }}">
+            <div class="form-group">
+                <label for="full_name">Full Name *</label>
+                <input type="text" class="form-control" id="full_name" name="full_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="age">Age *</label>
+                <input type="number" class="form-control" id="age" name="age" min="1" max="120" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contact">Contact Number</label>
+                <input type="tel" class="form-control" id="contact" name="contact" placeholder="+1-234-567-8900">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" class="form-control" id="password" name="password" minlength="6" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">Account Type *</label>
+                <select class="form-control" id="role" name="role" required>
+                    <option value="patient">Patient</option>
+                    <option value="doctor">Doctor</option>
+                </select>
+            </div>
+            
+            <hr style="margin: 30px 0;">
+            <h5 style="color: #0066CC; margin-bottom: 20px;">🏥 Additional Information (Optional)</h5>
+            
+            <div class="form-group">
+                <label for="city">City</label>
+                <select class="form-control" id="city" name="city">
+                    <option value="Default">Other/Not Listed</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Bengaluru">Bengaluru</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Kolkata">Kolkata</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Jaipur">Jaipur</option>
+                    <option value="Kolhapur">Kolhapur</option>
+                    <option value="Kagal">Kagal</option>
+                    <option value="Agra">Agra</option>
+                    <option value="New York">New York</option>
+                    <option value="Los Angeles">Los Angeles</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="Houston">Houston</option>
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="smoking">Smoking</label>
+                        <select class="form-control" id="smoking" name="smoking">
+                            <option value="no">No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="blood_pressure">Blood Pressure</label>
+                        <select class="form-control" id="blood_pressure" name="blood_pressure">
+                            <option value="normal">Normal</option>
+                            <option value="low">Low</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="blood_sugar">Blood Sugar</label>
+                        <select class="form-control" id="blood_sugar" name="blood_sugar">
+                            <option value="normal">Normal</option>
+                            <option value="prediabetic">Pre-diabetic</option>
+                            <option value="high">High/Diabetic</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <p>Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-blue); font-weight: 600;">Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

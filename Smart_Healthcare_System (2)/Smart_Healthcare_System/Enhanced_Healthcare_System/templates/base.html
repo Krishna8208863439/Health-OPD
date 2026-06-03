@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HealthCare Plus{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-blue: #0066CC;
+            --secondary-green: #28A745;
+            --warning-yellow: #FFC107;
+            --danger-red: #DC3545;
+            --background: #F5F7FA;
+            --text-dark: #2C3E50;
+            --white: #FFFFFF;
+            --light-gray: #E9ECEF;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #0052A3 100%);
+            color: var(--white);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .hospital-name h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .hospital-name p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-menu a {
+            color: var(--white);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .nav-menu .btn-logout {
+            background: var(--danger-red);
+            padding: 8px 20px;
+            border-radius: 5px;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Flash Messages */
+        .flash-messages {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #D4EDDA;
+            color: #155724;
+            border-left: 4px solid var(--secondary-green);
+        }
+        
+        .alert-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            border-left: 4px solid var(--danger-red);
+        }
+        
+        .alert-info {
+            background: #D1ECF1;
+            color: #0C5460;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background: #0052A3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+        }
+        
+        .btn-success {
+            background: var(--secondary-green);
+            color: var(--white);
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-danger {
+            background: var(--danger-red);
+            color: var(--white);
+        }
+        
+        .btn-secondary {
+            background: #6C757D;
+            color: var(--white);
+        }
+        
+        /* Severity Badges */
+        .severity-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .severity-low {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        
+        .severity-medium {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        
+        .severity-high {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--primary-blue);
+            color: var(--white);
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">🏥</div>
+                <div class="hospital-name">
+                    <h1>HealthCare Plus</h1>
+                    <p>Advanced Disease Prediction & Care</p>
+                </div>
+            </div>
+            {% if current_user.is_authenticated %}
+            <nav class="nav-menu">
+                {% if current_user.role == 'patient' %}
+                <a href="{{ url_for('symptom_entry') }}">Symptoms</a>
+                <a href="{{ url_for('history') }}">History</a>
+                {% elif current_user.role == 'doctor' %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 HealthCare Plus Hospital | 24/7 Emergency Services</p>
+        <p>Contact: +1-800-HEALTH | Email: care@healthcareplus.com</p>
+    </footer>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

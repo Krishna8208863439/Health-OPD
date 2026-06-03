@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter Patient Symptoms</title>
+    <link rel="stylesheet" href="/static/symptom.css">
+</head>
+<body>
+
+<div class="overlay">
+    <div class="card">
+
+        <h2>Enter Patient Symptoms</h2>
+        <div class="note">
+            Enter <b>1 = Yes</b> &nbsp; | &nbsp; <b>2 = No</b>
+        </div>
+
+        <form action="/predict" method="post">
+
+            <div class="symptom">
+                <label>Body Pain</label>
+                <input type="number" name="s1" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Hollow</label>
+                <input type="number" name="s2" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Cold & Cough</label>
+                <input type="number" name="s3" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Cough</label>
+                <input type="number" name="s4" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Fever Level (1-High / 2-Low)</label>
+                <input type="number" name="s5" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Chest Pain</label>
+                <input type="number" name="s6" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Breathing Problem</label>
+                <input type="number" name="s7" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Throat Pain</label>
+                <input type="number" name="s8" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Head Pain</label>
+                <input type="number" name="s9" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Stomach Pain</label>
+                <input type="number" name="s10" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Diarrhea</label>
+                <input type="number" name="s11" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Vomiting</label>
+                <input type="number" name="s12" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Back Pain</label>
+                <input type="number" name="s13" min="1" max="2" required>
+            </div>
+
+            <div class="symptom">
+                <label>Swollen Feet</label>
+                <input type="number" name="s14" min="1" max="2" required>
+            </div>
+
+            <button type="submit">Predict Disease</button>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

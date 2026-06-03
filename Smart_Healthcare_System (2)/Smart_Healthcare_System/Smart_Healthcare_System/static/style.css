@@ -1,0 +1,50 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Consolas, monospace;
+    background: url("/static/bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* White overlay for readability */
+.overlay {
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Result card */
+.card {
+    background: #ffffff;
+    width: 600px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+h2 {
+    text-align: center;
+    color: #0a5275;
+}
+
+pre {
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background: #0a5275;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #083b55;
+}

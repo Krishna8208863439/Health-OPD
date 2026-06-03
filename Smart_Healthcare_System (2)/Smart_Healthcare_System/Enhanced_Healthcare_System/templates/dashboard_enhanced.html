@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Analytics Dashboard - HealthCare Plus{% endblock %}
+
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+    
+    <!-- Dashboard Header -->
+    <div style="background: linear-gradient(135deg, #0066CC, #3B82F6); color: white; padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+        <h2><i class="fas fa-chart-line"></i> Admin Analytics Dashboard</h2>
+        <p style="margin: 0;">Welcome, Dr. {{ doctor.full_name }}</p>
+    </div>
+
+    <!-- Key Statistics -->
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-md-3">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s;">
+                <div style="font-size: 2.5rem; color: #3B82F6; margin-bottom: 15px;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 5px;">{{ stats.total_patients }}</div>
+                <div style="color: #6B7280; font-size: 0.95rem;">Total Patients</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s;">
+                <div style="font-size: 2.5rem; color: #10B981; margin-bottom: 15px;">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 5px;">{{ stats.today_count }}</div>
+                <div style="color: #6B7280; font-size: 0.95rem;">Today's Patients</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s;">
+                <div style="font-size: 2.5rem; color: #EF4444; margin-bottom: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 5px;">{{ stats.high_risk }}</div>
+                <div style="color: #6B7280; font-size: 0.95rem;">High Risk Cases</div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; transition: all 0.3s;">
+                <div style="font-size: 2.5rem; color: #F59E0B; margin-bottom: 15px;">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 5px;">{{ stats.avg_risk_score }}</div>
+                <div style="color: #6B7280; font-size: 0.95rem;">Avg Risk Score</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-md-6">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <h5><i class="fas fa-disease"></i> Most Common Diseases</h5>
+                <canvas id="diseaseChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <h5><i class="fas fa-chart-pie"></i> Severity Distribution</h5>
+                <canvas id="severityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-md-6">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <h5><i class="fas fa-users"></i> Age-wise Distribution</h5>
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <h5><i class="fas fa-calendar-week"></i> Daily Patient Trend (Last 7 Days)</h5>
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Risk Patients Table -->
+    <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
+        <h5><i class="fas fa-user-injured"></i> High-Risk Patients (Score ≥ 60)</h5>
+        <div style="overflow-x: auto;">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Disease</th>
+                        <th>Risk Score</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in stats.high_risk_patients %}
+                    <tr>
+                        <td><strong>PT-{{ '%06d'|format(patient.patient_id) }}</strong></td>
+                        <td>{{ patient.disease }}</td>
+                        <td><strong>{{ patient.health_risk_score }}</strong></td>
+                        <td>
+                            <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; {% if patient.health_risk_score >= 80 %}background: #7F1D1D; color: white;{% else %}background: #FEE2E2; color: #991B1B;{% endif %}">
+                                {{ patient.health_risk_category }}
+                            </span>
+                        </td>
+                        <td>{{ patient.timestamp[:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Age-wise Disease Distribution -->
+    <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+        <h5><i class="fas fa-chart-bar"></i> Age-wise Disease Distribution</h5>
+        <div style="overflow-x: auto;">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Age Group</th>
+                        <th>Disease</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in stats.age_disease_stats[:20] %}
+                    <tr>
+                        <td><strong>{{ row[0] }}</strong></td>
+                        <td>{{ row[1] }}</td>
+                        <td><span style="background: #3B82F6; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem;">{{ row[2] }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Fetch analytics data
+fetch('/analytics-data')
+    .then(response => response.json())
+    .then(data => {
+        // Disease Chart
+        new Chart(document.getElementById('diseaseChart'), {
+            type: 'bar',
+            data: {
+                labels: data.diseases.labels,
+                datasets: [{
+                    label: 'Cases',
+                    data: data.diseases.data,
+                    backgroundColor: '#3B82F6'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        
+        // Severity Chart
+        new Chart(document.getElementById('severityChart'), {
+            type: 'doughnut',
+            data: {
+                labels: data.severity.labels,
+                datasets: [{
+                    data: data.severity.data,
+                    backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+        
+        // Age Chart
+        new Chart(document.getElementById('ageChart'), {
+            type: 'bar',
+            data: {
+                labels: data.age.labels,
+                datasets: [{
+                    label: 'Patients',
+                    data: data.age.data,
+                    backgroundColor: '#8B5CF6'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        
+        // Daily Chart
+        new Chart(document.getElementById('dailyChart'), {
+            type: 'line',
+            data: {
+                labels: data.daily.labels,
+                datasets: [{
+                    label: 'Patients',
+                    data: data.daily.data,
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error loading analytics data:', error);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: url("/static/symptom_bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* Overlay for readability */
+.overlay {
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.88);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Card */
+.card {
+    width: 520px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 18px rgba(0,0,0,0.3);
+}
+
+h2 {
+    text-align: center;
+    color: #0a5275;
+}
+
+.note {
+    text-align: center;
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 15px;
+}
+
+.symptom {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.symptom label {
+    font-weight: bold;
+}
+
+.symptom input {
+    width: 60px;
+    padding: 4px;
+}
+
+button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    font-size: 16px;
+    background: #0a5275;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #083b55;
+}

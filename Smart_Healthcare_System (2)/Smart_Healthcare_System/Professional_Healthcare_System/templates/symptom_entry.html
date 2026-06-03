@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Symptom Entry - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .symptom-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .symptom-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid var(--accent-blue);
+    }
+    
+    .symptom-header i {
+        font-size: 3.5rem;
+        color: var(--accent-blue);
+        margin-bottom: 15px;
+    }
+    
+    .symptom-header h2 {
+        color: var(--primary-blue);
+        font-weight: 700;
+    }
+    
+    .patient-info {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .symptom-group {
+        background: #F9FAFB;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 2px solid #E5E7EB;
+    }
+    
+    .symptom-group h4 {
+        color: var(--primary-blue);
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .symptom-group h4 i {
+        margin-right: 10px;
+        color: var(--accent-blue);
+    }
+    
+    .symptom-item {
+        margin-bottom: 15px;
+    }
+    
+    .symptom-label {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #E5E7EB;
+    }
+    
+    .symptom-label:hover {
+        border-color: var(--accent-blue);
+        transform: translateX(5px);
+    }
+    
+    .symptom-label input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        margin-right: 15px;
+        cursor: pointer;
+    }
+    
+    .symptom-label span {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .symptom-label input[type="checkbox"]:checked + span {
+        color: var(--accent-blue);
+        font-weight: 600;
+    }
+    
+    .btn-predict {
+        background: var(--success-green);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    
+    .btn-predict:hover {
+        background: #059669;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="symptom-card">
+    <div class="symptom-header">
+        <i class="fas fa-stethoscope"></i>
+        <h2>Symptom Assessment</h2>
+        <p class="text-muted">Select all symptoms you are experiencing</p>
+    </div>
+    
+    <div class="patient-info">
+        <h5><i class="fas fa-user"></i> Patient Information</h5>
+        <p class="mb-1"><strong>Name:</strong> {{ patient.full_name }}</p>
+        <p class="mb-0"><strong>Age:</strong> {{ patient.age }} years | <strong>ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('predict') }}">
+        <div class="symptom-group">
+            <h4><i class="fas fa-head-side-cough"></i> General Symptoms</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="fever" value="1">
+                            <span>🌡️ Fever</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="bodypain" value="1">
+                            <span>💪 Body Pain</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="head_pain" value="1">
+                            <span>🤕 Headache</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="back_pain" value="1">
+                            <span>🔙 Back Pain</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="symptom-group">
+            <h4><i class="fas fa-lungs"></i> Respiratory Symptoms</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="cough" value="1">
+                            <span>😷 Cough</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="cold_cough" value="1">
+                            <span>🤧 Cold & Cough</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="breathing_problem" value="1">
+                            <span>🫁 Breathing Problem</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="throat_pain" value="1">
+                            <span>🗣️ Throat Pain</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="symptom-group">
+            <h4><i class="fas fa-heartbeat"></i> Chest & Heart Symptoms</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="chest_pain" value="1">
+                            <span>💔 Chest Pain</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="Hollow" value="1">
+                            <span>🫀 Hollow Feeling</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="symptom-group">
+            <h4><i class="fas fa-stomach"></i> Digestive Symptoms</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="stomach_pain" value="1">
+                            <span>🤢 Stomach Pain</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="diarrhea" value="1">
+                            <span>🚽 Diarrhea</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="omitting" value="1">
+                            <span>🤮 Vomiting</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="symptom-item">
+                        <label class="symptom-label">
+                            <input type="checkbox" name="swollen_feet" value="1">
+                            <span>🦶 Swollen Feet</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="symptom-group">
+            <h4><i class="fas fa-hospital"></i> Hospital Preferences (Optional)</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Hospital Type:</strong></label>
+                    <select class="form-select" name="hospital_type">
+                        <option value="">All Types</option>
+                        <option value="Government">Government</option>
+                        <option value="Private">Private</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Maximum Distance (km):</strong></label>
+                    <input type="number" class="form-control" name="max_distance" placeholder="e.g., 10" min="1" max="100" step="0.5">
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-predict">
+                <i class="fas fa-brain"></i> Analyze Symptoms & Predict Disease
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

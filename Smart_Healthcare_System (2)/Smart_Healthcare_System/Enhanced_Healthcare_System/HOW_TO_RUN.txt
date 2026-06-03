@@ -1,0 +1,94 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                   🚀 HOW TO RUN - SIMPLE GUIDE 🚀                            ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+STEP 1: INSTALL DEPENDENCIES (First Time Only)
+═══════════════════════════════════════════════════════════════════════════════
+
+Open Command Prompt or Terminal in this folder and run:
+
+    pip install Flask Flask-Login pandas scikit-learn reportlab Pillow
+
+OR if you have requirements file:
+
+    pip install -r requirements.txt
+
+
+STEP 2: RUN THE APPLICATION
+═══════════════════════════════════════════════════════════════════════════════
+
+In the same Command Prompt/Terminal, run:
+
+    python app.py
+
+You should see output like:
+    * Running on http://127.0.0.1:5001
+    * Running on http://localhost:5001
+
+
+STEP 3: OPEN IN BROWSER
+═══════════════════════════════════════════════════════════════════════════════
+
+Open your web browser and go to:
+
+    http://localhost:5001
+
+OR
+
+    http://127.0.0.1:5001
+
+
+STEP 4: CREATE ACCOUNT & USE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Click "Sign Up Here"
+2. Fill in your details:
+   - Full Name: Your Name
+   - Username: yourname
+   - Email: your@email.com
+   - Password: yourpassword
+   - Age: 25
+   - Contact: +1234567890
+   - Role: Patient (or Doctor)
+3. Click "Create Account"
+4. Login with your email and password
+5. Start using the system!
+
+
+QUICK COMMANDS SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+# Install (first time only)
+pip install Flask Flask-Login pandas scikit-learn reportlab Pillow
+
+# Run the app
+python app.py
+
+# Open browser
+http://localhost:5001
+
+
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Problem: "pip is not recognized"
+Solution: Install Python from python.org (make sure to check "Add to PATH")
+
+Problem: "Port 5001 is already in use"
+Solution: 
+  1. Open app.py
+  2. Find the last line: app.run(debug=True, port=5001)
+  3. Change to: app.run(debug=True, port=5002)
+  4. Then use: http://localhost:5002
+
+Problem: "Module not found"
+Solution: Make sure you installed all dependencies (Step 1)
+
+Problem: "Database error"
+Solution: Delete healthcare.db file and restart the app
+
+
+THAT'S IT! ENJOY YOUR HEALTHCARE SYSTEM! 🎉
+═══════════════════════════════════════════════════════════════════════════════

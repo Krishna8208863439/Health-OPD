@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .welcome-section {
+        background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+        color: white;
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    
+    .welcome-section h1 {
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .action-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .action-card i {
+        font-size: 3.5rem;
+        margin-bottom: 20px;
+    }
+    
+    .action-card.primary i {
+        color: var(--accent-blue);
+    }
+    
+    .action-card.success i {
+        color: var(--success-green);
+    }
+    
+    .action-card h3 {
+        color: var(--primary-blue);
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .btn-action {
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-action.primary {
+        background: var(--accent-blue);
+        color: white;
+    }
+    
+    .btn-action.success {
+        background: var(--success-green);
+        color: white;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .recent-predictions {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .prediction-item {
+        border-left: 4px solid var(--accent-blue);
+        padding: 15px;
+        margin-bottom: 15px;
+        background: #F9FAFB;
+        border-radius: 8px;
+    }
+    
+    .prediction-item.high {
+        border-left-color: var(--danger-red);
+    }
+    
+    .prediction-item.medium {
+        border-left-color: var(--warning-orange);
+    }
+    
+    .prediction-item.low {
+        border-left-color: var(--success-green);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1><i class="fas fa-user-circle"></i> Welcome, {{ patient.full_name }}!</h1>
+    <p class="lead">Patient ID: PT-{{ '%06d'|format(patient.id) }} | Age: {{ patient.age }} years</p>
+    <p><i class="fas fa-envelope"></i> {{ patient.email }} | <i class="fas fa-phone"></i> {{ patient.contact or 'Not provided' }}</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="action-card primary">
+            <i class="fas fa-notes-medical"></i>
+            <h3>Check Symptoms</h3>
+            <p class="text-muted">Enter your symptoms for AI-powered disease prediction</p>
+            <a href="{{ url_for('symptom_entry') }}" class="btn btn-action primary">
+                <i class="fas fa-stethoscope"></i> Start Diagnosis
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="action-card success">
+            <i class="fas fa-history"></i>
+            <h3>Medical History</h3>
+            <p class="text-muted">View your complete medical records and reports</p>
+            <a href="{{ url_for('history') }}" class="btn btn-action success">
+                <i class="fas fa-file-medical"></i> View History
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="recent-predictions">
+    <h3 class="mb-4"><i class="fas fa-clock"></i> Recent Diagnoses</h3>
+    
+    {% if recent_predictions %}
+        {% for pred in recent_predictions %}
+        <div class="prediction-item {% if 'HIGH' in pred.severity %}high{% elif 'MEDIUM' in pred.severity %}medium{% else %}low{% endif %}">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-1">{{ pred.disease }}</h5>
+                    <p class="mb-1 text-muted">
+                        <i class="fas fa-calendar"></i> {{ pred.timestamp }}
+                    </p>
+                    <span class="badge {% if 'HIGH' in pred.severity %}bg-danger{% elif 'MEDIUM' in pred.severity %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ pred.severity }}
+                    </span>
+                    <span class="badge bg-secondary">Risk: {{ pred.risk_percentage }}%</span>
+                </div>
+                <div class="col-md-4 text-end">
+                    {% if pred.pdf_path %}
+                    <a href="{{ url_for('download_pdf', filename=pred.pdf_path) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-download"></i> Download Report
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>No diagnoses yet. Start by checking your symptoms.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
