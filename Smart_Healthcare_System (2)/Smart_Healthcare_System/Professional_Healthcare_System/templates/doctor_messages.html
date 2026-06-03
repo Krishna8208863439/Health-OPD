@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Messages - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        height: 75vh;
+        min-height: 500px;
+        display: flex;
+        overflow: hidden;
+    }
+    .contacts-list {
+        width: 30%;
+        border-right: 1px solid var(--glass-border);
+        display: flex;
+        flex-direction: column;
+        background: rgba(0,0,0,0.1);
+    }
+    .chat-area {
+        width: 70%;
+        display: flex;
+        flex-direction: column;
+    }
+    .contact-item {
+        padding: 16px 20px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--glass-border);
+        transition: background 0.2s;
+    }
+    .contact-item:hover, .contact-item.active {
+        background: rgba(255,255,255,0.03);
+    }
+    .messages-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: rgba(0,0,0,0.05);
+    }
+    .chat-bubble {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 0.92rem;
+        line-height: 1.4;
+    }
+    .chat-bubble.sent {
+        align-self: flex-end;
+        background: linear-gradient(135deg, var(--accent), var(--accent-light));
+        color: white;
+        border-top-right-radius: 4px;
+    }
+    .chat-bubble.received {
+        align-self: flex-start;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-top-left-radius: 4px;
+    }
+    .chat-input-box {
+        padding: 16px;
+        border-top: 1px solid var(--glass-border);
+        display: flex;
+        gap: 12px;
+        background: rgba(0,0,0,0.1);
+    }
+    .chat-input-box input {
+        flex: 1;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+    }
+    .chat-input-box input:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    @media (max-width: 768px) {
+        .chat-card {
+            flex-direction: column;
+            height: 80vh;
+        }
+        .contacts-list {
+            width: 100%;
+            height: 30%;
+            border-right: none;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .chat-area {
+            width: 100%;
+            height: 70%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-card">
+    <!-- Sidebar Contacts List -->
+    <div class="contacts-list">
+        <div class="p-3 border-bottom border-secondary-subtle">
+            <h5 class="fw-bold mb-0" data-en="Active Patients" data-hi="सक्रिय मरीज">Active Patients</h5>
+        </div>
+        <div class="overflow-y-auto" style="flex:1;">
+            {% for patient in patients %}
+            <div class="contact-item" onclick="selectPatient({{ patient.id }}, '{{ patient.full_name }}', this)">
+                <strong class="d-block"><i class="fas fa-user me-2 text-primary"></i>{{ patient.full_name }}</strong>
+                <small class="text-muted">{{ patient.email }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Active Chat Area -->
+    <div class="chat-area">
+        <!-- Chat Header -->
+        <div class="p-3 border-bottom border-secondary-subtle d-flex align-items-center justify-content-between">
+            <h5 class="fw-bold mb-0" id="activePatName">Select a patient to start chat</h5>
+            <span class="badge bg-success" id="chatStatus" style="display:none;" data-en="Connected" data-hi="कनेक्टेड">Connected</span>
+        </div>
+
+        <!-- Messages history -->
+        <div class="messages-container" id="messagesContainer">
+            <div class="text-center text-muted py-5" id="chatWelcome">
+                <i class="far fa-comments fa-3x mb-3"></i>
+                <p data-en="Please select a patient from the active list to load your conversation thread." data-hi="बातचीत शुरू करने के लिए कृपया सक्रिय सूची से एक मरीज का चयन करें।">Please select a patient from the active list to load your conversation thread.</p>
+            </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="chat-input-box">
+            <input type="text" id="messageInput" placeholder="Write your message here..." onkeypress="checkEnter(event)" disabled data-en="Write your message here..." data-hi="अपना संदेश यहाँ लिखें...">
+            <button onclick="sendMessage()" class="btn btn-primary px-4 fw-bold" id="sendBtn" disabled style="background: var(--accent); border:none; border-radius:10px;">
+                <i class="fas fa-paper-plane me-1"></i> <span data-en="Send" data-hi="भेजें">Send</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let activePatientId = null;
+    let lastMessageId = 0;
+    let pollInterval = null;
+    const messagesContainer = document.getElementById('messagesContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const activePatName = document.getElementById('activePatName');
+    const chatWelcome = document.getElementById('chatWelcome');
+    const chatStatus = document.getElementById('chatStatus');
+
+    function selectPatient(id, name, el) {
+        document.querySelectorAll('.contact-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+
+        activePatientId = id;
+        lastMessageId = 0;
+        activePatName.textContent = name;
+        chatWelcome.style.display = 'none';
+        chatStatus.style.display = 'inline-block';
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+
+        messagesContainer.innerHTML = '';
+        loadMessages();
+
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(loadMessages, 5000);
+    }
+
+    function loadMessages() {
+        if (!activePatientId) return;
+
+        fetch(`/messages/poll?other_user_id=${activePatientId}&last_id=${lastMessageId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        const bubble = document.createElement('div');
+                        const isSent = (msg.sender_id !== activePatientId);
+                        bubble.className = `chat-bubble ${isSent ? 'sent' : 'received'}`;
+                        bubble.textContent = msg.body;
+                        messagesContainer.appendChild(bubble);
+                        lastMessageId = Math.max(lastMessageId, msg.id);
+                    });
+                    scrollToBottom();
+                }
+            })
+            .catch(err => console.error("Error loading chat messages:", err));
+    }
+
+    function sendMessage() {
+        const body = messageInput.value.trim();
+        if (!body || !activePatientId) return;
+
+        const formData = new FormData();
+        formData.append('recipient_id', activePatientId);
+        formData.append('body', body);
+
+        messageInput.value = '';
+        const tempBubble = document.createElement('div');
+        tempBubble.className = 'chat-bubble sent';
+        tempBubble.textContent = body;
+        messagesContainer.appendChild(tempBubble);
+        scrollToBottom();
+
+        fetch('/messages/send', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                loadMessages();
+            }
+        })
+        .catch(err => console.error("Error sending message:", err));
+    }
+
+    function checkEnter(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>
+{% endblock %}

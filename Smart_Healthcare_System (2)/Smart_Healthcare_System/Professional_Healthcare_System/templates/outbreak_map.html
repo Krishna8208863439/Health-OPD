@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Outbreak Map - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    .map-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: 15px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        margin-bottom: 24px;
+    }
+    #map {
+        height: 60vh;
+        min-height: 400px;
+        max-height: 600px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        z-index: 1;
+    }
+    .legend {
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: white;
+        line-height: 1.5;
+        font-size: 0.8rem;
+    }
+    .legend i {
+        width: 14px;
+        height: 14px;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.8;
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-card">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-map-marked-alt text-primary me-2"></i>
+                <span data-en="Disease Outbreak Tracker" data-hi="बीमारी प्रकोप ट्रैकर">Disease Outbreak Tracker</span>
+            </h2>
+            <p class="text-muted mb-0" data-en="Real-time analytics of disease hotspots based on patient predictions across cities." data-hi="विभिन्न शहरों में मरीजों की भविष्यवाणियों के आधार पर बीमारी के हॉटस्पॉट का वास्तविक समय विश्लेषण।">Real-time analytics of disease hotspots based on patient predictions across cities.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-secondary p-2" data-en="Live Tracker Active" data-hi="लाइव ट्रैकर सक्रिय">Live Tracker Active</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Center the map on India
+        const map = L.map('map').setView([20.5937, 78.9629], 5);
+
+        // Dark or light map style based on active theme
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const tileUrl = isLight 
+            ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+        L.tileLayer(tileUrl, {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        }).addTo(map);
+
+        // Fetch outbreak data from backend
+        fetch('/outbreak-map/data')
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(item => {
+                    // Set color and radius based on case count
+                    let color = '#10b981'; // Green
+                    if (item.count >= 10) {
+                        color = '#f43f5e'; // Red
+                    } else if (item.count >= 4) {
+                        color = '#f59e0b'; // Amber
+                    }
+
+                    const radius = Math.min(item.count * 8000 + 15000, 100000);
+
+                    const circle = L.circle([item.lat, item.lng], {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.4,
+                        radius: radius
+                    }).addTo(map);
+
+                    const popupContent = `
+                        <div style="font-family: 'Inter', sans-serif; color: #1e293b;">
+                            <h6 style="margin:0 0 5px; font-weight:700;">${item.city}</h6>
+                            <p style="margin:0 0 3px; font-size:0.85rem;">Disease: <strong>${item.disease}</strong></p>
+                            <p style="margin:0 0 3px; font-size:0.85rem;">Active Cases: <strong>${item.count}</strong></p>
+                            <p style="margin:0; font-size:0.85rem;">Severity: <span style="font-weight:600; color:${color}">${item.severity}</span></p>
+                        </div>
+                    `;
+                    circle.bindPopup(popupContent);
+                });
+            })
+            .catch(err => console.error("Error loading outbreak map data:", err));
+
+        // Add Legend to map
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h6 style="margin:0 0 8px; font-weight:700;">Cases Alert</h6>
+                <div><i style="background:#f43f5e"></i>10+ cases (High Risk)</div>
+                <div><i style="background:#f59e0b"></i>4-9 cases (Moderate)</div>
+                <div><i style="background:#10b981"></i>1-3 cases (Low Risk)</div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    });
+</script>
+{% endblock %}

@@ -184,6 +184,80 @@ def init_db():
     )
     """)
     
+    # === FEATURE TABLES ===
+
+    # 5. Notifications
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        type TEXT DEFAULT 'info',
+        is_read INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    """)
+
+    # 6. Messages (Patient <-> Doctor)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        recipient_id INTEGER NOT NULL,
+        body TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sender_id) REFERENCES users(id),
+        FOREIGN KEY (recipient_id) REFERENCES users(id)
+    )
+    """)
+
+    # 7. Doctor Availability Slots
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS doctor_slots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        doctor_id INTEGER NOT NULL,
+        slot_date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        is_booked INTEGER DEFAULT 0,
+        patient_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (doctor_id) REFERENCES users(id),
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )
+    """)
+
+    # 8. Second Opinions
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS second_opinions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id INTEGER NOT NULL,
+        prediction_id INTEGER,
+        request_note TEXT,
+        doctor_id INTEGER,
+        doctor_note TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id),
+        FOREIGN KEY (doctor_id) REFERENCES users(id)
+    )
+    """)
+
+    # 9. Chatbot Logs
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS chatbot_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        user_message TEXT NOT NULL,
+        bot_response TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    """)
+
     # Seed default admin if not exists
     admin_user = cur.execute("SELECT * FROM users WHERE username = 'admin' OR email = 'admin@healthcare.com'").fetchone()
     if not admin_user:
@@ -692,6 +766,25 @@ def predict():
           health_risk['score'], health_risk['category'], prediction_data['severity'], prob, 
           str(symptoms), symptom_count, prediction_data['medicines'], 
           prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name))
+    
+    # Auto-generate notification for the user
+    notif_title = f"New AI Prediction: {disease}"
+    notif_body = f"Calculated {risk}% risk for {disease}."
+    notif_type = "info"
+    if health_risk['score'] >= 70 or 'high' in prediction_data['severity'].lower():
+        notif_title = f"🚨 High Risk Alert: {disease}"
+        notif_body = f"Critical concern! Calculated {risk}% risk for {disease}. Please consult a doctor immediately."
+        notif_type = "danger"
+    elif health_risk['score'] >= 40 or 'medium' in prediction_data['severity'].lower():
+        notif_title = f"⚠️ Moderate Risk Alert: {disease}"
+        notif_body = f"Moderate concern. Calculated {risk}% risk for {disease}."
+        notif_type = "warning"
+        
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (current_user.id, notif_title, notif_body, notif_type))
+    
     conn.commit()
     conn.close()
     
@@ -1007,6 +1100,24 @@ def book_appointment():
         request.form.get('notes'),
         request.form.get('current_medications')
     ))
+    
+    # Notify patient
+    doc_name = request.form.get('doctor_name')
+    appt_date = request.form.get('appt_date')
+    appt_time = request.form.get('appt_time')
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (current_user.id, "📅 Appointment Booked", f"Your appointment with {doc_name} on {appt_date} at {appt_time} is pending confirmation.", "info"))
+    
+    # Find doctor if they are registered as a user
+    doc_user = cur.execute("SELECT id FROM users WHERE role = 'doctor' AND full_name LIKE ?", (f"%{doc_name}%",)).fetchone()
+    if doc_user:
+        cur.execute("""
+            INSERT INTO notifications (user_id, title, body, type)
+            VALUES (?, ?, ?, ?)
+        """, (doc_user['id'], "📅 New Appointment Request", f"Patient {current_user.full_name} has requested an appointment on {appt_date} at {appt_time}.", "info"))
+        
     conn.commit()
     conn.close()
     flash('Appointment booked successfully! You will receive a confirmation shortly.', 'success')
@@ -1764,6 +1875,749 @@ def admin_delete_appointment(appt_id):
     conn.close()
     flash('Appointment deleted successfully!', 'success')
     return redirect(url_for('admin_appointments'))
+
+
+# ==============================================================================
+# NEW NEW FEATURES ROUTES
+# ==============================================================================
+
+# Helper to send notifications
+def add_notification(user_id, title, body, notif_type='info'):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, title, body, notif_type))
+    conn.commit()
+    conn.close()
+
+# --- Feature 1: AI Chatbot ---
+@app.route('/chatbot/ask', methods=['POST'])
+@login_required
+def chatbot_ask():
+    data = request.get_json()
+    if not data or 'message' not in data:
+        return jsonify({'response': 'Invalid request'}), 400
+        
+    user_msg = data['message'].strip().lower()
+    
+    # local rule-based response generator
+    response = ""
+    if any(k in user_msg for k in ['hi', 'hello', 'hey', 'greetings', 'namaste']):
+        response = "Hello! I am your AI Health Assistant. How can I help you today? Please tell me your symptoms or health queries."
+    elif any(k in user_msg for k in ['fever', 'temperature', 'pyrexia', 'bukhar']):
+        response = "A fever is usually a sign that your body is fighting off an infection. Please drink plenty of fluids, rest, and monitor your temperature. If it exceeds 102°F (38.9°C) or lasts more than 3 days, please consult a doctor. You can book an appointment or check available slots with our specialists."
+    elif any(k in user_msg for k in ['cough', 'cold', 'sneeze', 'flu', 'sardi', 'khansi']):
+        response = "For cough and cold, warm liquids like herbal tea or warm water with honey can help soothe your throat. Rest well. If you experience shortness of breath, a high fever, or your cough persists for more than 10 days, please schedule a virtual or physical visit with a physician."
+    elif any(k in user_msg for k in ['headache', 'migraine', 'head pain', 'sir dard']):
+        response = "Headaches can be triggered by stress, dehydration, lack of sleep, or eye strain. Try resting in a dark, quiet room, and stay hydrated. If the headache is sudden and severe (a 'thunderclap' headache) or accompanied by fever, neck stiffness, or confusion, seek emergency care immediately."
+    elif any(k in user_msg for k in ['stomach', 'belly', 'abdominal', 'nausea', 'vomit', 'diarrhea', 'pet dard']):
+        response = "Abdominal discomfort or nausea can be due to indigestion, food poisoning, or virus infections. Stay hydrated by taking small sips of water or ORS. Stick to bland foods (BRAT diet: bananas, rice, applesauce, toast). If you experience severe, sharp pain, or blood in vomit/stool, consult a doctor immediately."
+    elif any(k in user_msg for k in ['chest pain', 'heart', 'cardiac', 'shortness of breath', 'breathless', 'dil', 'dhadkan']):
+        response = "⚠️ **URGENT:** Chest pain or severe shortness of breath can be a sign of a cardiac emergency or serious pulmonary condition. Please do not ignore this. Seek emergency medical services (SOS) or go to the nearest emergency room immediately!"
+    elif any(k in user_msg for k in ['diabetes', 'sugar', 'glucose', 'sugar level']):
+        response = "Managing diabetes involves maintaining a healthy diet low in refined sugars, regular physical activity, monitoring blood glucose levels, and taking prescribed medications. Please track your daily blood glucose in our Vitals section, and share the log with your doctor."
+    elif any(k in user_msg for k in ['appointment', 'book', 'doctor', 'slot', 'milna']):
+        response = "You can easily book a doctor's appointment! Use the 'Doctor Slots' or 'Appointments' links in the sidebar to see available times and lock in your session."
+    elif any(k in user_msg for k in ['report', 'history', 'trends', 'card']):
+        response = "You can view your health progress anytime! Go to 'Symptom Trends' in the sidebar to see charts of your symptoms over time, or 'Monthly Report Card' to view and print your consolidated monthly report."
+    elif any(k in user_msg for k in ['thank', 'thanks', 'cool', 'awesome', 'shukriya']):
+        response = "You're very welcome! I'm here to support your health journey. Let me know if you have other symptoms or questions."
+    else:
+        response = "Thank you for sharing. Based on my database, your symptoms/query could be related to standard health factors. I highly recommend logging your vitals (temperature, BP) on our 'Vitals Tracker' page, and using our 'Predict Disease' feature for a detailed risk analysis, or booking a direct appointment with our panel of doctors."
+
+    # Save to DB
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO chatbot_logs (user_id, user_message, bot_response)
+        VALUES (?, ?, ?)
+    """, (current_user.id, data['message'], response))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'response': response})
+
+@app.route('/chatbot/history', methods=['GET'])
+@login_required
+def chatbot_history():
+    conn = get_db()
+    cur = conn.cursor()
+    logs = cur.execute("""
+        SELECT user_message, bot_response, created_at 
+        FROM chatbot_logs 
+        WHERE user_id = ? 
+        ORDER BY created_at ASC 
+        LIMIT 20
+    """, (current_user.id,)).fetchall()
+    conn.close()
+    
+    history_list = []
+    for log in logs:
+        history_list.append({
+            'user_message': log['user_message'],
+            'bot_response': log['bot_response'],
+            'created_at': log['created_at']
+        })
+    return jsonify({'history': history_list})
+
+
+# --- Feature 2: Disease Outbreak Map ---
+@app.route('/outbreak-map')
+@login_required
+def outbreak_map():
+    return render_template('outbreak_map.html')
+
+@app.route('/outbreak-map/data')
+@login_required
+def outbreak_map_data():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # India typical cities mapping
+    city_coords = {
+        'delhi': [28.6139, 77.2090],
+        'mumbai': [19.0760, 72.8777],
+        'bangalore': [12.9716, 77.5946],
+        'chennai': [13.0827, 80.2707],
+        'kolkata': [22.5726, 88.3639],
+        'hyderabad': [17.3850, 78.4867],
+        'pune': [18.5204, 73.8567],
+        'ahmedabad': [23.0225, 72.5714],
+        'jaipur': [26.9124, 75.7873],
+        'lucknow': [26.8467, 80.9462],
+        'default': [20.5937, 78.9629]
+    }
+    
+    rows = cur.execute("""
+        SELECT u.city, p.disease, COUNT(*) as cases_count, MAX(p.severity) as max_severity
+        FROM predictions p
+        JOIN users u ON p.patient_id = u.id
+        GROUP BY u.city, p.disease
+    """).fetchall()
+    
+    conn.close()
+    
+    data = []
+    import random
+    for row in rows:
+        city_name = row['city'] or 'Delhi'
+        city_key = city_name.strip().lower()
+        
+        coords = city_coords.get(city_key)
+        if not coords:
+            lat = city_coords['default'][0] + random.uniform(-4.0, 4.0)
+            lng = city_coords['default'][1] + random.uniform(-4.0, 4.0)
+            coords = [lat, lng]
+            
+        data.append({
+            'city': city_name,
+            'disease': row['disease'],
+            'count': row['cases_count'],
+            'lat': coords[0],
+            'lng': coords[1],
+            'severity': row['max_severity'] or 'Mild'
+        })
+        
+    return jsonify(data)
+
+
+# --- Feature 3: Monthly Health Report Card ---
+@app.route('/report-card')
+@login_required
+@role_required('patient')
+def report_card():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get last 30 days vitals
+    vitals = cur.execute("""
+        SELECT * FROM vitals 
+        WHERE patient_id = ? AND logged_at >= datetime('now', '-30 days')
+        ORDER BY logged_at DESC
+    """, (current_user.id,)).fetchall()
+    
+    # Get last 30 days predictions
+    preds = cur.execute("""
+        SELECT * FROM predictions 
+        WHERE patient_id = ? AND timestamp >= datetime('now', '-30 days')
+        ORDER BY timestamp DESC
+    """, (current_user.id,)).fetchall()
+    
+    # Get active medicines
+    meds = cur.execute("""
+        SELECT * FROM medicine_reminders 
+        WHERE patient_id = ? AND is_active = 1
+    """, (current_user.id,)).fetchall()
+    
+    conn.close()
+    
+    avg_vitals = {
+        'bp_systolic': 0, 'bp_diastolic': 0, 'pulse': 0, 
+        'temperature': 0.0, 'weight': 0.0, 'oxygen': 0.0, 'count': 0
+    }
+    
+    if vitals:
+        for v in vitals:
+            avg_vitals['bp_systolic'] += v['bp_systolic']
+            avg_vitals['bp_diastolic'] += v['bp_diastolic']
+            avg_vitals['pulse'] += v['pulse']
+            avg_vitals['temperature'] += v['temperature']
+            avg_vitals['weight'] += v['weight']
+            avg_vitals['oxygen'] += v['oxygen_saturation'] if v['oxygen_saturation'] else 98.0
+        n = len(vitals)
+        avg_vitals['bp_systolic'] = int(avg_vitals['bp_systolic'] / n)
+        avg_vitals['bp_diastolic'] = int(avg_vitals['bp_diastolic'] / n)
+        avg_vitals['pulse'] = int(avg_vitals['pulse'] / n)
+        avg_vitals['temperature'] = round(avg_vitals['temperature'] / n, 1)
+        avg_vitals['weight'] = round(avg_vitals['weight'] / n, 1)
+        avg_vitals['oxygen'] = round(avg_vitals['oxygen'] / n, 1)
+        avg_vitals['count'] = n
+        
+    return render_template('report_card.html', patient=current_user, vitals=vitals, avg_vitals=avg_vitals, predictions=preds, medicines=meds)
+
+@app.route('/report-card/pdf')
+@login_required
+@role_required('patient')
+def report_card_pdf():
+    reports_dir = os.path.join(BASE_DIR, "static", "reports")
+    if not os.path.exists(reports_dir):
+        os.makedirs(reports_dir)
+        
+    filename = f"Monthly_Report_Card_{current_user.full_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m')}.pdf"
+    filepath = os.path.join(reports_dir, filename)
+    
+    conn = get_db()
+    cur = conn.cursor()
+    vitals = cur.execute("""
+        SELECT * FROM vitals WHERE patient_id = ? AND logged_at >= datetime('now', '-30 days')
+    """, (current_user.id,)).fetchall()
+    preds = cur.execute("""
+        SELECT * FROM predictions WHERE patient_id = ? AND timestamp >= datetime('now', '-30 days')
+    """, (current_user.id,)).fetchall()
+    conn.close()
+    
+    # Calculate averages
+    avg_bp = "N/A"
+    avg_temp = "N/A"
+    avg_pulse = "N/A"
+    avg_oxygen = "N/A"
+    
+    if vitals:
+        bps = [v['bp_systolic'] for v in vitals]
+        bpd = [v['bp_diastolic'] for v in vitals]
+        temps = [v['temperature'] for v in vitals]
+        pulses = [v['pulse'] for v in vitals]
+        oxys = [v['oxygen_saturation'] for v in vitals if v['oxygen_saturation']]
+        
+        avg_bp = f"{int(sum(bps)/len(bps))}/{int(sum(bpd)/len(bpd))} mmHg"
+        avg_temp = f"{round(sum(temps)/len(temps), 1)} F"
+        avg_pulse = f"{int(sum(pulses)/len(pulses))} bpm"
+        if oxys:
+            avg_oxygen = f"{round(sum(oxys)/len(oxys), 1)}%"
+            
+    c = canvas.Canvas(filepath, pagesize=A4)
+    width, height = A4
+    
+    # Theme Colors
+    primary_color = colors.HexColor('#1E3A8A')
+    
+    # Header
+    c.setFillColor(primary_color)
+    c.rect(0, height - 120, width, 120, fill=True, stroke=False)
+    
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(40, height - 55, "MONTHLY HEALTH REPORT CARD")
+    c.setFont("Helvetica", 10)
+    c.drawString(40, height - 80, f"Generated: {datetime.now().strftime('%B %Y')} | Smart Healthcare System")
+    
+    # Patient Info Box
+    c.setFillColor(colors.HexColor('#F8FAFC'))
+    c.rect(40, height - 230, width - 80, 90, fill=True, stroke=True)
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(55, height - 165, "PATIENT INFORMATION")
+    c.setFont("Helvetica", 10)
+    c.drawString(55, height - 190, f"Name: {current_user.full_name}")
+    c.drawString(55, height - 210, f"Age / Gender: {current_user.age} / {current_user.gender}")
+    c.drawString(300, height - 190, f"Email: {current_user.email}")
+    c.drawString(300, height - 210, f"City: {current_user.city}")
+    
+    # Vitals Summary Box
+    y = height - 260
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "30-Day Vitals Averages")
+    
+    c.setFillColor(colors.HexColor('#F1F5F9'))
+    c.rect(40, y - 90, width - 80, 75, fill=True, stroke=False)
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica", 10)
+    c.drawString(60, y - 40, f"Average Blood Pressure: {avg_bp}")
+    c.drawString(60, y - 65, f"Average Body Temperature: {avg_temp}")
+    c.drawString(320, y - 40, f"Average Pulse Rate: {avg_pulse}")
+    c.drawString(320, y - 65, f"Average Oxygen Level: {avg_oxygen}")
+    
+    # Predictions summary
+    y = y - 130
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(40, y, "Disease Risk Prediction Assessments (Last 30 Days)")
+    
+    y_pos = y - 30
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(40, y_pos, "Date")
+    c.drawString(140, y_pos, "Disease Predicted")
+    c.drawString(300, y_pos, "Risk Score")
+    c.drawString(400, y_pos, "Severity")
+    
+    c.setStrokeColor(colors.HexColor('#CBD5E1'))
+    c.line(40, y_pos - 5, width - 40, y_pos - 5)
+    
+    c.setFont("Helvetica", 9)
+    y_pos = y_pos - 20
+    
+    max_rows = 8
+    displayed = 0
+    for p in preds:
+        if displayed >= max_rows:
+            break
+        dt = p['timestamp'][:10]
+        c.drawString(40, y_pos, dt)
+        c.drawString(140, y_pos, p['disease'])
+        c.drawString(300, y_pos, f"{int(p['risk_percentage'])}%")
+        c.drawString(400, y_pos, p['severity'])
+        y_pos -= 20
+        displayed += 1
+        
+    if not preds:
+        c.drawString(40, y_pos, "No prediction diagnostic records found for this period.")
+        
+    # Signature
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(40, 80, "AI Medical Assistant Signature")
+    c.line(40, 115, 200, 115)
+    c.drawString(380, 80, "Chief Medical Advisor")
+    c.line(380, 115, 540, 115)
+    
+    c.showPage()
+    c.save()
+    
+    return send_file(filepath, as_attachment=True)
+
+
+# --- Feature 4: Doctor Availability Slots ---
+@app.route('/doctor/slots', methods=['GET', 'POST'])
+@login_required
+@role_required('doctor')
+def doctor_slots():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    if request.method == 'POST':
+        slot_date = request.form.get('slot_date')
+        start_time = request.form.get('start_time')
+        end_time = request.form.get('end_time')
+        
+        if slot_date and start_time and end_time:
+            cur.execute("""
+                INSERT INTO doctor_slots (doctor_id, slot_date, start_time, end_time, is_booked)
+                VALUES (?, ?, ?, ?, 0)
+            """, (current_user.id, slot_date, start_time, end_time))
+            conn.commit()
+            flash('Availability slot added successfully!', 'success')
+            
+    slots = cur.execute("""
+        SELECT s.*, u.full_name as patient_name
+        FROM doctor_slots s
+        LEFT JOIN users u ON s.patient_id = u.id
+        WHERE s.doctor_id = ?
+        ORDER BY s.slot_date ASC, s.start_time ASC
+    """, (current_user.id,)).fetchall()
+    
+    conn.close()
+    return render_template('doctor_slots.html', doctor=current_user, slots=slots)
+
+@app.route('/doctor/slots/delete/<int:slot_id>', methods=['POST'])
+@login_required
+@role_required('doctor')
+def delete_doctor_slot(slot_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM doctor_slots WHERE id = ? AND doctor_id = ? AND is_booked = 0", (slot_id, current_user.id))
+    conn.commit()
+    conn.close()
+    flash('Slot removed.', 'info')
+    return redirect(url_for('doctor_slots'))
+
+@app.route('/appointments/book-slot', methods=['GET'])
+@login_required
+@role_required('patient')
+def book_slot_view():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    slots = cur.execute("""
+        SELECT s.*, u.full_name as doctor_name
+        FROM doctor_slots s
+        JOIN users u ON s.doctor_id = u.id
+        WHERE s.is_booked = 0 AND s.slot_date >= date('now')
+        ORDER BY s.slot_date ASC, s.start_time ASC
+    """).fetchall()
+    
+    conn.close()
+    return render_template('book_slot.html', patient=current_user, slots=slots)
+
+@app.route('/appointments/book-slot/<int:slot_id>', methods=['POST'])
+@login_required
+@role_required('patient')
+def book_slot(slot_id):
+    conn = get_db()
+    cur = conn.cursor()
+    
+    slot = cur.execute("""
+        SELECT s.*, u.full_name as doctor_name
+        FROM doctor_slots s
+        JOIN users u ON s.doctor_id = u.id
+        WHERE s.id = ? AND s.is_booked = 0
+    """, (slot_id,)).fetchone()
+    
+    if not slot:
+        conn.close()
+        flash('This slot is no longer available.', 'danger')
+        return redirect(url_for('book_slot_view'))
+        
+    cur.execute("""
+        UPDATE doctor_slots 
+        SET is_booked = 1, patient_id = ?
+        WHERE id = ?
+    """, (current_user.id, slot_id))
+    
+    cur.execute("""
+        INSERT INTO appointments (patient_id, doctor_name, appt_date, appt_time, appt_type, notes, status)
+        VALUES (?, ?, ?, ?, 'General Consultation', 'Booked via availability slot system', 'confirmed')
+    """, (current_user.id, slot['doctor_name'], slot['slot_date'], slot['start_time']))
+    
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (current_user.id, "📅 Appointment Booked", f"Your appointment with {slot['doctor_name']} on {slot['slot_date']} at {slot['start_time']} is confirmed.", "success"))
+    
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (slot['doctor_id'], "📅 New Slot Booking", f"Patient {current_user.full_name} has booked your slot on {slot['slot_date']} at {slot['start_time']}.", "info"))
+    
+    conn.commit()
+    conn.close()
+    
+    flash(f"Slot booked successfully! Appointment with {slot['doctor_name']} confirmed.", 'success')
+    return redirect(url_for('appointments'))
+
+
+# --- Feature 5: Notifications ---
+@app.route('/notifications')
+@login_required
+def notifications_view():
+    conn = get_db()
+    cur = conn.cursor()
+    notifs = cur.execute("""
+        SELECT * FROM notifications 
+        WHERE user_id = ? 
+        ORDER BY created_at DESC
+    """, (current_user.id,)).fetchall()
+    conn.close()
+    return render_template('notifications.html', user=current_user, notifications=notifs)
+
+@app.route('/notifications/count', methods=['GET'])
+@login_required
+def notifications_count():
+    conn = get_db()
+    cur = conn.cursor()
+    res = cur.execute("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0", (current_user.id,)).fetchone()
+    conn.close()
+    return jsonify({'count': res['count'] if res else 0})
+
+@app.route('/notifications/mark-read/<int:notif_id>', methods=['POST'])
+@login_required
+def notifications_mark_read(notif_id):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", (notif_id, current_user.id))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/notifications/mark-all-read', methods=['POST'])
+@login_required
+def notifications_mark_all_read():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ?", (current_user.id,))
+    conn.commit()
+    conn.close()
+    flash('All notifications marked as read.', 'success')
+    return redirect(url_for('notifications_view'))
+
+
+# --- Feature 6: Patient-Doctor Messaging ---
+@app.route('/messages', methods=['GET'])
+@login_required
+@role_required('patient')
+def patient_messages():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    doctors = cur.execute("SELECT id, full_name, email FROM users WHERE role = 'doctor'").fetchall()
+    
+    latest_rx = cur.execute("""
+        SELECT doctor_id FROM prescriptions 
+        WHERE patient_id = ? 
+        ORDER BY timestamp DESC LIMIT 1
+    """, (current_user.id,)).fetchone()
+    
+    default_doctor_id = latest_rx['doctor_id'] if latest_rx else (doctors[0]['id'] if doctors else None)
+    
+    conn.close()
+    return render_template('messages.html', patient=current_user, doctors=doctors, default_doctor_id=default_doctor_id)
+
+@app.route('/doctor/messages', methods=['GET'])
+@login_required
+@role_required('doctor')
+def doctor_messages_list():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    patients = cur.execute("""
+        SELECT DISTINCT u.id, u.full_name, u.email
+        FROM users u
+        JOIN messages m ON (m.sender_id = u.id OR m.recipient_id = u.id)
+        WHERE (m.sender_id = ? OR m.recipient_id = ?) AND u.role = 'patient'
+    """, (current_user.id, current_user.id)).fetchall()
+    
+    if not patients:
+        patients = cur.execute("SELECT id, full_name, email FROM users WHERE role = 'patient' LIMIT 20").fetchall()
+        
+    conn.close()
+    return render_template('doctor_messages.html', doctor=current_user, patients=patients)
+
+@app.route('/messages/send', methods=['POST'])
+@login_required
+def message_send():
+    recipient_id = request.form.get('recipient_id')
+    body = request.form.get('body')
+    
+    if not recipient_id or not body:
+        return jsonify({'error': 'Missing recipient or body'}), 400
+        
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO messages (sender_id, recipient_id, body, is_read)
+        VALUES (?, ?, ?, 0)
+    """, (current_user.id, recipient_id, body.strip()))
+    conn.commit()
+    conn.close()
+    
+    # Notify recipient
+    add_notification(
+        recipient_id,
+        f"💬 New Message from {current_user.full_name}",
+        body[:50] + ("..." if len(body) > 50 else ""),
+        "info"
+    )
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/messages/poll', methods=['GET'])
+@login_required
+def message_poll():
+    other_id = request.args.get('other_user_id')
+    last_id = request.args.get('last_id', 0, type=int)
+    
+    if not other_id:
+        return jsonify({'error': 'Missing other_user_id'}), 400
+        
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        UPDATE messages SET is_read = 1 
+        WHERE sender_id = ? AND recipient_id = ? AND id > ?
+    """, (other_id, current_user.id, last_id))
+    conn.commit()
+    
+    messages = cur.execute("""
+        SELECT id, sender_id, recipient_id, body, created_at
+        FROM messages
+        WHERE ((sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?))
+          AND id > ?
+        ORDER BY id ASC
+    """, (current_user.id, other_id, other_id, current_user.id, last_id)).fetchall()
+    
+    conn.close()
+    
+    msg_list = []
+    for msg in messages:
+        msg_list.append({
+            'id': msg['id'],
+            'sender_id': msg['sender_id'],
+            'recipient_id': msg['recipient_id'],
+            'body': msg['body'],
+            'created_at': msg['created_at']
+        })
+        
+    return jsonify({'messages': msg_list})
+
+
+# --- Feature 7: Symptom Trend Tracker ---
+@app.route('/symptom-trends')
+@login_required
+@role_required('patient')
+def symptom_trends():
+    conn = get_db()
+    cur = conn.cursor()
+    preds = cur.execute("""
+        SELECT disease, risk_percentage, health_risk_score, severity, symptoms, timestamp 
+        FROM predictions 
+        WHERE patient_id = ? 
+        ORDER BY timestamp ASC
+    """, (current_user.id,)).fetchall()
+    conn.close()
+    
+    timeline = []
+    for p in preds:
+        symptom_list = []
+        try:
+            import ast
+            sym_dict = ast.literal_eval(p['symptoms'])
+            symptom_list = [k.replace('_', ' ').capitalize() for k, v in sym_dict.items() if v == 1]
+        except Exception:
+            pass
+            
+        timeline.append({
+            'date': p['timestamp'][:10],
+            'disease': p['disease'],
+            'risk': p['risk_percentage'],
+            'severity': p['severity'],
+            'score': p['health_risk_score'],
+            'symptoms': symptom_list
+        })
+        
+    return render_template('symptom_trends.html', patient=current_user, timeline=timeline)
+
+
+# --- Feature 8: Second Opinion Request ---
+@app.route('/second-opinion/request', methods=['POST'])
+@login_required
+@role_required('patient')
+def second_opinion_request():
+    prediction_id = request.form.get('prediction_id')
+    doctor_id = request.form.get('doctor_id')
+    request_note = request.form.get('request_note')
+    
+    if not prediction_id or not doctor_id:
+        flash('Invalid second opinion request submission.', 'danger')
+        return redirect(url_for('history'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        INSERT INTO second_opinions (patient_id, prediction_id, request_note, doctor_id, status)
+        VALUES (?, ?, ?, ?, 'pending')
+    """, (current_user.id, prediction_id, request_note, doctor_id))
+    
+    conn.commit()
+    conn.close()
+    
+    # Notify doctor
+    add_notification(
+        doctor_id,
+        "🩺 Second Opinion Request",
+        f"Patient {current_user.full_name} requested a second opinion review.",
+        "info"
+    )
+    
+    flash('Second opinion requested successfully! The doctor will review your case.', 'success')
+    return redirect(url_for('second_opinions_view'))
+
+@app.route('/second-opinions')
+@login_required
+@role_required('patient')
+def second_opinions_view():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    requests = cur.execute("""
+        SELECT so.*, p.disease, p.risk_percentage, p.timestamp as prediction_time, u.full_name as doctor_name
+        FROM second_opinions so
+        JOIN predictions p ON so.prediction_id = p.id
+        JOIN users u ON so.doctor_id = u.id
+        WHERE so.patient_id = ?
+        ORDER BY so.created_at DESC
+    """, (current_user.id,)).fetchall()
+    
+    doctors = cur.execute("SELECT id, full_name FROM users WHERE role = 'doctor'").fetchall()
+    predictions = cur.execute("SELECT id, disease, risk_percentage, timestamp FROM predictions WHERE patient_id = ? ORDER BY timestamp DESC", (current_user.id,)).fetchall()
+    
+    conn.close()
+    return render_template('second_opinions.html', patient=current_user, requests=requests, doctors=doctors, predictions=predictions)
+
+@app.route('/doctor/second-opinions')
+@login_required
+@role_required('doctor')
+def doctor_second_opinions():
+    conn = get_db()
+    cur = conn.cursor()
+    
+    requests = cur.execute("""
+        SELECT so.*, p.disease, p.risk_percentage, p.symptoms, p.timestamp as prediction_time, u.full_name as patient_name, u.age as patient_age, u.gender as patient_gender
+        FROM second_opinions so
+        JOIN predictions p ON so.prediction_id = p.id
+        JOIN users u ON so.patient_id = u.id
+        WHERE so.doctor_id = ?
+        ORDER BY so.status DESC, so.created_at DESC
+    """, (current_user.id,)).fetchall()
+    
+    conn.close()
+    return render_template('doctor_second_opinions.html', doctor=current_user, requests=requests)
+
+@app.route('/doctor/second-opinions/<int:so_id>/respond', methods=['POST'])
+@login_required
+@role_required('doctor')
+def doctor_second_opinion_respond(so_id):
+    doctor_note = request.form.get('doctor_note')
+    
+    if not doctor_note:
+        flash('Response note cannot be empty.', 'danger')
+        return redirect(url_for('doctor_second_opinions'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    
+    cur.execute("""
+        UPDATE second_opinions
+        SET doctor_note = ?, status = 'resolved'
+        WHERE id = ? AND doctor_id = ?
+    """, (doctor_note, so_id, current_user.id))
+    
+    so = cur.execute("SELECT patient_id FROM second_opinions WHERE id = ?", (so_id,)).fetchone()
+    
+    conn.commit()
+    conn.close()
+    
+    if so:
+        # Notify patient
+        add_notification(
+            so['patient_id'],
+            "🩺 Second Opinion Review Completed",
+            f"Dr. {current_user.full_name} has provided expert feedback on your second opinion request.",
+            "success"
+        )
+        
+    flash('Second opinion review saved and sent to the patient.', 'success')
+    return redirect(url_for('doctor_second_opinions'))
 
 
 if __name__ == '__main__':

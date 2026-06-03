@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <title>{% block title %}HealthCare Plus Medical Center{% endblock %}</title>
     <meta name="description" content="Smart AI-powered healthcare system with disease prediction, patient management, and advanced analytics.">
     <!-- PWA Settings -->
@@ -36,16 +42,41 @@
             --text-secondary: #94a3b8;
             --card-bg: rgba(30,41,59,0.9);
             --surface: #1e293b;
+            --bg-main: #0f172a;
+            --sidebar-bg: rgba(15,23,42,0.95);
+        }
+
+        :root[data-theme="light"] {
+            --primary: #f8fafc;
+            --primary-800: #f1f5f9;
+            --primary-700: #e2e8f0;
+            --accent: #2563eb;
+            --accent-light: #3b82f6;
+            --accent-glow: rgba(37,99,235,0.15);
+            --cyan: #0891b2;
+            --emerald: #059669;
+            --amber: #d97706;
+            --rose: #e11d48;
+            --violet: #7c3aed;
+            --glass: rgba(15,23,42,0.05);
+            --glass-border: rgba(15,23,42,0.08);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --card-bg: rgba(255,255,255,0.9);
+            --surface: #ffffff;
+            --bg-main: #f8fafc;
+            --sidebar-bg: rgba(241,245,249,0.95);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0f172a;
+            background: var(--bg-main);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
 
         /* ===== ANIMATED BACKGROUND ===== */
@@ -66,14 +97,14 @@
             position: fixed;
             left: 0; top: 0; bottom: 0;
             width: var(--sidebar-w);
-            background: rgba(15,23,42,0.95);
+            background: var(--sidebar-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s;
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -434,6 +465,172 @@
             color: white;
             line-height: 1.2;
         }
+        /* ===== CHATBOT STYLES ===== */
+        .chatbot-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent), var(--cyan));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.6rem;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9999;
+        }
+        .chatbot-bubble:hover {
+            transform: scale(1.1) rotate(15deg);
+        }
+        .chatbot-panel {
+            position: fixed;
+            bottom: 105px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(30px) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 9998;
+        }
+        .chatbot-panel.active {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chatbot-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9));
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chatbot-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+        .chatbot-close:hover {
+            color: var(--rose);
+        }
+        .chatbot-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .chat-msg.bot {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            border-top-left-radius: 4px;
+            color: var(--text-primary);
+        }
+        .chat-msg.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: white;
+            border-top-right-radius: 4px;
+        }
+        .chatbot-input-area {
+            padding: 12px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .chatbot-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 0.88rem;
+        }
+        .chatbot-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .chatbot-send {
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chatbot-send:hover {
+            background: var(--accent-light);
+        }
+
+        /* ===== MOBILE RESPONSIVE TWEAKS ===== */
+        @media (max-width: 768px) {
+            .chatbot-panel {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+                bottom: 95px;
+                height: 400px;
+            }
+            .chatbot-bubble {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+            .page-content {
+                padding: 16px 12px !important;
+            }
+            .topbar {
+                padding: 10px 14px !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
 
         {% block extra_css %}{% endblock %}
     </style>
@@ -465,86 +662,127 @@
         <!-- Navigation -->
         <nav class="sidebar-nav">
             {% if current_user.role == 'admin' %}
-            <div class="nav-section-label">Administration</div>
+            <div class="nav-section-label" data-en="Administration" data-hi="प्रशासन">Administration</div>
             <a href="{{ url_for('admin_dashboard') }}" class="nav-item-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-user-shield"></i></span>
-                Admin Dashboard
+                <span data-en="Admin Dashboard" data-hi="एडमिन डैशबोर्ड">Admin Dashboard</span>
             </a>
             <a href="{{ url_for('admin_users') }}" class="nav-item-link {% if request.endpoint == 'admin_users' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-users-cog"></i></span>
-                Manage Users
+                <span data-en="Manage Users" data-hi="उपयोगकर्ता प्रबंधित करें">Manage Users</span>
             </a>
             <a href="{{ url_for('admin_predictions') }}" class="nav-item-link {% if request.endpoint == 'admin_predictions' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-file-medical-alt"></i></span>
-                Medical Records
+                <span data-en="Medical Records" data-hi="चिकित्सा रिकॉर्ड">Medical Records</span>
             </a>
             <a href="{{ url_for('admin_appointments') }}" class="nav-item-link {% if request.endpoint == 'admin_appointments' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
-                Appointments
+                <span data-en="Appointments" data-hi="अपॉइंटमेंट">Appointments</span>
             </a>
+            <a href="{{ url_for('outbreak_map') }}" class="nav-item-link {% if request.endpoint == 'outbreak_map' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-map-marked-alt"></i></span>
+                <span data-en="Outbreak Map" data-hi="प्रकोप मानचित्र">Outbreak Map</span>
+            </a>
+
             {% elif current_user.role == 'doctor' %}
-            <div class="nav-section-label">Main</div>
+            <div class="nav-section-label" data-en="Main" data-hi="मुख्य">Main</div>
             <a href="{{ url_for('doctor_dashboard') }}" class="nav-item-link {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
-                Dashboard
+                <span data-en="Dashboard" data-hi="डैशबोर्ड">Dashboard</span>
             </a>
             <a href="{{ url_for('doctor_prescriptions') }}" class="nav-item-link {% if request.endpoint == 'doctor_prescriptions' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-file-prescription"></i></span>
-                Prescriptions
+                <span data-en="Prescriptions" data-hi="नुस्खे (प्रिस्क्रिप्शन)">Prescriptions</span>
             </a>
             <a href="{{ url_for('doctor_appointments') }}" class="nav-item-link {% if request.endpoint == 'doctor_appointments' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
-                Appointments
+                <span data-en="Appointments" data-hi="अपॉइंटमेंट">Appointments</span>
                 <span id="apptBadge" style="margin-left:auto; background:rgba(244,63,94,0.2); color:#fb7185; border:1px solid rgba(244,63,94,0.3); border-radius:10px; padding:2px 7px; font-size:0.7rem; display:none;"></span>
             </a>
+            <a href="{{ url_for('doctor_slots') }}" class="nav-item-link {% if request.endpoint == 'doctor_slots' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-clock"></i></span>
+                <span data-en="Availability Slots" data-hi="उपलब्ध समय स्लॉट">Availability Slots</span>
+            </a>
 
-            <div class="nav-section-label" style="margin-top:12px;">Analytics</div>
+            <div class="nav-section-label" style="margin-top:12px;" data-en="Analytics" data-hi="विश्लेषण">Analytics</div>
             <a href="{{ url_for('doctor_patient_list') }}" class="nav-item-link {% if request.endpoint == 'doctor_patient_list' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-users"></i></span>
-                Patient List
+                <span data-en="Patient List" data-hi="मरीजों की सूची">Patient List</span>
+            </a>
+            <a href="{{ url_for('doctor_messages_list') }}" class="nav-item-link {% if request.endpoint == 'doctor_messages_list' or request.endpoint == 'doctor_messages' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-comments"></i></span>
+                <span data-en="Patient Messages" data-hi="मरीजों से बातचीत">Patient Messages</span>
+            </a>
+            <a href="{{ url_for('doctor_second_opinions') }}" class="nav-item-link {% if request.endpoint == 'doctor_second_opinions' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span>
+                <span data-en="Second Opinions" data-hi="दूसरी राय">Second Opinions</span>
+            </a>
+            <a href="{{ url_for('outbreak_map') }}" class="nav-item-link {% if request.endpoint == 'outbreak_map' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-map-marked-alt"></i></span>
+                <span data-en="Outbreak Map" data-hi="प्रकोप मानचित्र">Outbreak Map</span>
             </a>
 
             {% else %}
-            <div class="nav-section-label">Main</div>
+            <div class="nav-section-label" data-en="Main" data-hi="मुख्य">Main</div>
             <a href="{{ url_for('patient_dashboard') }}" class="nav-item-link {% if request.endpoint == 'patient_dashboard' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-home"></i></span>
-                Dashboard
+                <span data-en="Dashboard" data-hi="डैशबोर्ड">Dashboard</span>
             </a>
             <a href="{{ url_for('symptom_entry') }}" class="nav-item-link {% if request.endpoint == 'symptom_entry' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-stethoscope"></i></span>
-                Check Symptoms
+                <span data-en="Check Symptoms" data-hi="लक्षणों की जांच">Check Symptoms</span>
             </a>
             <a href="{{ url_for('history') }}" class="nav-item-link {% if request.endpoint == 'history' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-history"></i></span>
-                History
+                <span data-en="History" data-hi="इतिहास">History</span>
             </a>
 
-            <div class="nav-section-label" style="margin-top:12px;">Health Tools</div>
+            <div class="nav-section-label" style="margin-top:12px;" data-en="Health Tools" data-hi="स्वास्थ्य उपकरण">Health Tools</div>
             <a href="{{ url_for('vitals_tracker') }}" class="nav-item-link {% if request.endpoint == 'vitals_tracker' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-heartbeat"></i></span>
-                Vitals Tracker
+                <span data-en="Vitals Tracker" data-hi="महत्वपूर्ण स्वास्थ्य संकेत">Vitals Tracker</span>
             </a>
             <a href="{{ url_for('appointments') }}" class="nav-item-link {% if request.endpoint == 'appointments' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
-                Appointments
+                <span data-en="Appointments" data-hi="अपॉइंटमेंट">Appointments</span>
+            </a>
+            <a href="{{ url_for('book_slot_view') }}" class="nav-item-link {% if request.endpoint == 'book_slot_view' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-calendar-plus"></i></span>
+                <span data-en="Book Doctor Slot" data-hi="डॉक्टर स्लॉट बुक करें">Book Doctor Slot</span>
+            </a>
+            <a href="{{ url_for('symptom_trends') }}" class="nav-item-link {% if request.endpoint == 'symptom_trends' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-chart-area"></i></span>
+                <span data-en="Symptom Trends" data-hi="लक्षणों के रुझान">Symptom Trends</span>
+            </a>
+            <a href="{{ url_for('report_card') }}" class="nav-item-link {% if request.endpoint == 'report_card' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-file-medical"></i></span>
+                <span data-en="Monthly Report Card" data-hi="मासिक स्वास्थ्य रिपोर्ट">Monthly Report Card</span>
+            </a>
+            <a href="{{ url_for('patient_messages') }}" class="nav-item-link {% if request.endpoint == 'patient_messages' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-comments"></i></span>
+                <span data-en="Doctor Messaging" data-hi="डॉक्टर से बातचीत">Doctor Messaging</span>
+            </a>
+            <a href="{{ url_for('second_opinions_view') }}" class="nav-item-link {% if request.endpoint == 'second_opinions_view' %}active{% endif %}">
+                <span class="nav-icon"><i class="fas fa-notes-medical"></i></span>
+                <span data-en="Second Opinions" data-hi="दूसरी राय">Second Opinions</span>
             </a>
             <a href="{{ url_for('medicine_reminders') }}" class="nav-item-link {% if request.endpoint == 'medicine_reminders' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-pills"></i></span>
-                Medicine Reminders
+                <span data-en="Medicine Reminders" data-hi="दवा रिमाइंडर्स">Medicine Reminders</span>
             </a>
             <a href="{{ url_for('calculate_bmi') }}" class="nav-item-link {% if request.endpoint == 'calculate_bmi' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-weight"></i></span>
-                BMI Calculator
+                <span data-en="BMI Calculator" data-hi="बीएमआई कैलकुलेटर">BMI Calculator</span>
             </a>
 
-            <div class="nav-section-label" style="margin-top:12px;">Account</div>
+            <div class="nav-section-label" style="margin-top:12px;" data-en="Account" data-hi="खाता">Account</div>
             <a href="{{ url_for('edit_profile') }}" class="nav-item-link {% if request.endpoint == 'edit_profile' %}active{% endif %}">
                 <span class="nav-icon"><i class="fas fa-user-edit"></i></span>
-                Edit Profile
+                <span data-en="Edit Profile" data-hi="प्रोफ़ाइल संपादित करें">Edit Profile</span>
             </a>
             <a href="{{ url_for('emergency_sos') }}" class="nav-item-link" style="color:#fb7185;">
                 <span class="nav-icon"><i class="fas fa-ambulance"></i></span>
-                Emergency SOS
+                <span data-en="Emergency SOS" data-hi="आपातकालीन एसओएस">Emergency SOS</span>
             </a>
             {% endif %}
         </nav>
@@ -581,16 +819,33 @@
                 <div class="topbar-title">{% block page_title %}HealthCare Plus{% endblock %}</div>
             </div>
             <div class="topbar-right">
+                <!-- Notification Bell -->
+                <a href="{{ url_for('notifications_view') }}" class="topbar-badge position-relative" style="text-decoration: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none; font-size: 0.65rem;">0</span>
+                </a>
+                
+                <!-- Language Toggle -->
+                <button id="langToggle" class="topbar-badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 10px; font-weight: 600;" title="Translate Language">
+                    <i class="fas fa-language me-1"></i>
+                    <span id="langText">EN</span>
+                </button>
+                
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="topbar-badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px;" title="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+
                 <div class="topbar-badge d-none d-md-flex">
                     <div class="status-dot"></div>
-                    System Online
+                    <span data-en="System Online" data-hi="सिस्टम ऑनलाइन">System Online</span>
                 </div>
                 <div class="topbar-badge d-none d-sm-flex" style="color: var(--text-primary);">
                     <i class="fas fa-user-circle" style="color:var(--accent);"></i>
                     {{ current_user.full_name }}
                 </div>
                 <a href="{{ url_for('logout') }}" class="topbar-badge" style="color: #fb7185; text-decoration: none; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.1); cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i> <span data-en="Logout" data-hi="लॉगआउट">Logout</span>
                 </a>
             </div>
         </div>
@@ -623,6 +878,33 @@
         &nbsp;&bull;&nbsp;
         <span>24/7 Emergency: <strong style="color:var(--rose);">+1-800-HEALTH-911</strong></span>
     </footer>
+    {% endif %}
+
+    {% if current_user.is_authenticated %}
+    <!-- Chatbot Bubble -->
+    <div class="chatbot-bubble" id="chatBubble" onclick="toggleChatPanel()" title="AI Health Assistant">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <!-- Chatbot Panel -->
+    <div class="chatbot-panel" id="chatPanel">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot" style="color:var(--accent-light);"></i>
+                <span data-en="AI Health Assistant" data-hi="एआई स्वास्थ्य सहायक">AI Health Assistant</span>
+            </div>
+            <button class="chatbot-close" onclick="toggleChatPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <span data-en="Hello! I am your AI Health Assistant. How can I help you today? Feel free to describe any symptoms you are experiencing." data-hi="नमस्ते! मैं आपका एआई स्वास्थ्य सहायक हूं। आज मैं आपकी क्या मदद कर सकता हूं? आप जो भी लक्षण महसूस कर रहे हैं, बेझिझक बताएं।">Hello! I am your AI Health Assistant. How can I help you today? Feel free to describe any symptoms you are experiencing.</span>
+            </div>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" class="chatbot-input" id="chatInput" placeholder="Type symptom or query..." onkeypress="handleChatKey(event)" data-en="Type symptom or query..." data-hi="लक्षण या प्रश्न दर्ज करें...">
+            <button class="chatbot-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
     {% endif %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -671,6 +953,165 @@
                 }
             }).catch(() => {});
         {% endif %}
+
+        // --- Dark/Light Mode Theme Toggle ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        function updateThemeUI(theme) {
+            if (theme === 'light') {
+                if (themeIcon) {
+                    themeIcon.className = 'fas fa-sun';
+                    themeIcon.style.color = '#eab308';
+                }
+            } else {
+                if (themeIcon) {
+                    themeIcon.className = 'fas fa-moon';
+                    themeIcon.style.color = '';
+                }
+            }
+        }
+        
+        if (themeToggleBtn) {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            updateThemeUI(currentTheme);
+            
+            themeToggleBtn.addEventListener('click', () => {
+                const activeTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', activeTheme);
+                localStorage.setItem('theme', activeTheme);
+                updateThemeUI(activeTheme);
+            });
+        }
+
+        // --- Language Toggle (English / Hindi) ---
+        const langToggleBtn = document.getElementById('langToggle');
+        const langText = document.getElementById('langText');
+        
+        function applyLanguage(lang) {
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const translation = el.getAttribute(`data-${lang}`);
+                if (translation) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translation;
+                    } else {
+                        el.textContent = translation;
+                    }
+                }
+            });
+            if (langText) {
+                langText.textContent = lang === 'en' ? 'EN' : 'हिं';
+            }
+        }
+        
+        if (langToggleBtn) {
+            const currentLang = localStorage.getItem('lang') || 'en';
+            applyLanguage(currentLang);
+            
+            langToggleBtn.addEventListener('click', () => {
+                const nextLang = localStorage.getItem('lang') === 'hi' ? 'en' : 'hi';
+                localStorage.setItem('lang', nextLang);
+                applyLanguage(nextLang);
+            });
+        }
+
+        // --- Notifications count polling ---
+        const notifBadge = document.getElementById('notifBadge');
+        function pollNotifications() {
+            if (!notifBadge) return;
+            fetch('/notifications/count')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.count > 0) {
+                        notifBadge.textContent = data.count;
+                        notifBadge.style.display = 'inline-block';
+                    } else {
+                        notifBadge.style.display = 'none';
+                    }
+                })
+                .catch(err => console.log('Notification fetch error:', err));
+        }
+        {% if current_user.is_authenticated %}
+        pollNotifications();
+        setInterval(pollNotifications, 30000); // 30 seconds
+        {% endif %}
+
+        // --- Chatbot Panel controls ---
+        const chatPanel = document.getElementById('chatPanel');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        let chatLoaded = false;
+        
+        function toggleChatPanel() {
+            if (!chatPanel) return;
+            chatPanel.classList.toggle('active');
+            if (chatPanel.classList.contains('active') && !chatLoaded) {
+                loadChatHistory();
+            }
+        }
+        
+        function loadChatHistory() {
+            fetch('/chatbot/history')
+                .then(r => r.json())
+                .then(data => {
+                    chatLoaded = true;
+                    if (data.history && data.history.length > 0) {
+                        chatMessages.innerHTML = '';
+                        data.history.forEach(log => {
+                            appendMessageBubble(log.user_message, 'user');
+                            appendMessageBubble(log.bot_response, 'bot');
+                        });
+                        scrollToBottom();
+                    }
+                })
+                .catch(e => console.log("Chat history fetch failed", e));
+        }
+        
+        function scrollToBottom() {
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        function appendMessageBubble(text, sender) {
+            const div = document.createElement('div');
+            div.className = `chat-msg ${sender}`;
+            
+            if (sender === 'bot') {
+                div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            } else {
+                div.textContent = text;
+            }
+            chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+        
+        function handleChatKey(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+        
+        function sendChatMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            appendMessageBubble(text, 'user');
+            chatInput.value = '';
+            
+            fetch('/chatbot/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            })
+            .then(r => r.json())
+            .then(data => {
+                appendMessageBubble(data.response, 'bot');
+            })
+            .catch(err => {
+                appendMessageBubble("Sorry, I encountered an issue connecting to the assistant. Please try again.", 'bot');
+            });
+        }
     </script>
 
     <!-- PWA Install Modal -->

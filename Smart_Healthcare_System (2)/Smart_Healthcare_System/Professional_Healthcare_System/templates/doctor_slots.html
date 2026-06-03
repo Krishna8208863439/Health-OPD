@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Availability Slots - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .slots-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: 15px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        margin-bottom: 24px;
+    }
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+    }
+    .form-control:focus, .form-select:focus {
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-primary);
+        border-color: var(--accent);
+        box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .slot-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.3s;
+    }
+    .slot-item.booked {
+        border-left: 4px solid var(--rose);
+        background: rgba(244, 63, 94, 0.02);
+    }
+    .slot-item.available {
+        border-left: 4px solid var(--emerald);
+        background: rgba(16, 185, 129, 0.02);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Add slot form -->
+    <div class="col-lg-4 mb-4">
+        <div class="slots-card">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-plus-circle text-primary me-2"></i>
+                <span data-en="Add Availability Slot" data-hi="उपलब्धता स्लॉट जोड़ें">Add Availability Slot</span>
+            </h4>
+            <form action="{{ url_for('doctor_slots') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label" data-en="Date" data-hi="तारीख">Date</label>
+                    <input type="date" name="slot_date" class="form-control" required min="{{ datetime_now }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" data-en="Start Time" data-hi="शुरुआत का समय">Start Time</label>
+                    <input type="time" name="start_time" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" data-en="End Time" data-hi="समाप्ति समय">End Time</label>
+                    <input type="time" name="end_time" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background: var(--accent); border:none; border-radius: 8px;">
+                    <i class="fas fa-save me-1"></i> <span data-en="Save Slot" data-hi="स्लॉट सहेजें">Save Slot</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active slots list -->
+    <div class="col-lg-8">
+        <div class="slots-card">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                <span data-en="My Active Slots" data-hi="मेरे सक्रिय स्लॉट">My Active Slots</span>
+            </h4>
+
+            {% if slots %}
+                {% for slot in slots %}
+                <div class="slot-item {% if slot.is_booked %}booked{% else %}available{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-1">
+                                <i class="far fa-calendar-alt me-1 text-muted"></i> {{ slot.slot_date }}
+                            </h6>
+                            <p class="mb-0 text-muted small">
+                                <i class="far fa-clock me-1"></i> {{ slot.start_time }} - {{ slot.end_time }}
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            {% if slot.is_booked %}
+                            <div>
+                                <span class="badge bg-danger" data-en="Booked" data-hi="बुक किया गया">Booked</span>
+                                <small class="d-block text-muted text-end mt-1">{{ slot.patient_name }}</small>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-success" data-en="Available" data-hi="उपलब्ध">Available</span>
+                            <form action="{{ url_for('delete_doctor_slot', slot_id=slot.id) }}" method="POST">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove Slot">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                    <p data-en="You have not created any availability slots yet. Use the form on the left to add one." data-hi="आपने अभी तक कोई उपलब्धता स्लॉट नहीं बनाया है। नया स्लॉट जोड़ने के लिए बाईं ओर के फॉर्म का उपयोग करें।">You have not created any availability slots yet. Use the form on the left to add one.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

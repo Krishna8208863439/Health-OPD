@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Review Cases (Second Opinions) - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .so-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: 15px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        margin-bottom: 24px;
+    }
+    .so-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+    }
+    .so-item.pending {
+        border-left: 4px solid var(--amber);
+    }
+    .so-item.resolved {
+        border-left: 4px solid var(--emerald);
+    }
+    .form-control {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+    }
+    .form-control:focus {
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-primary);
+        border-color: var(--accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="so-card">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-clipboard-list text-primary me-2"></i>
+                <span data-en="Review Cases (Second Opinions)" data-hi="मामलों की समीक्षा (दूसरी राय)">Review Cases (Second Opinions)</span>
+            </h2>
+            <p class="text-muted mb-0" data-en="Analyze patient diagnostic records and provide expert notes to resolve requests." data-hi="मरीजों के निदान रिकॉर्ड का विश्लेषण करें और अनुरोधों को हल करने के लिए विशेषज्ञ नोट प्रदान करें।">Analyze patient diagnostic records and provide expert notes to resolve requests.</p>
+        </div>
+    </div>
+
+    {% if requests %}
+        {% for req in requests %}
+        <div class="so-item {% if req.status == 'resolved' %}resolved{% else %}pending{% endif %}">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 text-primary">
+                        {{ req.patient_name }} <small class="text-muted">({{ req.patient_age }} yrs / {{ req.patient_gender }})</small>
+                    </h5>
+                    <p class="mb-0 fs-6">
+                        <strong class="text-light">{{ req.disease }}</strong> 
+                        <span class="badge bg-secondary ms-2">Risk: {{ req.risk_percentage }}%</span>
+                        <span class="badge bg-dark ms-1">Time: {{ req.prediction_time[:10] }}</span>
+                    </p>
+                </div>
+                <div>
+                    {% if req.status == 'resolved' %}
+                    <span class="badge bg-success" data-en="Resolved" data-hi="सुलझा हुआ">Resolved</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark" data-en="Pending Review" data-hi="समीक्षा लंबित">Pending Review</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Patient context note -->
+            <div class="mb-3">
+                <span class="text-muted d-block small" data-en="Patient Message:" data-hi="मरीज का संदेश:">Patient Message:</span>
+                <p class="mb-0 text-secondary" style="font-size:0.9rem;">{{ req.request_note }}</p>
+            </div>
+
+            <!-- Doctor response note -->
+            <div class="border-top border-secondary-subtle pt-3">
+                {% if req.status == 'resolved' %}
+                <span class="text-muted d-block small" data-en="My Feedback Notes:" data-hi="मेरी प्रतिक्रिया नोट:">My Feedback Notes:</span>
+                <p class="mb-0 mt-1 fw-medium text-light" style="font-size:0.92rem; border-left: 2px solid var(--emerald); padding-left: 10px;">{{ req.doctor_note }}</p>
+                {% else %}
+                <form action="{{ url_for('doctor_second_opinion_respond', so_id=req.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small" data-en="Add Expert Feedback Note" data-hi="विशेषज्ञ प्रतिक्रिया नोट जोड़ें">Add Expert Feedback Note</label>
+                        <textarea name="doctor_note" class="form-control" rows="3" placeholder="Provide medical guidance, confirm or adjust diagnosis risk score..." required data-en="Provide medical guidance, confirm or adjust diagnosis risk score..." data-hi="चिकित्सीय मार्गदर्शन प्रदान करें, निदान जोखिम स्कोर की पुष्टि या समायोजन करें..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary py-2 px-3 fw-bold" style="background: var(--accent); border:none; border-radius:8px;">
+                        <i class="fas fa-check-circle me-1"></i> <span data-en="Resolve & Send Feedback" data-hi="सुलझाएं और प्रतिक्रिया भेजें">Resolve & Send Feedback</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-check-circle fa-4x mb-3 text-emerald"></i>
+            <h5 class="fw-bold" data-en="All Clear!" data-hi="सब साफ है!">All Clear!</h5>
+            <p data-en="There are currently no pending second opinion review cases assigned to you." data-hi="वर्तमान में आपको सौंपे गए कोई भी लंबित दूसरी राय समीक्षा मामले नहीं हैं।">There are currently no pending second opinion review cases assigned to you.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

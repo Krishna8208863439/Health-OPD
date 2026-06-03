@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}My Notifications - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notif-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-primary);
+        border-radius: 15px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        margin-bottom: 24px;
+    }
+    .notif-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+        transition: all 0.3s;
+        border-left: 4px solid var(--accent);
+    }
+    .notif-item.unread {
+        background: rgba(59, 130, 246, 0.03);
+    }
+    .notif-item.danger {
+        border-left-color: var(--rose);
+    }
+    .notif-item.warning {
+        border-left-color: var(--amber);
+    }
+    .notif-item.success {
+        border-left-color: var(--emerald);
+    }
+    .notif-item.info {
+        border-left-color: var(--accent);
+    }
+    .notif-item.read {
+        opacity: 0.7;
+        border-left-color: var(--primary-700);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-card">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-bell text-primary me-2"></i>
+                <span data-en="Notifications Center" data-hi="अधिसूचना केंद्र">Notifications Center</span>
+            </h2>
+            <p class="text-muted mb-0" data-en="Keep track of your health status updates and medical advice alerts." data-hi="अपने स्वास्थ्य की स्थिति के अपडेट और चिकित्सा सलाह के अलर्ट पर नज़र रखें।">Keep track of your health status updates and medical advice alerts.</p>
+        </div>
+        {% if notifications %}
+        <form action="{{ url_for('notifications_mark_all_read') }}" method="POST">
+            <button type="submit" class="btn btn-secondary py-2 px-3" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px;">
+                <i class="fas fa-check-double me-1"></i> <span data-en="Mark All Read" data-hi="सभी को पढ़ा हुआ चिह्नित करें">Mark All Read</span>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+        {% for notif in notifications %}
+        <div class="notif-item {% if notif.is_read %}read{% else %}unread{% endif %} {{ notif.type }}" id="notif-row-{{ notif.id }}">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+                <div style="flex: 1; min-width: 250px;">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <strong class="fs-6">{{ notif.title }}</strong>
+                        {% if not notif.is_read %}
+                        <span class="badge bg-primary" style="font-size:0.65rem;" data-en="New" data-hi="नया">New</span>
+                        {% endif %}
+                    </div>
+                    <p class="mb-0 text-secondary" style="font-size:0.9rem;">{{ notif.body }}</p>
+                    <small class="text-muted d-block mt-2">
+                        <i class="far fa-clock me-1"></i> {{ notif.created_at }}
+                    </small>
+                </div>
+                <div>
+                    {% if not notif.is_read %}
+                    <button onclick="markAsRead({{ notif.id }})" class="btn btn-sm btn-outline-secondary" data-en="Mark Read" data-hi="पढ़ा चिह्नित करें">
+                        Mark Read
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-bell-slash fa-4x mb-3"></i>
+            <h5 class="fw-bold" data-en="Inbox Clean!" data-hi="कोई सूचना नहीं!">Inbox Clean!</h5>
+            <p data-en="You have no notifications or health alerts at the moment." data-hi="इस समय आपके पास कोई अधिसूचना या स्वास्थ्य अलर्ट नहीं है।">You have no notifications or health alerts at the moment.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAsRead(id) {
+        fetch(`/notifications/mark-read/${id}`, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const row = document.getElementById(`notif-row-${id}`);
+                if (row) {
+                    row.classList.remove('unread');
+                    row.classList.add('read');
+                    const badge = row.querySelector('.badge.bg-primary');
+                    if (badge) badge.remove();
+                    const btn = row.querySelector('button');
+                    if (btn) btn.remove();
+                }
+                // Refresh topbar count
+                if (typeof pollNotifications === 'function') {
+                    pollNotifications();
+                }
+            }
+        })
+        .catch(err => console.error("Error marking notification read:", err));
+    }
+</script>
+{% endblock %}
