@@ -1372,7 +1372,8 @@ def calculate_bmi():
 @app.route('/emergency-sos')
 @login_required
 def emergency_sos():
-    return render_template('emergency_sos.html', patient=current_user)
+    from hospital_finder import HOSPITALS_BY_CITY
+    return render_template('emergency_sos.html', patient=current_user, hospitals_data=HOSPITALS_BY_CITY)
 
 
 # =============================================
