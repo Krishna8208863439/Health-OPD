@@ -91,7 +91,7 @@
             {% if hospitals %}
                 {% for hospital in hospitals %}
                 <div style="background: white; border: 2px solid #E5E7EB; border-radius: 15px; padding: 20px; margin-bottom: 15px; transition: all 0.3s;">
-                    <div style="display: flex; justify-content: between; align-items: start; flex-wrap: wrap;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 300px;">
                             <h5 style="margin-bottom: 10px;">{{ hospital.name }}</h5>
                             <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 10px; {% if hospital.type == 'Government' %}background: #DBEAFE; color: #1E40AF;{% else %}background: #FEF3C7; color: #92400E;{% endif %}">
