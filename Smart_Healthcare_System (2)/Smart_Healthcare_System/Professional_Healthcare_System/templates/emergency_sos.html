@@ -488,11 +488,26 @@
                             <span class="text-muted">Vehicle No:</span>
                             <strong class="text-light">MH-12-EM-9911</strong>
                         </div>
-                        <div class="d-flex justify-content-between mb-4 py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between mb-2 py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
                             <span class="text-muted">Dispatch Hospital:</span>
                             <strong class="text-light" id="dispatchHospitalName">Local Emergency Clinic</strong>
                         </div>
-                        <a href="tel:+919876543210" class="btn btn-call btn-lg w-100 py-2 fs-6 mt-2"><i class="fas fa-phone-alt"></i> Call Driver</a>
+                        <div class="d-flex justify-content-between mb-3 py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                            <span class="text-muted">Hospital Contact:</span>
+                            <strong class="text-light" id="dispatchHospitalPhone">108</strong>
+                        </div>
+                        
+                        <!-- Map Directions Route link for ambulance en route -->
+                        <a href="#" id="liveRouteButton" target="_blank" class="btn btn-maps btn-lg w-100 py-2 mt-2 mb-3" style="display: flex; align-items: center; justify-content: center; font-size: 0.95rem; border-radius: 10px;"><i class="fas fa-directions me-2"></i>View Live Route to Hospital</a>
+                        
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="tel:+919876543210" class="btn btn-outline-light w-100 py-2" style="font-size:0.85rem;"><i class="fas fa-phone-alt me-1"></i>Call Driver</a>
+                            </div>
+                            <div class="col-6">
+                                <a href="#" id="liveCallHospitalButton" class="btn btn-danger w-100 py-2" style="font-size:0.85rem; background:#dc2626; border:none;"><i class="fas fa-phone-volume me-1"></i>Call Hospital</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -864,26 +879,65 @@ function startAmbulanceSimulation() {
     document.getElementById('trackingPortal').classList.add('d-none');
     document.getElementById('trackingActive').classList.remove('d-none');
 
-    // Hospital locations based on city
+    // Hospital locations & info based on live nearest hospitals or fallback
     var hospitalName = "Local General Hospital";
+    var hospitalPhone = "108";
+    var hospitalAddress = "City Center";
+    var hospitalLat = 0;
+    var hospitalLng = 0;
+
     if (nearestHospitals && nearestHospitals.length > 0) {
-        hospitalName = nearestHospitals[0].name;
+        const primaryHospital = nearestHospitals[0];
+        hospitalName = primaryHospital.name;
+        hospitalPhone = primaryHospital.phone;
+        hospitalAddress = primaryHospital.address;
+        hospitalLat = primaryHospital.lat;
+        hospitalLng = primaryHospital.lng;
     } else {
         var userCity = "{{ patient.city }}";
         if (userCity === 'Delhi') {
             hospitalName = "Safdarjung Emergency Centre";
+            hospitalPhone = "011-26707444";
+            hospitalAddress = "Ansari Nagar West, Delhi";
+            hospitalLat = 28.5672;
+            hospitalLng = 77.2100;
         } else if (userCity === 'Mumbai') {
             hospitalName = "KEM Trauma Care";
+            hospitalPhone = "+91-22-2410-7000";
+            hospitalAddress = "Sardar Moodliar Road, Parel, Mumbai";
+            hospitalLat = 19.0176;
+            hospitalLng = 72.8562;
         } else if (userCity === 'Bengaluru' || userCity === 'Bangalore') {
             hospitalName = "Manipal Hospital Emergency";
+            hospitalPhone = "+91-80-2502-4444";
+            hospitalAddress = "98, Airport Road, Bengaluru";
+            hospitalLat = 12.9716;
+            hospitalLng = 77.5946;
         } else if (userCity === 'Pune') {
             hospitalName = "Sassoon General Trauma";
+            hospitalPhone = "+91-20-2612-7394";
+            hospitalAddress = "Near Pune Railway Station, Pune";
+            hospitalLat = 18.5204;
+            hospitalLng = 73.8567;
         } else {
             hospitalName = "City General Hospital Dispatch";
+            hospitalPhone = "108";
+            hospitalAddress = "Main Street, City Center";
+            hospitalLat = 20.5937;
+            hospitalLng = 78.9629;
         }
     }
 
+    // Set hospital details in DOM
     document.getElementById('dispatchHospitalName').textContent = hospitalName;
+    document.getElementById('dispatchHospitalPhone').textContent = hospitalPhone;
+    document.getElementById('liveCallHospitalButton').href = "tel:" + hospitalPhone;
+
+    // Build the dynamic direction route link
+    const originStr = userCoords ? `${userCoords.lat},${userCoords.lng}` : "My Location";
+    var destStr = hospitalLat !== 0 && hospitalLng !== 0 ? `${hospitalLat},${hospitalLng}` : hospitalName + " " + hospitalAddress;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}`;
+    document.getElementById('liveRouteButton').href = directionsUrl;
 
     // Reset UI to initial tracking state
     var timelineProgressLine = document.getElementById('timelineProgressLine');
