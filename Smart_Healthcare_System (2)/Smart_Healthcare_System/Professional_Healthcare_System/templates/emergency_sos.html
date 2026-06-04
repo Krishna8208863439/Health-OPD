@@ -3,7 +3,6 @@
 {% block title %}Emergency SOS - HealthCare Plus{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -245,6 +244,79 @@
     }
     .first-aid-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Vertical Timeline styles */
+    .timeline-steps {
+        position: relative;
+    }
+    .timeline-progress-line {
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: rgba(255,255,255,0.1);
+        z-index: 1;
+    }
+    .timeline-progress-fill {
+        width: 100%;
+        height: 0%;
+        background: #dc2626;
+        transition: height 1s ease;
+    }
+    .timeline-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 2;
+    }
+    .timeline-step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #334155;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #1e293b;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+    .timeline-step-icon.active {
+        background: #dc2626;
+        color: white;
+        box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+        animation: pulse-icon 1.5s infinite;
+    }
+    .timeline-step-icon.completed {
+        background: #10b981;
+        color: white;
+        box-shadow: none;
+    }
+    .timeline-step-content {
+        margin-left: 16px;
+    }
+    .timeline-step-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 0;
+        transition: color 0.3s;
+    }
+    .timeline-step-title.active, .timeline-step-title.completed {
+        color: #f1f5f9;
+    }
+    .timeline-step-time {
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+    @keyframes pulse-icon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
 </style>
 {% endblock %}
 
@@ -279,7 +351,7 @@
             <div style="font-size:3.5rem; margin-bottom:15px;">🚑</div>
             <h5 class="fw-bold text-light">Emergency Dispatch System</h5>
             <p class="text-muted mx-auto" style="max-width:500px; font-size:0.9rem;">
-                Need emergency transport? Click below to request an emergency ambulance. The system will automatically detect your city <strong>({{ patient.city }})</strong>, dispatch the nearest hospital vehicle, and track its route live on the map.
+                Need emergency transport? Click below to request an emergency ambulance. The system will automatically detect your city <strong>({{ patient.city }})</strong>, dispatch the nearest hospital vehicle, and track its dispatch status in real-time.
             </p>
             <button class="btn btn-lg btn-danger px-4 py-2 mt-2" onclick="startAmbulanceSimulation()" style="background:#dc2626; border:none; border-radius:10px; font-weight:600; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">
                 🚨 Request Emergency Ambulance Dispatch
@@ -287,41 +359,123 @@
         </div>
 
         <div id="trackingActive" class="d-none">
-            <div class="row g-3">
-                <div class="col-lg-8">
-                    <!-- Map Container -->
-                    <div id="ambulanceMap" style="height: 350px; border-radius: 15px; border: 2px solid var(--glass-border); background: #0f172a; position: relative; z-index: 1;"></div>
+            <div class="row g-4">
+                <!-- Visual Tracking & Progress Area (Replaces Leaflet Map) -->
+                <div class="col-lg-7">
+                    <div class="p-4 rounded h-100 d-flex flex-column justify-content-between" style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);">
+                        <div>
+                            <h5 class="text-light mb-4"><i class="fas fa-route me-2 text-danger"></i>Dispatch Status Tracker</h5>
+                            
+                            <!-- Timeline Steps -->
+                            <div class="timeline-steps ps-4">
+                                <!-- Vertical progress bar line -->
+                                <div class="timeline-progress-line">
+                                    <div id="timelineProgressLine" class="timeline-progress-fill"></div>
+                                </div>
+                                
+                                <!-- Step 1 -->
+                                <div class="timeline-step">
+                                    <div id="stepIcon1" class="timeline-step-icon completed">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="timeline-step-content">
+                                        <h6 class="timeline-step-title completed fw-bold">Emergency Request Logged</h6>
+                                        <small class="timeline-step-time" id="stepTime1">Just now</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2 -->
+                                <div class="timeline-step">
+                                    <div id="stepIcon2" class="timeline-step-icon completed">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="timeline-step-content">
+                                        <h6 class="timeline-step-title completed fw-bold">Hospital Acknowledged & Assigned</h6>
+                                        <small class="timeline-step-time" id="stepTime2">Just now</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3 -->
+                                <div class="timeline-step">
+                                    <div id="stepIcon3" class="timeline-step-icon active">
+                                        <i class="fas fa-ambulance" id="stepInnerIcon3"></i>
+                                    </div>
+                                    <div class="timeline-step-content">
+                                        <h6 class="timeline-step-title active fw-bold" id="stepTitle3">Ambulance Dispatched</h6>
+                                        <small class="timeline-step-time" id="stepTime3">En Route</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 4 -->
+                                <div class="timeline-step">
+                                    <div id="stepIcon4" class="timeline-step-icon">
+                                        <i class="fas fa-road"></i>
+                                    </div>
+                                    <div class="timeline-step-content">
+                                        <h6 class="timeline-step-title" id="stepTitle4">En Route to Location</h6>
+                                        <small class="timeline-step-time" id="stepTime4">Pending</small>
+                                    </div>
+                                </div>
+
+                                <!-- Step 5 -->
+                                <div class="timeline-step">
+                                    <div id="stepIcon5" class="timeline-step-icon">
+                                        <i class="fas fa-home"></i>
+                                    </div>
+                                    <div class="timeline-step-content">
+                                        <h6 class="timeline-step-title" id="stepTitle5">Arrived at Destination</h6>
+                                        <small class="timeline-step-time" id="stepTime5">Pending</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mini progress bar animation -->
+                        <div class="p-3 rounded mt-3 d-flex align-items-center gap-3" style="background: rgba(220,38,38,0.05); border: 1px dashed rgba(220,38,38,0.2);">
+                            <div class="spinner-grow text-danger flex-shrink-0" id="progressSpinner" role="status" style="width: 20px; height: 20px;"></div>
+                            <div class="w-100">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-light" id="progressStatusLabel">Ambulance dispatched, preparing route...</small>
+                                    <small class="text-danger fw-bold" id="progressPercentageLabel">0%</small>
+                                </div>
+                                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                    <div id="liveProgressBar" class="progress-bar bg-danger progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-4">
+                
+                <div class="col-lg-5">
                     <!-- Live Console Info -->
-                    <div class="p-3 rounded h-100" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary);">
+                    <div class="p-4 rounded h-100" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text-primary);">
                         <h6 class="text-uppercase tracking-wider text-muted mb-2" style="letter-spacing:1px; font-weight:700; font-size:0.75rem;">Live Status</h6>
                         <div class="d-flex align-items-center gap-2 my-2">
                             <span class="status-dot bg-danger"></span>
-                            <strong id="liveStatusText" class="text-danger" style="font-size:1.1rem;">Ambulance Dispatched</strong>
+                            <strong id="liveStatusText" class="text-danger" style="font-size:1.25rem;">Ambulance Dispatched</strong>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <small class="text-muted d-block">Estimated Arrival (ETA)</small>
-                            <strong id="liveETA" class="text-light" style="font-size:1.4rem;">4 mins</strong>
+                            <strong id="liveETA" class="text-light" style="font-size:2rem; font-family: monospace;">5 mins</strong>
                         </div>
-                        <hr style="border-color: var(--glass-border);">
+                        <hr style="border-color: var(--glass-border); margin: 20px 0;">
                         <h6 class="text-uppercase tracking-wider text-muted mb-3" style="letter-spacing:1px; font-weight:700; font-size:0.75rem;">Paramedic Team Details</h6>
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <div style="width:48px; height:48px; border-radius:50%; background: linear-gradient(135deg, var(--accent), var(--cyan)); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">🧑‍✈️</div>
+                            <div style="width:52px; height:52px; border-radius:50%; background: linear-gradient(135deg, var(--accent), var(--cyan)); display:flex; align-items:center; justify-content:center; font-size:1.3rem; box-shadow: 0 4px 10px rgba(59,130,246,0.3);">🧑‍✈️</div>
                             <div>
-                                <strong class="text-light d-block">Rajesh Kumar</strong>
+                                <strong class="text-light d-block" style="font-size: 1.05rem;">Rajesh Kumar</strong>
                                 <small class="text-muted">Primary Paramedic & Driver</small>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-2 py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
                             <span class="text-muted">Vehicle No:</span>
                             <strong class="text-light">MH-12-EM-9911</strong>
                         </div>
-                        <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex justify-content-between mb-4 py-1" style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
                             <span class="text-muted">Dispatch Hospital:</span>
                             <strong class="text-light" id="dispatchHospitalName">Local Emergency Clinic</strong>
                         </div>
-                        <a href="tel:+919876543210" class="btn btn-call w-100 mt-2"><i class="fas fa-phone-alt"></i> Call Driver</a>
+                        <a href="tel:+919876543210" class="btn btn-call btn-lg w-100 py-2 fs-6 mt-2"><i class="fas fa-phone-alt"></i> Call Driver</a>
                     </div>
                 </div>
             </div>
@@ -466,115 +620,127 @@ function showFirstAid(section) {
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map = null;
-var ambulanceMarker = null;
-var routePolyline = null;
 var simulationInterval = null;
 
 function startAmbulanceSimulation() {
-    // Hide dispatch screen, show map screen
+    // Hide dispatch screen, show timeline tracking screen
     document.getElementById('trackingPortal').classList.add('d-none');
     document.getElementById('trackingActive').classList.remove('d-none');
 
-    // Hospital and Patient locations based on city
+    // Hospital locations based on city
     var userCity = "{{ patient.city }}";
-    var startLat, startLng, endLat, endLng;
     var hospitalName = "Local General Hospital";
 
     if (userCity === 'Delhi') {
-        startLat = 28.5726; startLng = 77.2032; // Safdarjung
-        endLat = 28.5672; endLng = 77.2100; // AIIMS Patient
         hospitalName = "Safdarjung Emergency Centre";
     } else if (userCity === 'Mumbai') {
-        startLat = 19.0080; startLng = 72.8420; // KEM Area
-        endLat = 19.0176; endLng = 72.8562; // Patient in Parel
         hospitalName = "KEM Trauma Care";
     } else if (userCity === 'Bengaluru' || userCity === 'Bangalore') {
-        startLat = 12.9800; startLng = 77.6050;
-        endLat = 12.9716; endLng = 77.5946;
         hospitalName = "Manipal Hospital Emergency";
     } else if (userCity === 'Pune') {
-        startLat = 18.5290; startLng = 73.8640;
-        endLat = 18.5204; endLng = 73.8567;
         hospitalName = "Sassoon General Trauma";
     } else {
-        // Default: Mumbai coordinates
-        startLat = 19.0080; startLng = 72.8420;
-        endLat = 19.0176; endLng = 72.8562;
         hospitalName = "City General Hospital Dispatch";
     }
 
     document.getElementById('dispatchHospitalName').textContent = hospitalName;
 
-    // Initialize Leaflet Map
-    map = L.map('ambulanceMap').setView([startLat, startLng], 14);
-
-    // Dark themed Map Tiles (CartoDB Positron Dark)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Patient icon (Heart/SOS Red marker)
-    var patientMarker = L.marker([endLat, endLng]).addTo(map)
-        .bindPopup("<b>You (Emergency Location)</b>").openPopup();
-
-    // Generate Path points
-    var pathPoints = [];
-    var segments = 10;
-    for (var i = 0; i <= segments; i++) {
-        var t = i / segments;
-        var lat = startLat + (endLat - startLat) * t;
-        var lng = startLng + (endLng - startLng) * t;
-        // Add minor jitter to look like streets
-        if (i > 0 && i < segments) {
-            lat += (Math.random() - 0.5) * 0.001;
-            lng += (Math.random() - 0.5) * 0.001;
-        }
-        pathPoints.push([lat, lng]);
-    }
-
-    // Add polyline
-    routePolyline = L.polyline(pathPoints, {color: '#ef4444', weight: 4, dashArray: '5, 10'}).addTo(map);
-
-    // Custom Ambulance Icon
-    var ambulanceIcon = L.divIcon({
-        html: '<div style="font-size: 24px; filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.8));">🚑</div>',
-        className: 'ambulance-map-icon',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-    });
-
-    ambulanceMarker = L.marker([startLat, startLng], {icon: ambulanceIcon}).addTo(map);
-
+    // Reset UI to initial tracking state
+    var timelineProgressLine = document.getElementById('timelineProgressLine');
+    var progressStatusLabel = document.getElementById('progressStatusLabel');
+    var progressPercentageLabel = document.getElementById('progressPercentageLabel');
+    var liveProgressBar = document.getElementById('liveProgressBar');
+    var liveStatusText = document.getElementById('liveStatusText');
+    var liveETA = document.getElementById('liveETA');
+    
+    timelineProgressLine.style.height = '50%';
+    progressStatusLabel.textContent = "Ambulance dispatched, preparing route...";
+    progressPercentageLabel.textContent = "0%";
+    liveProgressBar.style.width = "0%";
+    
     var currentStep = 0;
-    var totalSteps = pathPoints.length;
+    var totalSteps = 10;
 
     simulationInterval = setInterval(function() {
         currentStep++;
-        if (currentStep >= totalSteps) {
+        
+        if (currentStep === 1) {
+            progressStatusLabel.textContent = "Ambulance departed, en route to location...";
+            progressPercentageLabel.textContent = "10%";
+            liveProgressBar.style.width = "10%";
+        }
+        else if (currentStep === 2) {
+            // Move active state to Step 4 (En Route)
+            document.getElementById('stepIcon3').className = "timeline-step-icon completed";
+            document.getElementById('stepIcon3').innerHTML = '<i class="fas fa-check"></i>';
+            document.getElementById('stepTitle3').className = "timeline-step-title completed fw-bold";
+            document.getElementById('stepTime3').textContent = "Completed";
+
+            document.getElementById('stepIcon4').className = "timeline-step-icon active";
+            document.getElementById('stepTitle4').className = "timeline-step-title active fw-bold";
+            document.getElementById('stepTime4').textContent = "Active";
+
+            timelineProgressLine.style.height = '75%';
+            
+            liveStatusText.textContent = "En Route";
+            liveETA.textContent = "4 mins";
+            progressStatusLabel.textContent = "Moving through local traffic...";
+            progressPercentageLabel.textContent = "25%";
+            liveProgressBar.style.width = "25%";
+        }
+        else if (currentStep === 4) {
+            liveETA.textContent = "3 mins";
+            progressStatusLabel.textContent = "Passing major intersections...";
+            progressPercentageLabel.textContent = "50%";
+            liveProgressBar.style.width = "50%";
+        }
+        else if (currentStep === 6) {
+            liveETA.textContent = "2 mins";
+            progressStatusLabel.textContent = "Approaching patient neighborhood...";
+            progressPercentageLabel.textContent = "70%";
+            liveProgressBar.style.width = "70%";
+        }
+        else if (currentStep === 8) {
+            liveStatusText.textContent = "En Route - Arriving Soon";
+            liveETA.textContent = "1 min";
+            progressStatusLabel.textContent = "Turning onto patient's street...";
+            progressPercentageLabel.textContent = "90%";
+            liveProgressBar.style.width = "90%";
+        }
+        else if (currentStep >= totalSteps) {
             clearInterval(simulationInterval);
-            ambulanceMarker.setLatLng([endLat, endLng]);
-            document.getElementById('liveStatusText').textContent = "Arrived";
-            document.getElementById('liveStatusText').className = "text-success";
+            
+            // Mark all steps completed
+            document.getElementById('stepIcon4').className = "timeline-step-icon completed";
+            document.getElementById('stepIcon4').innerHTML = '<i class="fas fa-check"></i>';
+            document.getElementById('stepTitle4').className = "timeline-step-title completed fw-bold";
+            document.getElementById('stepTime4').textContent = "Completed";
+
+            document.getElementById('stepIcon5').className = "timeline-step-icon completed";
+            document.getElementById('stepIcon5').innerHTML = '<i class="fas fa-check"></i>';
+            document.getElementById('stepTitle5').className = "timeline-step-title completed fw-bold";
+            document.getElementById('stepTime5').textContent = "Arrived";
+
+            timelineProgressLine.style.height = '100%';
+            
+            liveStatusText.textContent = "Arrived";
+            liveStatusText.className = "text-success";
             document.querySelector('#trackingActive .status-dot').className = "status-dot bg-success";
-            document.getElementById('liveETA').textContent = "Arrived";
-            patientMarker.bindPopup("<b>Ambulance has arrived!</b> Please meet the paramedic team.").openPopup();
-            return;
+            liveETA.textContent = "Arrived";
+            
+            progressStatusLabel.textContent = "Ambulance has arrived! Please meet the paramedic team.";
+            progressPercentageLabel.textContent = "100%";
+            liveProgressBar.style.width = "100%";
+            liveProgressBar.className = "progress-bar bg-success";
+            
+            // Remove progress spinner
+            var spinner = document.getElementById('progressSpinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
         }
-
-        var nextLatLng = pathPoints[currentStep];
-        ambulanceMarker.setLatLng(nextLatLng);
-        map.panTo(nextLatLng);
-
-        // Update ETA
-        var etaMinutes = Math.ceil((totalSteps - currentStep) * 0.5);
-        document.getElementById('liveETA').textContent = etaMinutes + " min" + (etaMinutes > 1 ? "s" : "");
-        if (etaMinutes <= 2) {
-            document.getElementById('liveStatusText').textContent = "En Route - Arriving Soon";
-        }
-    }, 3000);
+    }, 2500);
 }
 </script>
 {% endblock %}
