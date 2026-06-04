@@ -3,22 +3,8 @@
 {% block title %}🚨 Emergency Ambulance – HealthCare Plus{% endblock %}
 
 {% block extra_css %}
-<!-- Leaflet.js CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-
-    :root {
-        --emergency-red: #E53E3E;
-        --emergency-dark: #C53030;
-        --ambulance-blue: #2B6CB0;
-        --safe-green: #276749;
-        --bg-dark: #0f1117;
-    }
-
-    body {
-        background: #f0f4f8 !important;
-    }
+    body { background: #f0f4f8 !important; }
 
     .emergency-hero {
         background: linear-gradient(135deg, #C53030 0%, #E53E3E 50%, #FC8181 100%);
@@ -29,7 +15,7 @@
         justify-content: space-between;
         border-radius: 0 0 20px 20px;
         box-shadow: 0 8px 30px rgba(197,48,48,0.35);
-        margin-bottom: 24px;
+        margin-bottom: 28px;
         flex-wrap: wrap;
         gap: 12px;
     }
@@ -41,11 +27,7 @@
         margin: 0;
     }
 
-    .emergency-hero p {
-        margin: 4px 0 0;
-        opacity: 0.92;
-        font-size: 0.95rem;
-    }
+    .emergency-hero p { margin: 4px 0 0; opacity: 0.92; font-size: 0.95rem; }
 
     .pulse-badge {
         display: flex;
@@ -60,50 +42,21 @@
     }
 
     .pulse-dot {
-        width: 12px;
-        height: 12px;
-        background: #fff;
-        border-radius: 50%;
-        animation: pulse 1.4s infinite;
+        width: 12px; height: 12px;
+        background: #fff; border-radius: 50%;
+        animation: pulseDot 1.4s infinite;
     }
 
-    @keyframes pulse {
+    @keyframes pulseDot {
         0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.7); }
+        50%       { opacity: 0.4; transform: scale(0.7); }
     }
 
-    /* MAP */
-    #india-map {
-        width: 100%;
-        height: 480px;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        border: 3px solid #E53E3E;
-        z-index: 1;
-    }
-
-    .map-card {
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
-    }
-
-    .map-card h5 {
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* STATUS TRACKER */
+    /* ── STATUS TRACKER ── */
     .status-tracker {
         background: white;
         border-radius: 20px;
-        padding: 24px;
+        padding: 28px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         margin-bottom: 20px;
     }
@@ -112,24 +65,21 @@
         display: flex;
         justify-content: space-between;
         position: relative;
-        margin: 28px 0 10px;
+        margin: 32px 0 14px;
     }
 
     .status-steps::before {
         content: '';
         position: absolute;
-        top: 22px;
-        left: 10%;
-        width: 80%;
-        height: 3px;
+        top: 22px; left: 10%;
+        width: 80%; height: 3px;
         background: #e2e8f0;
         z-index: 0;
     }
 
     .status-bar-fill {
         position: absolute;
-        top: 22px;
-        left: 10%;
+        top: 22px; left: 10%;
         height: 3px;
         background: linear-gradient(90deg, #E53E3E, #FC8181);
         z-index: 1;
@@ -138,65 +88,46 @@
     }
 
     .step {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-        flex: 1;
+        display: flex; flex-direction: column; align-items: center;
+        position: relative; z-index: 2; flex: 1;
     }
 
     .step-icon {
-        width: 44px;
-        height: 44px;
+        width: 46px; height: 46px;
         border-radius: 50%;
-        background: #e2e8f0;
-        color: #a0aec0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        margin-bottom: 8px;
+        background: #e2e8f0; color: #a0aec0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; margin-bottom: 8px;
         transition: all 0.5s ease;
         border: 3px solid #e2e8f0;
     }
 
     .step.active .step-icon {
-        background: #E53E3E;
-        color: white;
-        border-color: #E53E3E;
-        box-shadow: 0 0 0 6px rgba(229,62,62,0.15);
+        background: #E53E3E; color: white; border-color: #E53E3E;
         animation: stepPulse 1.2s infinite;
     }
 
     .step.done .step-icon {
-        background: #38a169;
-        color: white;
-        border-color: #38a169;
+        background: #38a169; color: white; border-color: #38a169;
     }
 
     @keyframes stepPulse {
         0%, 100% { box-shadow: 0 0 0 0 rgba(229,62,62,0.4); }
-        50% { box-shadow: 0 0 0 10px rgba(229,62,62,0); }
+        50%       { box-shadow: 0 0 0 10px rgba(229,62,62,0); }
     }
 
     .step-label {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #718096;
-        text-align: center;
-        max-width: 80px;
+        font-size: 0.78rem; font-weight: 600; color: #718096;
+        text-align: center; max-width: 80px;
     }
 
     .step.active .step-label { color: #E53E3E; }
-    .step.done .step-label  { color: #38a169; }
+    .step.done  .step-label  { color: #38a169; }
 
-    /* ETA CARD */
+    /* ── ETA CARD ── */
     .eta-card {
         background: linear-gradient(135deg, #1a202c, #2d3748);
-        color: white;
-        border-radius: 20px;
-        padding: 24px;
+        color: white; border-radius: 20px; padding: 24px;
         margin-bottom: 20px;
         box-shadow: 0 8px 30px rgba(0,0,0,0.2);
         display: none;
@@ -205,165 +136,98 @@
     .eta-card.show { display: block; }
 
     .eta-timer {
-        font-size: 3.5rem;
-        font-weight: 800;
-        color: #FC8181;
-        line-height: 1;
+        font-size: 3.5rem; font-weight: 800;
+        color: #FC8181; line-height: 1;
         font-variant-numeric: tabular-nums;
     }
 
-    .eta-label {
-        font-size: 0.85rem;
-        color: #a0aec0;
-        margin-top: 4px;
-    }
+    .eta-label { font-size: 0.85rem; color: #a0aec0; margin-top: 4px; }
 
-    /* SOS BUTTON */
+    /* ── SOS BUTTON ── */
     .sos-btn {
-        width: 100%;
-        padding: 20px;
+        width: 100%; padding: 22px;
         background: linear-gradient(135deg, #C53030, #E53E3E);
-        color: white;
-        border: none;
-        border-radius: 16px;
-        font-size: 1.25rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.3s;
-        letter-spacing: 0.5px;
+        color: white; border: none; border-radius: 16px;
+        font-size: 1.3rem; font-weight: 800; cursor: pointer;
+        transition: all 0.3s; letter-spacing: 0.5px;
         box-shadow: 0 8px 24px rgba(197,48,48,0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 16px;
+        display: flex; align-items: center; justify-content: center;
+        gap: 12px; margin-bottom: 16px;
     }
 
     .sos-btn:hover:not(:disabled) {
         transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(197,48,48,0.55);
+        box-shadow: 0 14px 36px rgba(197,48,48,0.55);
     }
 
     .sos-btn:disabled {
         background: linear-gradient(135deg, #718096, #4a5568);
-        cursor: not-allowed;
-        box-shadow: none;
-        transform: none;
+        cursor: not-allowed; box-shadow: none; transform: none;
     }
 
-    .sos-btn .btn-icon {
-        font-size: 1.5rem;
-        animation: sosPulse 1s infinite;
-    }
+    .sos-btn .btn-icon { font-size: 1.6rem; animation: sosPulse 1s infinite; }
 
     @keyframes sosPulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.3); }
+        50%       { transform: scale(1.3); }
     }
 
     .sos-btn:disabled .btn-icon { animation: none; }
 
     .cancel-btn {
-        width: 100%;
-        padding: 14px;
-        background: #f7fafc;
-        color: #4a5568;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: none;
-        margin-bottom: 16px;
+        width: 100%; padding: 14px;
+        background: #f7fafc; color: #4a5568;
+        border: 2px solid #e2e8f0; border-radius: 12px;
+        font-size: 1rem; font-weight: 600; cursor: pointer;
+        transition: all 0.3s; display: none; margin-bottom: 16px;
     }
 
     .cancel-btn:hover { background: #fed7d7; color: #c53030; border-color: #fc8181; }
-    .cancel-btn.show { display: block; }
+    .cancel-btn.show  { display: block; }
 
-    /* INFO CARDS */
+    /* ── INFO CARDS ── */
     .info-card {
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-        margin-bottom: 16px;
-        border-left: 4px solid #E53E3E;
+        background: white; border-radius: 16px;
+        padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+        margin-bottom: 16px; border-left: 4px solid #E53E3E;
     }
 
-    .info-card h6 {
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 10px;
-        font-size: 0.95rem;
-    }
+    .info-card h6 { font-weight: 700; color: #2d3748; margin-bottom: 12px; font-size: 0.97rem; }
 
-    .info-card p, .info-card li {
-        color: #718096;
-        font-size: 0.88rem;
-        margin: 4px 0;
-    }
-
+    .info-card p, .info-card li { color: #718096; font-size: 0.88rem; margin: 5px 0; }
     .info-card ul { padding-left: 18px; margin: 0; }
 
     .hotline-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f4f8;
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 0; border-bottom: 1px solid #f0f4f8;
     }
     .hotline-item:last-child { border-bottom: none; }
 
     .hotline-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
     }
 
-    .hotline-number {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #2d3748;
+    .hotline-number { font-size: 1.15rem; font-weight: 700; color: #2d3748; }
+    .hotline-name   { font-size: 0.8rem; color: #718096; }
+
+    /* ── DISPATCH CARD ── */
+    .dispatch-card {
+        background: white; border-radius: 20px;
+        padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
     }
 
-    .hotline-name {
-        font-size: 0.8rem;
-        color: #718096;
+    .dispatch-card h5 {
+        font-weight: 700; color: #2d3748;
+        margin-bottom: 18px; font-size: 1.05rem;
     }
 
-    /* Location status bar */
-    #location-status {
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-size: 0.88rem;
-        font-weight: 500;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .loc-found { background: #c6f6d5; color: #276749; }
-    .loc-searching { background: #fefcbf; color: #744210; }
-    .loc-error { background: #fed7d7; color: #9b2c2c; }
-
-    /* Ambulance info popup style */
-    .leaflet-popup-content-wrapper {
-        border-radius: 12px !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
-        #india-map { height: 320px; }
-        .eta-timer { font-size: 2.5rem; }
+        .eta-timer       { font-size: 2.5rem; }
         .emergency-hero h2 { font-size: 1.4rem; }
+        .sos-btn         { font-size: 1.1rem; padding: 18px; }
     }
 </style>
 {% endblock %}
@@ -374,7 +238,7 @@
 <div class="emergency-hero">
     <div>
         <h2>🚨 Emergency Ambulance Dispatch</h2>
-        <p>Live tracking — India coverage — Average response: 8–12 min</p>
+        <p>India coverage — Average response: 8–12 min</p>
     </div>
     <div class="pulse-badge">
         <div class="pulse-dot"></div>
@@ -384,28 +248,10 @@
 
 <div class="row g-4">
 
-    <!-- LEFT COLUMN: Map + Status -->
+    <!-- LEFT COLUMN: Status Tracker + Hotlines + Tips -->
     <div class="col-lg-8">
 
-        <!-- Map Card -->
-        <div class="map-card">
-            <h5><i class="fas fa-map-marked-alt text-danger"></i> India Live Ambulance Map
-                <span style="font-size:0.78rem; font-weight:500; color:#718096; margin-left:8px;">
-                    Click on the map to set your location
-                </span>
-            </h5>
-
-            <!-- Location Status -->
-            <div id="location-status" class="loc-searching">
-                <i class="fas fa-circle-notch fa-spin"></i>
-                <span id="loc-text">Detecting your location…</span>
-            </div>
-
-            <!-- THE MAP -->
-            <div id="india-map"></div>
-        </div>
-
-        <!-- Status Tracker (hidden until dispatched) -->
+        <!-- Status Tracker (shown after dispatch) -->
         <div class="status-tracker" id="status-tracker" style="display:none;">
             <h5 style="font-weight:700; color:#2d3748; margin-bottom:4px;">
                 <i class="fas fa-ambulance text-danger"></i> Ambulance Status
@@ -414,6 +260,7 @@
 
             <div class="status-steps">
                 <div class="status-bar-fill" id="status-bar"></div>
+
                 <div class="step" id="step-1">
                     <div class="step-icon"><i class="fas fa-phone"></i></div>
                     <div class="step-label">Request Sent</div>
@@ -436,29 +283,151 @@
                 </div>
             </div>
 
-            <div id="status-message" style="text-align:center; padding:14px; background:#fff5f5; border-radius:10px; color:#c53030; font-weight:600; font-size:0.95rem; margin-top:10px;">
+            <div id="status-message"
+                 style="text-align:center; padding:14px; background:#fff5f5; border-radius:10px;
+                        color:#c53030; font-weight:600; font-size:0.95rem; margin-top:10px;">
                 🚨 Ambulance dispatched!
+            </div>
+        </div>
+
+        <!-- Empty state before dispatch -->
+        <div id="pre-dispatch-info" class="status-tracker">
+            <h5 style="font-weight:700; color:#2d3748; margin-bottom:6px;">
+                <i class="fas fa-info-circle text-danger"></i> How It Works
+            </h5>
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
+                        <div style="font-size:2rem; margin-bottom:8px;">📱</div>
+                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">1. Press SOS</div>
+                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Tap the dispatch button</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
+                        <div style="font-size:2rem; margin-bottom:8px;">🚑</div>
+                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">2. Ambulance Assigned</div>
+                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Nearest unit dispatched</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
+                        <div style="font-size:2rem; margin-bottom:8px;">⏱️</div>
+                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">3. Track ETA</div>
+                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Live countdown timer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Hotlines -->
+        <div class="info-card">
+            <h6><i class="fas fa-phone-volume text-danger"></i> India Emergency Hotlines</h6>
+            <div class="hotline-item">
+                <div class="hotline-icon" style="background:#fff5f5; color:#e53e3e;">🚑</div>
+                <div>
+                    <div class="hotline-number">108</div>
+                    <div class="hotline-name">Ambulance (Free — 24/7)</div>
+                </div>
+                <a href="tel:108" style="margin-left:auto; background:#E53E3E; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+            <div class="hotline-item">
+                <div class="hotline-icon" style="background:#ebf8ff; color:#2b6cb0;">🚔</div>
+                <div>
+                    <div class="hotline-number">100</div>
+                    <div class="hotline-name">Police Emergency</div>
+                </div>
+                <a href="tel:100" style="margin-left:auto; background:#2b6cb0; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+            <div class="hotline-item">
+                <div class="hotline-icon" style="background:#fff5f5; color:#c05621;">🔥</div>
+                <div>
+                    <div class="hotline-number">101</div>
+                    <div class="hotline-name">Fire Brigade</div>
+                </div>
+                <a href="tel:101" style="margin-left:auto; background:#c05621; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+            <div class="hotline-item">
+                <div class="hotline-icon" style="background:#f0fff4; color:#276749;">☎️</div>
+                <div>
+                    <div class="hotline-number">112</div>
+                    <div class="hotline-name">National Emergency</div>
+                </div>
+                <a href="tel:112" style="margin-left:auto; background:#276749; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+            <div class="hotline-item">
+                <div class="hotline-icon" style="background:#faf5ff; color:#6b46c1;">🏥</div>
+                <div>
+                    <div class="hotline-number">104</div>
+                    <div class="hotline-name">Medical Helpline</div>
+                </div>
+                <a href="tel:104" style="margin-left:auto; background:#6b46c1; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+            </div>
+        </div>
+
+        <!-- While Waiting Tips -->
+        <div class="info-card">
+            <h6><i class="fas fa-first-aid text-danger"></i> While You Wait — First Aid Tips</h6>
+            <div class="row g-2 mt-1">
+                <div class="col-md-6">
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">🧘</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Keep the patient calm and still</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">🚫</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Do not give food or water if unconscious</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">💨</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Keep the airway clear and open</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">🩸</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Apply pressure on bleeding wounds</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">📞</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Stay on the phone with the dispatcher</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">🚪</span>
+                        <span style="font-size:0.87rem; color:#4a5568;">Send someone outside to guide the ambulance</span>
+                    </div>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- RIGHT COLUMN: Controls + Info -->
+    <!-- RIGHT COLUMN: Dispatch + ETA -->
     <div class="col-lg-4">
 
         <!-- ETA Card (shown after dispatch) -->
         <div class="eta-card" id="eta-card">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div style="font-size:0.8rem; color:#a0aec0; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Estimated Arrival</div>
+                    <div style="font-size:0.78rem; color:#a0aec0; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Estimated Arrival</div>
                     <div class="eta-timer" id="eta-display">08:00</div>
                     <div class="eta-label">minutes remaining</div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:0.8rem; color:#a0aec0;">Ambulance ID</div>
+                    <div style="font-size:0.78rem; color:#a0aec0;">Ambulance ID</div>
                     <div style="font-weight:700; font-size:1.1rem;" id="ambulance-id">MH-AMB-042</div>
-                    <div style="font-size:0.8rem; color:#68d391; margin-top:4px;">
-                        <i class="fas fa-circle" style="font-size:0.5rem;"></i> Moving toward you
+                    <div style="font-size:0.78rem; color:#68d391; margin-top:4px;">
+                        <i class="fas fa-circle" style="font-size:0.45rem;"></i> Heading to you
                     </div>
                 </div>
             </div>
@@ -468,16 +437,11 @@
             </div>
         </div>
 
-        <!-- SOS Dispatch Button -->
-        <div style="background:white; border-radius:20px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); margin-bottom:16px;">
-            <h5 style="font-weight:700; color:#2d3748; margin-bottom:14px;">
-                <i class="fas fa-siren-on text-danger"></i> Request Ambulance
+        <!-- SOS Dispatch Card -->
+        <div class="dispatch-card">
+            <h5>
+                <i class="fas fa-bell text-danger"></i> Request Ambulance
             </h5>
-
-            <div id="patient-location-display" style="background:#f7fafc; border-radius:10px; padding:12px; margin-bottom:14px; font-size:0.85rem; color:#4a5568; display:none;">
-                <i class="fas fa-map-pin" style="color:#e53e3e;"></i>
-                <span id="location-coords">—</span>
-            </div>
 
             <button class="sos-btn" id="sos-btn" onclick="requestAmbulance()">
                 <span class="btn-icon">🚨</span>
@@ -493,57 +457,23 @@
             </p>
         </div>
 
-        <!-- Emergency Hotlines -->
-        <div class="info-card">
-            <h6><i class="fas fa-phone-volume text-danger"></i> India Emergency Hotlines</h6>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#fff5f5; color:#e53e3e;">🚑</div>
-                <div>
-                    <div class="hotline-number">108</div>
-                    <div class="hotline-name">Ambulance (Free)</div>
-                </div>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#ebf8ff; color:#2b6cb0;">🚔</div>
-                <div>
-                    <div class="hotline-number">100</div>
-                    <div class="hotline-name">Police Emergency</div>
-                </div>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#fff5f5; color:#c05621;">🔥</div>
-                <div>
-                    <div class="hotline-number">101</div>
-                    <div class="hotline-name">Fire Brigade</div>
-                </div>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#f0fff4; color:#276749;">☎️</div>
-                <div>
-                    <div class="hotline-number">112</div>
-                    <div class="hotline-name">National Emergency</div>
-                </div>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#faf5ff; color:#6b46c1;">🏥</div>
-                <div>
-                    <div class="hotline-number">104</div>
-                    <div class="hotline-name">Medical Helpline</div>
-                </div>
-            </div>
+        <!-- Patient Info Card -->
+        <div class="info-card" style="border-left-color:#3182ce;">
+            <h6 style="color:#2b6cb0;"><i class="fas fa-user-circle" style="color:#3182ce;"></i> Patient On Record</h6>
+            <p style="margin:6px 0;"><strong>Name:</strong> {{ patient.full_name }}</p>
+            <p style="margin:6px 0;"><strong>Age:</strong> {{ patient.age }} years</p>
+            <p style="margin:6px 0;"><strong>City:</strong> {{ patient.city }}</p>
+            <p style="margin:6px 0;"><strong>Contact:</strong> {{ patient.contact or 'N/A' }}</p>
         </div>
 
-        <!-- While waiting tips -->
-        <div class="info-card">
-            <h6><i class="fas fa-info-circle text-danger"></i> While You Wait</h6>
-            <ul>
-                <li>Keep the patient calm and still</li>
-                <li>Do not give food or water if unconscious</li>
-                <li>Keep the airway clear</li>
-                <li>Apply pressure on any bleeding wounds</li>
-                <li>Stay on the phone with dispatcher</li>
-                <li>Send someone outside to guide the ambulance</li>
-            </ul>
+        <!-- Quick tip -->
+        <div style="background:linear-gradient(135deg,#C53030,#E53E3E); color:white; border-radius:16px; padding:18px; text-align:center;">
+            <div style="font-size:2rem; margin-bottom:8px;">☎️</div>
+            <div style="font-weight:700; font-size:1.1rem;">Call 108 directly</div>
+            <div style="font-size:0.85rem; opacity:0.9; margin-top:4px;">Fastest free ambulance in India</div>
+            <a href="tel:108" style="display:inline-block; margin-top:12px; background:white; color:#C53030; padding:9px 28px; border-radius:10px; font-weight:800; font-size:1rem; text-decoration:none;">
+                📞 Call 108 Now
+            </a>
         </div>
 
     </div>
@@ -551,160 +481,35 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Leaflet.js -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
-// ─── MAP SETUP ──────────────────────────────────────────────────
-// India bounds
-const INDIA_BOUNDS = [[6.4, 68.1], [35.5, 97.4]];
-const INDIA_CENTER = [20.5937, 78.9629];
-
-const map = L.map('india-map', {
-    center: INDIA_CENTER,
-    zoom: 5,
-    minZoom: 4,
-    maxZoom: 16,
-    maxBounds: INDIA_BOUNDS,
-    maxBoundsViscosity: 1.0,
-    zoomControl: true
-});
-
-// OpenStreetMap tiles
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-    bounds: INDIA_BOUNDS
-}).addTo(map);
-
-// Custom icons
-const userIcon = L.divIcon({
-    html: `<div style="background:#E53E3E; width:18px; height:18px; border-radius:50%; border:3px solid white; box-shadow:0 0 0 3px rgba(229,62,62,0.4);"></div>`,
-    iconSize: [18, 18], iconAnchor: [9, 9], className: ''
-});
-
-const ambulanceIcon = L.divIcon({
-    html: `<div style="font-size:28px; line-height:1; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));">🚑</div>`,
-    iconSize: [36, 36], iconAnchor: [18, 18], className: ''
-});
-
-const hospitalIcon = L.divIcon({
-    html: `<div style="font-size:22px; line-height:1; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));">🏥</div>`,
-    iconSize: [28, 28], iconAnchor: [14, 14], className: ''
-});
-
-// ─── STATE ───────────────────────────────────────────────────────
-let userMarker = null;
-let ambulanceMarker = null;
-let userLatLng = null;
-let etaInterval = null;
-let ambulanceMoveInterval = null;
-let ambulanceLatLng = null;
-let dispatched = false;
-
-// Simulated nearby hospitals in India
-const nearbyHospitals = [
-    { name: "AIIMS Delhi",       lat: 28.5672, lng: 77.2100, state: "Delhi" },
-    { name: "Apollo Chennai",    lat: 13.0827, lng: 80.2707, state: "Tamil Nadu" },
-    { name: "KEM Hospital",      lat: 19.0176, lng: 72.8562, state: "Maharashtra" },
-    { name: "Manipal Bengaluru", lat: 12.9716, lng: 77.5946, state: "Karnataka" },
-    { name: "PGIMER Chandigarh", lat: 30.7333, lng: 76.7794, state: "Punjab" },
-    { name: "NIMS Hyderabad",    lat: 17.4239, lng: 78.4738, state: "Telangana" },
-    { name: "SGPGI Lucknow",     lat: 26.8467, lng: 80.9462, state: "U.P." },
-    { name: "NIMHANS Bengaluru", lat: 12.9396, lng: 77.5954, state: "Karnataka" }
-];
-
-// Add hospital markers
-nearbyHospitals.forEach(h => {
-    L.marker([h.lat, h.lng], { icon: hospitalIcon })
-     .addTo(map)
-     .bindPopup(`<b style="color:#2b6cb0;">${h.name}</b><br><span style="color:#718096;font-size:0.85rem;">${h.state} • Emergency Available</span>`);
-});
-
-// ─── GEOLOCATION ─────────────────────────────────────────────────
-function setUserLocation(lat, lng, label) {
-    userLatLng = L.latLng(lat, lng);
-
-    if (userMarker) map.removeLayer(userMarker);
-    userMarker = L.marker([lat, lng], { icon: userIcon })
-        .addTo(map)
-        .bindPopup(`<b style="color:#e53e3e;">📍 Your Location</b><br><span style="font-size:0.82rem;color:#718096;">${label}</span>`)
-        .openPopup();
-
-    // Animate map to user
-    map.flyTo([lat, lng], 12, { duration: 1.4 });
-
-    document.getElementById('location-status').className = 'loc-found';
-    document.getElementById('loc-text').innerHTML = `<i class="fas fa-check-circle"></i> Location found: ${label}`;
-    document.getElementById('patient-location-display').style.display = 'block';
-    document.getElementById('location-coords').textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-}
-
-// Try GPS
-if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-        pos => setUserLocation(pos.coords.latitude, pos.coords.longitude, "Your GPS Location"),
-        err => {
-            // Default to India center
-            document.getElementById('location-status').className = 'loc-error';
-            document.getElementById('loc-text').innerHTML = `<i class="fas fa-exclamation-triangle"></i> GPS denied — click on map to set your location`;
-            setUserLocation(INDIA_CENTER[0], INDIA_CENTER[1], "India (default — click map to update)");
-        },
-        { timeout: 7000 }
-    );
-} else {
-    setUserLocation(INDIA_CENTER[0], INDIA_CENTER[1], "India (click map to pinpoint your location)");
-}
-
-// Click map to update location
-map.on('click', e => {
-    if (!dispatched) {
-        setUserLocation(e.latlng.lat, e.latlng.lng, `Selected: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`);
-    }
-});
-
-// ─── AMBULANCE DISPATCH ───────────────────────────────────────────
-const ambulanceIds = ['MH-AMB-042', 'DL-AMB-117', 'KA-AMB-083', 'TN-AMB-061'];
+// ── AMBULANCE DISPATCH ────────────────────────────────────────────
+const ambulanceIds  = ['MH-AMB-042', 'DL-AMB-117', 'KA-AMB-083', 'TN-AMB-061'];
 const driverPhones  = ['+91-98765-43210', '+91-87654-32109', '+91-76543-21098', '+91-65432-10987'];
 
-function requestAmbulance() {
-    if (!userLatLng) {
-        alert('Please wait for location detection or click on the map to set your location.');
-        return;
-    }
+let etaInterval   = null;
+let dispatched    = false;
 
+function requestAmbulance() {
     dispatched = true;
 
-    // Pick random ambulance info
+    // Random ambulance
     const idx = Math.floor(Math.random() * ambulanceIds.length);
-    document.getElementById('ambulance-id').textContent = ambulanceIds[idx];
-    document.getElementById('driver-phone').textContent = driverPhones[idx];
+    document.getElementById('ambulance-id').textContent  = ambulanceIds[idx];
+    document.getElementById('driver-phone').textContent  = driverPhones[idx];
 
-    // Disable SOS, show cancel
-    document.getElementById('sos-btn').disabled = true;
-    document.getElementById('sos-btn').innerHTML = `<i class="fas fa-spinner fa-spin"></i> Ambulance Dispatched…`;
+    // UI changes
+    const btn = document.getElementById('sos-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ambulance Dispatched…';
     document.getElementById('cancel-btn').classList.add('show');
-
-    // Show status tracker & ETA
     document.getElementById('status-tracker').style.display = 'block';
+    document.getElementById('pre-dispatch-info').style.display = 'none';
     document.getElementById('eta-card').classList.add('show');
 
-    // Spawn ambulance 15-20 km away from user
-    const angle = Math.random() * 2 * Math.PI;
-    const dist  = 0.13 + Math.random() * 0.07; // ~15-20km in degrees
-    ambulanceLatLng = L.latLng(
-        userLatLng.lat + dist * Math.sin(angle),
-        userLatLng.lng + dist * Math.cos(angle)
-    );
-
-    ambulanceMarker = L.marker(ambulanceLatLng, { icon: ambulanceIcon })
-        .addTo(map)
-        .bindPopup(`<b>🚑 ${ambulanceIds[idx]}</b><br><span style="color:#718096;font-size:0.85rem;">Heading to your location</span>`)
-        .openPopup();
-
-    // Animate steps
+    // Steps
     runStatusSteps();
 
-    // Start ETA countdown (8 min)
+    // ETA countdown — 8 min
     let etaSeconds = 8 * 60;
     updateETA(etaSeconds);
     etaInterval = setInterval(() => {
@@ -712,13 +517,9 @@ function requestAmbulance() {
         updateETA(etaSeconds);
         if (etaSeconds <= 0) {
             clearInterval(etaInterval);
-            clearInterval(ambulanceMoveInterval);
             arrivedAnimation();
         }
     }, 1000);
-
-    // Move ambulance toward user every 3 seconds
-    ambulanceMoveInterval = setInterval(() => moveAmbulance(), 3000);
 }
 
 function updateETA(seconds) {
@@ -727,42 +528,27 @@ function updateETA(seconds) {
     document.getElementById('eta-display').textContent = `${m}:${s}`;
 }
 
-function moveAmbulance() {
-    if (!ambulanceLatLng || !userLatLng) return;
-    // Move 12% closer each tick
-    const newLat = ambulanceLatLng.lat + (userLatLng.lat - ambulanceLatLng.lat) * 0.12;
-    const newLng = ambulanceLatLng.lng + (userLatLng.lng - ambulanceLatLng.lng) * 0.12;
-    ambulanceLatLng = L.latLng(newLat, newLng);
-    ambulanceMarker.setLatLng(ambulanceLatLng);
-}
-
 const stepMessages = [
     '🚨 Request received by dispatch center!',
     '✅ Request confirmed — ambulance assigned!',
     '🚑 Ambulance dispatched from nearest station!',
     '🛣️ Ambulance is en route to your location!',
-    '🏁 Ambulance is almost there — please stay visible!'
+    '🏁 Ambulance is almost there — stay visible!'
 ];
 
 function runStatusSteps() {
-    const delays = [0, 3000, 7000, 14000, 25000];
+    const delays    = [0, 3000, 7000, 14000, 25000];
     const barWidths = ['0%', '25%', '50%', '75%', '100%'];
 
     delays.forEach((delay, i) => {
         setTimeout(() => {
-            // Mark previous steps done
             for (let j = 0; j < i; j++) {
                 const s = document.getElementById(`step-${j+1}`);
                 if (s) { s.classList.remove('active'); s.classList.add('done'); }
             }
-            // Mark current step active
             const curr = document.getElementById(`step-${i+1}`);
             if (curr) curr.classList.add('active');
-
-            // Progress bar
             document.getElementById('status-bar').style.width = barWidths[i];
-
-            // Update message
             document.getElementById('status-message').textContent = stepMessages[i];
         }, delay);
     });
@@ -773,8 +559,7 @@ function arrivedAnimation() {
     document.getElementById('status-message').textContent = '🏥 Ambulance has arrived at your location!';
     document.getElementById('eta-card').style.background = 'linear-gradient(135deg, #1c4532, #276749)';
     document.getElementById('eta-display').style.color = '#68d391';
-    if (ambulanceMarker) ambulanceMarker.setLatLng(userLatLng);
-    document.getElementById('sos-btn').innerHTML = `<i class="fas fa-check-circle"></i> Ambulance Arrived`;
+    document.getElementById('sos-btn').innerHTML = '<i class="fas fa-check-circle"></i> Ambulance Arrived';
 }
 
 function cancelRequest() {
@@ -782,19 +567,19 @@ function cancelRequest() {
 
     dispatched = false;
     clearInterval(etaInterval);
-    clearInterval(ambulanceMoveInterval);
 
-    if (ambulanceMarker) { map.removeLayer(ambulanceMarker); ambulanceMarker = null; }
+    const btn = document.getElementById('sos-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">🚨</span> DISPATCH AMBULANCE NOW';
 
-    document.getElementById('sos-btn').disabled = false;
-    document.getElementById('sos-btn').innerHTML = `<span class="btn-icon">🚨</span> DISPATCH AMBULANCE NOW`;
     document.getElementById('cancel-btn').classList.remove('show');
     document.getElementById('eta-card').classList.remove('show');
     document.getElementById('status-tracker').style.display = 'none';
+    document.getElementById('pre-dispatch-info').style.display = 'block';
 
     ['step-1','step-2','step-3','step-4','step-5'].forEach(id => {
         const el = document.getElementById(id);
-        el.classList.remove('active','done');
+        el.classList.remove('active', 'done');
     });
     document.getElementById('status-bar').style.width = '0%';
 }
