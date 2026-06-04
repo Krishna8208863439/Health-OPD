@@ -334,6 +334,115 @@
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.1); }
     }
+
+    /* ============================================================ */
+    /* Interactive Hands-free First Aid Voice Assistant Styles      */
+    /* ============================================================ */
+    .btn-voice-ctrl {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .btn-voice-ctrl:hover {
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+        transform: translateY(-2px) scale(1.08);
+        box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
+    }
+    .btn-voice-ctrl.play-btn {
+        background: #dc2626;
+        color: #ffffff;
+        border-color: #dc2626;
+        box-shadow: 0 2px 5px rgba(220, 38, 38, 0.2);
+    }
+    .btn-voice-ctrl.play-btn:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
+    }
+    .btn-voice-ctrl:active {
+        transform: translateY(0) scale(0.98);
+    }
+    
+    .active-reading-step {
+        border: 2px solid #dc2626 !important;
+        background: #fff5f5 !important;
+        box-shadow: 0 0 16px rgba(220, 38, 38, 0.25) !important;
+        position: relative;
+        animation: active-step-pulse 2s infinite alternate;
+        transform: scale(1.01);
+        transition: all 0.3s ease;
+    }
+    
+    @keyframes active-step-pulse {
+        0% {
+            border-color: rgba(220, 38, 38, 0.7);
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.15);
+        }
+        100% {
+            border-color: rgba(220, 38, 38, 1);
+            box-shadow: 0 0 16px rgba(220, 38, 38, 0.35);
+        }
+    }
+
+    .audio-visualizer-bar {
+        display: inline-block;
+        width: 3px;
+        height: 12px;
+        background-color: #dc2626;
+        border-radius: 2px;
+        animation: voice-wave 0.8s ease-in-out infinite alternate;
+    }
+    .audio-visualizer-bar.bar1 { animation-delay: 0.15s; }
+    .audio-visualizer-bar.bar2 { animation-delay: 0.3s; }
+    .audio-visualizer-bar.bar3 { animation-delay: 0.45s; }
+    .audio-visualizer-bar.bar4 { animation-delay: 0.2s; }
+    .audio-visualizer-bar.bar5 { animation-delay: 0.35s; }
+
+    @keyframes voice-wave {
+        0% { transform: scaleY(0.4); }
+        100% { transform: scaleY(1.5); }
+    }
+
+    .voice-command-toast {
+        position: fixed;
+        bottom: 85px;
+        right: 20px;
+        background: rgba(17, 24, 39, 0.95);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideInUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .voice-mic-switch:checked {
+        background-color: #dc2626;
+        border-color: #dc2626;
+    }
 </style>
 {% endblock %}
 
@@ -598,6 +707,7 @@
     <div class="col-md-6">
         <div class="info-card">
             <h5 style="color:#dc2626;"><i class="fas fa-first-aid me-2"></i>Quick First Aid Guide</h5>
+            
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <button class="first-aid-tab active" onclick="showFirstAid('cpr')">🫀 CPR</button>
                 <button class="first-aid-tab" onclick="showFirstAid('choking')">😮 Choking</button>
@@ -606,47 +716,125 @@
                 <button class="first-aid-tab" onclick="showFirstAid('fracture')">🦴 Fracture</button>
             </div>
 
-            <div id="cpr" class="first-aid-content active">
-                <div class="checklist-item"><span>1.</span> Check if the person is responsive – tap shoulder, shout.</div>
-                <div class="checklist-item"><span>2.</span> Call 112 immediately or ask someone else to call.</div>
-                <div class="checklist-item"><span>3.</span> Begin chest compressions – push hard at center of chest, 30 times.</div>
-                <div class="checklist-item"><span>4.</span> Give 2 rescue breaths (if trained to do so).</div>
-                <div class="checklist-item"><span>5.</span> Continue until help arrives or person recovers.</div>
+            <!-- Voice Assistant Console Widget -->
+            <div class="voice-assistant-panel p-3 mb-3 rounded" style="background: rgba(220, 38, 38, 0.05); border: 1px solid rgba(220, 38, 38, 0.15); display: flex; flex-direction: column; gap: 10px;">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-5" id="voiceAssistantMicIcon">🔇</span>
+                        <div>
+                            <strong class="text-dark d-block" style="font-size: 0.9rem;">First Aid Voice Assistant</strong>
+                            <small id="voiceAssistantStatus" class="text-muted" style="font-size: 0.75rem;">Hands-free voice controls offline</small>
+                        </div>
+                    </div>
+                    <!-- Mic Toggle Switch -->
+                    <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
+                        <input class="form-check-input voice-mic-switch" type="checkbox" id="voiceMicToggle" style="cursor: pointer; width: 2.2em; height: 1.1em;">
+                        <label class="form-check-label fw-600 text-dark" for="voiceMicToggle" style="font-size: 0.8rem; cursor: pointer; user-select: none;">
+                            🎙️ Mic Control
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Listening Audio Visualizer Waves (Shown when Mic is listening) -->
+                <div id="micListeningVisualizer" class="align-items-center justify-content-center gap-1 py-1 d-none">
+                    <span class="audio-visualizer-bar bar1"></span>
+                    <span class="audio-visualizer-bar bar2"></span>
+                    <span class="audio-visualizer-bar bar3"></span>
+                    <span class="audio-visualizer-bar bar4"></span>
+                    <span class="audio-visualizer-bar bar5"></span>
+                    <span class="text-danger fw-bold ms-2" style="font-size: 0.75rem;">Listening for commands...</span>
+                </div>
+
+                <!-- Player Action Button Bar -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 border-top pt-2" style="border-color: rgba(220, 38, 38, 0.1) !important;">
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn-voice-ctrl" id="btnVoicePrev" onclick="voicePrevStep()" title="Previous Step">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="btn-voice-ctrl play-btn" id="btnVoicePlay" onclick="voiceTogglePlay()" title="Play Guide">
+                            <i class="fas fa-play" id="voicePlayIcon"></i>
+                        </button>
+                        <button class="btn-voice-ctrl" id="btnVoiceNext" onclick="voiceNextStep()" title="Next Step">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        <button class="btn-voice-ctrl" id="btnVoiceStop" onclick="voiceStop()" title="Stop Assistant">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
+                    <div class="text-end">
+                        <small id="voiceReadingIndicator" class="text-muted" style="font-size: 0.78rem; font-weight: 600;">Not reading</small>
+                    </div>
+                </div>
+
+                <!-- Hands-free Quick Guide Tip -->
+                <div class="voice-help-cue p-2 rounded" style="background: rgba(0,0,0,0.02); font-size: 0.75rem; border-left: 3px solid #dc2626; color: #475569;">
+                    <i class="fas fa-info-circle me-1 text-danger"></i><strong>Hands busy?</strong> Toggle <strong>Mic Control</strong> and say: <em>"Next"</em>, <em>"Back"</em>, <em>"Repeat"</em>, <em>"Stop"</em>, or <em>"Help CPR"</em>.
+                </div>
             </div>
-            <div id="choking" class="first-aid-content">
-                <div class="checklist-item"><span>1.</span> Ask "Are you choking?" – If they can't speak or breathe, act immediately.</div>
-                <div class="checklist-item"><span>2.</span> Bend them forward and give 5 firm back blows between shoulder blades.</div>
-                <div class="checklist-item"><span>3.</span> If ineffective, give 5 abdominal thrusts (Heimlich maneuver).</div>
-                <div class="checklist-item"><span>4.</span> Alternate back blows and abdominal thrusts until object is expelled.</div>
+
+            <div id="cpr" class="first-aid-content active" data-guide-name="CPR">
+                <div class="checklist-item first-aid-step-item" data-step-index="0"><span>1.</span> Check if the person is responsive – tap shoulder, shout.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="1"><span>2.</span> Call 112 immediately or ask someone else to call.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="2"><span>3.</span> Begin chest compressions – push hard at center of chest, 30 times.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="3"><span>4.</span> Give 2 rescue breaths (if trained to do so).</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="4"><span>5.</span> Continue until help arrives or person recovers.</div>
             </div>
-            <div id="bleeding" class="first-aid-content">
-                <div class="checklist-item"><span>1.</span> Apply firm, direct pressure with a clean cloth or bandage.</div>
-                <div class="checklist-item"><span>2.</span> Do not remove the cloth if it gets soaked – add more on top.</div>
-                <div class="checklist-item"><span>3.</span> Elevate the injured area above heart level if possible.</div>
-                <div class="checklist-item"><span>4.</span> Seek medical help if bleeding doesn't stop within 10 minutes.</div>
+            <div id="choking" class="first-aid-content" data-guide-name="Choking">
+                <div class="checklist-item first-aid-step-item" data-step-index="0"><span>1.</span> Ask "Are you choking?" – If they can't speak or breathe, act immediately.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="1"><span>2.</span> Bend them forward and give 5 firm back blows between shoulder blades.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="2"><span>3.</span> If ineffective, give 5 abdominal thrusts (Heimlich maneuver).</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="3"><span>4.</span> Alternate back blows and abdominal thrusts until object is expelled.</div>
             </div>
-            <div id="burns" class="first-aid-content">
-                <div class="checklist-item"><span>1.</span> Cool the burn under cool running water for at least 10 minutes.</div>
-                <div class="checklist-item"><span>2.</span> Do NOT apply ice, butter, toothpaste, or any cream.</div>
-                <div class="checklist-item"><span>3.</span> Cover loosely with a clean, non-fluffy material.</div>
-                <div class="checklist-item"><span>4.</span> Seek medical help for burns larger than a palm size.</div>
+            <div id="bleeding" class="first-aid-content" data-guide-name="Bleeding">
+                <div class="checklist-item first-aid-step-item" data-step-index="0"><span>1.</span> Apply firm, direct pressure with a clean cloth or bandage.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="1"><span>2.</span> Do not remove the cloth if it gets soaked – add more on top.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="2"><span>3.</span> Elevate the injured area above heart level if possible.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="3"><span>4.</span> Seek medical help if bleeding doesn't stop within 10 minutes.</div>
             </div>
-            <div id="fracture" class="first-aid-content">
-                <div class="checklist-item"><span>1.</span> Do not try to straighten the bone – immobilize as found.</div>
-                <div class="checklist-item"><span>2.</span> Support above and below the suspected fracture.</div>
-                <div class="checklist-item"><span>3.</span> Apply ice packs wrapped in cloth to reduce swelling.</div>
-                <div class="checklist-item"><span>4.</span> Call for emergency medical help immediately.</div>
+            <div id="burns" class="first-aid-content" data-guide-name="Burns">
+                <div class="checklist-item first-aid-step-item" data-step-index="0"><span>1.</span> Cool the burn under cool running water for at least 10 minutes.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="1"><span>2.</span> Do NOT apply ice, butter, toothpaste, or any cream.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="2"><span>3.</span> Cover loosely with a clean, non-fluffy material.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="3"><span>4.</span> Seek medical help for burns larger than a palm size.</div>
+            </div>
+            <div id="fracture" class="first-aid-content" data-guide-name="Fracture">
+                <div class="checklist-item first-aid-step-item" data-step-index="0"><span>1.</span> Do not try to straighten the bone – immobilize as found.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="1"><span>2.</span> Support above and below the suspected fracture.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="2"><span>3.</span> Apply ice packs wrapped in cloth to reduce swelling.</div>
+                <div class="checklist-item first-aid-step-item" data-step-index="3"><span>4.</span> Call for emergency medical help immediately.</div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Floating Voice Toast Notification -->
+<div id="voiceCommandToast" class="voice-command-toast d-none">
+    <i class="fas fa-check-circle"></i>
+    <span id="voiceCommandToastText">Command recognized</span>
 </div>
 
 <script>
 function showFirstAid(section) {
     document.querySelectorAll('.first-aid-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.first-aid-tab').forEach(el => el.classList.remove('active'));
-    document.getElementById(section).classList.add('active');
-    event.target.classList.add('active');
+    
+    const activeContent = document.getElementById(section);
+    if (activeContent) {
+        activeContent.classList.add('active');
+    }
+    
+    // Find the button and set it active
+    const tabs = document.querySelectorAll('.first-aid-tab');
+    tabs.forEach(tab => {
+        if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(section)) {
+            tab.classList.add('active');
+        }
+    });
+
+    // Notify voice assistant that guide changed
+    if (typeof syncVoiceGuideWithTab === 'function') {
+        syncVoiceGuideWithTab(section);
+    }
 }
 </script>
 {% endblock %}
@@ -1035,5 +1223,315 @@ function startAmbulanceSimulation() {
         }
     }, 2500);
 }
+
+// ============================================================
+// Interactive Hands-free First Aid Voice Assistant Script
+// ============================================================
+let currentActiveStepIndex = -1;
+let isVoiceReading = false;
+let currentVoiceUtterance = null;
+let speechRecognitionObj = null;
+let isMicListening = false;
+
+// 1. Text-To-Speech (TTS) Voice Guide Controller
+function getActiveGuideSteps() {
+    const activeGuide = document.querySelector('.first-aid-content.active');
+    if (!activeGuide) return [];
+    return Array.from(activeGuide.querySelectorAll('.first-aid-step-item'));
+}
+
+function getActiveGuideName() {
+    const activeGuide = document.querySelector('.first-aid-content.active');
+    return activeGuide ? activeGuide.getAttribute('data-guide-name') : 'first aid';
+}
+
+function updateVisualHighlight() {
+    const steps = getActiveGuideSteps();
+    steps.forEach((step, idx) => {
+        if (idx === currentActiveStepIndex) {
+            step.classList.add('active-reading-step');
+            step.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            step.classList.remove('active-reading-step');
+        }
+    });
+
+    const indicator = document.getElementById('voiceReadingIndicator');
+    const playIcon = document.getElementById('voicePlayIcon');
+    
+    if (currentActiveStepIndex >= 0 && currentActiveStepIndex < steps.length) {
+        indicator.textContent = `Reading Step ${currentActiveStepIndex + 1} of ${steps.length}`;
+        playIcon.className = "fas fa-pause";
+    } else {
+        indicator.textContent = "Not reading";
+        playIcon.className = "fas fa-play";
+    }
+}
+
+function voiceTogglePlay() {
+    const steps = getActiveGuideSteps();
+    if (steps.length === 0) return;
+
+    if (isVoiceReading) {
+        window.speechSynthesis.pause();
+        isVoiceReading = false;
+        document.getElementById('voicePlayIcon').className = "fas fa-play";
+        document.getElementById('voiceAssistantStatus').textContent = "Voice guide paused";
+    } else {
+        if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+            isVoiceReading = true;
+            document.getElementById('voicePlayIcon').className = "fas fa-pause";
+            document.getElementById('voiceAssistantStatus').textContent = "Voice guide playing";
+        } else {
+            if (currentActiveStepIndex < 0 || currentActiveStepIndex >= steps.length) {
+                currentActiveStepIndex = 0;
+            }
+            speakCurrentStep();
+        }
+    }
+}
+
+function speakCurrentStep() {
+    const steps = getActiveGuideSteps();
+    if (currentActiveStepIndex < 0 || currentActiveStepIndex >= steps.length) {
+        voiceStop();
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    updateVisualHighlight();
+    isVoiceReading = true;
+
+    const stepElement = steps[currentActiveStepIndex];
+    let rawText = stepElement.textContent.trim();
+    let textToSpeak = rawText.replace(/^\d+\.\s*/, "Step " + (currentActiveStepIndex + 1) + ": ");
+
+    if (currentActiveStepIndex === 0) {
+        textToSpeak = `Starting guide for ${getActiveGuideName()}. ` + textToSpeak;
+    }
+
+    currentVoiceUtterance = new SpeechSynthesisUtterance(textToSpeak);
+    
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Zira') || v.name.includes('David')));
+    if (preferredVoice) {
+        currentVoiceUtterance.voice = preferredVoice;
+    }
+    
+    currentVoiceUtterance.rate = 0.95;
+    currentVoiceUtterance.pitch = 1.0;
+    
+    currentVoiceUtterance.onend = function() {
+        if (isVoiceReading) {
+            setTimeout(() => {
+                if (isVoiceReading) {
+                    currentActiveStepIndex++;
+                    if (currentActiveStepIndex < steps.length) {
+                        speakCurrentStep();
+                    } else {
+                        voiceStop();
+                        const compUtterance = new SpeechSynthesisUtterance("First aid guide complete. Repeat or select another guide if needed.");
+                        window.speechSynthesis.speak(compUtterance);
+                    }
+                }
+            }, 1800);
+        }
+    };
+
+    currentVoiceUtterance.onerror = function(e) {
+        console.error("SpeechSynthesis error:", e);
+    };
+
+    window.speechSynthesis.speak(currentVoiceUtterance);
+}
+
+function voiceNextStep() {
+    const steps = getActiveGuideSteps();
+    if (steps.length === 0) return;
+    
+    currentActiveStepIndex++;
+    if (currentActiveStepIndex >= steps.length) {
+        currentActiveStepIndex = steps.length - 1;
+    }
+    speakCurrentStep();
+}
+
+function voicePrevStep() {
+    const steps = getActiveGuideSteps();
+    if (steps.length === 0) return;
+    
+    currentActiveStepIndex--;
+    if (currentActiveStepIndex < 0) {
+        currentActiveStepIndex = 0;
+    }
+    speakCurrentStep();
+}
+
+function voiceStop() {
+    window.speechSynthesis.cancel();
+    isVoiceReading = false;
+    currentActiveStepIndex = -1;
+    updateVisualHighlight();
+    document.getElementById('voicePlayIcon').className = "fas fa-play";
+    document.getElementById('voiceReadingIndicator').textContent = "Not reading";
+    
+    if (isMicListening) {
+        document.getElementById('voiceAssistantStatus').textContent = "Listening for commands...";
+    } else {
+        document.getElementById('voiceAssistantStatus').textContent = "Hands-free voice controls offline";
+    }
+}
+
+function syncVoiceGuideWithTab(section) {
+    const wasReading = isVoiceReading;
+    voiceStop();
+    if (wasReading) {
+        setTimeout(() => {
+            currentActiveStepIndex = 0;
+            speakCurrentStep();
+        }, 300);
+    }
+}
+
+// 2. Speech Recognition (Voice Commands Interface)
+function showVoiceCommandToast(commandText) {
+    const toast = document.getElementById('voiceCommandToast');
+    const toastText = document.getElementById('voiceCommandToastText');
+    if (toast && toastText) {
+        toastText.textContent = `Command recognized: "${commandText}"`;
+        toast.classList.remove('d-none');
+        
+        setTimeout(() => {
+            toast.classList.add('d-none');
+        }, 3000);
+    }
+}
+
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        console.warn("Browser does not support SpeechRecognition.");
+        const toggle = document.getElementById('voiceMicToggle');
+        if (toggle) toggle.disabled = true;
+        document.getElementById('voiceAssistantStatus').textContent = "Voice controls not supported in this browser";
+        return;
+    }
+
+    speechRecognitionObj = new SpeechRecognition();
+    speechRecognitionObj.continuous = true;
+    speechRecognitionObj.interimResults = false;
+    speechRecognitionObj.lang = 'en-US';
+
+    speechRecognitionObj.onstart = function() {
+        isMicListening = true;
+        document.getElementById('voiceAssistantMicIcon').textContent = "🔴";
+        document.getElementById('voiceAssistantStatus').textContent = "Listening for voice commands...";
+        document.getElementById('micListeningVisualizer').classList.remove('d-none');
+        document.getElementById('micListeningVisualizer').classList.add('d-flex');
+    };
+
+    speechRecognitionObj.onresult = function(event) {
+        const lastResultIndex = event.results.length - 1;
+        const speechText = event.results[lastResultIndex][0].transcript.trim().toLowerCase();
+        console.log("Voice Command Captured: ", speechText);
+        
+        processVoiceCommand(speechText);
+    };
+
+    speechRecognitionObj.onerror = function(event) {
+        console.error("SpeechRecognition error:", event.error);
+        if (event.error === 'not-allowed') {
+            const toggle = document.getElementById('voiceMicToggle');
+            if (toggle) toggle.checked = false;
+            toggleMicControl(false);
+            document.getElementById('voiceAssistantStatus').textContent = "Microphone access denied";
+        }
+    };
+
+    speechRecognitionObj.onend = function() {
+        if (isMicListening) {
+            try {
+                speechRecognitionObj.start();
+            } catch (err) {
+                console.error("Failed to restart speech recognition:", err);
+            }
+        } else {
+            document.getElementById('voiceAssistantMicIcon').textContent = "🔇";
+            document.getElementById('voiceAssistantStatus').textContent = "Hands-free voice controls offline";
+            document.getElementById('micListeningVisualizer').classList.remove('d-flex');
+            document.getElementById('micListeningVisualizer').classList.add('d-none');
+        }
+    };
+}
+
+function toggleMicControl(enable) {
+    if (!speechRecognitionObj) {
+        initSpeechRecognition();
+    }
+    
+    if (!speechRecognitionObj) return;
+
+    if (enable) {
+        isMicListening = true;
+        try {
+            speechRecognitionObj.start();
+        } catch (err) {
+            console.log("Speech recognition already active:", err);
+        }
+    } else {
+        isMicListening = false;
+        try {
+            speechRecognitionObj.stop();
+        } catch (err) {
+            console.log("Speech recognition already stopped:", err);
+        }
+    }
+}
+
+function processVoiceCommand(text) {
+    if (text.includes("next") || text.includes("forward") || text.includes("aage")) {
+        showVoiceCommandToast("Next Step");
+        voiceNextStep();
+    } else if (text.includes("back") || text.includes("previous") || text.includes("piche")) {
+        showVoiceCommandToast("Previous Step");
+        voicePrevStep();
+    } else if (text.includes("repeat") || text.includes("again") || text.includes("dobara")) {
+        showVoiceCommandToast("Repeat Step");
+        speakCurrentStep();
+    } else if (text.includes("stop") || text.includes("pause") || text.includes("ruk")) {
+        showVoiceCommandToast("Pause Guide");
+        voiceTogglePlay();
+    } else if (text.includes("cpr") || text.includes("cardio")) {
+        showVoiceCommandToast("Switch to CPR");
+        showFirstAid('cpr');
+    } else if (text.includes("choke") || text.includes("choking")) {
+        showVoiceCommandToast("Switch to Choking");
+        showFirstAid('choking');
+    } else if (text.includes("bleed") || text.includes("bleeding") || text.includes("blood")) {
+        showVoiceCommandToast("Switch to Bleeding");
+        showFirstAid('bleeding');
+    } else if (text.includes("burn") || text.includes("burns")) {
+        showVoiceCommandToast("Switch to Burns");
+        showFirstAid('burns');
+    } else if (text.includes("fracture") || text.includes("bone")) {
+        showVoiceCommandToast("Switch to Fracture");
+        showFirstAid('fracture');
+    }
+}
+
+// 3. Document Setup & Binding
+document.addEventListener("DOMContentLoaded", function() {
+    const micToggle = document.getElementById('voiceMicToggle');
+    if (micToggle) {
+        micToggle.addEventListener('change', function(e) {
+            toggleMicControl(e.target.checked);
+        });
+    }
+
+    if (window.speechSynthesis) {
+        window.speechSynthesis.getVoices();
+    }
+});
 </script>
 {% endblock %}
