@@ -629,6 +629,77 @@
             }
             .main-content {
                 margin-left: 0 !important;
+                padding-bottom: 75px !important;
+            }
+            .footer {
+                margin-bottom: 65px !important;
+                padding-bottom: 20px !important;
+            }
+            /* Adjust chatbot positions so they do not overlap bottom nav bar */
+            .chatbot-bubble {
+                bottom: 80px !important;
+                right: 20px !important;
+            }
+            .chatbot-panel {
+                bottom: 145px !important;
+                right: 20px !important;
+                left: 20px !important;
+                width: calc(100vw - 40px) !important;
+                height: calc(100vh - 220px) !important;
+            }
+        }
+
+        /* ===== MOBILE BOTTOM NAVIGATION ===== */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--sidebar-bg);
+            border-top: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 999;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .mobile-bottom-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none !important;
+            font-size: 0.72rem;
+            font-weight: 600;
+            flex: 1;
+            height: 100%;
+            transition: all 0.2s ease;
+            gap: 4px;
+        }
+        .mobile-bottom-item i {
+            font-size: 1.15rem;
+            transition: transform 0.2s ease;
+        }
+        .mobile-bottom-item:hover, .mobile-bottom-item.active {
+            color: var(--accent-light);
+        }
+        .mobile-bottom-item.active i {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .mobile-bottom-item.emergency-sos-item {
+            color: var(--rose) !important;
+        }
+        .mobile-bottom-item.emergency-sos-item.active i, .mobile-bottom-item.emergency-sos-item:hover i {
+            color: var(--rose) !important;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: flex;
             }
         }
 
@@ -904,6 +975,78 @@
             <input type="text" class="chatbot-input" id="chatInput" placeholder="Type symptom or query..." onkeypress="handleChatKey(event)" data-en="Type symptom or query..." data-hi="लक्षण या प्रश्न दर्ज करें...">
             <button class="chatbot-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.is_authenticated %}
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-bottom-nav">
+        {% if current_user.role == 'patient' %}
+        <a href="{{ url_for('patient_dashboard') }}" class="mobile-bottom-item {% if request.endpoint == 'patient_dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span data-en="Home" data-hi="होम">Home</span>
+        </a>
+        <a href="{{ url_for('symptom_entry') }}" class="mobile-bottom-item {% if request.endpoint == 'symptom_entry' %}active{% endif %}">
+            <i class="fas fa-stethoscope"></i>
+            <span data-en="Check" data-hi="जांच">Check</span>
+        </a>
+        <a href="{{ url_for('emergency_sos') }}" class="mobile-bottom-item emergency-sos-item {% if request.endpoint == 'emergency_sos' %}active{% endif %}">
+            <i class="fas fa-ambulance"></i>
+            <span data-en="SOS" data-hi="एसओएस">SOS</span>
+        </a>
+        <a href="{{ url_for('appointments') }}" class="mobile-bottom-item {% if request.endpoint == 'appointments' or request.endpoint == 'book_slot_view' %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i>
+            <span data-en="Book" data-hi="बुक">Book</span>
+        </a>
+        <a href="{{ url_for('vitals_tracker') }}" class="mobile-bottom-item {% if request.endpoint == 'vitals_tracker' %}active{% endif %}">
+            <i class="fas fa-heartbeat"></i>
+            <span data-en="Vitals" data-hi="वाइबल्स">Vitals</span>
+        </a>
+        
+        {% elif current_user.role == 'doctor' %}
+        <a href="{{ url_for('doctor_dashboard') }}" class="mobile-bottom-item {% if request.endpoint == 'doctor_dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i>
+            <span data-en="Home" data-hi="होम">Home</span>
+        </a>
+        <a href="{{ url_for('doctor_prescriptions') }}" class="mobile-bottom-item {% if request.endpoint == 'doctor_prescriptions' %}active{% endif %}">
+            <i class="fas fa-file-prescription"></i>
+            <span data-en="Scripts" data-hi="नुस्खे">Scripts</span>
+        </a>
+        <a href="{{ url_for('emergency_sos') }}" class="mobile-bottom-item emergency-sos-item {% if request.endpoint == 'emergency_sos' %}active{% endif %}">
+            <i class="fas fa-ambulance"></i>
+            <span data-en="SOS" data-hi="एसओएस">SOS</span>
+        </a>
+        <a href="{{ url_for('doctor_appointments') }}" class="mobile-bottom-item {% if request.endpoint == 'doctor_appointments' or request.endpoint == 'doctor_slots' %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i>
+            <span data-en="Appts" data-hi="अपॉइंटमेंट">Appts</span>
+        </a>
+        <a href="{{ url_for('doctor_patient_list') }}" class="mobile-bottom-item {% if request.endpoint == 'doctor_patient_list' %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            <span data-en="Patients" data-hi="मरीज">Patients</span>
+        </a>
+        
+        {% elif current_user.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="mobile-bottom-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <i class="fas fa-user-shield"></i>
+            <span data-en="Home" data-hi="होम">Home</span>
+        </a>
+        <a href="{{ url_for('admin_users') }}" class="mobile-bottom-item {% if request.endpoint == 'admin_users' %}active{% endif %}">
+            <i class="fas fa-users-cog"></i>
+            <span data-en="Users" data-hi="लोग">Users</span>
+        </a>
+        <a href="{{ url_for('emergency_sos') }}" class="mobile-bottom-item emergency-sos-item {% if request.endpoint == 'emergency_sos' %}active{% endif %}">
+            <i class="fas fa-ambulance"></i>
+            <span data-en="SOS" data-hi="एसओएस">SOS</span>
+        </a>
+        <a href="{{ url_for('admin_appointments') }}" class="mobile-bottom-item {% if request.endpoint == 'admin_appointments' %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i>
+            <span data-en="Appts" data-hi="अपॉइंटमेंट">Appts</span>
+        </a>
+        <a href="{{ url_for('outbreak_map') }}" class="mobile-bottom-item {% if request.endpoint == 'outbreak_map' %}active{% endif %}">
+            <i class="fas fa-map-marked-alt"></i>
+            <span data-en="Outbreak" data-hi="प्रकोप">Outbreak</span>
+        </a>
+        {% endif %}
     </div>
     {% endif %}
 
