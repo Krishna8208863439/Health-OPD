@@ -826,5 +826,11 @@ def analytics_data():
         }
     })
 
+@app.route('/emergency')
+@login_required
+def emergency():
+    return render_template('emergency.html', patient=current_user)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
+
