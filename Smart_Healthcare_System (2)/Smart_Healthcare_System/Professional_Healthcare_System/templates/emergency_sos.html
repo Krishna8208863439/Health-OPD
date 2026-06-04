@@ -3,43 +3,10 @@
 {% block title %}Emergency SOS - HealthCare Plus{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Inter', sans-serif; }
 
-    #emergency-map {
-        height: 350px;
-        width: 100%;
-        border-radius: 16px;
-        border: 2px solid #e2e8f0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 16px;
-        position: relative;
-        z-index: 10;
-    }
-    .user-pulse-marker {
-        width: 20px;
-        height: 20px;
-        background: #3b82f6;
-        border: 3px solid white;
-        border-radius: 50%;
-        box-shadow: 0 0 10px rgba(59,130,246,0.8);
-        position: relative;
-    }
-    .user-pulse-marker::after {
-        content: '';
-        position: absolute;
-        top: -6px; left: -6px; right: -6px; bottom: -6px;
-        border-radius: 50%;
-        border: 2px solid #3b82f6;
-        animation: pulse-marker-anim 1.5s infinite;
-        opacity: 0.8;
-    }
-    @keyframes pulse-marker-anim {
-        0% { transform: scale(0.9); opacity: 1; }
-        100% { transform: scale(1.6); opacity: 0; }
-    }
     .geo-status-badge {
         font-size: 0.78rem;
         font-weight: 700;
@@ -560,9 +527,9 @@
         </div>
     </div>
 
-    <!-- Nearby Hospitals + Leaflet Map -->
+    <!-- Nearby Hospitals -->
     <div class="col-md-6">
-        <div class="info-card h-100 d-flex flex-column" style="min-height: 550px;">
+        <div class="info-card h-100 d-flex flex-column" style="min-height: 500px;">
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <h5 style="color:#1d4ed8; margin: 0;"><i class="fas fa-hospital me-2"></i>Nearest Emergency Hospitals</h5>
                 <span class="geo-status-badge bg-warning text-dark" id="geoStatusBadge">
@@ -570,18 +537,15 @@
                 </span>
             </div>
             
-            <!-- Leaflet Map Container -->
-            <div id="emergency-map"></div>
-            
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Select a hospital to trace route & view contact details</small>
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Hospitals are ranked dynamically by proximity to you.</small>
                 <button class="btn btn-sm btn-outline-danger" onclick="requestLiveLocation()" style="font-size:0.75rem; border-radius:8px;">
                     <i class="fas fa-redo me-1"></i>Retry GPS
                 </button>
             </div>
             
             <!-- Dynamic Hospital List -->
-            <div id="dynamicHospitalList" style="max-height: 380px; overflow-y: auto; flex-grow: 1; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+            <div id="dynamicHospitalList" style="max-height: 480px; overflow-y: auto; flex-grow: 1; border-top: 1px solid #f1f5f9; padding-top: 10px;">
                 <div class="text-center py-4 text-muted">
                     <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
                     <p class="mb-0">Calculating nearest hospitals from your position...</p>
@@ -673,7 +637,6 @@ function showFirstAid(section) {
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const localHospitalsDb = {{ hospitals_data | tojson | safe }};
 const patientCity = "{{ patient.city }}";
@@ -700,35 +663,8 @@ const CITY_COORDINATES = {
     "Default": [20.5937, 78.9629]
 };
 
-let map = null;
-let userMarker = null;
-let hospitalMarkersGroup = null;
-let routeLayer = null;
 let userCoords = null;
 let nearestHospitals = [];
-
-function initMap(lat, lng) {
-    if (map) {
-        try {
-            map.remove();
-        } catch(e) {
-            console.error("Error removing map instance:", e);
-        }
-    }
-    
-    map = L.map('emergency-map').setView([lat, lng], 13);
-    
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const tileUrl = isLight 
-        ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-
-    L.tileLayer(tileUrl, {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-    }).addTo(map);
-    
-    hospitalMarkersGroup = L.layerGroup().addTo(map);
-}
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // km
@@ -775,17 +711,6 @@ async function fetchNearbyHospitalsOverpass(lat, lng) {
 }
 
 async function processHospitals(lat, lng, isLiveGPS) {
-    initMap(lat, lng);
-    
-    const userIcon = L.divIcon({
-        html: `<div class="user-pulse-marker"></div>`,
-        className: 'custom-div-icon',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-    });
-    userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-    userMarker.bindPopup(`<strong style="color:#000;">Your Position</strong>${isLiveGPS ? '<br><small style="color:#666;">(Live GPS Location)</small>' : ''}`).openPopup();
-    
     const listContainer = document.getElementById('dynamicHospitalList');
     listContainer.innerHTML = `
         <div class="text-center py-4 text-muted">
@@ -841,52 +766,14 @@ async function processHospitals(lat, lng, isLiveGPS) {
     candidates.sort((a, b) => a.distance - b.distance);
     nearestHospitals = candidates.slice(0, 5);
     
-    renderHospitalListAndMarkers();
+    renderHospitalList();
 }
 
-function renderHospitalListAndMarkers() {
-    hospitalMarkersGroup.clearLayers();
-    if (routeLayer) {
-        map.removeLayer(routeLayer);
-        routeLayer = null;
-    }
-    
+function renderHospitalList() {
     const listContainer = document.getElementById('dynamicHospitalList');
     listContainer.innerHTML = '';
     
-    const bounds = L.latLngBounds([userMarker.getLatLng()]);
-    
     nearestHospitals.forEach((h, idx) => {
-        const markerHtml = `
-            <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;">
-                <i class="fas fa-map-marker-alt" style="color: #dc2626; font-size: 2.2rem; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));"></i>
-                <i class="fas fa-plus-circle" style="color: white; font-size: 0.8rem; position: absolute; top: 6px;"></i>
-            </div>
-        `;
-        
-        const hMarkerIcon = L.divIcon({
-            html: markerHtml,
-            className: 'custom-div-icon',
-            iconSize: [34, 34],
-            iconAnchor: [17, 34]
-        });
-        
-        const marker = L.marker([h.lat, h.lng], { icon: hMarkerIcon }).addTo(hospitalMarkersGroup);
-        bounds.extend([h.lat, h.lng]);
-        
-        const popupContent = `
-            <div style="font-family: 'Inter', sans-serif; color: #1e293b; min-width: 180px; padding: 2px;">
-                <h6 style="margin: 0 0 6px; font-weight: 700; font-size: 0.95rem; color: #dc2626;">🏥 ${h.name}</h6>
-                <p style="margin: 0 0 6px; font-size: 0.78rem; color: #475569;"><i class="fas fa-map-marker-alt me-1"></i>${h.address}</p>
-                <p style="margin: 0 0 8px; font-size: 0.78rem; font-weight: 700; color: #1d4ed8;">
-                    <i class="fas fa-road me-1"></i>${h.distance.toFixed(2)} km away
-                </p>
-                <a href="tel:${h.phone}" class="btn btn-danger btn-sm text-white w-100 py-1" style="font-size:0.75rem;"><i class="fas fa-phone-alt me-1"></i>Call: ${h.phone}</a>
-            </div>
-        `;
-        marker.bindPopup(popupContent);
-        marker.on('click', () => selectHospital(idx));
-        
         const card = document.createElement('div');
         card.className = `hospital-sos-card p-3 mb-2 rounded border d-flex justify-content-between align-items-center`;
         card.style.cursor = 'pointer';
@@ -912,8 +799,6 @@ function renderHospitalListAndMarkers() {
         
         listContainer.appendChild(card);
     });
-    
-    map.fitBounds(bounds, { padding: [40, 40] });
 }
 
 function selectHospital(idx) {
@@ -923,35 +808,12 @@ function selectHospital(idx) {
         selectedCard.classList.add('selected');
         selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    
-    const h = nearestHospitals[idx];
-    
-    const markers = hospitalMarkersGroup.getLayers();
-    if (markers[idx]) {
-        markers[idx].openPopup();
-        map.setView([h.lat, h.lng], 14);
-    }
-    
-    if (routeLayer) {
-        map.removeLayer(routeLayer);
-    }
-    
-    routeLayer = L.polyline([
-        [userCoords.lat, userCoords.lng],
-        [h.lat, h.lng]
-    ], {
-        color: '#dc2626',
-        weight: 4,
-        opacity: 0.8,
-        dashArray: '6, 6',
-        lineCap: 'round',
-        lineJoin: 'round'
-    }).addTo(map);
 }
 
 function showDirectionsRoute(idx) {
     const h = nearestHospitals[idx];
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${userCoords.lat},${userCoords.lng}&destination=${encodeURIComponent(h.name + ' ' + h.address)}`;
+    const originStr = userCoords ? `${userCoords.lat},${userCoords.lng}` : "My Location";
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(h.name + ' ' + h.address)}`;
     window.open(url, '_blank');
 }
 
