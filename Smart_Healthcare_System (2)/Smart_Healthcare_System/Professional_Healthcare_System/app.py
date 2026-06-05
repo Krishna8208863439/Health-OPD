@@ -716,6 +716,7 @@ def signup():
         blood_pressure = request.form.get('blood_pressure', 'normal')
         blood_sugar = request.form.get('blood_sugar', 'normal')
         role = request.form.get('role', 'patient')
+        hospital_name = request.form.get('hospital_name', 'City General Hospital')
         
         conn = get_db()
         cur = conn.cursor()
@@ -729,16 +730,17 @@ def signup():
         
         password_hash = generate_password_hash(password)
         cur.execute("""
-            INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, city, smoking, blood_pressure, blood_sugar, role)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (username, email, password_hash, full_name, age, gender, contact, address, city, smoking, blood_pressure, blood_sugar, role))
+            INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, city, smoking, blood_pressure, blood_sugar, role, hospital_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (username, email, password_hash, full_name, age, gender, contact, address, city, smoking, blood_pressure, blood_sugar, role, hospital_name))
         conn.commit()
         conn.close()
         
         flash('Account created successfully! Please login.', 'success')
         return redirect(url_for('login'))
     
-    return render_template('signup.html')
+    from hospital_finder import HOSPITALS_BY_CITY
+    return render_template('signup.html', HOSPITALS_BY_CITY=HOSPITALS_BY_CITY)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1728,12 +1730,14 @@ def edit_profile():
             conn.close()
             return redirect(url_for('edit_profile'))
 
+        hospital_name = request.form.get('hospital_name', current_user.hospital_name)
         cur.execute("""
             UPDATE users SET
                 full_name = ?, email = ?, age = ?, gender = ?, contact = ?,
                 address = ?, city = ?, smoking = ?, blood_pressure = ?, blood_sugar = ?,
                 blood_group = ?, allergies = ?,
-                emergency_contact_name = ?, emergency_contact_phone = ?, emergency_contact_relation = ?
+                emergency_contact_name = ?, emergency_contact_phone = ?, emergency_contact_relation = ?,
+                hospital_name = ?
             WHERE id = ?
         """, (
             request.form.get('full_name'),
@@ -1751,11 +1755,16 @@ def edit_profile():
             request.form.get('emergency_contact_name', ''),
             request.form.get('emergency_contact_phone', ''),
             request.form.get('emergency_contact_relation', ''),
+            hospital_name,
             current_user.id
         ))
         conn.commit()
         conn.close()
         flash('Profile updated successfully!', 'success')
+        if current_user.role == 'doctor':
+            return redirect(url_for('doctor_dashboard'))
+        elif current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
         return redirect(url_for('patient_dashboard'))
 
     # For GET - pass patient with extra fields as a dict-like object
@@ -1774,7 +1783,8 @@ def edit_profile():
             return self._extra.get(key, default)
 
     proxy = PatientProxy(current_user, patient_dict)
-    return render_template('edit_profile.html', patient=proxy)
+    from hospital_finder import HOSPITALS_BY_CITY
+    return render_template('edit_profile.html', patient=proxy, HOSPITALS_BY_CITY=HOSPITALS_BY_CITY)
 
 
 @app.route('/profile/change-password', methods=['POST'])

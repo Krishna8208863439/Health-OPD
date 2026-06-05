@@ -198,6 +198,22 @@
                 <label class="profile-label">🏙️ City</label>
                 <input type="text" class="profile-input" name="city" value="{{ patient.city or '' }}" placeholder="Your city">
             </div>
+            {% if current_user.role == 'doctor' %}
+            <div class="col-12">
+                <label class="profile-label">🏥 Associated Hospital</label>
+                <select class="profile-input" name="hospital_name" required>
+                    {% for city, city_hospitals in HOSPITALS_BY_CITY.items() %}
+                        {% if city != "Default" %}
+                            <optgroup label="{{ city }}">
+                            {% for hosp in city_hospitals %}
+                                <option value="{{ hosp.name }}" {% if patient.get('hospital_name', '') == hosp.name %}selected{% endif %}>{{ hosp.name }}</option>
+                            {% endfor %}
+                            </optgroup>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
         </div>
     </div>
 
