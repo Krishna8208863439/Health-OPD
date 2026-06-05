@@ -1428,6 +1428,311 @@
         });
     </script>
 
+    <!-- Medicine Alarm Modal Overlay -->
+    {% if current_user.is_authenticated %}
+    <div id="medicine-alarm-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease;">
+        <div class="alarm-modal-card" style="background: rgba(30, 41, 59, 0.95); border: 2px solid rgba(249, 115, 22, 0.3); border-radius: 24px; max-width: 450px; width: 90%; padding: 35px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); color: #f1f5f9; font-family: 'Inter', sans-serif;">
+            
+            <!-- Ringing Bell Icon -->
+            <div class="alarm-bell-container" style="position: relative; margin-bottom: 24px; display: inline-block;">
+                <div class="bell-glow" style="position: absolute; top:-10px; left:-10px; right:-10px; bottom:-10px; background: rgba(249, 115, 22, 0.2); border-radius: 50%; animation: pulse-ring 1.5s infinite;"></div>
+                <div class="alarm-icon-bg" style="width: 76px; height: 76px; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 8px 25px rgba(234, 88, 12, 0.4); animation: shake-bell 0.8s infinite alternate;">
+                    ⏰
+                </div>
+            </div>
+            
+            <h4 class="fw-bold mb-1" style="color: #fb923c; font-size: 1.5rem; letter-spacing: 0.5px;">Medicine Reminder!</h4>
+            <p class="text-secondary mb-4" style="font-size: 0.9rem;">It's time to take your medication.</p>
+            
+            <!-- Medication Info Box -->
+            <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 18px; margin-bottom: 25px; text-align: left;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: #a1a1aa; font-weight: 600; letter-spacing: 1px; margin-bottom: 4px;">Medicine Name</div>
+                <div id="alarm-med-name" class="fw-bold text-white mb-2" style="font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                    💊 <span>Paracetamol 500mg</span>
+                </div>
+                
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: #a1a1aa; font-weight: 600; letter-spacing: 1px; margin-bottom: 4px;">Dosage</div>
+                <div id="alarm-med-dosage" class="text-light fw-500 mb-2" style="font-size: 0.95rem;">1 tablet after meals</div>
+                
+                <div id="alarm-instructions-section">
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: #a1a1aa; font-weight: 600; letter-spacing: 1px; margin-bottom: 4px;">Instructions</div>
+                    <div id="alarm-med-instructions" class="text-warning" style="font-size: 0.85rem; font-style: italic;">Take with water</div>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div class="d-flex gap-3 justify-content-center">
+                <button id="btn-alarm-snooze" class="btn" style="flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #e4e4e7; transition: all 0.2s;">
+                    <i class="fas fa-history me-2"></i>Snooze (5m)
+                </button>
+                <button id="btn-alarm-dismiss" class="btn" style="flex: 1; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; background: linear-gradient(135deg, #f97316, #ea580c); border: none; color: white; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3); transition: all 0.2s;">
+                    <i class="fas fa-check me-2"></i>I Took It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS Animations -->
+    <style>
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        @keyframes shake-bell {
+            0% { transform: rotate(-8deg); }
+            50% { transform: rotate(0deg); }
+            100% { transform: rotate(8deg); }
+        }
+        .alarm-modal-card button:hover {
+            transform: translateY(-2px);
+        }
+        #btn-alarm-snooze:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+        }
+        #btn-alarm-dismiss:hover {
+            box-shadow: 0 6px 20px rgba(234, 88, 12, 0.5) !important;
+            filter: brightness(1.1);
+        }
+    </style>
+
+    <!-- Medicine Alarm Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let activeReminders = [];
+        let snoozedReminders = {}; // id -> time string "HH:MM"
+        let activeAlarmReminder = null;
+        let alarmInterval = null;
+        let audioCtx = null;
+        
+        const overlay = document.getElementById('medicine-alarm-overlay');
+        const medNameEl = document.getElementById('alarm-med-name');
+        const medDosageEl = document.getElementById('alarm-med-dosage');
+        const medInstEl = document.getElementById('alarm-med-instructions');
+        const instSection = document.getElementById('alarm-instructions-section');
+        const btnSnooze = document.getElementById('btn-alarm-snooze');
+        const btnDismiss = document.getElementById('btn-alarm-dismiss');
+
+        if (!overlay) return; // safeguard if element not present
+
+        // Setup user interaction listener to resume AudioContext
+        const unlockAudio = () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('keydown', unlockAudio);
+        };
+        window.addEventListener('click', unlockAudio);
+        window.addEventListener('keydown', unlockAudio);
+
+        function playAlarmSound() {
+            if (alarmInterval) return;
+            
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {
+                console.error("AudioContext initialization failed:", e);
+            }
+
+            function beep() {
+                try {
+                    if (!audioCtx || audioCtx.state === 'suspended') return;
+                    
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                    
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+                    
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.35);
+                    
+                    setTimeout(() => {
+                        if (!audioCtx || audioCtx.state === 'suspended') return;
+                        const osc2 = audioCtx.createOscillator();
+                        const gain2 = audioCtx.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioCtx.destination);
+                        osc2.type = 'sine';
+                        osc2.frequency.setValueAtTime(880, audioCtx.currentTime);
+                        gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+                        gain2.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.05);
+                        gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+                        osc2.start(audioCtx.currentTime);
+                        osc2.stop(audioCtx.currentTime + 0.35);
+                    }, 180);
+                } catch (err) {
+                    console.warn("Audio beep failed:", err);
+                }
+            }
+            
+            beep();
+            alarmInterval = setInterval(beep, 1200);
+        }
+
+        function stopAlarmSound() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+        }
+
+        function getTodayDateString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function getCurrentTimeString() {
+            const d = new Date();
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function triggerAlarm(reminder) {
+            activeAlarmReminder = reminder;
+            
+            // Set details in modal
+            medNameEl.innerHTML = `💊 <span>${reminder.medicine_name}</span>`;
+            medDosageEl.textContent = reminder.dosage;
+            if (reminder.instructions && reminder.instructions.trim()) {
+                medInstEl.textContent = reminder.instructions;
+                instSection.style.display = 'block';
+            } else {
+                instSection.style.display = 'none';
+            }
+            
+            // Show modal with animation
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                const card = overlay.querySelector('.alarm-modal-card');
+                if (card) {
+                    card.style.transform = 'scale(1)';
+                }
+            }, 50);
+
+            // Play alarm sound
+            playAlarmSound();
+        }
+
+        function checkReminders() {
+            if (activeAlarmReminder) return; // alarm already active
+
+            const todayStr = getTodayDateString();
+            const timeStr = getCurrentTimeString();
+
+            // 1. Check standard reminders
+            for (let rem of activeReminders) {
+                // Verify start date / end date
+                if (rem.start_date && todayStr < rem.start_date) continue;
+                if (rem.end_date && todayStr > rem.end_date) continue;
+
+                // Match time
+                if (rem.reminder_time === timeStr) {
+                    const storageKey = `med-rem-triggered-${rem.id}-${todayStr}-${timeStr}`;
+                    if (!localStorage.getItem(storageKey)) {
+                        localStorage.setItem(storageKey, 'true'); // lock immediately so it won't fire again on refresh/poll
+                        triggerAlarm(rem);
+                        return;
+                    }
+                }
+            }
+
+            // 2. Check snoozed reminders
+            for (let remId in snoozedReminders) {
+                if (snoozedReminders[remId] === timeStr) {
+                    delete snoozedReminders[remId]; // remove from snooze list
+                    const matchingRem = activeReminders.find(r => r.id == remId);
+                    if (matchingRem) {
+                        triggerAlarm(matchingRem);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function fetchActiveReminders() {
+            fetch('/api/reminders/active')
+                .then(res => {
+                    if (!res.ok) throw new Error("HTTP error " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.reminders) {
+                        activeReminders = data.reminders;
+                    }
+                })
+                .catch(err => console.error("Failed to fetch active reminders:", err));
+        }
+
+        // Actions
+        if (btnDismiss) {
+            btnDismiss.addEventListener('click', function() {
+                stopAlarmSound();
+                
+                // Animate close
+                overlay.style.opacity = '0';
+                const card = overlay.querySelector('.alarm-modal-card');
+                if (card) card.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    activeAlarmReminder = null;
+                }, 400);
+            });
+        }
+
+        if (btnSnooze) {
+            btnSnooze.addEventListener('click', function() {
+                if (!activeAlarmReminder) return;
+                
+                stopAlarmSound();
+                
+                // Calculate snooze target time (5 minutes from now)
+                const snoozeTime = new Date(Date.now() + 5 * 60000);
+                const hrs = String(snoozeTime.getHours()).padStart(2, '0');
+                const mins = String(snoozeTime.getMinutes()).padStart(2, '0');
+                const snoozeTimeStr = `${hrs}:${mins}`;
+                
+                snoozedReminders[activeAlarmReminder.id] = snoozeTimeStr;
+
+                // Animate close
+                overlay.style.opacity = '0';
+                const card = overlay.querySelector('.alarm-modal-card');
+                if (card) card.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    activeAlarmReminder = null;
+                }, 400);
+            });
+        }
+
+        // Initialize loops
+        fetchActiveReminders();
+        setInterval(fetchActiveReminders, 30000); // refresh reminders list every 30 seconds
+        
+        // Check reminders every 10 seconds to align precisely with the clock
+        setInterval(checkReminders, 10000);
+    });
+    </script>
+    {% endif %}
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

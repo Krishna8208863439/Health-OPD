@@ -190,9 +190,30 @@
     <h4 class="fw-bold mb-4" style="color:#065f46;"><i class="fas fa-plus-circle me-2"></i>Book New Appointment</h4>
     <form method="POST" action="{{ url_for('book_appointment') }}">
         <div class="row g-4">
+            <!-- Step 1: Choose Hospital -->
             <div class="col-12">
-                <p class="form-section-title">Select Doctor</p>
-                <div class="row g-3">
+                <p class="form-section-title"><i class="fas fa-hospital me-2" style="color:#059669;"></i>Step 1: Choose a Hospital</p>
+                <div class="mb-3">
+                    <label class="styled-label">Select Hospital</label>
+                    <select class="styled-input" name="hospital_name" id="hospital-select-main" required>
+                        <option value="">-- Select Hospital --</option>
+                        {% for city, city_hospitals in HOSPITALS_BY_CITY.items() %}
+                            {% if city != "Default" %}
+                                <optgroup label="{{ city }}">
+                                {% for hosp in city_hospitals %}
+                                    <option value="{{ hosp.name }}">{{ hosp.name }}</option>
+                                {% endfor %}
+                                </optgroup>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 2: Choose Doctor -->
+            <div class="col-12" id="doctor-section" style="display: none;">
+                <p class="form-section-title"><i class="fas fa-user-md me-2" style="color:#059669;"></i>Step 2: Choose Doctor at <span id="display-selected-hospital" class="fw-bold text-success"></span></p>
+                <div class="row g-3" id="doctor-cards-container">
                     {% for doc in db_doctors %}
                         {% set emoji_spec = '👨‍⚕️' %}
                         {% set bg_color = '#dbeafe' %}
@@ -215,7 +236,7 @@
                         {% endif %}
                         <div class="col-md-4 col-6 doctor-option-card" data-hospital="{{ doc.hospital_name }}">
                             <label class="doctor-card d-block w-100">
-                                <input type="radio" name="doctor_name" value="{{ doc.full_name }} ({{ clean_spec }})" required>
+                                <input type="radio" name="doctor_name" value="{{ doc.full_name }} ({{ clean_spec }})" required disabled>
                                 <div class="doc-avatar" style="background:{{ bg_color }};">{{ emoji_spec }}</div>
                                 <div class="doc-name">{{ doc.full_name }}</div>
                                 <div class="doc-spec">{{ clean_spec }}</div>
@@ -232,25 +253,21 @@
                         </div>
                     {% endfor %}
                 </div>
+                <!-- Warning when no doctors are available at the chosen hospital -->
+                <div id="no-doctors-warning" class="alert alert-warning text-center d-none" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>No doctors are registered at this hospital. Please select another hospital.
+                </div>
+            </div>
+
+            <!-- Placeholder info before choosing hospital -->
+            <div class="col-12 text-center py-4 border rounded-4 bg-light mb-2" id="hospital-placeholder">
+                <i class="fas fa-hospital-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted fw-bold">Step 2: Choose Doctor</h5>
+                <p class="text-muted mb-0">Please select a hospital above to view the available doctors.</p>
             </div>
 
             <div class="col-md-6">
-                <p class="form-section-title">Appointment Details</p>
-                <div class="mb-3">
-                    <label class="styled-label">Select Hospital</label>
-                    <select class="styled-input" name="hospital_name" required>
-                        <option value="">-- Select Hospital --</option>
-                        {% for city, city_hospitals in HOSPITALS_BY_CITY.items() %}
-                            {% if city != "Default" %}
-                                <optgroup label="{{ city }}">
-                                {% for hosp in city_hospitals %}
-                                    <option value="{{ hosp.name }}">{{ hosp.name }}</option>
-                                {% endfor %}
-                                </optgroup>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
+                <p class="form-section-title"><i class="fas fa-info-circle me-2" style="color:#059669;"></i>Step 3: Appointment Details</p>
                 <div class="mb-3">
                     <label class="styled-label">Appointment Date</label>
                     <input type="date" class="styled-input" name="appt_date" required min="{{ today }}">
@@ -288,7 +305,7 @@
             </div>
 
             <div class="col-md-6">
-                <p class="form-section-title">Health Concerns</p>
+                <p class="form-section-title"><i class="fas fa-heartbeat me-2" style="color:#059669;"></i>Step 4: Health Concerns</p>
                 <div class="mb-3">
                     <label class="styled-label">Primary Concern / Symptoms</label>
                     <textarea class="styled-input" name="notes" rows="5" placeholder="Describe your symptoms or reason for visit..." style="resize:vertical;"></textarea>
@@ -356,69 +373,83 @@
 </div>
 
 <script>
-// Highlight selected doctor card and link with hospital
-const hospitalSelect = document.querySelector('select[name="hospital_name"]');
-const doctorCards = document.querySelectorAll('.doctor-option-card');
-const doctorRadios = document.querySelectorAll('.doctor-option-card input[type="radio"]');
+document.addEventListener('DOMContentLoaded', function() {
+    const hospitalSelect = document.getElementById('hospital-select-main');
+    const doctorSection = document.getElementById('doctor-section');
+    const hospitalPlaceholder = document.getElementById('hospital-placeholder');
+    const displaySelectedHospital = document.getElementById('display-selected-hospital');
+    const noDoctorsWarning = document.getElementById('no-doctors-warning');
+    const doctorCards = document.querySelectorAll('.doctor-option-card');
+    const doctorRadios = document.querySelectorAll('.doctor-option-card input[type="radio"]');
 
-// Highlight selected doctor card
-doctorRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-        document.querySelectorAll('.doctor-card').forEach(c => {
-            c.style.background = '';
-            c.style.borderColor = '';
-        });
-        if (this.checked) {
-            const card = this.closest('.doctor-card');
-            card.style.background = '#f0fdf4';
-            card.style.borderColor = '#059669';
-            
-            // Auto-select hospital when doctor is selected
-            const optionContainer = this.closest('.doctor-option-card');
-            const docHospital = optionContainer.getAttribute('data-hospital');
-            if (docHospital && hospitalSelect) {
-                // Find matching option
-                for (let option of hospitalSelect.options) {
-                    if (option.value === docHospital) {
-                        hospitalSelect.value = docHospital;
-                        break;
-                    }
-                }
-            }
-        }
-    });
-});
-
-// Filter doctors when hospital is selected
-if (hospitalSelect) {
-    hospitalSelect.addEventListener('change', function() {
-        const selectedHospital = this.value;
-        if (!selectedHospital) {
-            // Show all doctors
-            doctorCards.forEach(card => {
-                card.style.display = 'block';
-                card.querySelector('input[type="radio"]').disabled = false;
+    // Highlight selected doctor card
+    doctorRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.doctor-card').forEach(c => {
+                c.style.background = '';
+                c.style.borderColor = '';
             });
-            return;
-        }
-        
-        doctorCards.forEach(card => {
-            const docHospital = card.getAttribute('data-hospital');
-            if (docHospital === selectedHospital) {
-                card.style.display = 'block';
-                card.querySelector('input[type="radio"]').disabled = false;
-            } else {
-                card.style.display = 'none';
-                const radio = card.querySelector('input[type="radio"]');
-                radio.disabled = true;
-                if (radio.checked) {
-                    radio.checked = false;
-                    card.querySelector('.doctor-card').style.background = '';
-                    card.querySelector('.doctor-card').style.borderColor = '';
-                }
+            if (this.checked) {
+                const card = this.closest('.doctor-card');
+                card.style.background = '#f0fdf4';
+                card.style.borderColor = '#059669';
             }
         });
     });
-}
+
+    // Filter doctors when hospital is selected
+    if (hospitalSelect) {
+        hospitalSelect.addEventListener('change', function() {
+            const selectedHospital = this.value;
+            if (!selectedHospital) {
+                // Hide doctors section, show placeholder
+                doctorSection.style.display = 'none';
+                hospitalPlaceholder.style.display = 'block';
+                noDoctorsWarning.classList.add('d-none');
+                
+                // Reset doctor radios
+                doctorRadios.forEach(radio => {
+                    radio.checked = false;
+                    radio.disabled = true;
+                    const card = radio.closest('.doctor-card');
+                    card.style.background = '';
+                    card.style.borderColor = '';
+                });
+                return;
+            }
+
+            // Show doctors section, hide placeholder
+            doctorSection.style.display = 'block';
+            hospitalPlaceholder.style.display = 'none';
+            displaySelectedHospital.textContent = selectedHospital;
+
+            let visibleDoctorsCount = 0;
+
+            doctorCards.forEach(card => {
+                const docHospital = card.getAttribute('data-hospital');
+                const radio = card.querySelector('input[type="radio"]');
+                
+                if (docHospital === selectedHospital) {
+                    card.style.display = 'block';
+                    radio.disabled = false;
+                    visibleDoctorsCount++;
+                } else {
+                    card.style.display = 'none';
+                    radio.disabled = true;
+                    radio.checked = false;
+                    const docCardEl = card.querySelector('.doctor-card');
+                    docCardEl.style.background = '';
+                    docCardEl.style.borderColor = '';
+                }
+            });
+
+            if (visibleDoctorsCount === 0) {
+                noDoctorsWarning.classList.remove('d-none');
+            } else {
+                noDoctorsWarning.classList.add('d-none');
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

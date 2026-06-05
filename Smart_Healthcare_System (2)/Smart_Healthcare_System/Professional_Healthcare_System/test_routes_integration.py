@@ -219,6 +219,53 @@ def test_integration():
         sys.exit(1)
     print("   Patient polled and verified message successfully!")
     
+    # 10. Test Active Reminders API
+    print("\n[Step 10] Testing active reminders API...")
+    # Add a reminder
+    res = session.post(f"{BASE_URL}/reminders/add", data={
+        'medicine_name': 'TestMed 500mg',
+        'dosage': '1 pill',
+        'reminder_time': '10:00',
+        'frequency': 'daily',
+        'start_date': '2026-06-06',
+        'instructions': 'Take with water'
+    }, allow_redirects=True)
+    if "medicine reminders" not in res.text.lower():
+        print("❌ Adding reminder failed!")
+        sys.exit(1)
+    print("   Added new medicine reminder successfully!")
+
+    # Fetch active reminders API
+    res = session.get(f"{BASE_URL}/api/reminders/active")
+    if res.status_code != 200:
+        print(f"❌ Active reminders API failed! Status: {res.status_code}")
+        sys.exit(1)
+    rem_data = res.json()
+    rems = rem_data.get('reminders', [])
+    target_rem = next((r for r in rems if r['medicine_name'] == 'TestMed 500mg'), None)
+    if not target_rem:
+        print("❌ Active reminders API response does not contain added reminder!")
+        sys.exit(1)
+    print("   Active reminders API successfully returned the new active reminder!")
+    
+    # Toggle active status to inactive
+    rem_id = target_rem['id']
+    res = session.post(f"{BASE_URL}/reminders/toggle/{rem_id}", allow_redirects=True)
+    
+    # Verify it is no longer returned in active list
+    res = session.get(f"{BASE_URL}/api/reminders/active")
+    rem_data = res.json()
+    rems = rem_data.get('reminders', [])
+    inactive_rem = next((r for r in rems if r['id'] == rem_id), None)
+    if inactive_rem:
+        print("❌ Inactive reminder still returned in active reminders API!")
+        sys.exit(1)
+    print("   Toggled reminder to inactive, verified it is hidden from active reminders API!")
+
+    # Delete the reminder
+    res = session.post(f"{BASE_URL}/reminders/delete/{rem_id}", allow_redirects=True)
+    print("   Cleaned up test reminder successfully!")
+    
     print("\n" + "=" * 60)
     print("🎉 ALL END-TO-END INTEGRATION TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)

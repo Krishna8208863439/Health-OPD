@@ -1391,7 +1391,7 @@ def appointments():
         ORDER BY appt_date DESC, appt_time DESC
     """, (current_user.id,)).fetchall()
     db_doctors = cur.execute("""
-        SELECT id, full_name, address as spec, city
+        SELECT id, full_name, address as spec, city, hospital_name
         FROM users WHERE role = 'doctor'
     """).fetchall()
     conn.close()
@@ -1542,6 +1542,34 @@ def delete_reminder(rem_id):
     conn.close()
     flash('Reminder deleted.', 'info')
     return redirect(url_for('medicine_reminders'))
+
+
+@app.route('/api/reminders/active')
+@login_required
+def active_reminders_api():
+    conn = get_db()
+    cur = conn.cursor()
+    reminders = cur.execute("""
+        SELECT id, medicine_name, dosage, reminder_time, frequency, start_date, end_date, instructions
+        FROM medicine_reminders
+        WHERE patient_id = ? AND is_active = 1
+    """, (current_user.id,)).fetchall()
+    conn.close()
+    
+    rem_list = []
+    for r in reminders:
+        rem_list.append({
+            'id': r['id'],
+            'medicine_name': r['medicine_name'],
+            'dosage': r['dosage'],
+            'reminder_time': r['reminder_time'],
+            'frequency': r['frequency'],
+            'start_date': r['start_date'],
+            'end_date': r['end_date'],
+            'instructions': r['instructions']
+        })
+    return jsonify({'reminders': rem_list})
+
 
 
 # =============================================
