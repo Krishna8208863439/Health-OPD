@@ -17,6 +17,17 @@ from medicine_db import MEDICINE_DATABASE, HOSPITAL_DATABASE
 from risk_calculator import calculate_health_risk_score, get_risk_recommendations
 from hospital_finder import find_hospitals, get_google_maps_url, get_directions_url
 
+# Load environment variables from .env file if it exists
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_path):
+    with open(env_path) as f:
+        for line in f:
+            if '=' in line and not line.startswith('#'):
+                k, v = line.strip().split('=', 1)
+                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'healthcare-secret-key-2026'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
@@ -38,8 +49,61 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def ensure_columns_exist(conn):
+    cur = conn.cursor()
+    
+    # Helper to check if a column exists in a table
+    def column_exists(table, column):
+        cur.execute(f"PRAGMA table_info({table})")
+        columns = [row['name'] for row in cur.fetchall()]
+        return column in columns
+
+    # Ensure appointments table columns
+    if not column_exists('appointments', 'hospital_name'):
+        try:
+            cur.execute("ALTER TABLE appointments ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+        except Exception as e:
+            print(f"Error altering appointments: {e}")
+
+    # Ensure doctor_slots table columns
+    if not column_exists('doctor_slots', 'hospital_name'):
+        try:
+            cur.execute("ALTER TABLE doctor_slots ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+        except Exception as e:
+            print(f"Error altering doctor_slots: {e}")
+
+    # Ensure users table columns
+    user_cols = {
+        'blood_group': 'TEXT DEFAULT ""',
+        'allergies': 'TEXT DEFAULT ""',
+        'emergency_contact_name': 'TEXT DEFAULT ""',
+        'emergency_contact_phone': 'TEXT DEFAULT ""',
+        'emergency_contact_relation': 'TEXT DEFAULT ""',
+        'hospital_name': "TEXT DEFAULT 'City General Hospital'"
+    }
+    for col, definition in user_cols.items():
+        if not column_exists('users', col):
+            try:
+                cur.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
+            except Exception as e:
+                print(f"Error altering users with {col}: {e}")
+
+    # Ensure predictions table columns
+    pred_cols = {
+        'doctor_name': "TEXT DEFAULT 'Dr. Amit Sharma, MD'",
+        'doctor_phone': "TEXT DEFAULT ''",
+        'referred_hospital': "TEXT DEFAULT ''"
+    }
+    for col, definition in pred_cols.items():
+        if not column_exists('predictions', col):
+            try:
+                cur.execute(f"ALTER TABLE predictions ADD COLUMN {col} {definition}")
+            except Exception as e:
+                print(f"Error altering predictions with {col}: {e}")
+
 def init_db():
     conn = get_db()
+    ensure_columns_exist(conn)
     cur = conn.cursor()
     
     cur.execute("""
@@ -63,7 +127,8 @@ def init_db():
         emergency_contact_phone TEXT DEFAULT '',
         emergency_contact_relation TEXT DEFAULT '',
         role TEXT DEFAULT 'patient',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        hospital_name TEXT DEFAULT 'City General Hospital'
     )
     """)
 
@@ -295,22 +360,25 @@ def init_db():
 
     # Seed default specialist doctors if not exist
     DEFAULT_DOCTORS = [
-        ("dr_general",  "dr.general@healthcare.com",  "Dr. Rajesh Kumar",   42, "Male",   "General Physician",    "Mumbai"),
-        ("dr_cardio",   "dr.cardio@healthcare.com",   "Dr. Priya Sharma",   39, "Female", "Cardiologist",         "Mumbai"),
-        ("dr_neuro",    "dr.neuro@healthcare.com",    "Dr. Amit Patel",     47, "Male",   "Neurologist",          "Delhi"),
-        ("dr_ortho",    "dr.ortho@healthcare.com",    "Dr. Meena Iyer",     44, "Female", "Orthopedist",          "Bangalore"),
-        ("dr_pulmo",    "dr.pulmo@healthcare.com",    "Dr. Kiran Rao",      51, "Male",   "Pulmonologist",        "Chennai"),
-        ("dr_gastro",   "dr.gastro@healthcare.com",   "Dr. Sunita Nair",    38, "Female", "Gastroenterologist",   "Hyderabad"),
+        ("dr_general",  "dr.general@healthcare.com",  "Dr. Rajesh Kumar",   42, "Male",   "General Physician",    "Mumbai", "Kokilaben Dhirubhai Ambani Hospital"),
+        ("dr_cardio",   "dr.cardio@healthcare.com",   "Dr. Priya Sharma",   39, "Female", "Cardiologist",         "Mumbai", "Lilavati Hospital"),
+        ("dr_neuro",    "dr.neuro@healthcare.com",    "Dr. Amit Patel",     47, "Male",   "Neurologist",          "Delhi", "All India Institute of Medical Sciences (AIIMS)"),
+        ("dr_ortho",    "dr.ortho@healthcare.com",    "Dr. Meena Iyer",     44, "Female", "Orthopedist",          "Bangalore", "Manipal Hospital"),
+        ("dr_pulmo",    "dr.pulmo@healthcare.com",    "Dr. Kiran Rao",      51, "Male",   "Pulmonologist",        "Chennai", "Apollo Hospitals"),
+        ("dr_gastro",   "dr.gastro@healthcare.com",   "Dr. Sunita Nair",    38, "Female", "Gastroenterologist",   "Hyderabad", "Apollo Hospitals"),
     ]
     doctor_pass = generate_password_hash("doctor123")
     doctor_ids = {}
-    for uname, email, fname, age, gender, spec, city in DEFAULT_DOCTORS:
+    for uname, email, fname, age, gender, spec, city, hosp in DEFAULT_DOCTORS:
         existing = cur.execute("SELECT id FROM users WHERE username = ?", (uname,)).fetchone()
         if not existing:
             cur.execute("""
-                INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, role, city)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'doctor', ?)
-            """, (uname, email, doctor_pass, fname, age, gender, "+91-9000000000", spec + " Clinic", city))
+                INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, role, city, hospital_name)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'doctor', ?, ?)
+            """, (uname, email, doctor_pass, fname, age, gender, "+91-9000000000", spec + " Clinic", city, hosp))
+            conn.commit()
+        else:
+            cur.execute("UPDATE users SET hospital_name = ? WHERE id = ?", (hosp, existing['id']))
             conn.commit()
         doc_row = cur.execute("SELECT id FROM users WHERE username = ?", (uname,)).fetchone()
         if doc_row:
@@ -347,7 +415,7 @@ init_db()
 
 # User Class
 class User(UserMixin):
-    def __init__(self, id, username, email, full_name, age, gender, contact, address, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal'):
+    def __init__(self, id, username, email, full_name, age, gender, contact, address, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal', hospital_name='City General Hospital'):
         self.id = id
         self.username = username
         self.email = email
@@ -361,6 +429,7 @@ class User(UserMixin):
         self.smoking = smoking
         self.blood_pressure = blood_pressure
         self.blood_sugar = blood_sugar
+        self.hospital_name = hospital_name
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -369,11 +438,13 @@ def load_user(user_id):
     user = cur.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     conn.close()
     if user:
+        hosp = user['hospital_name'] if 'hospital_name' in user.keys() else 'City General Hospital'
         return User(user['id'], user['username'], user['email'], 
                    user['full_name'], user['age'], user['gender'],
                    user['contact'], user['address'], user['role'],
                    user['city'] if user['city'] else 'Default', user['smoking'] if user['smoking'] else 'no',
-                   user['blood_pressure'] if user['blood_pressure'] else 'normal', user['blood_sugar'] if user['blood_sugar'] else 'normal')
+                   user['blood_pressure'] if user['blood_pressure'] else 'normal', user['blood_sugar'] if user['blood_sugar'] else 'normal',
+                   hosp)
     return None
 
 # Role Decorator
@@ -684,11 +755,13 @@ def login():
         conn.close()
         
         if user and check_password_hash(user['password_hash'], password):
+            hosp = user['hospital_name'] if 'hospital_name' in user.keys() else 'City General Hospital'
             user_obj = User(user['id'], user['username'], user['email'],
                           user['full_name'], user['age'], user['gender'],
                           user['contact'], user['address'], user['role'],
                           user['city'] if user['city'] else 'Default', user['smoking'] if user['smoking'] else 'no',
-                          user['blood_pressure'] if user['blood_pressure'] else 'normal', user['blood_sugar'] if user['blood_sugar'] else 'normal')
+                          user['blood_pressure'] if user['blood_pressure'] else 'normal', user['blood_sugar'] if user['blood_sugar'] else 'normal',
+                          hosp)
             login_user(user_obj)
             flash(f'Welcome back, {user["full_name"]}!', 'success')
             
@@ -728,6 +801,91 @@ def patient_dashboard():
 def symptom_entry():
     return render_template('symptom_entry.html', patient=current_user)
 
+def get_ai_symptom_prediction(symptoms, user_age, user_gender, user_city):
+    present_symptoms = [s for s, val in symptoms.items() if val == 1]
+    if not present_symptoms:
+        return None
+        
+    import os
+    import json
+    import requests
+    
+    gemini_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+    openai_key = os.environ.get('OPENAI_API_KEY')
+    
+    if not gemini_key and not openai_key:
+        return None
+        
+    symptoms_str = ", ".join(present_symptoms)
+    
+    prompt = f"""
+You are an advanced AI Clinical Diagnostic Assistant on a premium smart healthcare platform.
+Analyze the following patient symptoms and user information to predict the most likely disease or health condition and suggest treatment options.
+
+Patient Details:
+- Age: {user_age}
+- Gender: {user_gender}
+- Location: {user_city}
+- Present Symptoms: {symptoms_str}
+
+Perform a clinical symptom assessment and return a JSON object with the following exact keys:
+1. "disease": (string, predicted disease name, e.g. "Pneumonia", "Gastroenteritis", "Migraine")
+2. "severity": (string, must be exactly one of: "LOW", "MEDIUM", "HIGH")
+3. "risk_percentage": (integer, estimated risk percentage from 0 to 100)
+4. "health_risk_score": (integer, estimated overall health risk score from 0 to 100)
+5. "health_risk_category": (string, health risk category, e.g. "Low Risk", "Moderate Concern", "High Concern")
+6. "medicines": (list of strings, containing real clinical medicine names with typical brand names and dosages, e.g. ["Paracetamol 500mg (Calpol)", "Guaifenesin 200mg (Mucinex)"])
+7. "doctor_advice": (string, short medical advice for the patient)
+8. "specialist": (string, specialty of doctor needed, e.g. "Cardiologist", "Neurologist", "General Physician")
+
+Return ONLY the raw JSON object. Do not wrap in markdown or backticks.
+"""
+
+    response_data = None
+    
+    # 1. Try OpenAI if key is present
+    if openai_key:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {openai_key}"
+            }
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"},
+                "temperature": 0.2
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=8)
+            if res.status_code == 200:
+                choice = res.json()['choices'][0]['message']['content'].strip()
+                response_data = json.loads(choice)
+        except Exception as e:
+            print(f"Error calling OpenAI API for prediction: {e}")
+            
+    # 2. Try Gemini if OpenAI wasn't used or failed
+    if not response_data and gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            headers = {'Content-Type': 'application/json'}
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "responseMimeType": "application/json",
+                    "temperature": 0.2
+                }
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=8)
+            if res.status_code == 200:
+                result = res.json()
+                text_content = result['candidates'][0]['content']['parts'][0]['text'].strip()
+                response_data = json.loads(text_content)
+        except Exception as e:
+            print(f"Error calling Gemini API for prediction: {e}")
+            
+    return response_data
+
 @app.route('/predict', methods=['POST'])
 @login_required
 def predict():
@@ -748,37 +906,6 @@ def predict():
         'Swollen feet': int(request.form.get('swollen_feet', 0))
     }
     
-    df = pd.DataFrame([list(symptoms.values())], columns=list(symptoms.keys()))
-    
-    pid = model.predict(df)[0]
-    prob = max(model.predict_proba(df)[0])
-    
-    risk, severity, icon = calculate_risk(prob)
-    disease = disease_map[pid]
-    
-    # Get past history count
-    conn = get_db()
-    cur = conn.cursor()
-    past_history_count = cur.execute(
-        "SELECT COUNT(*) FROM predictions WHERE patient_id = ?", 
-        (current_user.id,)
-    ).fetchone()[0]
-    
-    # Calculate comprehensive health risk score
-    patient_data = {
-        'age': current_user.age,
-        'smoking': current_user.smoking,
-        'blood_pressure': current_user.blood_pressure,
-        'blood_sugar': current_user.blood_sugar
-    }
-    
-    health_risk = calculate_health_risk_score(
-        patient_data, 
-        symptoms, 
-        f"{severity} {icon}",
-        past_history_count
-    )
-    
     # Get hospital filters from form
     hospital_type = request.form.get('hospital_type')  # Government/Private
     max_distance = request.form.get('max_distance')
@@ -796,35 +923,9 @@ def predict():
         user_lng = float(user_lng) if user_lng else None
     except ValueError:
         user_lng = None
-    
-    # Find hospitals
-    hospitals_list = find_hospitals(
-        city=current_user.city,
-        hospital_type=hospital_type,
-        disease=disease,
-        max_distance=max_distance,
-        user_lat=user_lat,
-        user_lng=user_lng
-    )
-    
-    medicines = MEDICINE_DATABASE.get(disease, {}).get(severity, ["Consult Doctor"])
-    
-    # Referred Hospital and Doctor Assignment
-    if hospitals_list:
-        referred_hospital = hospitals_list[0]['name']
-        doctor_phone = hospitals_list[0]['phone']
-    else:
-        referred_hospital = "City General Hospital"
-        doctor_phone = "+91-XXX-XXX-XXXX"
 
-    # Map diseases to specialties and doctor names
-    specialty_docs = {
-        "Cardiology": ["Dr. Devi Shetty, MS", "Dr. Naresh Trehan, MD", "Dr. K. K. Talwar, DM"],
-        "Oncology": ["Dr. Suresh Advani, MD", "Dr. Rajendra Badwe, MS", "Dr. S. H. Advani, MD"],
-        "Neurology": ["Dr. Ashok Panagariya, DM", "Dr. K. Sridhar, MCh", "Dr. Mukul Varma, DM"],
-        "General Medicine": ["Dr. Sandeep Budhiraja, MD", "Dr. Randeep Guleria, DM", "Dr. Rajesh Chawla, MD"],
-        "Emergency": ["Dr. Amit Sharma, MD", "Dr. S. K. Sarin, DM", "Dr. Balram Bhargava, DM"]
-    }
+    conn = get_db()
+    cur = conn.cursor()
     
     # Map diseases to specialties
     disease_specialty_map = {
@@ -849,19 +950,101 @@ def predict():
         "Allergic Side Effects": "General Medicine",
         "Acidity": "General Medicine"
     }
+
+    specialty_docs = {
+        "Cardiology": ["Dr. Devi Shetty, MS", "Dr. Naresh Trehan, MD", "Dr. K. K. Talwar, DM"],
+        "Oncology": ["Dr. Suresh Advani, MD", "Dr. Rajendra Badwe, MS", "Dr. S. H. Advani, MD"],
+        "Neurology": ["Dr. Ashok Panagariya, DM", "Dr. K. Sridhar, MCh", "Dr. Mukul Varma, DM"],
+        "General Medicine": ["Dr. Sandeep Budhiraja, MD", "Dr. Randeep Guleria, DM", "Dr. Rajesh Chawla, MD"],
+        "Emergency": ["Dr. Amit Sharma, MD", "Dr. S. K. Sarin, DM", "Dr. Balram Bhargava, DM"]
+    }
     
-    spec = disease_specialty_map.get(disease, "General Medicine")
+    # Try calling ChatGPT/Gemini API first
+    ai_pred = get_ai_symptom_prediction(symptoms, current_user.age, current_user.gender, current_user.city)
+    
+    if ai_pred:
+        disease = ai_pred.get('disease', 'Common Cold')
+        severity = ai_pred.get('severity', 'LOW')
+        if severity not in ['LOW', 'MEDIUM', 'HIGH']:
+            severity = 'LOW'
+            
+        risk = ai_pred.get('risk_percentage', 50)
+        prob = float(risk) / 100.0
+        
+        severity_icons = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}
+        icon = severity_icons.get(severity, "🟢")
+        
+        health_risk = {
+            'score': ai_pred.get('health_risk_score', 30),
+            'category': ai_pred.get('health_risk_category', 'Low Risk'),
+            'color': 'success' if severity == 'LOW' else ('warning' if severity == 'MEDIUM' else 'warning' if severity == 'MEDIUM' else 'danger'),
+            'icon': icon
+        }
+        
+        medicines = ai_pred.get('medicines', ["Consult Doctor"])
+        if not isinstance(medicines, list):
+            medicines = [str(medicines)]
+            
+        spec = ai_pred.get('specialist', 'General Medicine')
+        doctor_advice_text = ai_pred.get('doctor_advice', 'Monitor symptoms and rest.')
+    else:
+        # Fallback to local Random Forest
+        df = pd.DataFrame([list(symptoms.values())], columns=list(symptoms.keys()))
+        pid = model.predict(df)[0]
+        prob = max(model.predict_proba(df)[0])
+        
+        risk, severity, icon = calculate_risk(prob)
+        disease = disease_map[pid]
+        
+        past_history_count = cur.execute(
+            "SELECT COUNT(*) FROM predictions WHERE patient_id = ?", 
+            (current_user.id,)
+        ).fetchone()[0]
+        
+        patient_data = {
+            'age': current_user.age,
+            'smoking': current_user.smoking,
+            'blood_pressure': current_user.blood_pressure,
+            'blood_sugar': current_user.blood_sugar
+        }
+        
+        health_risk = calculate_health_risk_score(
+            patient_data, 
+            symptoms, 
+            f"{severity} {icon}",
+            past_history_count
+        )
+        
+        medicines = MEDICINE_DATABASE.get(disease, {}).get(severity, ["Consult Doctor"])
+        spec = disease_specialty_map.get(disease, "General Medicine")
+        
+        doctor_advice = {
+            "LOW": "Monitor symptoms at home. Stay hydrated, get adequate rest. Consult if symptoms worsen.",
+            "MEDIUM": "Consult a doctor within 24 hours. Follow prescribed medications and monitor closely.",
+            "HIGH": "Seek immediate medical attention. Visit emergency or call ambulance if severe."
+        }
+        doctor_advice_text = doctor_advice[severity]
+
+    # Find hospitals
+    hospitals_list = find_hospitals(
+        city=current_user.city,
+        hospital_type=hospital_type,
+        disease=disease,
+        max_distance=max_distance,
+        user_lat=user_lat,
+        user_lng=user_lng
+    )
+    
+    if hospitals_list:
+        referred_hospital = hospitals_list[0]['name']
+        doctor_phone = hospitals_list[0]['phone']
+    else:
+        referred_hospital = "City General Hospital"
+        doctor_phone = "+91-XXX-XXX-XXXX"
+        
     doc_list = specialty_docs.get(spec, specialty_docs["General Medicine"])
-    
-    # Use referred_hospital hash to select a deterministic doctor from the list
     h_idx = sum(ord(c) for c in referred_hospital) % len(doc_list)
     doctor_name = doc_list[h_idx]
-    
-    doctor_advice = {
-        "LOW": "Monitor symptoms at home. Stay hydrated, get adequate rest. Consult if symptoms worsen.",
-        "MEDIUM": "Consult a doctor within 24 hours. Follow prescribed medications and monitor closely.",
-        "HIGH": "Seek immediate medical attention. Visit emergency or call ambulance if severe."
-    }
     
     prediction_data = {
         'disease': disease,
@@ -874,14 +1057,13 @@ def predict():
         'probability': prob,
         'medicines': ', '.join(medicines),
         'hospitals': ', '.join([h['name'] for h in hospitals_list[:5]]),
-        'doctor_advice': doctor_advice[severity],
+        'doctor_advice': doctor_advice_text,
         'doctor_name': doctor_name,
         'doctor_phone': doctor_phone,
         'referred_hospital': referred_hospital
     }
     
     pdf_filename = generate_pdf(current_user, prediction_data)
-    
     symptom_count = sum(1 for v in symptoms.values() if v == 1)
     
     cur.execute("""
@@ -1218,9 +1400,13 @@ def appointments():
 @app.route('/appointments/book', methods=['POST'])
 @login_required
 def book_appointment():
+    doc_name = request.form.get('doctor_name')
+    if not doc_name:
+        flash('Please select a doctor to book an appointment.', 'danger')
+        return redirect(url_for('appointments'))
+
     conn = get_db()
     cur = conn.cursor()
-    doc_name = request.form.get('doctor_name')
     appt_date = request.form.get('appt_date')
     appt_time = request.form.get('appt_time')
     appt_type = request.form.get('appt_type')
@@ -1251,9 +1437,10 @@ def book_appointment():
           "info"))
 
     # Find doctor if they are registered as a user
+    clean_doc_name = doc_name.split('(')[0].strip() if '(' in doc_name else doc_name.strip()
     doc_user = cur.execute(
         "SELECT id FROM users WHERE role = 'doctor' AND full_name LIKE ?",
-        (f"%{doc_name.split('(')[0].strip()}%",)
+        (f"%{clean_doc_name}%",)
     ).fetchone()
     if doc_user:
         cur.execute("""
@@ -2595,11 +2782,16 @@ def doctor_messages_list():
 @app.route('/messages/send', methods=['POST'])
 @login_required
 def message_send():
-    recipient_id = request.form.get('recipient_id')
+    recipient_id_raw = request.form.get('recipient_id')
     body = request.form.get('body')
     
-    if not recipient_id or not body:
+    if not recipient_id_raw or not body:
         return jsonify({'error': 'Missing recipient or body'}), 400
+        
+    try:
+        recipient_id = int(recipient_id_raw)
+    except ValueError:
+        return jsonify({'error': 'Invalid recipient_id'}), 400
         
     conn = get_db()
     cur = conn.cursor()
@@ -2623,11 +2815,16 @@ def message_send():
 @app.route('/messages/poll', methods=['GET'])
 @login_required
 def message_poll():
-    other_id = request.args.get('other_user_id')
+    other_id_raw = request.args.get('other_user_id')
     last_id = request.args.get('last_id', 0, type=int)
     
-    if not other_id:
+    if not other_id_raw:
         return jsonify({'error': 'Missing other_user_id'}), 400
+        
+    try:
+        other_id = int(other_id_raw)
+    except ValueError:
+        return jsonify({'error': 'Invalid other_user_id'}), 400
         
     conn = get_db()
     cur = conn.cursor()

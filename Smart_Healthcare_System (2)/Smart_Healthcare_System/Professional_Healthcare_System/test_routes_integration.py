@@ -191,6 +191,34 @@ def test_integration():
         sys.exit(1)
     print("✅ Verification: Hospital name present in appointments list!")
     
+    # 9. Test Messaging between Patient and Doctor
+    print("\n[Step 9] Testing Patient-Doctor Messaging...")
+    res = session.get(f"{BASE_URL}/messages")
+    doc_ids = re.findall(r'selectDoctor\((\d+),', res.text)
+    if not doc_ids:
+        print("❌ No doctors found on patient messages page!")
+        sys.exit(1)
+    target_doc_id = int(doc_ids[0])
+    print(f"   Target doctor ID for chat: {target_doc_id}")
+    
+    # Send a message from patient to doctor
+    msg_body = "Hello Doctor, this is a test message from patient."
+    res = session.post(f"{BASE_URL}/messages/send", data={
+        'recipient_id': target_doc_id,
+        'body': msg_body
+    })
+    if res.status_code != 200 or "success" not in res.text:
+        print(f"❌ Patient sending message failed! Status: {res.status_code}, Response: {res.text}")
+        sys.exit(1)
+    print("   Patient sent message successfully!")
+    
+    # Poll messages as patient
+    res = session.get(f"{BASE_URL}/messages/poll?other_user_id={target_doc_id}&last_id=0")
+    if res.status_code != 200 or msg_body not in res.text:
+        print(f"❌ Patient polling messages failed! Response: {res.text}")
+        sys.exit(1)
+    print("   Patient polled and verified message successfully!")
+    
     print("\n" + "=" * 60)
     print("🎉 ALL END-TO-END INTEGRATION TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)

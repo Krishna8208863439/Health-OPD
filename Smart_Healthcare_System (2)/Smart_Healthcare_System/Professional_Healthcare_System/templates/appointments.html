@@ -213,13 +213,17 @@
                             {% set emoji_spec = '💊' %}
                             {% set bg_color = '#fee2e2' %}
                         {% endif %}
-                        <div class="col-md-4 col-6">
+                        <div class="col-md-4 col-6 doctor-option-card" data-hospital="{{ doc.hospital_name }}">
                             <label class="doctor-card d-block w-100">
                                 <input type="radio" name="doctor_name" value="{{ doc.full_name }} ({{ clean_spec }})" required>
                                 <div class="doc-avatar" style="background:{{ bg_color }};">{{ emoji_spec }}</div>
                                 <div class="doc-name">{{ doc.full_name }}</div>
                                 <div class="doc-spec">{{ clean_spec }}</div>
-                                <div class="doc-avail"><i class="fas fa-map-marker-alt me-1"></i>{{ doc.city }}</div>
+                                <div class="doc-avail">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ doc.city }}
+                                    <br>
+                                    <i class="fas fa-hospital me-1 text-primary"></i> <small>{{ doc.hospital_name }}</small>
+                                </div>
                             </label>
                         </div>
                     {% else %}
@@ -352,13 +356,69 @@
 </div>
 
 <script>
+// Highlight selected doctor card and link with hospital
+const hospitalSelect = document.querySelector('select[name="hospital_name"]');
+const doctorCards = document.querySelectorAll('.doctor-option-card');
+const doctorRadios = document.querySelectorAll('.doctor-option-card input[type="radio"]');
+
 // Highlight selected doctor card
-document.querySelectorAll('.doctor-card input[type="radio"]').forEach(radio => {
+doctorRadios.forEach(radio => {
     radio.addEventListener('change', function() {
-        document.querySelectorAll('.doctor-card').forEach(c => c.style.background = '');
-        this.closest('.doctor-card').style.background = '#f0fdf4';
-        this.closest('.doctor-card').style.borderColor = '#059669';
+        document.querySelectorAll('.doctor-card').forEach(c => {
+            c.style.background = '';
+            c.style.borderColor = '';
+        });
+        if (this.checked) {
+            const card = this.closest('.doctor-card');
+            card.style.background = '#f0fdf4';
+            card.style.borderColor = '#059669';
+            
+            // Auto-select hospital when doctor is selected
+            const optionContainer = this.closest('.doctor-option-card');
+            const docHospital = optionContainer.getAttribute('data-hospital');
+            if (docHospital && hospitalSelect) {
+                // Find matching option
+                for (let option of hospitalSelect.options) {
+                    if (option.value === docHospital) {
+                        hospitalSelect.value = docHospital;
+                        break;
+                    }
+                }
+            }
+        }
     });
 });
+
+// Filter doctors when hospital is selected
+if (hospitalSelect) {
+    hospitalSelect.addEventListener('change', function() {
+        const selectedHospital = this.value;
+        if (!selectedHospital) {
+            // Show all doctors
+            doctorCards.forEach(card => {
+                card.style.display = 'block';
+                card.querySelector('input[type="radio"]').disabled = false;
+            });
+            return;
+        }
+        
+        doctorCards.forEach(card => {
+            const docHospital = card.getAttribute('data-hospital');
+            if (docHospital === selectedHospital) {
+                card.style.display = 'block';
+                card.querySelector('input[type="radio"]').disabled = false;
+            } else {
+                card.style.display = 'none';
+                const radio = card.querySelector('input[type="radio"]');
+                radio.disabled = true;
+                if (radio.checked) {
+                    radio.checked = false;
+                    card.querySelector('.doctor-card').style.background = '';
+                    card.querySelector('.doctor-card').style.borderColor = '';
+                }
+            }
+        });
+    });
+}
 </script>
 {% endblock %}
