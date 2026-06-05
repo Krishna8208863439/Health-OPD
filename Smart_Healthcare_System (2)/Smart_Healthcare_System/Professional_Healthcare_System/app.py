@@ -408,6 +408,29 @@ def init_db():
                 """, (doctor_ids[uname], slot_date, start, end, hosp))
         conn.commit()
 
+    # Auto-assign real hospital names to doctors to prevent booking issues
+    try:
+        from hospital_finder import HOSPITALS_BY_CITY
+        docs = cur.execute("SELECT id, city, hospital_name FROM users WHERE role = 'doctor'").fetchall()
+        for doc in docs:
+            hosp = doc['hospital_name']
+            city = doc['city']
+            if not hosp or hosp == 'City General Hospital' or hosp == 'None':
+                # Match city case-insensitively
+                matched_city = None
+                for c in HOSPITALS_BY_CITY.keys():
+                    if c.lower() == city.lower() or (c.lower() == 'bengaluru' and city.lower() == 'bangalore'):
+                        matched_city = c
+                        break
+                if matched_city and HOSPITALS_BY_CITY[matched_city]:
+                    real_hosp = HOSPITALS_BY_CITY[matched_city][0]['name']
+                else:
+                    real_hosp = "Lilavati Hospital"
+                cur.execute("UPDATE users SET hospital_name = ? WHERE id = ?", (real_hosp, doc['id']))
+        conn.commit()
+    except Exception as e:
+        print(f"Error mapping doctor hospitals: {e}")
+
     conn.commit()
     conn.close()
 
