@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+
+# Database files (keep schema but not data for deployment)
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated PDF reports
+static/reports/*.pdf
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
