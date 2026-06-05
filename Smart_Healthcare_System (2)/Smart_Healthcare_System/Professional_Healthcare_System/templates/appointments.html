@@ -193,24 +193,39 @@
             <div class="col-12">
                 <p class="form-section-title">Select Doctor</p>
                 <div class="row g-3">
-                    {% set doctors = [
-                        {'id': 'dr_general', 'name': 'Dr. Rajesh Kumar', 'spec': 'General Physician', 'avail': 'Mon, Wed, Fri – 9AM to 5PM', 'emoji': '👨‍⚕️', 'bg': '#dbeafe'},
-                        {'id': 'dr_cardio', 'name': 'Dr. Priya Sharma', 'spec': 'Cardiologist', 'avail': 'Tue, Thu – 10AM to 4PM', 'emoji': '❤️', 'bg': '#fce7f3'},
-                        {'id': 'dr_neuro', 'name': 'Dr. Amit Patel', 'spec': 'Neurologist', 'avail': 'Mon, Fri – 11AM to 3PM', 'emoji': '🧠', 'bg': '#ede9fe'},
-                        {'id': 'dr_ortho', 'name': 'Dr. Meena Iyer', 'spec': 'Orthopedist', 'avail': 'Wed, Sat – 9AM to 2PM', 'emoji': '🦴', 'bg': '#fef3c7'},
-                        {'id': 'dr_pulmo', 'name': 'Dr. Kiran Rao', 'spec': 'Pulmonologist', 'avail': 'Tue, Thu, Sat – 8AM to 1PM', 'emoji': '🫁', 'bg': '#d1fae5'},
-                        {'id': 'dr_gastro', 'name': 'Dr. Sunita Nair', 'spec': 'Gastroenterologist', 'avail': 'Mon, Wed, Fri – 2PM to 6PM', 'emoji': '💊', 'bg': '#fee2e2'}
-                    ] %}
-                    {% for doc in doctors %}
-                    <div class="col-md-4 col-6">
-                        <label class="doctor-card d-block w-100">
-                            <input type="radio" name="doctor_name" value="{{ doc.name }} ({{ doc.spec }})" required>
-                            <div class="doc-avatar" style="background:{{ doc.bg }};">{{ doc.emoji }}</div>
-                            <div class="doc-name">{{ doc.name }}</div>
-                            <div class="doc-spec">{{ doc.spec }}</div>
-                            <div class="doc-avail"><i class="fas fa-clock me-1"></i>{{ doc.avail }}</div>
-                        </label>
-                    </div>
+                    {% for doc in db_doctors %}
+                        {% set emoji_spec = '👨‍⚕️' %}
+                        {% set bg_color = '#dbeafe' %}
+                        {% set clean_spec = doc.spec|replace(' Clinic', '') %}
+                        {% if 'cardio' in clean_spec|lower %}
+                            {% set emoji_spec = '❤️' %}
+                            {% set bg_color = '#fce7f3' %}
+                        {% elif 'neuro' in clean_spec|lower %}
+                            {% set emoji_spec = '🧠' %}
+                            {% set bg_color = '#ede9fe' %}
+                        {% elif 'ortho' in clean_spec|lower %}
+                            {% set emoji_spec = '🦴' %}
+                            {% set bg_color = '#fef3c7' %}
+                        {% elif 'pulmo' in clean_spec|lower %}
+                            {% set emoji_spec = '🫁' %}
+                            {% set bg_color = '#d1fae5' %}
+                        {% elif 'gastro' in clean_spec|lower %}
+                            {% set emoji_spec = '💊' %}
+                            {% set bg_color = '#fee2e2' %}
+                        {% endif %}
+                        <div class="col-md-4 col-6">
+                            <label class="doctor-card d-block w-100">
+                                <input type="radio" name="doctor_name" value="{{ doc.full_name }} ({{ clean_spec }})" required>
+                                <div class="doc-avatar" style="background:{{ bg_color }};">{{ emoji_spec }}</div>
+                                <div class="doc-name">{{ doc.full_name }}</div>
+                                <div class="doc-spec">{{ clean_spec }}</div>
+                                <div class="doc-avail"><i class="fas fa-map-marker-alt me-1"></i>{{ doc.city }}</div>
+                            </label>
+                        </div>
+                    {% else %}
+                        <div class="col-12 text-center text-muted py-3">
+                            <p>No doctors registered in this city.</p>
+                        </div>
                     {% endfor %}
                 </div>
             </div>

@@ -158,19 +158,22 @@ def test_integration():
         sys.exit(1)
     print("✅ Doctor Slot Creation Succeeded!")
     
-    # Get slot ID from db using sqlite
-    import sqlite3
-    conn = sqlite3.connect('healthcare_system.db')
-    cur = conn.cursor()
-    slot_id = cur.execute("SELECT id FROM doctor_slots WHERE hospital_name = 'Lilavati Hospital' AND slot_date = '2026-07-10'").fetchone()[0]
-    conn.close()
-    print(f"   Found Created Slot ID: {slot_id}")
-    
     # Log out doctor
     session.get(f"{BASE_URL}/logout")
     
     # Login as the patient again
     session.post(f"{BASE_URL}/login", data=login_data, allow_redirects=True)
+    
+    # Get slot ID by parsing /appointments/book-slot HTML page
+    print("   Fetching available slots page as patient...")
+    res = session.get(f"{BASE_URL}/appointments/book-slot")
+    import re
+    slot_ids = re.findall(r'action="/appointments/book-slot/(\d+)"', res.text)
+    if not slot_ids:
+        print("❌ Could not parse slot IDs from available slots page!")
+        sys.exit(1)
+    slot_id = int(slot_ids[-1])
+    print(f"   Found Available Slot ID via HTML parsing: {slot_id}")
     
     # Book the slot
     print("\n[Step 8] Patient booking the doctor availability slot...")

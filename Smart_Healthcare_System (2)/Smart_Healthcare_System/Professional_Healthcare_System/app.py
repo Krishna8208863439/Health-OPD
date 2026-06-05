@@ -34,7 +34,7 @@ DB_PATH = os.path.join(BASE_DIR, "healthcare_system.db")
 
 # Database Setup
 def get_db():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -100,31 +100,24 @@ def init_db():
         doctor_advice TEXT NOT NULL,
         pdf_path TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        doctor_name TEXT DEFAULT 'Dr. Amit Sharma, MD',
+        doctor_phone TEXT DEFAULT '',
+        referred_hospital TEXT DEFAULT '',
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )
     """)
     
-    # Alter predictions to add doctor_name if not exists
+    # Alter predictions to add columns if not exists (for backward compatibility)
     try:
         cur.execute("ALTER TABLE predictions ADD COLUMN doctor_name TEXT DEFAULT 'Dr. Amit Sharma, MD'")
     except Exception:
         pass
-
-    # Alter predictions to add doctor_phone if not exists
     try:
         cur.execute("ALTER TABLE predictions ADD COLUMN doctor_phone TEXT DEFAULT ''")
     except Exception:
         pass
-
-    # Alter predictions to add referred_hospital if not exists
     try:
         cur.execute("ALTER TABLE predictions ADD COLUMN referred_hospital TEXT DEFAULT ''")
-    except Exception:
-        pass
-
-    # Alter appointments to add hospital_name if not exists
-    try:
-        cur.execute("ALTER TABLE appointments ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
     except Exception:
         pass
 
@@ -161,9 +154,16 @@ def init_db():
         current_medications TEXT,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        hospital_name TEXT DEFAULT 'City General Hospital',
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )
     """)
+
+    # Alter appointments to add hospital_name if not exists (for backward compatibility)
+    try:
+        cur.execute("ALTER TABLE appointments ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+    except Exception:
+        pass
 
     # 3. Medicine Reminders
     cur.execute("""
@@ -243,10 +243,17 @@ def init_db():
         is_booked INTEGER DEFAULT 0,
         patient_id INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        hospital_name TEXT DEFAULT 'City General Hospital',
         FOREIGN KEY (doctor_id) REFERENCES users(id),
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )
     """)
+
+    # Alter doctor_slots to add hospital_name if not exists (for backward compatibility)
+    try:
+        cur.execute("ALTER TABLE doctor_slots ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+    except Exception:
+        pass
 
     # 8. Second Opinions
     cur.execute("""
@@ -275,12 +282,6 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users(id)
     )
     """)
-
-    # Alter doctor_slots to add hospital_name if not exists
-    try:
-        cur.execute("ALTER TABLE doctor_slots ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
-    except Exception:
-        pass
 
     # Seed default admin if not exists
     admin_user = cur.execute("SELECT * FROM users WHERE username = 'admin' OR email = 'admin@healthcare.com'").fetchone()
@@ -1205,9 +1206,13 @@ def appointments():
         SELECT * FROM appointments WHERE patient_id = ?
         ORDER BY appt_date DESC, appt_time DESC
     """, (current_user.id,)).fetchall()
+    db_doctors = cur.execute("""
+        SELECT id, full_name, address as spec, city
+        FROM users WHERE role = 'doctor'
+    """).fetchall()
     conn.close()
     today = datetime.now().strftime('%Y-%m-%d')
-    return render_template('appointments.html', patient=current_user, appointments=appts, today=today, HOSPITALS_BY_CITY=HOSPITALS_BY_CITY)
+    return render_template('appointments.html', patient=current_user, appointments=appts, today=today, HOSPITALS_BY_CITY=HOSPITALS_BY_CITY, db_doctors=db_doctors)
 
 
 @app.route('/appointments/book', methods=['POST'])
