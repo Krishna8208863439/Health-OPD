@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Health Tips – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
+.tips-hero{
+    background:linear-gradient(135deg,#F59E0B 0%,#EF4444 100%);
+    border-radius:16px;padding:32px;color:#fff;
+    display:flex;align-items:center;gap:22px;
+    margin-bottom:28px;box-shadow:0 8px 32px rgba(245,158,11,.3);}
+.tips-hero .ico{font-size:56px;}
+.tips-hero h2{font-size:26px;font-weight:700;margin-bottom:4px;}
+.tips-hero p{font-size:14px;opacity:.9;margin:0;}
+
+/* Category filter bar */
+.cat-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.cat-btn{
+    padding:8px 18px;border-radius:50px;border:2px solid #E9ECEF;
+    background:#fff;color:#666;font-size:13px;font-weight:600;
+    cursor:pointer;transition:.2s;}
+.cat-btn:hover,.cat-btn.active{border-color:#0066CC;background:#0066CC;color:#fff;}
+
+/* Tips grid */
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.tip-card{
+    background:#fff;border-radius:14px;padding:22px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);
+    border-top:5px solid #E9ECEF;
+    transition:.2s;display:flex;flex-direction:column;}
+.tip-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.tip-icon{font-size:40px;margin-bottom:12px;}
+.tip-title{font-size:16px;font-weight:700;color:#1a202c;margin-bottom:8px;}
+.tip-body{font-size:14px;color:#555;line-height:1.65;flex:1;}
+.tip-tag{
+    display:inline-block;padding:3px 10px;border-radius:20px;
+    font-size:11px;font-weight:700;margin-top:12px;}
+
+/* Tip-of-the-day banner */
+.tod-banner{
+    background:linear-gradient(135deg,#0066CC,#00A896);
+    border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:28px;
+    display:flex;align-items:flex-start;gap:18px;}
+.tod-banner .tod-ico{font-size:44px;flex-shrink:0;}
+.tod-banner h4{font-size:16px;font-weight:700;margin-bottom:6px;opacity:.85;}
+.tod-banner p{font-size:15px;line-height:1.6;margin:0;}
+
+/* Search */
+.search-bar{
+    display:flex;gap:10px;margin-bottom:20px;}
+.search-bar input{
+    flex:1;padding:11px 16px;border:2px solid #E9ECEF;
+    border-radius:10px;font-size:14px;}
+.search-bar input:focus{border-color:#0066CC;outline:none;}
+
+@media(max-width:600px){
+    .tips-hero{flex-direction:column;text-align:center;}
+    .tips-grid{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tips-hero">
+    <div class="ico">💡</div>
+    <div>
+        <h2>Daily Health Tips</h2>
+        <p>Evidence-based tips for a healthier life — personalised for your health profile</p>
+    </div>
+</div>
+
+<!-- Tip of the Day -->
+<div class="tod-banner">
+    <div class="tod-ico">⭐</div>
+    <div>
+        <h4>TIP OF THE DAY</h4>
+        <p>{{ tip_of_day }}</p>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="🔍  Search tips by keyword…" oninput="filterTips()">
+</div>
+
+<!-- Category filter -->
+<div class="cat-bar">
+    <button class="cat-btn active" onclick="filterCat('all',this)">All</button>
+    <button class="cat-btn" onclick="filterCat('nutrition',this)">🥗 Nutrition</button>
+    <button class="cat-btn" onclick="filterCat('exercise',this)">🏃 Exercise</button>
+    <button class="cat-btn" onclick="filterCat('mental',this)">🧘 Mental Health</button>
+    <button class="cat-btn" onclick="filterCat('sleep',this)">😴 Sleep</button>
+    <button class="cat-btn" onclick="filterCat('prevention',this)">🛡️ Prevention</button>
+    <button class="cat-btn" onclick="filterCat('diabetes',this)">🩸 Diabetes</button>
+    <button class="cat-btn" onclick="filterCat('heart',this)">❤️ Heart</button>
+    <button class="cat-btn" onclick="filterCat('immunity',this)">💪 Immunity</button>
+</div>
+
+<!-- Tips grid -->
+<div class="tips-grid" id="tips-grid">
+{% for tip in tips %}
+<div class="tip-card" data-cat="{{ tip.category }}" data-text="{{ tip.title }} {{ tip.body }}"
+     style="border-top-color:{{ tip.color }};">
+    <div class="tip-icon">{{ tip.icon }}</div>
+    <div class="tip-title">{{ tip.title }}</div>
+    <div class="tip-body">{{ tip.body }}</div>
+    <div>
+        <span class="tip-tag" style="background:{{ tip.color }}22;color:{{ tip.color }};">
+            {{ tip.category.title() }}
+        </span>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<div id="no-results" style="display:none;text-align:center;padding:48px;color:#aaa;">
+    <div style="font-size:48px;margin-bottom:12px;">🔍</div>
+    <h4>No tips match your search.</h4>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let activeCategory = 'all';
+
+function filterCat(cat, btn) {
+    activeCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter();
+}
+
+function filterTips() { applyFilter(); }
+
+function applyFilter() {
+    const q   = document.getElementById('search-input').value.toLowerCase();
+    const cards = document.querySelectorAll('.tip-card');
+    let visible = 0;
+    cards.forEach(c => {
+        const matchCat  = activeCategory === 'all' || c.dataset.cat === activeCategory;
+        const matchText = !q || c.dataset.text.toLowerCase().includes(q);
+        const show = matchCat && matchText;
+        c.style.display = show ? 'flex' : 'none';
+        if (show) visible++;
+    });
+    document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
+}
+</script>
+{% endblock %}

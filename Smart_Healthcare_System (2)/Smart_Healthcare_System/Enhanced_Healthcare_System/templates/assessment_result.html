@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}Assessment Result – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
+
+/* ── Top result hero ── */
+.result-hero{
+    background:linear-gradient(135deg,{{top_result.color}} 0%,{{top_result.color}}cc 100%);
+    color:#fff;border-radius:18px;padding:32px;margin-bottom:28px;
+    box-shadow:0 8px 32px rgba(0,0,0,.18);
+}
+.result-hero .disease-name{
+    font-size:32px;font-weight:800;margin-bottom:6px;
+}
+.result-hero .disease-desc{
+    font-size:15px;opacity:.9;line-height:1.6;
+}
+.confidence-ring{
+    width:130px;height:130px;border-radius:50%;
+    background:rgba(255,255,255,.2);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    margin-left:auto;flex-shrink:0;
+    border:5px solid rgba(255,255,255,.5);
+}
+.confidence-ring .pct{font-size:36px;font-weight:800;line-height:1;}
+.confidence-ring .lbl{font-size:11px;opacity:.85;margin-top:2px;}
+.hero-top{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;}
+
+/* ── Badges ── */
+.badge-sev{
+    display:inline-block;padding:6px 18px;border-radius:50px;
+    font-weight:700;font-size:14px;margin-top:10px;
+    background:rgba(255,255,255,.25);
+}
+.sym-tag-matched{
+    display:inline-block;background:rgba(255,255,255,.2);
+    border-radius:20px;padding:4px 12px;
+    font-size:12px;font-weight:600;margin:3px;
+}
+
+/* ── Alternatives ── */
+.alt-card{
+    background:#fff;border-radius:12px;padding:18px;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+    border-left:5px solid #ccc;
+    display:flex;align-items:center;gap:16px;
+    margin-bottom:12px;
+}
+.alt-bar-bg{
+    flex:1;height:8px;background:#E9ECEF;border-radius:4px;overflow:hidden;
+}
+.alt-bar-fill{height:100%;border-radius:4px;transition:.4s;}
+.alt-name{font-weight:700;font-size:15px;min-width:220px;}
+.alt-pct{font-size:13px;font-weight:700;color:#0066CC;min-width:40px;text-align:right;}
+
+/* ── Medicine section ── */
+.med-card{
+    background:#fff;border-radius:14px;padding:26px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;
+}
+.med-card h4{
+    color:var(--blue);font-weight:700;font-size:19px;
+    margin-bottom:18px;padding-bottom:12px;
+    border-bottom:2px solid #E9ECEF;
+    display:flex;align-items:center;gap:10px;
+}
+.med-tier-title{
+    font-size:13px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.05em;color:#888;margin:16px 0 8px;
+}
+.med-item{
+    background:#F8FAFF;border-left:4px solid var(--blue);
+    padding:10px 14px;border-radius:6px;margin-bottom:8px;
+    font-size:14px;line-height:1.5;
+}
+.med-item.secondary{border-left-color:#28A745;background:#F0FFF4;}
+.med-item.home{border-left-color:#FFC107;background:#FFFCF0;}
+.med-item.warning{border-left-color:#DC3545;background:#FFF5F5;font-weight:700;color:#721C24;}
+
+.see-doctor-box{
+    background:linear-gradient(135deg,#DC3545,#c0392b);
+    color:#fff;border-radius:12px;padding:18px 22px;
+    margin-top:16px;
+    display:flex;align-items:flex-start;gap:12px;
+}
+.see-doctor-box .icon{font-size:28px;flex-shrink:0;}
+.see-doctor-box p{font-size:14px;line-height:1.6;margin:0;}
+
+/* ── Hospitals ── */
+.hospital-card{
+    background:#fff;border-radius:12px;padding:18px;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+    margin-bottom:14px;
+    display:flex;justify-content:space-between;
+    align-items:flex-start;flex-wrap:wrap;gap:12px;
+}
+.hosp-name{font-size:16px;font-weight:700;color:#0066CC;margin-bottom:6px;}
+.hosp-meta{font-size:13px;color:#555;margin-bottom:4px;}
+.tag{
+    display:inline-block;padding:3px 10px;border-radius:12px;
+    font-size:11px;font-weight:600;margin-right:5px;
+}
+.tag-gov{background:#DBEAFE;color:#1E40AF;}
+.tag-priv{background:#FEF3C7;color:#92400E;}
+.tag-spec{background:#E0F2FE;color:#0369A1;}
+.map-btn{
+    background:#4285F4;color:#fff;text-decoration:none;
+    padding:7px 14px;border-radius:8px;font-size:13px;
+    display:inline-block;margin-right:8px;margin-top:4px;
+}
+
+/* ── Action buttons ── */
+.action-bar{
+    display:flex;gap:14px;flex-wrap:wrap;
+    justify-content:center;margin-top:32px;
+}
+.btn-pdf{
+    background:linear-gradient(135deg,#28A745,#1e7e34);
+    color:#fff;padding:14px 30px;border-radius:10px;
+    text-decoration:none;font-size:16px;font-weight:700;
+    display:inline-flex;align-items:center;gap:8px;
+}
+.btn-new{
+    background:linear-gradient(135deg,#0066CC,#004a99);
+    color:#fff;padding:14px 30px;border-radius:10px;
+    text-decoration:none;font-size:16px;font-weight:700;
+    display:inline-flex;align-items:center;gap:8px;
+}
+.btn-reminder{
+    background:linear-gradient(135deg,#FFC107,#e0a800);
+    color:#333;padding:14px 30px;border-radius:10px;
+    text-decoration:none;font-size:16px;font-weight:700;
+    display:inline-flex;align-items:center;gap:8px;
+}
+
+/* ── Disclaimer ── */
+.disclaimer{
+    background:#FFF3CD;border:1px solid #FFC107;
+    border-radius:10px;padding:14px 18px;
+    font-size:13px;color:#856404;margin-bottom:22px;
+    line-height:1.6;
+}
+
+@media(max-width:600px){
+    .result-hero .hero-top{flex-direction:column;}
+    .confidence-ring{margin:0 auto;}
+    .alt-name{min-width:120px;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:1100px;margin:0 auto;">
+
+<!-- Disclaimer -->
+<div class="disclaimer">
+    ⚠️ <strong>Medical Disclaimer:</strong> This tool provides a preliminary symptom assessment only and is NOT a substitute for professional medical diagnosis. Always consult a licensed doctor. In emergency, call <strong>108</strong> immediately.
+</div>
+
+<!-- ── PRIMARY RESULT ── -->
+<div class="result-hero">
+    <div class="hero-top">
+        <div style="flex:1;">
+            <div style="font-size:13px;opacity:.85;margin-bottom:4px;">Most likely diagnosis based on your symptoms:</div>
+            <div class="disease-name">{{ top_result.disease }}</div>
+            <div class="disease-desc">{{ top_result.description }}</div>
+            <div class="badge-sev">{{ severity }}</div>
+            <div style="margin-top:14px;">
+                {% for s in top_result.matched_strong %}
+                <span class="sym-tag-matched">✓ {{s.replace('_',' ').title()}}</span>
+                {% endfor %}
+                {% for s in top_result.matched_moderate %}
+                <span class="sym-tag-matched" style="opacity:.8;">◎ {{s.replace('_',' ').title()}}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="confidence-ring">
+            <div class="pct">{{ top_result.confidence_pct }}%</div>
+            <div class="lbl">Match</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ALTERNATIVE DIAGNOSES ── -->
+{% if alt_results %}
+<div class="med-card">
+    <h4>🔬 Differential Diagnosis</h4>
+    <p style="font-size:13px;color:#666;margin-bottom:16px;">Other possible conditions ranked by symptom match:</p>
+    {% for r in alt_results %}
+    <div class="alt-card" style="border-left-color:{{ r.color }};">
+        <div class="alt-name">
+            <div style="font-weight:700;">{{ r.disease }}</div>
+            <div style="font-size:12px;color:#888;font-weight:400;">{{ r.description[:80] }}...</div>
+        </div>
+        <div style="flex:1;">
+            <div class="alt-bar-bg">
+                <div class="alt-bar-fill" style="width:{{r.confidence_pct}}%;background:{{r.color}};"></div>
+            </div>
+        </div>
+        <div class="alt-pct">{{r.confidence_pct}}%</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── MEDICINES ── -->
+<div class="med-card">
+    <h4>💊 Medicines for {{ top_result.disease }}</h4>
+
+    <div class="med-tier-title">🔵 Primary Medicines (Prescription / Main Treatment)</div>
+    {% for m in medicines.PRIMARY %}
+    <div class="med-item {% if '⚠️' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}">{{ m }}</div>
+    {% endfor %}
+
+    <div class="med-tier-title">🟢 Supporting / Secondary Medicines</div>
+    {% for m in medicines.SECONDARY %}
+    <div class="med-item secondary">{{ m }}</div>
+    {% endfor %}
+
+    <div class="med-tier-title">🟡 Home Remedies & Self-Care</div>
+    {% for m in medicines.HOME_REMEDIES %}
+    <div class="med-item home">{{ m }}</div>
+    {% endfor %}
+
+    <div class="see-doctor-box">
+        <div class="icon">🏥</div>
+        <p><strong>When to see a doctor:</strong><br>{{ medicines.WHEN_TO_SEE_DOCTOR }}</p>
+    </div>
+</div>
+
+<!-- ── HOSPITALS ── -->
+{% if hospitals %}
+<div class="med-card">
+    <h4>🏥 Recommended Hospitals Near You</h4>
+    {% for h in hospitals %}
+    <div class="hospital-card">
+        <div style="flex:1;min-width:260px;">
+            <div class="hosp-name">{{ h.name }}</div>
+            <div style="margin-bottom:8px;">
+                <span class="tag {% if h.type == 'Government' %}tag-gov{% else %}tag-priv{% endif %}">{{ h.type }}</span>
+                {% for sp in h.specialty[:3] %}
+                <span class="tag tag-spec">{{ sp }}</span>
+                {% endfor %}
+            </div>
+            <div class="hosp-meta">📍 {{ h.address }}</div>
+            <div class="hosp-meta">📞 {{ h.phone }}</div>
+            <div class="hosp-meta">📏 {{ h.distance }} km away &nbsp; ⭐ {{ h.rating }}/5.0</div>
+        </div>
+        <div>
+            <a href="{{ get_maps_url(h) }}" target="_blank" class="map-btn">
+                🗺️ View on Maps
+            </a>
+            <a href="{{ get_directions_url(h) }}" target="_blank" class="map-btn">
+                🧭 Directions
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── DOCTOR INFO ── -->
+<div class="med-card">
+    <h4>👨‍⚕️ Assigned Doctor</h4>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+            <p><strong>Name:</strong> {{ doctor_name }}</p>
+            <p><strong>Contact:</strong> {{ doctor_phone }}</p>
+            <p><strong>Specialization:</strong> {{ specialty }}</p>
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <p><strong>Duration:</strong> {{ symptom_duration }}</p>
+            <p><strong>Severity:</strong> {{ severity }}</p>
+            <p><strong>Symptoms reported:</strong> {{ symptom_count }}</p>
+        </div>
+    </div>
+    <div style="margin-top:14px;background:#F0F4FF;border-radius:8px;padding:14px;">
+        <strong>Doctor's Advice:</strong><br>
+        <span style="font-size:14px;color:#333;">{{ doctor_advice }}</span>
+    </div>
+</div>
+
+<!-- ── PATIENT INFO ── -->
+<div class="med-card">
+    <h4>👤 Patient Information</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+        <div><strong>Name:</strong><br>{{ patient.full_name }}</div>
+        <div><strong>Age:</strong><br>{{ patient.age }} years</div>
+        <div><strong>City:</strong><br>{{ patient.city }}</div>
+        <div><strong>Patient ID:</strong><br>PT-{{ '%06d'|format(patient.id) }}</div>
+    </div>
+</div>
+
+<!-- ── ACTIONS ── -->
+<div class="action-bar">
+    {% if pdf_file %}
+    <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn-pdf">
+        📄 Download Report (PDF)
+    </a>
+    {% endif %}
+    <a href="{{ url_for('symptom_assessment') }}" class="btn-new">
+        🩺 New Assessment
+    </a>
+    <a href="{{ url_for('reminders') }}" class="btn-reminder">
+        💊 Set Medicine Reminder
+    </a>
+</div>
+
+</div>
+{% endblock %}

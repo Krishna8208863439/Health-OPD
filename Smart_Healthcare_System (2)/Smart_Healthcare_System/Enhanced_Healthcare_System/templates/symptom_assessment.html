@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+{% block title %}Symptom Assessment – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --blue:#0066CC; --green:#28A745; --red:#DC3545;
+    --yellow:#FFC107; --bg:#F5F7FA; --white:#fff;
+}
+
+/* ── Hero ── */
+.hero{
+    background:linear-gradient(135deg,#0066CC 0%,#004a99 100%);
+    color:#fff;border-radius:16px;padding:32px 36px;
+    margin-bottom:28px;display:flex;align-items:center;gap:22px;
+}
+.hero .icon{font-size:56px;line-height:1;}
+.hero h2{font-size:26px;font-weight:700;margin-bottom:4px;}
+.hero p{font-size:14px;opacity:.9;margin:0;}
+
+/* ── Progress bar ── */
+.step-bar{
+    display:flex;justify-content:center;gap:0;margin-bottom:28px;
+    background:#fff;border-radius:50px;padding:6px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+.step-btn{
+    flex:1;padding:10px 14px;border:none;border-radius:50px;
+    font-size:13px;font-weight:600;cursor:pointer;
+    background:transparent;color:#888;transition:.2s;
+    white-space:nowrap;
+}
+.step-btn.active{background:var(--blue);color:#fff;}
+.step-btn.done{background:#D4EDDA;color:#155724;}
+
+/* ── Symptom Group Card ── */
+.step-panel{display:none;}
+.step-panel.active{display:block;}
+
+.sym-group{
+    background:#fff;border-radius:14px;padding:24px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;
+}
+.sym-group-title{
+    font-size:17px;font-weight:700;color:var(--blue);
+    margin-bottom:16px;padding-bottom:10px;
+    border-bottom:2px solid #E9ECEF;
+}
+.sym-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:10px;
+}
+.sym-item{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:10px 12px;border-radius:9px;border:2px solid #E9ECEF;
+    cursor:pointer;transition:.18s;user-select:none;
+}
+.sym-item:hover{border-color:var(--blue);background:#EFF6FF;}
+.sym-item.checked{
+    border-color:var(--green);background:#D4EDDA;
+}
+.sym-item input[type=checkbox]{
+    width:18px;height:18px;flex-shrink:0;margin-top:1px;
+    accent-color:var(--green);cursor:pointer;
+}
+.sym-item label{font-size:13px;color:#333;cursor:pointer;line-height:1.4;}
+
+/* ── Severity selector ── */
+.severity-row{
+    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;
+}
+.sev-btn{
+    flex:1;min-width:90px;padding:12px;border-radius:10px;
+    border:2px solid #E9ECEF;background:#fff;font-size:13px;
+    font-weight:600;cursor:pointer;text-align:center;transition:.18s;
+}
+.sev-btn:hover,.sev-btn.selected{border-color:var(--blue);background:#EFF6FF;}
+.sev-btn.selected-mild{border-color:#28A745;background:#D4EDDA;color:#155724;}
+.sev-btn.selected-moderate{border-color:#FFC107;background:#FFF3CD;color:#856404;}
+.sev-btn.selected-severe{border-color:#DC3545;background:#F8D7DA;color:#721C24;}
+
+/* ── Selected counter ── */
+.sel-count{
+    position:sticky;top:12px;z-index:100;
+    background:#0066CC;color:#fff;
+    border-radius:50px;padding:10px 22px;
+    font-weight:700;font-size:14px;text-align:center;
+    box-shadow:0 4px 16px rgba(0,102,204,.35);
+    margin-bottom:20px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;
+}
+.sel-count .count-num{
+    background:#fff;color:var(--blue);
+    border-radius:50%;width:32px;height:32px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:800;
+}
+
+/* ── Nav buttons ── */
+.nav-btns{
+    display:flex;justify-content:space-between;
+    align-items:center;margin-top:24px;gap:12px;flex-wrap:wrap;
+}
+.btn-next{
+    background:linear-gradient(135deg,var(--blue),#004a99);
+    color:#fff;border:none;border-radius:10px;
+    padding:13px 36px;font-size:15px;font-weight:700;
+    cursor:pointer;transition:.2s;
+}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,102,204,.35);}
+.btn-prev{
+    background:#E9ECEF;color:#333;border:none;border-radius:10px;
+    padding:13px 28px;font-size:14px;font-weight:600;cursor:pointer;
+}
+.btn-analyze{
+    background:linear-gradient(135deg,var(--green),#1e7e34);
+    color:#fff;border:none;border-radius:10px;
+    padding:14px 40px;font-size:16px;font-weight:700;
+    cursor:pointer;transition:.2s;
+}
+.btn-analyze:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(40,167,69,.35);}
+
+/* ── Loading overlay ── */
+#loading-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.55);z-index:9999;
+    flex-direction:column;align-items:center;justify-content:center;
+    color:#fff;font-size:20px;font-weight:700;gap:18px;
+}
+.spinner{
+    width:60px;height:60px;border:6px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Summary card ── */
+.summary-card{
+    background:#fff;border-radius:14px;padding:22px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:18px;
+}
+.summary-card h5{
+    font-size:16px;font-weight:700;color:var(--blue);margin-bottom:12px;
+}
+.sym-tag{
+    display:inline-block;background:#EFF6FF;color:var(--blue);
+    border-radius:20px;padding:4px 12px;font-size:12px;
+    font-weight:600;margin:3px;
+}
+
+/* ── Info inputs ── */
+.info-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:16px;
+}
+.info-group label{
+    font-size:13px;font-weight:600;color:#555;
+    display:block;margin-bottom:6px;
+}
+.info-group select,
+.info-group input{
+    width:100%;padding:10px 13px;border:2px solid #E9ECEF;
+    border-radius:8px;font-size:14px;background:#FAFAFA;
+}
+.info-group select:focus,
+.info-group input:focus{
+    border-color:var(--blue);outline:none;background:#fff;
+}
+
+@media(max-width:600px){
+    .sym-grid{grid-template-columns:1fr 1fr;}
+    .step-bar{flex-wrap:wrap;}
+    .step-btn{font-size:11px;padding:8px;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div>🔍 Analyzing your symptoms...</div>
+    <div style="font-size:14px;opacity:.8;">Running clinical assessment engine</div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+    <div class="icon">🩺</div>
+    <div>
+        <h2>Real Symptom Assessment</h2>
+        <p>Select every symptom you're experiencing. The more accurately you report, the better the analysis.</p>
+        <p style="margin-top:4px;">Patient: <strong>{{ patient.full_name }}</strong> &nbsp;|&nbsp; Age: <strong>{{ patient.age }} yrs</strong></p>
+    </div>
+</div>
+
+<!-- Step progress bar -->
+<div class="step-bar" id="step-bar">
+    <button class="step-btn active" onclick="goStep(0)" id="sbtn-0">1. General</button>
+    <button class="step-btn" onclick="goStep(1)" id="sbtn-1">2. Head/Neuro</button>
+    <button class="step-btn" onclick="goStep(2)" id="sbtn-2">3. Respiratory</button>
+    <button class="step-btn" onclick="goStep(3)" id="sbtn-3">4. Digestive</button>
+    <button class="step-btn" onclick="goStep(4)" id="sbtn-4">5. Muscles/Joints</button>
+    <button class="step-btn" onclick="goStep(5)" id="sbtn-5">6. Skin/Allergy</button>
+    <button class="step-btn" onclick="goStep(6)" id="sbtn-6">7. Urinary</button>
+    <button class="step-btn" onclick="goStep(7)" id="sbtn-7">8. Other</button>
+    <button class="step-btn" onclick="goStep(8)" id="sbtn-8">9. Review</button>
+</div>
+
+<!-- Selected count badge -->
+<div class="sel-count">
+    <span>✅ Symptoms selected:</span>
+    <span class="count-num" id="sym-count">0</span>
+    <span style="font-size:12px;opacity:.85;">Select at least 2 for accurate results</span>
+</div>
+
+<form id="assess-form" method="POST" action="{{ url_for('assess_predict') }}">
+<input type="hidden" name="symptom_severity" id="hidden_severity" value="moderate">
+<input type="hidden" name="symptom_duration" id="hidden_duration" value="1-3 days">
+<input type="hidden" name="user_lat" id="user_lat">
+<input type="hidden" name="user_lng" id="user_lng">
+
+<!-- ───── STEP 0: General ───── -->
+<div class="step-panel active" id="step-0">
+    <div class="sym-group">
+        <div class="sym-group-title">🌡️ General Symptoms</div>
+        <div class="sym-grid">
+            {% set general_syms = [
+                ("fever","Fever (above 100°F / 38°C)"),
+                ("high_fever","High Fever (above 103°F / 39.4°C)"),
+                ("chills","Chills / Shivering"),
+                ("fatigue","Fatigue / Weakness / Tiredness"),
+                ("night_sweats","Night Sweats"),
+                ("weight_loss","Unexplained Weight Loss"),
+                ("loss_of_appetite","Loss of Appetite")
+            ] %}
+            {% for sid, slabel in general_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="sym-group">
+        <div class="sym-group-title">⏱️ How long have you had these symptoms?</div>
+        <div class="severity-row">
+            <button type="button" class="sev-btn" onclick="setDuration('Less than 1 day',this)">Less than 1 day</button>
+            <button type="button" class="sev-btn selected selected-mild" onclick="setDuration('1-3 days',this)">1–3 days</button>
+            <button type="button" class="sev-btn" onclick="setDuration('4-7 days',this)">4–7 days</button>
+            <button type="button" class="sev-btn" onclick="setDuration('More than 1 week',this)">More than 1 week</button>
+            <button type="button" class="sev-btn" onclick="setDuration('More than 1 month',this)">More than 1 month</button>
+        </div>
+    </div>
+
+    <div class="sym-group">
+        <div class="sym-group-title">📊 How severe are your symptoms overall?</div>
+        <div class="severity-row">
+            <button type="button" class="sev-btn selected-mild selected" onclick="setSeverity('mild',this)">🟢 Mild</button>
+            <button type="button" class="sev-btn" onclick="setSeverity('moderate',this)">🟡 Moderate</button>
+            <button type="button" class="sev-btn" onclick="setSeverity('severe',this)">🔴 Severe</button>
+        </div>
+    </div>
+
+    <div class="nav-btns">
+        <span></span>
+        <button type="button" class="btn-next" onclick="nextStep(0)">Next: Head / Neuro →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 1: Head / Neuro ───── -->
+<div class="step-panel" id="step-1">
+    <div class="sym-group">
+        <div class="sym-group-title">🧠 Head / Neurological Symptoms</div>
+        <div class="sym-grid">
+            {% set head_syms = [
+                ("headache","Headache"),
+                ("severe_headache","Severe / Throbbing Headache"),
+                ("dizziness","Dizziness / Lightheadedness"),
+                ("confusion","Confusion / Disorientation"),
+                ("neck_stiffness","Neck Stiffness"),
+                ("light_sensitivity","Sensitivity to Light / Sound"),
+                ("nausea","Nausea (feeling of wanting to vomit)"),
+                ("vomiting","Vomiting")
+            ] %}
+            {% for sid, slabel in head_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(0)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(1)">Next: Respiratory →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 2: Respiratory / Chest ───── -->
+<div class="step-panel" id="step-2">
+    <div class="sym-group">
+        <div class="sym-group-title">🫁 Respiratory / Chest Symptoms</div>
+        <div class="sym-grid">
+            {% set resp_syms = [
+                ("runny_nose","Runny / Stuffy Nose"),
+                ("sneezing","Sneezing"),
+                ("sore_throat","Sore Throat"),
+                ("dry_cough","Dry Cough"),
+                ("productive_cough","Productive Cough (with mucus / phlegm)"),
+                ("coughing_blood","Coughing up Blood"),
+                ("breathing_difficulty","Difficulty Breathing / Shortness of Breath"),
+                ("wheezing","Wheezing (whistling sound while breathing)"),
+                ("chest_pain","Chest Pain"),
+                ("chest_tightness","Chest Tightness / Pressure"),
+                ("loss_of_smell","Loss of Smell (Anosmia)"),
+                ("loss_of_taste","Loss of Taste"),
+                ("oxygen_low","Feeling of suffocation / Low oxygen")
+            ] %}
+            {% for sid, slabel in resp_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(1)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(2)">Next: Digestive →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 3: Digestive ───── -->
+<div class="step-panel" id="step-3">
+    <div class="sym-group">
+        <div class="sym-group-title">🍽️ Digestive / Stomach Symptoms</div>
+        <div class="sym-grid">
+            {% set dig_syms = [
+                ("stomach_pain","Stomach / Abdominal Pain"),
+                ("stomach_cramps","Stomach Cramps"),
+                ("diarrhea","Diarrhea (loose stools)"),
+                ("bloody_diarrhea","Bloody Diarrhea"),
+                ("constipation","Constipation"),
+                ("bloating","Bloating / Excessive Gas"),
+                ("heartburn","Heartburn / Acid Reflux / Burning sensation"),
+                ("indigestion","Indigestion / Difficulty digesting food"),
+                ("belching","Frequent Belching / Burping"),
+                ("jaundice","Jaundice (yellowing of skin or eyes)")
+            ] %}
+            {% for sid, slabel in dig_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(2)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(3)">Next: Muscles / Joints →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 4: Muscles / Joints ───── -->
+<div class="step-panel" id="step-4">
+    <div class="sym-group">
+        <div class="sym-group-title">🦴 Muscles / Joints / Back</div>
+        <div class="sym-grid">
+            {% set mj_syms = [
+                ("body_ache","Body Ache / Muscle Pain"),
+                ("joint_pain","Joint Pain or Swelling"),
+                ("back_pain","Back Pain (lower or upper)"),
+                ("flank_pain","Flank / Side Pain (kidney area)"),
+                ("neck_pain","Neck / Shoulder Pain / Stiffness"),
+                ("leg_pain","Leg / Calf Pain"),
+                ("swollen_joints","Swollen Joints")
+            ] %}
+            {% for sid, slabel in mj_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="sym-group">
+        <div class="sym-group-title">❤️ Heart / Circulation</div>
+        <div class="sym-grid">
+            {% set cv_syms = [
+                ("palpitations","Heart Palpitations / Racing Heart"),
+                ("swollen_feet","Swollen Feet / Ankles"),
+                ("high_bp","High Blood Pressure (known)")
+            ] %}
+            {% for sid, slabel in cv_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(3)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(4)">Next: Skin / Allergy →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 5: Skin / Allergy ───── -->
+<div class="step-panel" id="step-5">
+    <div class="sym-group">
+        <div class="sym-group-title">🩺 Skin / Allergy</div>
+        <div class="sym-grid">
+            {% set skin_syms = [
+                ("rash","Skin Rash / Hives"),
+                ("itching","Itching (skin, eyes, nose)"),
+                ("skin_redness","Skin Redness / Swelling"),
+                ("rash_after_meds","Rash after taking a medication"),
+                ("bruising","Easy Bruising"),
+                ("petechiae","Tiny Red/Purple Spots on Skin"),
+                ("swollen_face","Swollen Face / Eyes / Lips")
+            ] %}
+            {% for sid, slabel in skin_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="sym-group">
+        <div class="sym-group-title">👁️ Eyes / ENT</div>
+        <div class="sym-grid">
+            {% set eye_syms = [
+                ("red_eyes","Red / Watery Eyes"),
+                ("eye_pain","Eye Pain"),
+                ("ear_pain","Ear Pain"),
+                ("tinnitus","Ringing in Ears (Tinnitus)"),
+                ("bleeding_gums","Bleeding Gums / Nose")
+            ] %}
+            {% for sid, slabel in eye_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(4)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(5)">Next: Urinary →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 6: Urinary / Metabolic ───── -->
+<div class="step-panel" id="step-6">
+    <div class="sym-group">
+        <div class="sym-group-title">💧 Urinary Symptoms</div>
+        <div class="sym-grid">
+            {% set uri_syms = [
+                ("frequent_urination","Frequent Urination"),
+                ("painful_urination","Painful / Burning Urination"),
+                ("blood_in_urine","Blood in Urine"),
+                ("cloudy_urine","Cloudy / Dark Urine"),
+                ("reduced_urination","Reduced Urine Output")
+            ] %}
+            {% for sid, slabel in uri_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="sym-group">
+        <div class="sym-group-title">🔬 Metabolic / Diabetes / Other</div>
+        <div class="sym-grid">
+            {% set meta_syms = [
+                ("excessive_thirst","Excessive Thirst / Dry Mouth"),
+                ("excessive_hunger","Excessive Hunger"),
+                ("blurred_vision","Blurred Vision"),
+                ("slow_healing","Slow Healing Wounds"),
+                ("numbness","Numbness / Tingling in hands/feet"),
+                ("anxiety","Anxiety / Restlessness"),
+                ("insomnia","Insomnia / Sleep Problems")
+            ] %}
+            {% for sid, slabel in meta_syms %}
+            <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
+                <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
+                <label for="sym-{{sid}}">{{slabel}}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(5)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(6)">Next: More Info →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 7: Additional Info ───── -->
+<div class="step-panel" id="step-7">
+    <div class="sym-group">
+        <div class="sym-group-title">📋 Additional Health Information <span style="font-size:13px;color:#999;">(helps improve accuracy)</span></div>
+        <div class="info-grid">
+            <div class="info-group">
+                <label>Do you smoke?</label>
+                <select name="smoking">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                    <option value="ex">Ex-smoker</option>
+                </select>
+            </div>
+            <div class="info-group">
+                <label>Blood Pressure (known)</label>
+                <select name="blood_pressure">
+                    <option value="normal">Normal</option>
+                    <option value="high">High (Hypertension)</option>
+                    <option value="low">Low (Hypotension)</option>
+                    <option value="unknown">Don't Know</option>
+                </select>
+            </div>
+            <div class="info-group">
+                <label>Blood Sugar (known)</label>
+                <select name="blood_sugar">
+                    <option value="normal">Normal</option>
+                    <option value="high">High (Diabetic)</option>
+                    <option value="prediabetic">Pre-Diabetic</option>
+                    <option value="unknown">Don't Know</option>
+                </select>
+            </div>
+            <div class="info-group">
+                <label>Any recent travel?</label>
+                <select name="recent_travel">
+                    <option value="no">No</option>
+                    <option value="domestic">Yes – Domestic</option>
+                    <option value="international">Yes – International</option>
+                </select>
+            </div>
+            <div class="info-group">
+                <label>Hospital Preference</label>
+                <select name="hospital_type">
+                    <option value="">Any</option>
+                    <option value="Government">Government</option>
+                    <option value="Private">Private</option>
+                </select>
+            </div>
+            <div class="info-group">
+                <label>Max distance to hospital (km)</label>
+                <input type="number" name="max_distance" placeholder="e.g. 10" min="1" max="100">
+            </div>
+        </div>
+    </div>
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(6)">← Back</button>
+        <button type="button" class="btn-next" onclick="nextStep(7)">Review →</button>
+    </div>
+</div>
+
+<!-- ───── STEP 8: Review & Submit ───── -->
+<div class="step-panel" id="step-8">
+    <div class="summary-card">
+        <h5>📋 Your Selected Symptoms</h5>
+        <div id="sym-summary">
+            <p style="color:#999;font-size:13px;">No symptoms selected yet.</p>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <h5>⚠️ Disclaimer</h5>
+        <p style="font-size:13px;color:#555;line-height:1.7;">
+            This assessment is for <strong>informational purposes only</strong> and does not replace professional medical diagnosis.
+            Always consult a qualified doctor for proper diagnosis and treatment.
+            In case of emergency, call <strong>108</strong> (India) or go to the nearest emergency room immediately.
+        </p>
+    </div>
+
+    <div class="nav-btns">
+        <button type="button" class="btn-prev" onclick="goStep(7)">← Back</button>
+        <button type="button" class="btn-analyze" onclick="submitAssessment()">
+            🔍 Analyze Symptoms & Get Diagnosis
+        </button>
+    </div>
+</div>
+
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 0;
+const TOTAL_STEPS = 9;
+
+// ── Step navigation ──
+function goStep(n) {
+    document.querySelectorAll('.step-panel').forEach((p,i) => {
+        p.classList.toggle('active', i === n);
+    });
+    document.querySelectorAll('.step-btn').forEach((b,i) => {
+        b.classList.remove('active','done');
+        if (i === n) b.classList.add('active');
+        else if (i < n) b.classList.add('done');
+    });
+    currentStep = n;
+    window.scrollTo({top:0,behavior:'smooth'});
+    if (n === 8) buildSummary();
+}
+
+function nextStep(from) {
+    goStep(from + 1);
+}
+
+// ── Symptom toggle ──
+function toggleSym(sid) {
+    const cb = document.getElementById('sym-' + sid);
+    const wrap = document.getElementById('wrap-' + sid);
+    cb.checked = !cb.checked;
+    wrap.classList.toggle('checked', cb.checked);
+    updateCount();
+}
+
+function updateCount() {
+    const checked = document.querySelectorAll('input[name="symptoms"]:checked');
+    document.getElementById('sym-count').textContent = checked.length;
+    // Re-sync wrapper classes
+    document.querySelectorAll('input[name="symptoms"]').forEach(cb => {
+        const wrap = document.getElementById('wrap-' + cb.value);
+        if (wrap) wrap.classList.toggle('checked', cb.checked);
+    });
+}
+
+// ── Severity / Duration ──
+function setSeverity(val, btn) {
+    document.getElementById('hidden_severity').value = val;
+    document.querySelectorAll('.sev-btn').forEach(b => {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').startsWith('setSeverity')) {
+            b.classList.remove('selected','selected-mild','selected-moderate','selected-severe');
+        }
+    });
+    btn.classList.add('selected', 'selected-' + val);
+}
+function setDuration(val, btn) {
+    document.getElementById('hidden_duration').value = val;
+    document.querySelectorAll('.sev-btn').forEach(b => {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').startsWith('setDuration')) {
+            b.classList.remove('selected','selected-mild','selected-moderate','selected-severe');
+        }
+    });
+    btn.classList.add('selected','selected-mild');
+}
+
+// ── Build review summary ──
+function buildSummary() {
+    const checked = document.querySelectorAll('input[name="symptoms"]:checked');
+    const div = document.getElementById('sym-summary');
+    if (checked.length === 0) {
+        div.innerHTML = '<p style="color:#DC3545;font-weight:600;">⚠️ You haven\'t selected any symptoms! Please go back and select symptoms.</p>';
+        return;
+    }
+    let html = '';
+    checked.forEach(cb => {
+        const label = cb.closest('.sym-item')?.querySelector('label')?.textContent || cb.value;
+        html += `<span class="sym-tag">✓ ${label}</span>`;
+    });
+    html += `<div style="margin-top:12px;font-size:13px;color:#555;">
+        <strong>${checked.length} symptom(s)</strong> selected &nbsp;|&nbsp;
+        Severity: <strong>${document.getElementById('hidden_severity').value}</strong> &nbsp;|&nbsp;
+        Duration: <strong>${document.getElementById('hidden_duration').value}</strong>
+    </div>`;
+    div.innerHTML = html;
+}
+
+// ── Submit ──
+function submitAssessment() {
+    const checked = document.querySelectorAll('input[name="symptoms"]:checked');
+    if (checked.length < 1) {
+        alert('Please select at least 1 symptom before analyzing.');
+        goStep(0);
+        return;
+    }
+    document.getElementById('loading-overlay').style.display = 'flex';
+    document.getElementById('assess-form').submit();
+}
+
+// ── Geolocation ──
+document.addEventListener('DOMContentLoaded', () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('user_lat').value = pos.coords.latitude;
+            document.getElementById('user_lng').value = pos.coords.longitude;
+        });
+    }
+});
+</script>
+{% endblock %}

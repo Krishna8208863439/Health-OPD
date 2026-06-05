@@ -1,0 +1,974 @@
+{% extends "base.html" %}
+
+{% block title %}Health Vitals Tracker | HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --blue: #0066CC;
+        --green: #28A745;
+        --red: #DC3545;
+        --yellow: #FFC107;
+        --blue-light: #E8F0FC;
+        --green-light: #E9F7EF;
+        --red-light: #FDECEA;
+        --yellow-light: #FFF8E1;
+        --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        --card-radius: 14px;
+    }
+
+    /* ── Hero Banner ── */
+    .vitals-hero {
+        background: linear-gradient(135deg, #0066CC 0%, #00A896 100%);
+        border-radius: var(--card-radius);
+        padding: 48px 40px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-bottom: 32px;
+        box-shadow: 0 8px 32px rgba(0,102,204,0.25);
+    }
+    .vitals-hero .hero-icon {
+        font-size: 64px;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    .vitals-hero h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .vitals-hero p {
+        font-size: 1.05rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    .vitals-hero .hero-badge {
+        background: rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    /* ── Section Cards ── */
+    .vcard {
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        padding: 30px 32px;
+        margin-bottom: 28px;
+    }
+    .vcard-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--blue);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #EEF2F7;
+    }
+    .vcard-title i { font-size: 1.1rem; }
+
+    /* ── Form Grid ── */
+    .vitals-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 18px;
+    }
+    .vitals-form-grid .span-full {
+        grid-column: 1 / -1;
+    }
+    .form-field label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #5a6474;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .form-field label i {
+        margin-right: 5px;
+        color: var(--blue);
+    }
+    .form-field input,
+    .form-field textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #E9ECEF;
+        border-radius: 9px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        color: #2C3E50;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #FAFBFC;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus {
+        outline: none;
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(0,102,204,0.12);
+        background: #fff;
+    }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+    .form-submit-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 22px;
+    }
+    .btn-add-vitals {
+        background: linear-gradient(135deg, var(--blue) 0%, #0052A3 100%);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 12px 32px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 14px rgba(0,102,204,0.3);
+    }
+    .btn-add-vitals:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,102,204,0.4);
+    }
+
+    /* ── Status Indicators ── */
+    .status-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 4px;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+    .status-normal  { background: var(--green); }
+    .status-border  { background: var(--yellow); }
+    .status-abnormal{ background: var(--red); }
+
+    .vital-cell {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        font-size: 0.88rem;
+    }
+
+    /* ── Chart Tabs ── */
+    .chart-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+    .chart-tab {
+        padding: 8px 20px;
+        border-radius: 30px;
+        border: 2px solid #E9ECEF;
+        background: #fff;
+        color: #666;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .chart-tab.active {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 3px 10px rgba(0,102,204,0.25);
+    }
+    .chart-tab:hover:not(.active) {
+        border-color: var(--blue);
+        color: var(--blue);
+    }
+    .chart-panel { display: none; }
+    .chart-panel.active { display: block; }
+    .chart-wrapper {
+        position: relative;
+        height: 280px;
+    }
+    .empty-chart-msg {
+        text-align: center;
+        padding: 60px 20px;
+        color: #aaa;
+    }
+    .empty-chart-msg i { font-size: 3rem; margin-bottom: 12px; display: block; }
+
+    /* ── Data Table ── */
+    .vitals-table-wrap {
+        overflow-x: auto;
+        border-radius: 10px;
+    }
+    .vitals-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .vitals-table thead tr {
+        background: linear-gradient(135deg, var(--blue) 0%, #0052A3 100%);
+        color: #fff;
+    }
+    .vitals-table th {
+        padding: 13px 15px;
+        text-align: left;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .vitals-table th:first-child { border-radius: 10px 0 0 0; }
+    .vitals-table th:last-child  { border-radius: 0 10px 0 0; }
+    .vitals-table tbody tr {
+        border-bottom: 1px solid #F0F3F7;
+        transition: background 0.15s;
+    }
+    .vitals-table tbody tr:hover { background: #F7FAFF; }
+    .vitals-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    .vitals-table td.notes-cell {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #777;
+        font-size: 0.84rem;
+    }
+    .btn-delete {
+        background: none;
+        border: 2px solid var(--red);
+        color: var(--red);
+        border-radius: 7px;
+        padding: 5px 12px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .btn-delete:hover {
+        background: var(--red);
+        color: #fff;
+    }
+    .no-data-row td {
+        text-align: center;
+        padding: 40px;
+        color: #aaa;
+        font-size: 1rem;
+    }
+
+    /* ── Normal Ranges Reference ── */
+    .ranges-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    .range-item {
+        border-radius: 10px;
+        padding: 16px 18px;
+        border-left: 4px solid transparent;
+    }
+    .range-item.blue-border  { border-color: var(--blue);  background: var(--blue-light); }
+    .range-item.green-border { border-color: var(--green); background: var(--green-light); }
+    .range-item.red-border   { border-color: var(--red);   background: var(--red-light); }
+    .range-item.yellow-border{ border-color: var(--yellow);background: var(--yellow-light); }
+    .range-item .ri-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .range-item .ri-title.blue   { color: var(--blue); }
+    .range-item .ri-title.green  { color: #1e7e34; }
+    .range-item .ri-title.red    { color: #a71d2a; }
+    .range-item .ri-title.yellow { color: #856404; }
+    .range-row {
+        font-size: 0.83rem;
+        color: #555;
+        margin-bottom: 3px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .range-row strong { color: #333; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .vitals-hero { flex-direction: column; padding: 30px 22px; text-align: center; }
+        .vitals-hero .hero-icon { font-size: 48px; }
+        .vitals-hero h2 { font-size: 1.5rem; }
+        .vcard { padding: 20px 16px; }
+        .vitals-form-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+        .vitals-form-grid { grid-template-columns: 1fr; }
+        .chart-tab { padding: 7px 14px; font-size: 0.82rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════ HERO BANNER ══════════════ -->
+<div class="vitals-hero">
+    <div class="hero-icon">💓</div>
+    <div>
+        <h2><i class="fa-solid fa-heart-pulse"></i> Health Vitals Tracker</h2>
+        <p>Track your BP, blood sugar, weight, heart rate and temperature over time</p>
+        <span class="hero-badge">
+            <i class="fa-solid fa-user"></i>
+            {{ patient.username if patient else 'Patient' }}
+            &nbsp;|&nbsp;
+            <i class="fa-solid fa-calendar-days"></i>
+            {% if vitals_list %}{{ vitals_list|length }} record{{ 's' if vitals_list|length != 1 }}{% else %}No records yet{% endif %}
+        </span>
+    </div>
+</div>
+
+<!-- ══════════════ ADD VITALS FORM ══════════════ -->
+<div class="vcard">
+    <div class="vcard-title">
+        <i class="fa-solid fa-circle-plus" style="color:var(--green);"></i>
+        Add New Vitals Entry
+    </div>
+    <form method="POST" action="/vitals/add" autocomplete="off">
+        <div class="vitals-form-grid">
+
+            <!-- Date -->
+            <div class="form-field">
+                <label><i class="fa-regular fa-calendar"></i>Date</label>
+                <input type="date" name="date" id="vitals-date" required
+                       value="{{ today }}" max="{{ today }}">
+            </div>
+
+            <!-- Systolic BP -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-droplet"></i>Systolic BP <small style="font-weight:400;text-transform:none;">(mmHg)</small></label>
+                <input type="number" name="systolic_bp" placeholder="e.g. 120"
+                       min="60" max="250" step="1">
+            </div>
+
+            <!-- Diastolic BP -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-droplet" style="opacity:.6;"></i>Diastolic BP <small style="font-weight:400;text-transform:none;">(mmHg)</small></label>
+                <input type="number" name="diastolic_bp" placeholder="e.g. 80"
+                       min="40" max="150" step="1">
+            </div>
+
+            <!-- Blood Sugar -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-vial"></i>Blood Sugar <small style="font-weight:400;text-transform:none;">(mg/dL)</small></label>
+                <input type="number" name="blood_sugar" placeholder="e.g. 100"
+                       min="50" max="600" step="1">
+            </div>
+
+            <!-- Weight -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-weight-scale"></i>Weight <small style="font-weight:400;text-transform:none;">(kg)</small></label>
+                <input type="number" name="weight_kg" placeholder="e.g. 70"
+                       min="20" max="300" step="0.1">
+            </div>
+
+            <!-- Heart Rate -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-heart-pulse"></i>Heart Rate <small style="font-weight:400;text-transform:none;">(bpm)</small></label>
+                <input type="number" name="heart_rate" placeholder="e.g. 72"
+                       min="30" max="220" step="1">
+            </div>
+
+            <!-- Temperature -->
+            <div class="form-field">
+                <label><i class="fa-solid fa-temperature-half"></i>Temperature <small style="font-weight:400;text-transform:none;">(°C)</small></label>
+                <input type="number" name="temperature_c" placeholder="e.g. 37.0"
+                       min="35" max="42" step="0.1">
+            </div>
+
+            <!-- Notes -->
+            <div class="form-field span-full">
+                <label><i class="fa-solid fa-note-sticky"></i>Notes <small style="font-weight:400;text-transform:none;">(optional)</small></label>
+                <textarea name="notes" placeholder="E.g. After morning walk, fasting, etc."></textarea>
+            </div>
+
+        </div>
+        <div class="form-submit-row">
+            <button type="submit" class="btn-add-vitals">
+                <i class="fa-solid fa-floppy-disk"></i> Save Entry
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ══════════════ CHARTS ══════════════ -->
+<div class="vcard">
+    <div class="vcard-title">
+        <i class="fa-solid fa-chart-line"></i>
+        Vitals Trend Charts
+    </div>
+
+    {% if vitals_list %}
+    <!-- Tab Buttons -->
+    <div class="chart-tabs" role="tablist" aria-label="Vitals charts">
+        <button class="chart-tab active" onclick="switchTab('bp')"    id="tab-bp"     aria-selected="true">
+            <i class="fa-solid fa-droplet"></i> BP Trend
+        </button>
+        <button class="chart-tab"        onclick="switchTab('sugar')" id="tab-sugar"  aria-selected="false">
+            <i class="fa-solid fa-vial"></i> Blood Sugar
+        </button>
+        <button class="chart-tab"        onclick="switchTab('weight')"id="tab-weight" aria-selected="false">
+            <i class="fa-solid fa-weight-scale"></i> Weight
+        </button>
+        <button class="chart-tab"        onclick="switchTab('hr')"    id="tab-hr"     aria-selected="false">
+            <i class="fa-solid fa-heart-pulse"></i> Heart Rate
+        </button>
+    </div>
+
+    <!-- Chart Panels -->
+    <div class="chart-panel active" id="panel-bp">
+        <div class="chart-wrapper"><canvas id="chartBP"></canvas></div>
+    </div>
+    <div class="chart-panel" id="panel-sugar">
+        <div class="chart-wrapper"><canvas id="chartSugar"></canvas></div>
+    </div>
+    <div class="chart-panel" id="panel-weight">
+        <div class="chart-wrapper"><canvas id="chartWeight"></canvas></div>
+    </div>
+    <div class="chart-panel" id="panel-hr">
+        <div class="chart-wrapper"><canvas id="chartHR"></canvas></div>
+    </div>
+
+    {% else %}
+    <div class="empty-chart-msg">
+        <i class="fa-solid fa-chart-line"></i>
+        <p>No vitals data yet. Add your first entry above to see trends.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════ HISTORY TABLE ══════════════ -->
+<div class="vcard">
+    <div class="vcard-title">
+        <i class="fa-solid fa-table-list"></i>
+        Vitals History
+    </div>
+    <div class="vitals-table-wrap">
+        <table class="vitals-table">
+            <thead>
+                <tr>
+                    <th><i class="fa-regular fa-calendar"></i> Date</th>
+                    <th><i class="fa-solid fa-droplet"></i> BP (sys/dia)</th>
+                    <th><i class="fa-solid fa-vial"></i> Blood Sugar</th>
+                    <th><i class="fa-solid fa-weight-scale"></i> Weight</th>
+                    <th><i class="fa-solid fa-heart-pulse"></i> HR</th>
+                    <th><i class="fa-solid fa-temperature-half"></i> Temp</th>
+                    <th><i class="fa-solid fa-note-sticky"></i> Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if vitals_list %}
+                    {% for v in vitals_list %}
+                    <tr>
+                        <!-- Date -->
+                        <td style="font-weight:600; color:#333; white-space:nowrap;">
+                            {{ v.date }}
+                        </td>
+
+                        <!-- BP -->
+                        <td>
+                            {% if v.systolic_bp and v.diastolic_bp %}
+                            <div class="vital-cell">
+                                {% set sys = v.systolic_bp|int %}
+                                {% set dia = v.diastolic_bp|int %}
+                                {% if sys < 120 and dia < 80 %}
+                                    <span class="status-dot status-normal"></span>
+                                    <span style="color:var(--green);">{{ sys }}/{{ dia }}</span>
+                                {% elif sys < 130 and dia < 80 %}
+                                    <span class="status-dot status-border"></span>
+                                    <span style="color:#856404;">{{ sys }}/{{ dia }}</span>
+                                {% elif sys < 140 or dia < 90 %}
+                                    <span class="status-dot status-border"></span>
+                                    <span style="color:#856404;">{{ sys }}/{{ dia }}</span>
+                                {% else %}
+                                    <span class="status-dot status-abnormal"></span>
+                                    <span style="color:var(--red);">{{ sys }}/{{ dia }}</span>
+                                {% endif %}
+                                <small style="color:#aaa;"> mmHg</small>
+                            </div>
+                            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+                        </td>
+
+                        <!-- Blood Sugar -->
+                        <td>
+                            {% if v.blood_sugar %}
+                            <div class="vital-cell">
+                                {% set bs = v.blood_sugar|float %}
+                                {% if bs >= 70 and bs <= 100 %}
+                                    <span class="status-dot status-normal"></span>
+                                    <span style="color:var(--green);">{{ bs|int }}</span>
+                                {% elif bs > 100 and bs <= 125 %}
+                                    <span class="status-dot status-border"></span>
+                                    <span style="color:#856404;">{{ bs|int }}</span>
+                                {% else %}
+                                    <span class="status-dot status-abnormal"></span>
+                                    <span style="color:var(--red);">{{ bs|int }}</span>
+                                {% endif %}
+                                <small style="color:#aaa;"> mg/dL</small>
+                            </div>
+                            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+                        </td>
+
+                        <!-- Weight -->
+                        <td>
+                            {% if v.weight_kg %}
+                            <div class="vital-cell">
+                                <span class="status-dot status-normal"></span>
+                                <span>{{ v.weight_kg }}</span>
+                                <small style="color:#aaa;"> kg</small>
+                            </div>
+                            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+                        </td>
+
+                        <!-- Heart Rate -->
+                        <td>
+                            {% if v.heart_rate %}
+                            <div class="vital-cell">
+                                {% set hr = v.heart_rate|int %}
+                                {% if hr >= 60 and hr <= 100 %}
+                                    <span class="status-dot status-normal"></span>
+                                    <span style="color:var(--green);">{{ hr }}</span>
+                                {% elif (hr >= 50 and hr < 60) or (hr > 100 and hr <= 110) %}
+                                    <span class="status-dot status-border"></span>
+                                    <span style="color:#856404;">{{ hr }}</span>
+                                {% else %}
+                                    <span class="status-dot status-abnormal"></span>
+                                    <span style="color:var(--red);">{{ hr }}</span>
+                                {% endif %}
+                                <small style="color:#aaa;"> bpm</small>
+                            </div>
+                            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+                        </td>
+
+                        <!-- Temperature -->
+                        <td>
+                            {% if v.temperature_c %}
+                            <div class="vital-cell">
+                                {% set tc = v.temperature_c|float %}
+                                {% if tc >= 36.1 and tc <= 37.2 %}
+                                    <span class="status-dot status-normal"></span>
+                                    <span style="color:var(--green);">{{ tc }}</span>
+                                {% elif tc > 37.2 and tc <= 38.0 %}
+                                    <span class="status-dot status-border"></span>
+                                    <span style="color:#856404;">{{ tc }}</span>
+                                {% else %}
+                                    <span class="status-dot status-abnormal"></span>
+                                    <span style="color:var(--red);">{{ tc }}</span>
+                                {% endif %}
+                                <small style="color:#aaa;"> °C</small>
+                            </div>
+                            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+                        </td>
+
+                        <!-- Notes -->
+                        <td class="notes-cell" title="{{ v.notes if v.notes else '' }}">
+                            {{ v.notes if v.notes else '—' }}
+                        </td>
+
+                        <!-- Delete -->
+                        <td>
+                            <form method="POST" action="/vitals/delete/{{ v.id }}"
+                                  onsubmit="return confirm('Delete this vitals entry?');"
+                                  style="margin:0;">
+                                <button type="submit" class="btn-delete">
+                                    <i class="fa-solid fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr class="no-data-row">
+                    <td colspan="8">
+                        <i class="fa-solid fa-database" style="font-size:2rem;margin-bottom:8px;display:block;color:#ddd;"></i>
+                        No vitals entries found. Start by adding one above!
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ══════════════ NORMAL RANGES REFERENCE ══════════════ -->
+<div class="vcard">
+    <div class="vcard-title">
+        <i class="fa-solid fa-circle-info" style="color:#0066CC;"></i>
+        Normal Ranges Reference
+    </div>
+    <div class="ranges-grid">
+
+        <div class="range-item blue-border">
+            <div class="ri-title blue"><i class="fa-solid fa-droplet"></i> Blood Pressure</div>
+            <div class="range-row"><span>Normal</span>       <strong>&lt;120/80 mmHg</strong></div>
+            <div class="range-row"><span>Elevated</span>     <strong>120–129/&lt;80</strong></div>
+            <div class="range-row"><span>High Stage 1</span> <strong>130–139/80–89</strong></div>
+            <div class="range-row"><span>High Stage 2</span> <strong>≥140/≥90 mmHg</strong></div>
+        </div>
+
+        <div class="range-item green-border">
+            <div class="ri-title green"><i class="fa-solid fa-vial"></i> Blood Sugar (Fasting)</div>
+            <div class="range-row"><span>Normal</span>       <strong>70–100 mg/dL</strong></div>
+            <div class="range-row"><span>Pre-diabetic</span> <strong>100–125 mg/dL</strong></div>
+            <div class="range-row"><span>Diabetic</span>     <strong>≥126 mg/dL</strong></div>
+            <div class="range-row"><span>Low (Hypo)</span>   <strong>&lt;70 mg/dL</strong></div>
+        </div>
+
+        <div class="range-item yellow-border">
+            <div class="ri-title yellow"><i class="fa-solid fa-heart-pulse"></i> Heart Rate (Resting)</div>
+            <div class="range-row"><span>Normal</span>       <strong>60–100 bpm</strong></div>
+            <div class="range-row"><span>Athletic</span>     <strong>40–60 bpm</strong></div>
+            <div class="range-row"><span>Bradycardia</span>  <strong>&lt;60 bpm</strong></div>
+            <div class="range-row"><span>Tachycardia</span>  <strong>&gt;100 bpm</strong></div>
+        </div>
+
+        <div class="range-item red-border">
+            <div class="ri-title red"><i class="fa-solid fa-temperature-half"></i> Body Temperature</div>
+            <div class="range-row"><span>Normal</span>       <strong>36.1–37.2 °C</strong></div>
+            <div class="range-row"><span>Low-grade fever</span><strong>37.3–38.0 °C</strong></div>
+            <div class="range-row"><span>Fever</span>        <strong>38.1–39.0 °C</strong></div>
+            <div class="range-row"><span>High fever</span>   <strong>&gt;39.0 °C</strong></div>
+        </div>
+
+        <div class="range-item blue-border" style="border-color:#6f42c1;background:#F3EEFF;">
+            <div class="ri-title" style="color:#6f42c1;"><i class="fa-solid fa-weight-scale"></i> BMI (Weight Guide)</div>
+            <div class="range-row"><span>Underweight</span>  <strong>BMI &lt;18.5</strong></div>
+            <div class="range-row"><span>Normal</span>       <strong>BMI 18.5–24.9</strong></div>
+            <div class="range-row"><span>Overweight</span>   <strong>BMI 25–29.9</strong></div>
+            <div class="range-row"><span>Obese</span>        <strong>BMI ≥30</strong></div>
+        </div>
+
+        <div class="range-item green-border">
+            <div class="ri-title green"><i class="fa-solid fa-circle-info"></i> Status Legend</div>
+            <div class="range-row">
+                <span><span class="status-dot status-normal" style="display:inline-block;"></span> Green</span>
+                <strong>Normal</strong>
+            </div>
+            <div class="range-row">
+                <span><span class="status-dot status-border" style="display:inline-block;"></span> Yellow</span>
+                <strong>Borderline</strong>
+            </div>
+            <div class="range-row">
+                <span><span class="status-dot status-abnormal" style="display:inline-block;"></span> Red</span>
+                <strong>Abnormal</strong>
+            </div>
+            <div class="range-row" style="margin-top:6px;font-size:0.78rem;color:#888;">
+                <span colspan="2">Always consult your doctor</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ─── Tab switching ───────────────────────────────────────────────────────────
+function switchTab(name) {
+    document.querySelectorAll('.chart-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
+
+    const tab   = document.getElementById('tab-'   + name);
+    const panel = document.getElementById('panel-' + name);
+    if (tab)   { tab.classList.add('active');   tab.setAttribute('aria-selected', 'true'); }
+    if (panel) { panel.classList.add('active'); }
+}
+
+// ─── Vitals data from Jinja2 ─────────────────────────────────────────────────
+{% if vitals_list %}
+const vitalsRaw = {{ vitals_list | tojson }};
+
+// Sort ascending by date so chart left→right is oldest→newest
+const vitals = vitalsRaw.slice().sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+});
+
+const labels = vitals.map(v => v.date);
+
+// Helper: extract numeric or null
+function num(v, key) {
+    const val = v[key];
+    return (val !== null && val !== undefined && val !== '') ? parseFloat(val) : null;
+}
+
+// ─── Shared chart defaults ────────────────────────────────────────────────────
+Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+Chart.defaults.font.size   = 13;
+
+const baseLineDataset = {
+    tension: 0.4,
+    fill: true,
+    pointRadius: 5,
+    pointHoverRadius: 8,
+    pointBorderWidth: 2,
+    spanGaps: true,
+};
+
+function makeGradient(ctx, color1, color2) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+    gradient.addColorStop(0,   color1);
+    gradient.addColorStop(1,   color2);
+    return gradient;
+}
+
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+        legend: {
+            position: 'top',
+            labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10 }
+        },
+        tooltip: {
+            backgroundColor: 'rgba(255,255,255,0.96)',
+            titleColor: '#333',
+            bodyColor: '#555',
+            borderColor: '#ddd',
+            borderWidth: 1,
+            padding: 12,
+        }
+    },
+    scales: {
+        x: {
+            grid: { display: false },
+            ticks: { color: '#888', maxRotation: 40 }
+        },
+        y: {
+            grid: { color: '#F0F3F7' },
+            ticks: { color: '#888' },
+            beginAtZero: false
+        }
+    }
+};
+
+// ─── 1. BP Chart ─────────────────────────────────────────────────────────────
+(function () {
+    const canvas = document.getElementById('chartBP');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const sysData = vitals.map(v => num(v, 'systolic_bp'));
+    const diaData = vitals.map(v => num(v, 'diastolic_bp'));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    ...baseLineDataset,
+                    label: 'Systolic (mmHg)',
+                    data: sysData,
+                    borderColor: '#0066CC',
+                    pointBackgroundColor: '#0066CC',
+                    pointBorderColor: '#fff',
+                    backgroundColor: function(context) {
+                        const c = context.chart.ctx;
+                        return makeGradient(c, 'rgba(0,102,204,0.18)', 'rgba(0,102,204,0.01)');
+                    },
+                },
+                {
+                    ...baseLineDataset,
+                    label: 'Diastolic (mmHg)',
+                    data: diaData,
+                    borderColor: '#00A896',
+                    pointBackgroundColor: '#00A896',
+                    pointBorderColor: '#fff',
+                    backgroundColor: function(context) {
+                        const c = context.chart.ctx;
+                        return makeGradient(c, 'rgba(0,168,150,0.15)', 'rgba(0,168,150,0.01)');
+                    },
+                }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                tooltip: {
+                    ...commonOptions.plugins.tooltip,
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}`
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: { display: true, text: 'mmHg', color: '#999' },
+                    suggestedMin: 50,
+                    suggestedMax: 180
+                }
+            }
+        }
+    });
+})();
+
+// ─── 2. Blood Sugar Chart ─────────────────────────────────────────────────────
+(function () {
+    const canvas = document.getElementById('chartSugar');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const sugarData = vitals.map(v => num(v, 'blood_sugar'));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                ...baseLineDataset,
+                label: 'Blood Sugar (mg/dL)',
+                data: sugarData,
+                borderColor: '#28A745',
+                pointBackgroundColor: '#28A745',
+                pointBorderColor: '#fff',
+                backgroundColor: function(context) {
+                    const c = context.chart.ctx;
+                    return makeGradient(c, 'rgba(40,167,69,0.18)', 'rgba(40,167,69,0.01)');
+                },
+            }]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                annotation: undefined  // no annotation plugin loaded, skip
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: { display: true, text: 'mg/dL', color: '#999' },
+                    suggestedMin: 60,
+                    suggestedMax: 250
+                }
+            }
+        }
+    });
+})();
+
+// ─── 3. Weight Chart ──────────────────────────────────────────────────────────
+(function () {
+    const canvas = document.getElementById('chartWeight');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const weightData = vitals.map(v => num(v, 'weight_kg'));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                ...baseLineDataset,
+                label: 'Weight (kg)',
+                data: weightData,
+                borderColor: '#FFC107',
+                pointBackgroundColor: '#FFC107',
+                pointBorderColor: '#fff',
+                backgroundColor: function(context) {
+                    const c = context.chart.ctx;
+                    return makeGradient(c, 'rgba(255,193,7,0.22)', 'rgba(255,193,7,0.01)');
+                },
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: { display: true, text: 'kg', color: '#999' },
+                    suggestedMin: 30,
+                    suggestedMax: 150
+                }
+            }
+        }
+    });
+})();
+
+// ─── 4. Heart Rate Chart ──────────────────────────────────────────────────────
+(function () {
+    const canvas = document.getElementById('chartHR');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const hrData = vitals.map(v => num(v, 'heart_rate'));
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                ...baseLineDataset,
+                label: 'Heart Rate (bpm)',
+                data: hrData,
+                borderColor: '#DC3545',
+                pointBackgroundColor: '#DC3545',
+                pointBorderColor: '#fff',
+                backgroundColor: function(context) {
+                    const c = context.chart.ctx;
+                    return makeGradient(c, 'rgba(220,53,69,0.18)', 'rgba(220,53,69,0.01)');
+                },
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: { display: true, text: 'bpm', color: '#999' },
+                    suggestedMin: 40,
+                    suggestedMax: 140
+                }
+            }
+        }
+    });
+})();
+
+{% endif %}
+
+// ─── Default today's date in the form ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    const dateInput = document.getElementById('vitals-date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().slice(0, 10);
+        dateInput.value = today;
+        dateInput.max   = today;
+    }
+});
+</script>
+{% endblock %}

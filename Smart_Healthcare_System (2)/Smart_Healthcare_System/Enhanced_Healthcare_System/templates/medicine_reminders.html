@@ -1,0 +1,543 @@
+{% extends "base.html" %}
+
+{% block title %}Medicine Reminders - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reminder-hero {
+        background: linear-gradient(135deg, #0066CC 0%, #28A745 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .reminder-hero .icon-box {
+        font-size: 56px;
+        line-height: 1;
+    }
+    .reminder-hero h2 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .reminder-hero p  { font-size: 15px; opacity: 0.9; margin: 0; }
+
+    /* Alarm banner */
+    #alarm-banner {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 9999;
+        background: linear-gradient(90deg, #DC3545, #c0392b);
+        color: #fff;
+        padding: 18px 24px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        animation: alarmPulse 1s infinite;
+    }
+    #alarm-banner .alarm-close {
+        float: right;
+        cursor: pointer;
+        font-size: 26px;
+        line-height: 1;
+        margin-left: 16px;
+    }
+    @keyframes alarmPulse {
+        0%,100% { background: #DC3545; }
+        50%      { background: #ff6b6b; }
+    }
+
+    /* Permission banner */
+    #permission-banner {
+        background: #FFF3CD;
+        border: 2px solid #FFC107;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    /* Add form card */
+    .add-form-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        margin-bottom: 28px;
+    }
+    .add-form-card h4 {
+        color: #0066CC;
+        font-weight: 700;
+        font-size: 20px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #E9ECEF;
+        padding-bottom: 12px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .form-group label { font-weight: 600; font-size: 13px; color: #555; margin-bottom: 6px; display: block; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #E9ECEF;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color .2s;
+        background: #FAFAFA;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        border-color: #0066CC;
+        outline: none;
+        background: #fff;
+    }
+    .btn-add {
+        background: linear-gradient(135deg, #28A745, #20c997);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40,167,69,.35); }
+
+    /* Reminder cards */
+    .reminders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+    .reminder-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        border-left: 5px solid #28A745;
+        position: relative;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .reminder-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+    .reminder-card.inactive { border-left-color: #6c757d; opacity: .75; }
+    .reminder-card.ringing  { border-left-color: #DC3545; animation: cardRing 0.8s infinite; }
+    @keyframes cardRing {
+        0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.6); }
+        50%      { box-shadow: 0 0 0 12px rgba(220,53,69,0); }
+    }
+    .reminder-card .med-name  { font-size: 18px; font-weight: 700; color: #0066CC; margin-bottom: 6px; }
+    .reminder-card .med-time  { font-size: 28px; font-weight: 800; color: #28A745; margin-bottom: 8px; }
+    .reminder-card.inactive .med-time { color: #6c757d; }
+    .reminder-card .med-meta  { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .badge-freq {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #E3F2FD;
+        color: #1565C0;
+        margin-bottom: 12px;
+    }
+    .reminder-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .btn-toggle {
+        flex: 1; border: none; border-radius: 8px; padding: 8px 14px;
+        font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+    }
+    .btn-toggle.on  { background: #FFF3CD; color: #856404; }
+    .btn-toggle.off { background: #D4EDDA; color: #155724; }
+    .btn-del {
+        border: none; border-radius: 8px; padding: 8px 14px;
+        background: #F8D7DA; color: #721C24;
+        font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+    }
+    .btn-del:hover    { background: #DC3545; color: #fff; }
+    .btn-toggle:hover { opacity: .85; }
+
+    .empty-state {
+        text-align: center; padding: 60px 20px; color: #999;
+    }
+    .empty-state .icon { font-size: 72px; margin-bottom: 16px; display: block; }
+    .empty-state h4 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+
+    /* Notification bell */
+    .bell-btn {
+        position: fixed;
+        bottom: 30px; right: 30px;
+        background: #0066CC;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 60px; height: 60px;
+        font-size: 26px;
+        cursor: pointer;
+        box-shadow: 0 4px 18px rgba(0,102,204,.45);
+        z-index: 1000;
+        transition: .2s;
+    }
+    .bell-btn:hover { background: #0052A3; transform: scale(1.1); }
+    .bell-badge {
+        position: absolute;
+        top: -4px; right: -4px;
+        background: #DC3545;
+        color: #fff;
+        border-radius: 50%;
+        width: 22px; height: 22px;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        display: none;
+    }
+
+    @media(max-width:600px) {
+        .form-row { grid-template-columns: 1fr; }
+        .reminders-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Alarm banner (shown when a reminder fires) -->
+<div id="alarm-banner">
+    <span id="alarm-text">💊 Time to take your medicine!</span>
+    <span class="alarm-close" onclick="dismissAlarm()">✕</span>
+</div>
+
+<!-- Permission request banner -->
+<div id="permission-banner" style="display:none;">
+    <div>
+        <strong>🔔 Enable Alarm Notifications</strong><br>
+        <small>Allow notifications so you receive alarms <b>even when the browser is minimized</b>.</small>
+    </div>
+    <button onclick="requestNotificationPermission()" class="btn-add" style="white-space:nowrap; padding:10px 20px;">
+        Enable Alarms
+    </button>
+</div>
+
+<!-- Hero -->
+<div class="reminder-hero">
+    <div class="icon-box">💊</div>
+    <div>
+        <h2>Medicine Reminders & Alarms</h2>
+        <p>Set scheduled alarms for your medicines. The alarm plays even when this tab is closed.</p>
+    </div>
+</div>
+
+<!-- Add Reminder Form -->
+<div class="add-form-card">
+    <h4>➕ Add New Reminder</h4>
+    <form method="POST" action="/reminders/add">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Medicine Name *</label>
+                <input type="text" name="medicine_name" placeholder="e.g. Paracetamol 500mg" required>
+            </div>
+            <div class="form-group">
+                <label>Dosage</label>
+                <input type="text" name="dosage" placeholder="e.g. 1 tablet">
+            </div>
+            <div class="form-group">
+                <label>Alarm Time *</label>
+                <input type="time" name="reminder_time" required>
+            </div>
+            <div class="form-group">
+                <label>Frequency</label>
+                <select name="frequency">
+                    <option value="daily">Daily</option>
+                    <option value="twice_daily">Twice Daily</option>
+                    <option value="thrice_daily">Three Times Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="once">Once Only</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" name="start_date" id="start_date">
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="date" name="end_date" id="end_date">
+            </div>
+            <div class="form-group">
+                <label>Instructions (optional)</label>
+                <input type="text" name="instructions" placeholder="e.g. After meals, With water">
+            </div>
+        </div>
+        <button type="submit" class="btn-add">🔔 Set Alarm</button>
+    </form>
+</div>
+
+<!-- Active Reminders -->
+<h4 style="font-size:20px; font-weight:700; color:#0066CC; margin-bottom:16px;">
+    🔔 Your Medicine Alarms
+    <span style="background:#E3F2FD; color:#1565C0; border-radius:20px; padding:3px 12px; font-size:14px; margin-left:8px;">
+        {{ reminders|length }} set
+    </span>
+</h4>
+
+{% if reminders %}
+<div class="reminders-grid">
+    {% for r in reminders %}
+    <div class="reminder-card {% if not r.is_active %}inactive{% endif %}" id="card-{{ r.id }}">
+        <div class="med-name">💊 {{ r.medicine_name }}</div>
+        <div class="med-time">⏰ {{ r.reminder_time }}</div>
+        <div class="badge-freq">{{ r.frequency.replace('_', ' ').title() }}</div>
+        {% if r.dosage %}
+        <div class="med-meta"><strong>Dose:</strong> {{ r.dosage }}</div>
+        {% endif %}
+        {% if r.instructions %}
+        <div class="med-meta"><strong>Instructions:</strong> {{ r.instructions }}</div>
+        {% endif %}
+        {% if r.start_date %}
+        <div class="med-meta"><strong>From:</strong> {{ r.start_date }}
+            {% if r.end_date %} &nbsp;→&nbsp; <strong>To:</strong> {{ r.end_date }}{% endif %}
+        </div>
+        {% endif %}
+        <div class="med-meta" style="margin-top:8px;">
+            Status: 
+            {% if r.is_active %}
+            <span style="color:#28A745; font-weight:700;">✅ Active</span>
+            {% else %}
+            <span style="color:#6c757d; font-weight:700;">⏸ Paused</span>
+            {% endif %}
+        </div>
+        <div class="reminder-actions">
+            <form method="POST" action="/reminders/toggle/{{ r.id }}" style="flex:1; display:flex;">
+                <button type="submit" class="btn-toggle {% if r.is_active %}on{% else %}off{% endif %}">
+                    {% if r.is_active %}⏸ Pause{% else %}▶ Resume{% endif %}
+                </button>
+            </form>
+            <form method="POST" action="/reminders/delete/{{ r.id }}"
+                  onsubmit="return confirm('Delete this reminder?')">
+                <button type="submit" class="btn-del">🗑 Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="icon">⏰</span>
+    <h4>No reminders set yet</h4>
+    <p>Add a medicine reminder above and we'll ring the alarm for you on time.</p>
+</div>
+{% endif %}
+
+<!-- Floating bell button -->
+<button class="bell-btn" onclick="testAlarm()" title="Test Alarm Sound">
+    🔔
+    <span class="bell-badge" id="bell-badge">0</span>
+</button>
+
+<!-- Hidden audio element – alarm sound (generated via Web Audio API) -->
+<audio id="alarm-audio" loop></audio>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ========== Alarm Audio (Web Audio API – no file needed) ==========
+let audioCtx = null;
+let alarmNodes = [];
+let alarmPlaying = false;
+
+function createAlarmSound() {
+    stopAlarmSound();
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function beepOnce(startTime) {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, startTime);
+        osc.frequency.setValueAtTime(660, startTime + 0.15);
+        gainNode.gain.setValueAtTime(0.8, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+        osc.start(startTime);
+        osc.stop(startTime + 0.4);
+        alarmNodes.push(osc);
+    }
+
+    // Play beep pattern: 3 beeps, repeat
+    let t = audioCtx.currentTime;
+    for (let rep = 0; rep < 100; rep++) {
+        beepOnce(t);
+        beepOnce(t + 0.45);
+        beepOnce(t + 0.9);
+        t += 2.0;  // pause between triplets
+    }
+    alarmPlaying = true;
+}
+
+function stopAlarmSound() {
+    if (audioCtx) {
+        try { audioCtx.close(); } catch(e){}
+        audioCtx = null;
+    }
+    alarmNodes = [];
+    alarmPlaying = false;
+}
+
+// ========== Show / dismiss alarm banner ==========
+let activeAlarms = [];
+
+function showAlarmBanner(medicineName, dosage) {
+    const banner = document.getElementById('alarm-banner');
+    document.getElementById('alarm-text').textContent =
+        `💊 ALARM: Time to take ${medicineName}${dosage ? ' — ' + dosage : ''}! Click ✕ to dismiss.`;
+    banner.style.display = 'block';
+    document.body.style.paddingTop = '70px';
+    createAlarmSound();
+
+    // Vibrate device if supported
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+}
+
+function dismissAlarm() {
+    document.getElementById('alarm-banner').style.display = 'none';
+    document.body.style.paddingTop = '0';
+    stopAlarmSound();
+}
+
+function testAlarm() {
+    showAlarmBanner('Test Medicine', '1 tablet');
+}
+
+// ========== Notification Permission ==========
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('Your browser does not support notifications.');
+        return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+        document.getElementById('permission-banner').style.display = 'none';
+        alert('✅ Alarm notifications enabled! You will receive alerts even when the tab is minimized.');
+        registerServiceWorker();
+    }
+}
+
+function checkNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        document.getElementById('permission-banner').style.display = 'flex';
+    } else if (Notification.permission === 'granted') {
+        document.getElementById('permission-banner').style.display = 'none';
+        registerServiceWorker();
+    }
+}
+
+// ========== Service Worker Registration ==========
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const reg = await navigator.serviceWorker.register('/static/sw.js', { scope: '/' });
+            console.log('SW registered:', reg.scope);
+
+            // Register periodic sync if supported
+            if ('periodicSync' in reg) {
+                try {
+                    await reg.periodicSync.register('medicine-alarm-check', { minInterval: 60 * 1000 });
+                    console.log('Periodic sync registered');
+                } catch(e) {
+                    console.log('Periodic sync not available:', e);
+                }
+            }
+        } catch(e) {
+            console.log('SW registration failed:', e);
+        }
+    }
+}
+
+// ========== In-page reminder checker (polls every 30 seconds while page is open) ==========
+function getCurrentHHMM() {
+    const now = new Date();
+    return now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+
+const firedToday = new Set();  // track already-fired reminders
+
+async function checkReminders() {
+    try {
+        const resp = await fetch('/api/reminders/due-now');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        
+        if (data.reminders && data.reminders.length > 0) {
+            for (const r of data.reminders) {
+                const key = `${r.id}-${getCurrentHHMM()}`;
+                if (firedToday.has(key)) continue;
+                firedToday.add(key);
+
+                // 1. Show in-page alarm banner (always works)
+                showAlarmBanner(r.medicine_name, r.dosage);
+
+                // 2. Send OS notification via SW (works when tab is background)
+                if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+                    const swReg = await navigator.serviceWorker.ready;
+                    swReg.showNotification('💊 Medicine Reminder', {
+                        body: `Time to take: ${r.medicine_name}${r.dosage ? ' — ' + r.dosage : ''}`,
+                        icon: '/static/assets/hospital_logo.png',
+                        vibrate: [200, 100, 200, 100, 200],
+                        tag: `reminder-${r.id}`,
+                        requireInteraction: true,
+                        actions: [
+                            { action: 'taken', title: '✅ Taken' },
+                            { action: 'snooze', title: '⏰ Snooze 10 min' }
+                        ],
+                        data: r
+                    });
+                }
+
+                // Highlight the card
+                const card = document.getElementById(`card-${r.id}`);
+                if (card) card.classList.add('ringing');
+            }
+        }
+    } catch(e) {
+        console.log('Reminder check error:', e);
+    }
+}
+
+// ========== Background checker via BroadcastChannel ==========
+// When tab is in background, the SW will trigger alarms.
+// This registers a listener so the page reacts when SW fires.
+if ('BroadcastChannel' in window) {
+    const bc = new BroadcastChannel('reminder-alarm');
+    bc.onmessage = (e) => {
+        if (e.data && e.data.type === 'alarm') {
+            showAlarmBanner(e.data.medicine_name, e.data.dosage);
+        }
+    };
+}
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', () => {
+    // Set default start date to today
+    const today = new Date().toISOString().split('T')[0];
+    const sd = document.getElementById('start_date');
+    if (sd && !sd.value) sd.value = today;
+
+    checkNotificationPermission();
+
+    // Poll every 30 seconds while page is open
+    checkReminders();
+    setInterval(checkReminders, 30 * 1000);
+});
+</script>
+{% endblock %}

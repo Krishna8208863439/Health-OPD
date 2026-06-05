@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}My Profile – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
+.profile-hero{
+    background:linear-gradient(135deg,#0066CC 0%,#00A896 100%);
+    border-radius:16px;padding:36px;color:#fff;
+    display:flex;align-items:center;gap:28px;margin-bottom:28px;
+    box-shadow:0 8px 32px rgba(0,102,204,.25);
+}
+.avatar-circle{
+    width:100px;height:100px;border-radius:50%;
+    background:rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;
+    font-size:48px;flex-shrink:0;
+    border:4px solid rgba(255,255,255,.5);
+}
+.profile-hero h2{font-size:28px;font-weight:700;margin-bottom:4px;}
+.profile-hero p{font-size:14px;opacity:.9;margin:2px 0;}
+.pcard{background:#fff;border-radius:14px;padding:28px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;}
+.pcard h4{color:var(--blue);font-size:18px;font-weight:700;
+    margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #E9ECEF;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.fg label{font-size:12px;font-weight:700;color:#666;text-transform:uppercase;
+    letter-spacing:.4px;display:block;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{
+    width:100%;padding:10px 13px;border:2px solid #E9ECEF;
+    border-radius:8px;font-size:14px;background:#FAFAFA;
+    font-family:inherit;transition:.2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+    border-color:var(--blue);outline:none;background:#fff;}
+.fg textarea{resize:vertical;min-height:80px;}
+.span-full{grid-column:1/-1;}
+.save-btn{
+    background:linear-gradient(135deg,var(--green),#1e7e34);
+    color:#fff;border:none;border-radius:10px;
+    padding:13px 36px;font-size:15px;font-weight:700;
+    cursor:pointer;transition:.2s;float:right;margin-top:16px;}
+.save-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(40,167,69,.35);}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
+.stat-box{background:linear-gradient(135deg,#EFF6FF,#F0FFF4);
+    border-radius:12px;padding:18px;text-align:center;
+    border:2px solid #E9ECEF;}
+.stat-box .sv{font-size:32px;font-weight:800;color:var(--blue);}
+.stat-box .sl{font-size:12px;color:#777;margin-top:4px;font-weight:600;}
+.badge-role{
+    display:inline-block;padding:4px 16px;border-radius:50px;
+    font-size:13px;font-weight:700;margin-top:8px;
+    background:rgba(255,255,255,.25);}
+@media(max-width:600px){
+    .profile-hero{flex-direction:column;text-align:center;}
+    .form-grid{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-hero">
+    <div class="avatar-circle">👤</div>
+    <div>
+        <h2>{{ patient.full_name }}</h2>
+        <p>📧 {{ patient.email }}</p>
+        <p>📞 {{ patient.contact or 'Not provided' }} &nbsp;|&nbsp; 🏙️ {{ patient.city }}</p>
+        <span class="badge-role">{{ patient.role.title() }}</span>
+    </div>
+</div>
+
+<!-- Stats row -->
+<div class="pcard">
+    <h4>📊 Your Health Summary</h4>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="sv">{{ stats.total_predictions }}</div>
+            <div class="sl">Total Assessments</div>
+        </div>
+        <div class="stat-box">
+            <div class="sv">{{ stats.reminders_count }}</div>
+            <div class="sl">Active Reminders</div>
+        </div>
+        <div class="stat-box">
+            <div class="sv">{{ stats.vitals_count }}</div>
+            <div class="sl">Vitals Logged</div>
+        </div>
+        <div class="stat-box">
+            <div class="sv" style="color:{% if stats.last_disease %}var(--red){% else %}var(--green){% endif %};">
+                {{ stats.last_disease[:10] + '…' if stats.last_disease and stats.last_disease|length > 10 else (stats.last_disease or '—') }}
+            </div>
+            <div class="sl">Last Diagnosis</div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit profile form -->
+<div class="pcard">
+    <h4>✏️ Edit Profile</h4>
+    <form method="POST" action="/profile/update">
+        <div class="form-grid">
+            <div class="fg">
+                <label>Full Name</label>
+                <input type="text" name="full_name" value="{{ patient.full_name }}" required>
+            </div>
+            <div class="fg">
+                <label>Age</label>
+                <input type="number" name="age" value="{{ patient.age }}" min="1" max="120" required>
+            </div>
+            <div class="fg">
+                <label>Contact Number</label>
+                <input type="text" name="contact" value="{{ patient.contact or '' }}" placeholder="+91 XXXXXXXXXX">
+            </div>
+            <div class="fg">
+                <label>City</label>
+                <input type="text" name="city" value="{{ patient.city or '' }}" placeholder="e.g. Mumbai">
+            </div>
+            <div class="fg">
+                <label>Smoking</label>
+                <select name="smoking">
+                    <option value="no" {% if patient.smoking=='no' %}selected{% endif %}>No</option>
+                    <option value="yes" {% if patient.smoking=='yes' %}selected{% endif %}>Yes</option>
+                    <option value="ex" {% if patient.smoking=='ex' %}selected{% endif %}>Ex-smoker</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Blood Pressure</label>
+                <select name="blood_pressure">
+                    <option value="normal" {% if patient.blood_pressure=='normal' %}selected{% endif %}>Normal</option>
+                    <option value="high"   {% if patient.blood_pressure=='high'   %}selected{% endif %}>High</option>
+                    <option value="low"    {% if patient.blood_pressure=='low'    %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Blood Sugar</label>
+                <select name="blood_sugar">
+                    <option value="normal"      {% if patient.blood_sugar=='normal'      %}selected{% endif %}>Normal</option>
+                    <option value="high"        {% if patient.blood_sugar=='high'        %}selected{% endif %}>High (Diabetic)</option>
+                    <option value="prediabetic" {% if patient.blood_sugar=='prediabetic' %}selected{% endif %}>Pre-diabetic</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="save-btn">💾 Save Changes</button>
+        <div style="clear:both;"></div>
+    </form>
+</div>
+
+<!-- Change password -->
+<div class="pcard">
+    <h4>🔒 Change Password</h4>
+    <form method="POST" action="/profile/change-password">
+        <div class="form-grid">
+            <div class="fg">
+                <label>Current Password</label>
+                <input type="password" name="current_password" required>
+            </div>
+            <div class="fg">
+                <label>New Password</label>
+                <input type="password" name="new_password" minlength="6" required>
+            </div>
+            <div class="fg">
+                <label>Confirm New Password</label>
+                <input type="password" name="confirm_password" required>
+            </div>
+        </div>
+        <button type="submit" class="save-btn" style="background:linear-gradient(135deg,#0066CC,#004a99);">🔑 Change Password</button>
+        <div style="clear:both;"></div>
+    </form>
+</div>
+{% endblock %}

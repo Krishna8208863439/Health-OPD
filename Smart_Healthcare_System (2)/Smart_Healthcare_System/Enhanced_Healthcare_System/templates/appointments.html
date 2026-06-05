@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
+.appt-hero{
+    background:linear-gradient(135deg,#28A745 0%,#0066CC 100%);
+    border-radius:16px;padding:32px;color:#fff;
+    display:flex;align-items:center;gap:22px;
+    margin-bottom:28px;box-shadow:0 8px 32px rgba(40,167,69,.25);}
+.appt-hero .ico{font-size:56px;}
+.appt-hero h2{font-size:26px;font-weight:700;margin-bottom:4px;}
+.appt-hero p{font-size:14px;opacity:.9;margin:0;}
+.acard{background:#fff;border-radius:14px;padding:28px;
+    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;}
+.acard h4{color:var(--blue);font-size:17px;font-weight:700;
+    margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #E9ECEF;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.fg label{font-size:12px;font-weight:700;color:#666;text-transform:uppercase;
+    letter-spacing:.4px;display:block;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{
+    width:100%;padding:10px 13px;border:2px solid #E9ECEF;
+    border-radius:8px;font-size:14px;background:#FAFAFA;
+    font-family:inherit;transition:.2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+    border-color:var(--blue);outline:none;background:#fff;}
+.fg textarea{resize:vertical;min-height:80px;}
+.span-full{grid-column:1/-1;}
+.book-btn{
+    background:linear-gradient(135deg,var(--green),#1e7e34);
+    color:#fff;border:none;border-radius:10px;
+    padding:13px 36px;font-size:15px;font-weight:700;
+    cursor:pointer;transition:.2s;float:right;margin-top:16px;}
+.book-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(40,167,69,.35);}
+
+/* Appointments cards */
+.appt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.appt-card{
+    background:#fff;border-radius:12px;padding:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.07);
+    border-left:5px solid var(--green);
+    transition:.2s;position:relative;}
+.appt-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1);}
+.appt-card.pending {border-left-color:#FFC107;}
+.appt-card.confirmed{border-left-color:#28A745;}
+.appt-card.cancelled{border-left-color:#DC3545;opacity:.7;}
+.appt-card.completed{border-left-color:#6c757d;}
+.appt-doc{font-size:16px;font-weight:700;color:#0066CC;margin-bottom:4px;}
+.appt-dt{font-size:20px;font-weight:800;color:#333;margin-bottom:8px;}
+.appt-meta{font-size:13px;color:#666;margin-bottom:4px;}
+.status-pill{
+    display:inline-block;padding:3px 12px;border-radius:20px;
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.sp-pending  {background:#FFF3CD;color:#856404;}
+.sp-confirmed{background:#D4EDDA;color:#155724;}
+.sp-cancelled{background:#F8D7DA;color:#721C24;}
+.sp-completed{background:#E2E8F0;color:#4A5568;}
+.cancel-btn{
+    position:absolute;top:14px;right:14px;
+    background:none;border:2px solid #DC3545;color:#DC3545;
+    border-radius:8px;padding:4px 10px;font-size:12px;
+    font-weight:700;cursor:pointer;transition:.2s;}
+.cancel-btn:hover{background:#DC3545;color:#fff;}
+.empty-state{
+    text-align:center;padding:48px 20px;color:#aaa;}
+.empty-state .eico{font-size:64px;display:block;margin-bottom:12px;}
+
+/* Doctor cards for selection */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
+.doc-chip{
+    border:2px solid #E9ECEF;border-radius:10px;padding:12px;
+    cursor:pointer;transition:.2s;text-align:center;background:#FAFAFA;}
+.doc-chip:hover,.doc-chip.selected{border-color:#0066CC;background:#EFF6FF;}
+.doc-chip .dc-name{font-size:13px;font-weight:700;color:#333;}
+.doc-chip .dc-spec{font-size:11px;color:#888;margin-top:3px;}
+.doc-chip .dc-ico{font-size:32px;margin-bottom:8px;}
+
+@media(max-width:600px){
+    .appt-hero{flex-direction:column;text-align:center;}
+    .form-grid{grid-template-columns:1fr;}
+    .appt-grid{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="appt-hero">
+    <div class="ico">📅</div>
+    <div>
+        <h2>Book an Appointment</h2>
+        <p>Schedule a consultation with our specialist doctors at HealthCare Plus Hospital</p>
+    </div>
+</div>
+
+<!-- Book new appointment -->
+<div class="acard">
+    <h4>➕ Schedule New Appointment</h4>
+    <form method="POST" action="/appointments/book">
+        <div class="form-grid">
+            <div class="fg">
+                <label>Doctor / Specialist</label>
+                <select name="doctor_name" required>
+                    <option value="">— Select a Doctor —</option>
+                    <optgroup label="General Medicine">
+                        <option>Dr. Sandeep Budhiraja, MD – General Medicine</option>
+                        <option>Dr. Amit Sharma, MD – General Medicine</option>
+                    </optgroup>
+                    <optgroup label="Cardiology">
+                        <option>Dr. Devi Shetty, MS – Cardiology</option>
+                        <option>Dr. Naresh Trehan, MD – Cardiology</option>
+                    </optgroup>
+                    <optgroup label="Pulmonology">
+                        <option>Dr. Randeep Guleria, DM – Pulmonology</option>
+                        <option>Dr. S.K. Jindal, DM – Pulmonology</option>
+                    </optgroup>
+                    <optgroup label="Neurology">
+                        <option>Dr. Ashok Panagariya, DM – Neurology</option>
+                        <option>Dr. K. Sridhar, MCh – Neurology</option>
+                    </optgroup>
+                    <optgroup label="Gastroenterology">
+                        <option>Dr. S.K. Sarin, DM – Gastroenterology</option>
+                    </optgroup>
+                    <optgroup label="Nephrology / Urology">
+                        <option>Dr. Sanjay Pandya, MCh – Nephrology</option>
+                    </optgroup>
+                    <optgroup label="Endocrinology">
+                        <option>Dr. A.K. Das, MD – Endocrinology</option>
+                        <option>Dr. Shashank Joshi, MD – Endocrinology</option>
+                    </optgroup>
+                    <optgroup label="Infectious Disease">
+                        <option>Dr. Rajesh Chawla, MD – Infectious Disease</option>
+                    </optgroup>
+                    <optgroup label="Orthopedics">
+                        <option>Dr. S. Rajasekaran, MS – Orthopedics</option>
+                    </optgroup>
+                    <optgroup label="Dermatology">
+                        <option>Dr. Niti Khunger, MD – Dermatology</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Appointment Date</label>
+                <input type="date" name="appointment_date" id="appt-date" required min="{{ today }}">
+            </div>
+            <div class="fg">
+                <label>Preferred Time</label>
+                <select name="appointment_time" required>
+                    <option value="">— Select —</option>
+                    <option>09:00 AM</option><option>09:30 AM</option>
+                    <option>10:00 AM</option><option>10:30 AM</option>
+                    <option>11:00 AM</option><option>11:30 AM</option>
+                    <option>12:00 PM</option>
+                    <option>02:00 PM</option><option>02:30 PM</option>
+                    <option>03:00 PM</option><option>03:30 PM</option>
+                    <option>04:00 PM</option><option>04:30 PM</option>
+                    <option>05:00 PM</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Type of Visit</label>
+                <select name="visit_type">
+                    <option value="consultation">General Consultation</option>
+                    <option value="followup">Follow-up Visit</option>
+                    <option value="emergency">Emergency / Urgent</option>
+                    <option value="test_review">Test / Report Review</option>
+                    <option value="preventive">Preventive Checkup</option>
+                </select>
+            </div>
+            <div class="fg span-full">
+                <label>Reason / Symptoms (optional)</label>
+                <textarea name="reason" placeholder="e.g. Recurring headaches, chest discomfort, follow-up for diabetes…"></textarea>
+            </div>
+        </div>
+        <button type="submit" class="book-btn">📅 Book Appointment</button>
+        <div style="clear:both;"></div>
+    </form>
+</div>
+
+<!-- My appointments -->
+<div class="acard">
+    <h4>📋 My Appointments
+        <span style="background:#E3F2FD;color:#1565C0;border-radius:20px;
+            padding:3px 12px;font-size:13px;margin-left:8px;">
+            {{ appointments|length }} total
+        </span>
+    </h4>
+
+    {% if appointments %}
+    <div class="appt-grid">
+        {% for a in appointments %}
+        <div class="appt-card {{ a.status }}">
+            {% if a.status in ['pending','confirmed'] %}
+            <form method="POST" action="/appointments/cancel/{{ a.id }}"
+                  onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
+                <button type="submit" class="cancel-btn">✕ Cancel</button>
+            </form>
+            {% endif %}
+            <div class="appt-doc">👨‍⚕️ {{ a.doctor_name }}</div>
+            <div class="appt-dt">📅 {{ a.appointment_date }} &nbsp; ⏰ {{ a.appointment_time }}</div>
+            <div class="appt-meta">🏥 {{ a.visit_type.replace('_',' ').title() }}</div>
+            {% if a.reason %}
+            <div class="appt-meta" style="margin-top:6px;color:#555;">💬 {{ a.reason[:80] }}{{ '…' if a.reason|length > 80 else '' }}</div>
+            {% endif %}
+            <div style="margin-top:10px;">
+                <span class="status-pill sp-{{ a.status }}">
+                    {% if a.status == 'pending' %}⏳ Pending
+                    {% elif a.status == 'confirmed' %}✅ Confirmed
+                    {% elif a.status == 'cancelled' %}✕ Cancelled
+                    {% else %}✔ Completed{% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <span class="eico">📅</span>
+        <h4>No appointments yet</h4>
+        <p>Book your first appointment with a specialist above.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info box -->
+<div style="background:#EFF6FF;border:2px solid #BFDBFE;border-radius:12px;padding:18px 22px;font-size:13px;color:#1E40AF;">
+    ℹ️ <strong>Note:</strong> Appointments are confirmed within 2 hours during working hours (9 AM – 5 PM, Mon–Sat).
+    For emergencies, please go to the nearest hospital or call <strong>108</strong>.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const di = document.getElementById('appt-date');
+    if (di) { di.min = today; }
+});
+</script>
+{% endblock %}
