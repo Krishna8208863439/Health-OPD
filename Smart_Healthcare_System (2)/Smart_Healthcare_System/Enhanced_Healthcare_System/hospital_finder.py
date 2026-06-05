@@ -503,9 +503,27 @@ HOSPITALS_BY_CITY = {
 }
 
 
-def find_hospitals(city="Default", hospital_type=None, specialty=None, max_distance=None, disease=None):
+import math
+
+def calculate_haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate distance between two coordinates in kilometers using Haversine formula"""
+    R = 6371.0 # Earth's radius in km
+    
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_phi / 2.0)**2 + \
+        math.cos(phi1) * math.cos(phi2) * \
+        math.sin(delta_lambda / 2.0)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    return round(R * c, 2)
+
+def find_hospitals(city="Default", hospital_type=None, specialty=None, max_distance=None, disease=None, user_lat=None, user_lng=None):
     """
-    Find hospitals based on filters
+    Find hospitals based on filters, with optional live location support.
     
     Args:
         city: City name
@@ -513,12 +531,21 @@ def find_hospitals(city="Default", hospital_type=None, specialty=None, max_dista
         specialty: Required specialty or None (all)
         max_distance: Maximum distance in km or None (all)
         disease: Disease name to match specialty
+        user_lat: Optional user latitude (live location)
+        user_lng: Optional user longitude (live location)
     
     Returns:
         List of matching hospitals
     """
-    # Get hospitals for city
-    hospitals = HOSPITALS_BY_CITY.get(city, HOSPITALS_BY_CITY["Default"])
+    # If live location is provided, search all listed hospitals across all cities to find the closest ones.
+    # Otherwise, fallback to the selected city.
+    if user_lat is not None and user_lng is not None:
+        hospitals_to_search = []
+        for city_key, city_list in HOSPITALS_BY_CITY.items():
+            if city_key != "Default":
+                hospitals_to_search.extend(city_list)
+    else:
+        hospitals_to_search = HOSPITALS_BY_CITY.get(city, HOSPITALS_BY_CITY["Default"])
     
     # Map diseases to specialties
     disease_specialty_map = {
@@ -550,7 +577,7 @@ def find_hospitals(city="Default", hospital_type=None, specialty=None, max_dista
     
     # Apply filters
     filtered = []
-    for hospital in hospitals:
+    for hospital in hospitals_to_search:
         # Type filter
         if hospital_type and hospital["type"] != hospital_type:
             continue
@@ -559,11 +586,18 @@ def find_hospitals(city="Default", hospital_type=None, specialty=None, max_dista
         if specialty and specialty not in hospital["specialty"]:
             continue
         
+        # Create a copy so we don't modify the global cache
+        h_copy = hospital.copy()
+        
+        # Calculate real distance if live coordinates are available
+        if user_lat is not None and user_lng is not None and h_copy["lat"] != 0 and h_copy["lng"] != 0:
+            h_copy["distance"] = calculate_haversine_distance(user_lat, user_lng, h_copy["lat"], h_copy["lng"])
+        
         # Distance filter
-        if max_distance and hospital["distance"] > max_distance:
+        if max_distance and h_copy["distance"] > max_distance:
             continue
         
-        filtered.append(hospital)
+        filtered.append(h_copy)
     
     # Sort by distance
     filtered.sort(key=lambda x: x["distance"])

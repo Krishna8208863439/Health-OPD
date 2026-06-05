@@ -110,6 +110,24 @@ def init_db():
     except Exception:
         pass
 
+    # Alter predictions to add doctor_phone if not exists
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN doctor_phone TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    # Alter predictions to add referred_hospital if not exists
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN referred_hospital TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    # Alter appointments to add hospital_name if not exists
+    try:
+        cur.execute("ALTER TABLE appointments ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+    except Exception:
+        pass
+
     # === NEW FEATURE TABLES ===
 
     # 1. Health Vitals Tracker
@@ -258,6 +276,12 @@ def init_db():
     )
     """)
 
+    # Alter doctor_slots to add hospital_name if not exists
+    try:
+        cur.execute("ALTER TABLE doctor_slots ADD COLUMN hospital_name TEXT DEFAULT 'City General Hospital'")
+    except Exception:
+        pass
+
     # Seed default admin if not exists
     admin_user = cur.execute("SELECT * FROM users WHERE username = 'admin' OR email = 'admin@healthcare.com'").fetchone()
     if not admin_user:
@@ -267,7 +291,54 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, ("admin", "admin@healthcare.com", admin_pass, "System Administrator", 35, "Other", "1234567890", "Main Office", "admin", "Delhi"))
         conn.commit()
-    
+
+    # Seed default specialist doctors if not exist
+    DEFAULT_DOCTORS = [
+        ("dr_general",  "dr.general@healthcare.com",  "Dr. Rajesh Kumar",   42, "Male",   "General Physician",    "Mumbai"),
+        ("dr_cardio",   "dr.cardio@healthcare.com",   "Dr. Priya Sharma",   39, "Female", "Cardiologist",         "Mumbai"),
+        ("dr_neuro",    "dr.neuro@healthcare.com",    "Dr. Amit Patel",     47, "Male",   "Neurologist",          "Delhi"),
+        ("dr_ortho",    "dr.ortho@healthcare.com",    "Dr. Meena Iyer",     44, "Female", "Orthopedist",          "Bangalore"),
+        ("dr_pulmo",    "dr.pulmo@healthcare.com",    "Dr. Kiran Rao",      51, "Male",   "Pulmonologist",        "Chennai"),
+        ("dr_gastro",   "dr.gastro@healthcare.com",   "Dr. Sunita Nair",    38, "Female", "Gastroenterologist",   "Hyderabad"),
+    ]
+    doctor_pass = generate_password_hash("doctor123")
+    doctor_ids = {}
+    for uname, email, fname, age, gender, spec, city in DEFAULT_DOCTORS:
+        existing = cur.execute("SELECT id FROM users WHERE username = ?", (uname,)).fetchone()
+        if not existing:
+            cur.execute("""
+                INSERT INTO users (username, email, password_hash, full_name, age, gender, contact, address, role, city)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'doctor', ?)
+            """, (uname, email, doctor_pass, fname, age, gender, "+91-9000000000", spec + " Clinic", city))
+            conn.commit()
+        doc_row = cur.execute("SELECT id FROM users WHERE username = ?", (uname,)).fetchone()
+        if doc_row:
+            doctor_ids[uname] = doc_row['id']
+
+    # Seed sample doctor availability slots if none exist
+    total_slots = cur.execute("SELECT COUNT(*) FROM doctor_slots").fetchone()[0]
+    if total_slots == 0 and doctor_ids:
+        from datetime import date, timedelta
+        slot_configs = [
+            ("dr_general", "Kokilaben Dhirubhai Ambani Hospital", 1, "09:00", "09:30"),
+            ("dr_general", "Kokilaben Dhirubhai Ambani Hospital", 2, "10:00", "10:30"),
+            ("dr_cardio",  "Lilavati Hospital",                  1, "11:00", "11:30"),
+            ("dr_cardio",  "Lilavati Hospital",                  3, "14:00", "14:30"),
+            ("dr_neuro",   "All India Institute of Medical Sciences (AIIMS)", 2, "09:30", "10:00"),
+            ("dr_ortho",   "Manipal Hospital",                   1, "10:00", "10:30"),
+            ("dr_pulmo",   "Apollo Hospitals",                   4, "08:00", "08:30"),
+            ("dr_gastro",  "Apollo Hospitals",                   2, "15:00", "15:30"),
+        ]
+        today = date.today()
+        for uname, hosp, days_ahead, start, end in slot_configs:
+            if uname in doctor_ids:
+                slot_date = (today + timedelta(days=days_ahead)).isoformat()
+                cur.execute("""
+                    INSERT INTO doctor_slots (doctor_id, slot_date, start_time, end_time, is_booked, hospital_name)
+                    VALUES (?, ?, ?, ?, 0, ?)
+                """, (doctor_ids[uname], slot_date, start, end, hosp))
+        conn.commit()
+
     conn.commit()
     conn.close()
 
@@ -712,25 +783,78 @@ def predict():
     max_distance = request.form.get('max_distance')
     if max_distance:
         max_distance = float(max_distance)
+        
+    user_lat = request.form.get('user_lat')
+    user_lng = request.form.get('user_lng')
+    try:
+        user_lat = float(user_lat) if user_lat else None
+    except ValueError:
+        user_lat = None
+        
+    try:
+        user_lng = float(user_lng) if user_lng else None
+    except ValueError:
+        user_lng = None
     
     # Find hospitals
     hospitals_list = find_hospitals(
         city=current_user.city,
         hospital_type=hospital_type,
         disease=disease,
-        max_distance=max_distance
+        max_distance=max_distance,
+        user_lat=user_lat,
+        user_lng=user_lng
     )
     
     medicines = MEDICINE_DATABASE.get(disease, {}).get(severity, ["Consult Doctor"])
     
-    # Assign Doctor Name
-    try:
-        doctor_row = cur.execute("SELECT full_name FROM users WHERE role = 'doctor' ORDER BY RANDOM() LIMIT 1").fetchone()
-        doctor_name = doctor_row['full_name'] if doctor_row else "Dr. Amit Sharma, MD"
-    except Exception:
-        doctor_name = "Dr. Amit Sharma, MD"
-    if not doctor_name.startswith("Dr. "):
-        doctor_name = "Dr. " + doctor_name
+    # Referred Hospital and Doctor Assignment
+    if hospitals_list:
+        referred_hospital = hospitals_list[0]['name']
+        doctor_phone = hospitals_list[0]['phone']
+    else:
+        referred_hospital = "City General Hospital"
+        doctor_phone = "+91-XXX-XXX-XXXX"
+
+    # Map diseases to specialties and doctor names
+    specialty_docs = {
+        "Cardiology": ["Dr. Devi Shetty, MS", "Dr. Naresh Trehan, MD", "Dr. K. K. Talwar, DM"],
+        "Oncology": ["Dr. Suresh Advani, MD", "Dr. Rajendra Badwe, MS", "Dr. S. H. Advani, MD"],
+        "Neurology": ["Dr. Ashok Panagariya, DM", "Dr. K. Sridhar, MCh", "Dr. Mukul Varma, DM"],
+        "General Medicine": ["Dr. Sandeep Budhiraja, MD", "Dr. Randeep Guleria, DM", "Dr. Rajesh Chawla, MD"],
+        "Emergency": ["Dr. Amit Sharma, MD", "Dr. S. K. Sarin, DM", "Dr. Balram Bhargava, DM"]
+    }
+    
+    # Map diseases to specialties
+    disease_specialty_map = {
+        "Pneumonia": "Emergency",
+        "Pneumonia or TB": "Emergency", 
+        "Pneumonia or TB or COVID": "Emergency",
+        "Bronchitis": "Emergency",
+        "Influenza": "Emergency",
+        "Seasonal Influenza": "Emergency",
+        "Asthma": "Emergency",
+        "Stomach Infection": "General Medicine",
+        "Gastroenteritis": "General Medicine",
+        "Food Poisoning": "General Medicine",
+        "Typhoid Fever": "General Medicine",
+        "Migraine": "Neurology",
+        "Hypertension": "Cardiology",
+        "Diabetes": "General Medicine",
+        "Common Cold": "General Medicine",
+        "cold and cough": "General Medicine",
+        "Dengue": "Emergency",
+        "Kidney Infection or Stone": "General Medicine",
+        "Allergic Side Effects": "General Medicine",
+        "Acidity": "General Medicine"
+    }
+    
+    spec = disease_specialty_map.get(disease, "General Medicine")
+    doc_list = specialty_docs.get(spec, specialty_docs["General Medicine"])
+    
+    # Use referred_hospital hash to select a deterministic doctor from the list
+    h_idx = sum(ord(c) for c in referred_hospital) % len(doc_list)
+    doctor_name = doc_list[h_idx]
     
     doctor_advice = {
         "LOW": "Monitor symptoms at home. Stay hydrated, get adequate rest. Consult if symptoms worsen.",
@@ -750,7 +874,9 @@ def predict():
         'medicines': ', '.join(medicines),
         'hospitals': ', '.join([h['name'] for h in hospitals_list[:5]]),
         'doctor_advice': doctor_advice[severity],
-        'doctor_name': doctor_name
+        'doctor_name': doctor_name,
+        'doctor_phone': doctor_phone,
+        'referred_hospital': referred_hospital
     }
     
     pdf_filename = generate_pdf(current_user, prediction_data)
@@ -760,12 +886,12 @@ def predict():
     cur.execute("""
         INSERT INTO predictions (patient_id, patient_name, patient_age, disease, risk_percentage, 
                                health_risk_score, health_risk_category, severity, probability, 
-                               symptoms, symptom_count, medicines, hospitals, doctor_advice, pdf_path, doctor_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               symptoms, symptom_count, medicines, hospitals, doctor_advice, pdf_path, doctor_name, doctor_phone, referred_hospital)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (current_user.id, current_user.full_name, current_user.age, disease, risk, 
           health_risk['score'], health_risk['category'], prediction_data['severity'], prob, 
           str(symptoms), symptom_count, prediction_data['medicines'], 
-          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name))
+          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name, doctor_phone, referred_hospital))
     
     # Auto-generate notification for the user
     notif_title = f"New AI Prediction: {disease}"
@@ -1072,6 +1198,7 @@ def log_vitals():
 @app.route('/appointments')
 @login_required
 def appointments():
+    from hospital_finder import HOSPITALS_BY_CITY
     conn = get_db()
     cur = conn.cursor()
     appts = cur.execute("""
@@ -1080,7 +1207,7 @@ def appointments():
     """, (current_user.id,)).fetchall()
     conn.close()
     today = datetime.now().strftime('%Y-%m-%d')
-    return render_template('appointments.html', patient=current_user, appointments=appts, today=today)
+    return render_template('appointments.html', patient=current_user, appointments=appts, today=today, HOSPITALS_BY_CITY=HOSPITALS_BY_CITY)
 
 
 @app.route('/appointments/book', methods=['POST'])
@@ -1088,39 +1215,52 @@ def appointments():
 def book_appointment():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO appointments (patient_id, doctor_name, appt_date, appt_time, appt_type, notes, current_medications)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        current_user.id,
-        request.form.get('doctor_name'),
-        request.form.get('appt_date'),
-        request.form.get('appt_time'),
-        request.form.get('appt_type'),
-        request.form.get('notes'),
-        request.form.get('current_medications')
-    ))
-    
-    # Notify patient
     doc_name = request.form.get('doctor_name')
     appt_date = request.form.get('appt_date')
     appt_time = request.form.get('appt_time')
+    appt_type = request.form.get('appt_type')
+    notes = request.form.get('notes')
+    current_medications = request.form.get('current_medications')
+    hospital_name = request.form.get('hospital_name', 'City General Hospital')
+
+    cur.execute("""
+        INSERT INTO appointments (patient_id, doctor_name, appt_date, appt_time, appt_type, notes, current_medications, hospital_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        current_user.id,
+        doc_name,
+        appt_date,
+        appt_time,
+        appt_type,
+        notes,
+        current_medications,
+        hospital_name
+    ))
+
+    # Notify patient
     cur.execute("""
         INSERT INTO notifications (user_id, title, body, type)
         VALUES (?, ?, ?, ?)
-    """, (current_user.id, "📅 Appointment Booked", f"Your appointment with {doc_name} on {appt_date} at {appt_time} is pending confirmation.", "info"))
-    
+    """, (current_user.id, "📅 Appointment Booked",
+          f"Your appointment with {doc_name} at {hospital_name} on {appt_date} at {appt_time} is pending confirmation.",
+          "info"))
+
     # Find doctor if they are registered as a user
-    doc_user = cur.execute("SELECT id FROM users WHERE role = 'doctor' AND full_name LIKE ?", (f"%{doc_name}%",)).fetchone()
+    doc_user = cur.execute(
+        "SELECT id FROM users WHERE role = 'doctor' AND full_name LIKE ?",
+        (f"%{doc_name.split('(')[0].strip()}%",)
+    ).fetchone()
     if doc_user:
         cur.execute("""
             INSERT INTO notifications (user_id, title, body, type)
             VALUES (?, ?, ?, ?)
-        """, (doc_user['id'], "📅 New Appointment Request", f"Patient {current_user.full_name} has requested an appointment on {appt_date} at {appt_time}.", "info"))
-        
+        """, (doc_user['id'], "📅 New Appointment Request",
+              f"Patient {current_user.full_name} has requested an appointment at {hospital_name} on {appt_date} at {appt_time}.",
+              "info"))
+
     conn.commit()
     conn.close()
-    flash('Appointment booked successfully! You will receive a confirmation shortly.', 'success')
+    flash(f'Appointment booked at {hospital_name}! You will receive a confirmation shortly.', 'success')
     return redirect(url_for('appointments'))
 
 
@@ -1901,32 +2041,67 @@ def chatbot_ask():
     if not data or 'message' not in data:
         return jsonify({'response': 'Invalid request'}), 400
         
-    user_msg = data['message'].strip().lower()
+    user_msg = data['message'].strip()
+    user_msg_lower = user_msg.lower()
     
-    # local rule-based response generator
-    response = ""
-    if any(k in user_msg for k in ['hi', 'hello', 'hey', 'greetings', 'namaste']):
-        response = "Hello! I am your AI Health Assistant. How can I help you today? Please tell me your symptoms or health queries."
-    elif any(k in user_msg for k in ['fever', 'temperature', 'pyrexia', 'bukhar']):
-        response = "A fever is usually a sign that your body is fighting off an infection. Please drink plenty of fluids, rest, and monitor your temperature. If it exceeds 102°F (38.9°C) or lasts more than 3 days, please consult a doctor. You can book an appointment or check available slots with our specialists."
-    elif any(k in user_msg for k in ['cough', 'cold', 'sneeze', 'flu', 'sardi', 'khansi']):
-        response = "For cough and cold, warm liquids like herbal tea or warm water with honey can help soothe your throat. Rest well. If you experience shortness of breath, a high fever, or your cough persists for more than 10 days, please schedule a virtual or physical visit with a physician."
-    elif any(k in user_msg for k in ['headache', 'migraine', 'head pain', 'sir dard']):
-        response = "Headaches can be triggered by stress, dehydration, lack of sleep, or eye strain. Try resting in a dark, quiet room, and stay hydrated. If the headache is sudden and severe (a 'thunderclap' headache) or accompanied by fever, neck stiffness, or confusion, seek emergency care immediately."
-    elif any(k in user_msg for k in ['stomach', 'belly', 'abdominal', 'nausea', 'vomit', 'diarrhea', 'pet dard']):
-        response = "Abdominal discomfort or nausea can be due to indigestion, food poisoning, or virus infections. Stay hydrated by taking small sips of water or ORS. Stick to bland foods (BRAT diet: bananas, rice, applesauce, toast). If you experience severe, sharp pain, or blood in vomit/stool, consult a doctor immediately."
-    elif any(k in user_msg for k in ['chest pain', 'heart', 'cardiac', 'shortness of breath', 'breathless', 'dil', 'dhadkan']):
-        response = "⚠️ **URGENT:** Chest pain or severe shortness of breath can be a sign of a cardiac emergency or serious pulmonary condition. Please do not ignore this. Seek emergency medical services (SOS) or go to the nearest emergency room immediately!"
-    elif any(k in user_msg for k in ['diabetes', 'sugar', 'glucose', 'sugar level']):
-        response = "Managing diabetes involves maintaining a healthy diet low in refined sugars, regular physical activity, monitoring blood glucose levels, and taking prescribed medications. Please track your daily blood glucose in our Vitals section, and share the log with your doctor."
-    elif any(k in user_msg for k in ['appointment', 'book', 'doctor', 'slot', 'milna']):
-        response = "You can easily book a doctor's appointment! Use the 'Doctor Slots' or 'Appointments' links in the sidebar to see available times and lock in your session."
-    elif any(k in user_msg for k in ['report', 'history', 'trends', 'card']):
-        response = "You can view your health progress anytime! Go to 'Symptom Trends' in the sidebar to see charts of your symptoms over time, or 'Monthly Report Card' to view and print your consolidated monthly report."
-    elif any(k in user_msg for k in ['thank', 'thanks', 'cool', 'awesome', 'shukriya']):
-        response = "You're very welcome! I'm here to support your health journey. Let me know if you have other symptoms or questions."
-    else:
-        response = "Thank you for sharing. Based on my database, your symptoms/query could be related to standard health factors. I highly recommend logging your vitals (temperature, BP) on our 'Vitals Tracker' page, and using our 'Predict Disease' feature for a detailed risk analysis, or booking a direct appointment with our panel of doctors."
+    # Try calling the real Gemini API if an API key is configured
+    response = None
+    import os
+    api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
+    if api_key:
+        import requests
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {
+            "contents": [{
+                "parts": [{
+                    "text": (
+                        f"You are a helpful, professional AI Health Assistant on a smart healthcare platform. "
+                        f"The user is asking: '{user_msg}'. Provide a friendly, helpful, and concise medical "
+                        f"answer in 2 to 4 sentences. Always include a brief disclaimer that they should consult "
+                        f"a physician for severe symptoms."
+                    )
+                }]
+            }]
+        }
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=5)
+            if res.status_code == 200:
+                result = res.json()
+                response = result['candidates'][0]['content']['parts'][0]['text'].strip()
+        except Exception as e:
+            print(f"Error calling Gemini API: {e}")
+            
+    # Fallback to local rule-based system if Gemini is unavailable
+    if not response:
+        if any(k in user_msg_lower for k in ['hi', 'hello', 'hey', 'greetings', 'namaste']):
+            response = "Hello! I am your AI Health Assistant. How can I help you today? Please tell me your symptoms or health queries."
+        elif any(k in user_msg_lower for k in ['fever', 'temperature', 'pyrexia', 'bukhar']):
+            response = "A fever is usually a sign that your body is fighting off an infection. Please drink plenty of fluids, rest, and monitor your temperature. If it exceeds 102°F (38.9°C) or lasts more than 3 days, please consult a doctor. You can book an appointment or check available slots with our specialists."
+        elif any(k in user_msg_lower for k in ['cough', 'cold', 'sneeze', 'flu', 'sardi', 'khansi']):
+            response = "For cough and cold, warm liquids like herbal tea or warm water with honey can help soothe your throat. Rest well. If you experience shortness of breath, a high fever, or your cough persists for more than 10 days, please schedule a virtual or physical visit with a physician."
+        elif any(k in user_msg_lower for k in ['headache', 'migraine', 'head pain', 'sir dard']):
+            response = "Headaches can be triggered by stress, dehydration, lack of sleep, or eye strain. Try resting in a dark, quiet room, and stay hydrated. If the headache is sudden and severe (a 'thunderclap' headache) or accompanied by fever, neck stiffness, or confusion, seek emergency care immediately."
+        elif any(k in user_msg_lower for k in ['stomach', 'belly', 'abdominal', 'nausea', 'vomit', 'diarrhea', 'pet dard']):
+            response = "Abdominal discomfort or nausea can be due to indigestion, food poisoning, or virus infections. Stay hydrated by taking small sips of water or ORS. Stick to bland foods (BRAT diet: bananas, rice, applesauce, toast). If you experience severe, sharp pain, or blood in vomit/stool, consult a doctor immediately."
+        elif any(k in user_msg_lower for k in ['chest pain', 'heart', 'cardiac', 'shortness of breath', 'breathless', 'dil', 'dhadkan']):
+            response = "⚠️ **URGENT:** Chest pain or severe shortness of breath can be a sign of a cardiac emergency or serious pulmonary condition. Please do not ignore this. Seek emergency medical services (SOS) or go to the nearest emergency room immediately!"
+        elif any(k in user_msg_lower for k in ['diabetes', 'sugar', 'glucose', 'sugar level']):
+            response = "Managing diabetes involves maintaining a healthy diet low in refined sugars, regular physical activity, monitoring blood glucose levels, and taking prescribed medications. Please track your daily blood glucose in our Vitals section, and share the log with your doctor."
+        elif any(k in user_msg_lower for k in ['dengue', 'platelet', 'mosquito']):
+            response = "Dengue is a viral infection spread by mosquitoes. Symptoms include high fever, severe body pain (breakbone fever), and skin rashes. It is critical to stay hydrated (ORS, juices) and avoid taking Aspirin or Ibuprofen as they increase bleeding risks. Monitor platelet counts daily."
+        elif any(k in user_msg_lower for k in ['kidney', 'stone', 'renal']):
+            response = "Kidney stones or infections can cause severe lower back pain, painful urination, or blood in urine. Drink 3-4 liters of water daily to help flush out small stones. If you have a fever, chills, or persistent vomiting along with the pain, seek immediate medical care for a potential kidney infection."
+        elif any(k in user_msg_lower for k in ['diet', 'food', 'eat', 'nutrition']):
+            response = "For optimal recovery, consume a balanced diet rich in leafy vegetables, lean proteins, fruits, and whole grains. Avoid processed foods, excess sodium, and high sugars. Proper hydration is equally crucial."
+        elif any(k in user_msg_lower for k in ['appointment', 'book', 'doctor', 'slot', 'milna']):
+            response = "You can easily book a doctor's appointment! Use the 'Doctor Slots' or 'Appointments' links in the sidebar to see available times and lock in your session."
+        elif any(k in user_msg_lower for k in ['report', 'history', 'trends', 'card']):
+            response = "You can view your health progress anytime! Go to 'Symptom Trends' in the sidebar to see charts of your symptoms over time, or 'Monthly Report Card' to view and print your consolidated monthly report."
+        elif any(k in user_msg_lower for k in ['thank', 'thanks', 'cool', 'awesome', 'shukriya']):
+            response = "You're very welcome! I'm here to support your health journey. Let me know if you have other symptoms or questions."
+        else:
+            response = f"Thank you for your question about '{user_msg}'. I recommend checking our 'Predict Disease' system for symptom assessment, logging your daily vitals in the Vitals Tracker, or scheduling a consultation with one of our specialized doctors for an accurate diagnosis."
 
     # Save to DB
     conn = get_db()
@@ -2212,22 +2387,24 @@ def report_card_pdf():
 @login_required
 @role_required('doctor')
 def doctor_slots():
+    from hospital_finder import HOSPITALS_BY_CITY
     conn = get_db()
     cur = conn.cursor()
-    
+
     if request.method == 'POST':
         slot_date = request.form.get('slot_date')
         start_time = request.form.get('start_time')
         end_time = request.form.get('end_time')
-        
+        hospital_name = request.form.get('hospital_name', 'City General Hospital')
+
         if slot_date and start_time and end_time:
             cur.execute("""
-                INSERT INTO doctor_slots (doctor_id, slot_date, start_time, end_time, is_booked)
-                VALUES (?, ?, ?, ?, 0)
-            """, (current_user.id, slot_date, start_time, end_time))
+                INSERT INTO doctor_slots (doctor_id, slot_date, start_time, end_time, is_booked, hospital_name)
+                VALUES (?, ?, ?, ?, 0, ?)
+            """, (current_user.id, slot_date, start_time, end_time, hospital_name))
             conn.commit()
-            flash('Availability slot added successfully!', 'success')
-            
+            flash(f'Availability slot at {hospital_name} added successfully!', 'success')
+
     slots = cur.execute("""
         SELECT s.*, u.full_name as patient_name
         FROM doctor_slots s
@@ -2235,9 +2412,11 @@ def doctor_slots():
         WHERE s.doctor_id = ?
         ORDER BY s.slot_date ASC, s.start_time ASC
     """, (current_user.id,)).fetchall()
-    
+
     conn.close()
-    return render_template('doctor_slots.html', doctor=current_user, slots=slots)
+    datetime_now = datetime.now().strftime('%Y-%m-%d')
+    return render_template('doctor_slots.html', doctor=current_user, slots=slots,
+                           HOSPITALS_BY_CITY=HOSPITALS_BY_CITY, datetime_now=datetime_now)
 
 @app.route('/doctor/slots/delete/<int:slot_id>', methods=['POST'])
 @login_required
@@ -2275,44 +2454,50 @@ def book_slot_view():
 def book_slot(slot_id):
     conn = get_db()
     cur = conn.cursor()
-    
+
     slot = cur.execute("""
         SELECT s.*, u.full_name as doctor_name
         FROM doctor_slots s
         JOIN users u ON s.doctor_id = u.id
         WHERE s.id = ? AND s.is_booked = 0
     """, (slot_id,)).fetchone()
-    
+
     if not slot:
         conn.close()
         flash('This slot is no longer available.', 'danger')
         return redirect(url_for('book_slot_view'))
-        
+
+    hosp = slot['hospital_name'] if slot['hospital_name'] else 'City General Hospital'
+
     cur.execute("""
-        UPDATE doctor_slots 
+        UPDATE doctor_slots
         SET is_booked = 1, patient_id = ?
         WHERE id = ?
     """, (current_user.id, slot_id))
-    
+
     cur.execute("""
-        INSERT INTO appointments (patient_id, doctor_name, appt_date, appt_time, appt_type, notes, status)
-        VALUES (?, ?, ?, ?, 'General Consultation', 'Booked via availability slot system', 'confirmed')
-    """, (current_user.id, slot['doctor_name'], slot['slot_date'], slot['start_time']))
-    
-    cur.execute("""
-        INSERT INTO notifications (user_id, title, body, type)
-        VALUES (?, ?, ?, ?)
-    """, (current_user.id, "📅 Appointment Booked", f"Your appointment with {slot['doctor_name']} on {slot['slot_date']} at {slot['start_time']} is confirmed.", "success"))
-    
+        INSERT INTO appointments (patient_id, doctor_name, appt_date, appt_time, appt_type, notes, status, hospital_name)
+        VALUES (?, ?, ?, ?, 'General Consultation', 'Booked via availability slot system', 'confirmed', ?)
+    """, (current_user.id, slot['doctor_name'], slot['slot_date'], slot['start_time'], hosp))
+
     cur.execute("""
         INSERT INTO notifications (user_id, title, body, type)
         VALUES (?, ?, ?, ?)
-    """, (slot['doctor_id'], "📅 New Slot Booking", f"Patient {current_user.full_name} has booked your slot on {slot['slot_date']} at {slot['start_time']}.", "info"))
-    
+    """, (current_user.id, "📅 Appointment Confirmed",
+          f"Your appointment with {slot['doctor_name']} at {hosp} on {slot['slot_date']} at {slot['start_time']} is confirmed.",
+          "success"))
+
+    cur.execute("""
+        INSERT INTO notifications (user_id, title, body, type)
+        VALUES (?, ?, ?, ?)
+    """, (slot['doctor_id'], "📅 New Slot Booking",
+          f"Patient {current_user.full_name} has booked your slot at {hosp} on {slot['slot_date']} at {slot['start_time']}.",
+          "info"))
+
     conn.commit()
     conn.close()
-    
-    flash(f"Slot booked successfully! Appointment with {slot['doctor_name']} confirmed.", 'success')
+
+    flash(f"Slot booked! Appointment with {slot['doctor_name']} at {hosp} confirmed.", 'success')
     return redirect(url_for('appointments'))
 
 

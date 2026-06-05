@@ -218,6 +218,21 @@
             <div class="col-md-6">
                 <p class="form-section-title">Appointment Details</p>
                 <div class="mb-3">
+                    <label class="styled-label">Select Hospital</label>
+                    <select class="styled-input" name="hospital_name" required>
+                        <option value="">-- Select Hospital --</option>
+                        {% for city, city_hospitals in HOSPITALS_BY_CITY.items() %}
+                            {% if city != "Default" %}
+                                <optgroup label="{{ city }}">
+                                {% for hosp in city_hospitals %}
+                                    <option value="{{ hosp.name }}">{{ hosp.name }}</option>
+                                {% endfor %}
+                                </optgroup>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
                     <label class="styled-label">Appointment Date</label>
                     <input type="date" class="styled-input" name="appt_date" required min="{{ today }}">
                 </div>
@@ -281,7 +296,12 @@
         {% for appt in appointments %}
         <div class="appt-item {{ appt.status }}">
             <div>
-                <div class="fw-bold text-dark">{{ appt.doctor_name }}</div>
+                <div class="fw-bold text-dark">
+                    {{ appt.doctor_name }}
+                    {% if appt.hospital_name %}
+                    at <span class="text-success fw-bold">{{ appt.hospital_name }}</span>
+                    {% endif %}
+                </div>
                 <div class="text-muted" style="font-size:0.9rem;">
                     <i class="fas fa-calendar me-1"></i>{{ appt.appt_date }} at {{ appt.appt_time }}
                     &nbsp;|&nbsp;

@@ -112,6 +112,15 @@ def test_hospital_finder():
     print(f"   Found {len(hospitals)} hospitals")
     for h in hospitals:
         print(f"   - {h['name']} ({h['type']})")
+        
+    # Test Case 7: Live location (Haversine calculation)
+    print("\n7. Live Location hospital finding (coordinates near Parel, Mumbai):")
+    # Tata Memorial is at 19.0176, 72.8562
+    hospitals = find_hospitals(user_lat=19.02, user_lng=72.85)
+    print(f"   Found {len(hospitals)} hospitals total across database.")
+    print("   Closest 3 hospitals:")
+    for h in hospitals[:3]:
+        print(f"   - {h['name']} ({h['type']}, {h['distance']} km from user)")
     
     print("\n✅ Hospital Finder Tests Passed!")
 

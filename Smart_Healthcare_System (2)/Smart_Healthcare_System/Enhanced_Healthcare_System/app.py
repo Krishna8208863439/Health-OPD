@@ -127,6 +127,21 @@ def init_db():
         except:
             pass
         print("Predictions table migrated successfully!")
+        
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN doctor_name TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN doctor_phone TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    try:
+        cur.execute("ALTER TABLE predictions ADD COLUMN referred_hospital TEXT DEFAULT ''")
+    except Exception:
+        pass
     
     conn.commit()
     conn.close()
@@ -555,17 +570,76 @@ def predict():
     max_distance = request.form.get('max_distance')
     if max_distance:
         max_distance = float(max_distance)
+        
+    user_lat = request.form.get('user_lat')
+    user_lng = request.form.get('user_lng')
+    try:
+        user_lat = float(user_lat) if user_lat else None
+    except ValueError:
+        user_lat = None
+        
+    try:
+        user_lng = float(user_lng) if user_lng else None
+    except ValueError:
+        user_lng = None
     
     # Find hospitals
     hospitals_list = find_hospitals(
         city=current_user.city,
         hospital_type=hospital_type,
         disease=disease,
-        max_distance=max_distance
+        max_distance=max_distance,
+        user_lat=user_lat,
+        user_lng=user_lng
     )
     
-    # Get recommendations
-    medicines = MEDICINE_DATABASE.get(disease, {}).get(severity.split()[0], ["Consult Doctor"])
+    # Referred Hospital and Doctor Assignment
+    if hospitals_list:
+        referred_hospital = hospitals_list[0]['name']
+        doctor_phone = hospitals_list[0]['phone']
+    else:
+        referred_hospital = "City General Hospital"
+        doctor_phone = "+91-XXX-XXX-XXXX"
+
+    # Map diseases to specialties and doctor names
+    specialty_docs = {
+        "Cardiology": ["Dr. Devi Shetty, MS", "Dr. Naresh Trehan, MD", "Dr. K. K. Talwar, DM"],
+        "Oncology": ["Dr. Suresh Advani, MD", "Dr. Rajendra Badwe, MS", "Dr. S. H. Advani, MD"],
+        "Neurology": ["Dr. Ashok Panagariya, DM", "Dr. K. Sridhar, MCh", "Dr. Mukul Varma, DM"],
+        "General Medicine": ["Dr. Sandeep Budhiraja, MD", "Dr. Randeep Guleria, DM", "Dr. Rajesh Chawla, MD"],
+        "Emergency": ["Dr. Amit Sharma, MD", "Dr. S. K. Sarin, DM", "Dr. Balram Bhargava, DM"]
+    }
+    
+    # Map diseases to specialties
+    disease_specialty_map = {
+        "Pneumonia": "Emergency",
+        "Pneumonia or TB": "Emergency", 
+        "Pneumonia or TB or COVID": "Emergency",
+        "Bronchitis": "Emergency",
+        "Influenza": "Emergency",
+        "Seasonal Influenza": "Emergency",
+        "Asthma": "Emergency",
+        "Stomach Infection": "General Medicine",
+        "Gastroenteritis": "General Medicine",
+        "Food Poisoning": "General Medicine",
+        "Typhoid Fever": "General Medicine",
+        "Migraine": "Neurology",
+        "Hypertension": "Cardiology",
+        "Diabetes": "General Medicine",
+        "Common Cold": "General Medicine",
+        "cold and cough": "General Medicine",
+        "Dengue": "Emergency",
+        "Kidney Infection or Stone": "General Medicine",
+        "Allergic Side Effects": "General Medicine",
+        "Acidity": "General Medicine"
+    }
+    
+    spec = disease_specialty_map.get(disease, "General Medicine")
+    doc_list = specialty_docs.get(spec, specialty_docs["General Medicine"])
+    
+    # Use referred_hospital hash to select a deterministic doctor from the list
+    h_idx = sum(ord(c) for c in referred_hospital) % len(doc_list)
+    doctor_name = doc_list[h_idx]
     
     doctor_advice = {
         "LOW": "Monitor symptoms at home. Stay hydrated and get adequate rest. Consult a doctor if symptoms worsen.",
@@ -587,7 +661,10 @@ def predict():
         'probability': prob,
         'medicines': ', '.join(medicines),
         'hospitals': ', '.join([h['name'] for h in hospitals_list[:5]]),
-        'doctor_advice': doctor_advice[severity_key]
+        'doctor_advice': doctor_advice[severity_key],
+        'doctor_name': doctor_name,
+        'doctor_phone': doctor_phone,
+        'referred_hospital': referred_hospital
     }
     
     # Generate PDF
@@ -599,11 +676,11 @@ def predict():
     cur.execute("""
         INSERT INTO predictions (patient_id, disease, risk_percentage, health_risk_score, 
                                health_risk_category, severity, probability, symptoms, symptom_count,
-                               medicines, hospitals, doctor_advice, pdf_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                               medicines, hospitals, doctor_advice, pdf_path, doctor_name, doctor_phone, referred_hospital)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (current_user.id, disease, risk, health_risk['score'], health_risk['category'],
           severity, prob, str(symptoms_dict), symptom_count, prediction_data['medicines'],
-          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename))
+          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name, doctor_phone, referred_hospital))
     conn.commit()
     conn.close()
     

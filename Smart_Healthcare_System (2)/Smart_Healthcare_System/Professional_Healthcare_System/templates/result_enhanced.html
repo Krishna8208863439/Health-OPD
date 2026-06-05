@@ -275,6 +275,9 @@
                 <p><strong>City:</strong> {{ patient.city }}</p>
                 <p><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
                 <p><strong>Assigned Doctor:</strong> {{ prediction.doctor_name }}</p>
+                {% if prediction.doctor_phone %}
+                <p><strong>Doctor Contact:</strong> {{ prediction.doctor_phone }}</p>
+                {% endif %}
             </div>
         </div>
     </div>
