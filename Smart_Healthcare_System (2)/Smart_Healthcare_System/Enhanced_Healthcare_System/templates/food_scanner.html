@@ -509,6 +509,10 @@ async function startCamera(e) {
         previewEl.style.display = 'none';
         document.getElementById('resume-hint').style.display = 'none';
         
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("getUserMedia is not supported on this browser/origin.");
+        }
+        
         let stream;
         try {
             // Attempt environment camera first (back camera on phone)

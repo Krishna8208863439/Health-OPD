@@ -1551,8 +1551,13 @@ def delete_reminder(reminder_id):
 @login_required
 def reminders_due_now():
     """API endpoint polled by the frontend every 30 s to check if any alarm is due."""
-    now_hhmm = datetime.now().strftime('%H:%M')
-    today    = datetime.now().strftime('%Y-%m-%d')
+    now_hhmm = request.args.get('client_time', '').strip()
+    today    = request.args.get('client_date', '').strip()
+
+    if not now_hhmm:
+        now_hhmm = datetime.now().strftime('%H:%M')
+    if not today:
+        today    = datetime.now().strftime('%Y-%m-%d')
 
     conn = get_db()
     cur  = conn.cursor()

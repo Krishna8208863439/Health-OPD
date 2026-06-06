@@ -75,7 +75,11 @@ self.addEventListener('sync', (event) => {
 
 async function checkRemindersInBackground() {
     try {
-        const response = await fetch('/api/reminders/due-now');
+        const now = new Date();
+        const clientTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+        const clientDate = now.getFullYear() + '-' + (now.getMonth()+1).toString().padStart(2,'0') + '-' + now.getDate().toString().padStart(2,'0');
+        
+        const response = await fetch(`/api/reminders/due-now?client_time=${clientTime}&client_date=${clientDate}`);
         if (!response.ok) return;
         const data = await response.json();
         

@@ -563,7 +563,11 @@ const firedToday = new Set();  // track already-fired reminders
 
 async function checkReminders() {
     try {
-        const resp = await fetch('/api/reminders/due-now');
+        const now = new Date();
+        const clientTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+        const clientDate = now.getFullYear() + '-' + (now.getMonth()+1).toString().padStart(2,'0') + '-' + now.getDate().toString().padStart(2,'0');
+        
+        const resp = await fetch(`/api/reminders/due-now?client_time=${clientTime}&client_date=${clientDate}`);
         if (!resp.ok) return;
         const data = await resp.json();
         
