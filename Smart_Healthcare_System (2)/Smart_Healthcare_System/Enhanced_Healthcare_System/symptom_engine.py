@@ -915,6 +915,12 @@ def assess_symptoms(present_symptoms: list) -> list:
         matched_moderate = []
         matched_weak     = []
 
+        # Count and score required symptoms that are not already scored
+        for s in required:
+            if s in present_set:
+                if s not in profile.get("strong", []) and s not in profile.get("moderate", []) and s not in profile.get("weak", []):
+                    score += 10
+
         for s in profile.get("strong", []):
             if s in present_set:
                 score += 10
@@ -934,8 +940,10 @@ def assess_symptoms(present_symptoms: list) -> list:
             if s in present_set:
                 score -= 8
 
-        # Skip if below minimum threshold
-        if score < profile.get("min_score", 20):
+        # Skip if below minimum threshold (scaled down dynamically to allow matching on few symptoms)
+        min_s = profile.get("min_score", 20)
+        min_threshold = max(5, int(min_s * 0.4))
+        if score < min_threshold:
             continue
 
         results.append({
