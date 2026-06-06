@@ -1,0 +1,48 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Database (will be created fresh on container start)
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated reports
+static/reports/*.pdf
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Test files
+test_*.py
+
+# Text/doc files (not needed at runtime)
+*.txt
+*.md
+*.sh
+
+# Distribution
+dist/
+build/
+*.egg-info/
