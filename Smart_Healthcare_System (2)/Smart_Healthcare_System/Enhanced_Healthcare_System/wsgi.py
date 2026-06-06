@@ -1,7 +1,10 @@
 import sys
 import os
+import getpass
 
-project = '/home/Krishna8208863439/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System'
+user = getpass.getuser()
+project = f'/home/{user}/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System'
+
 if project not in sys.path:
     sys.path.insert(0, project)
 
