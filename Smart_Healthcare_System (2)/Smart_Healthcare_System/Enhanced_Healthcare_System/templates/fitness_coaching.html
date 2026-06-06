@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block title %}Fitness Coaching – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --coach-primary: #8B5CF6;
+    --coach-success: #10B981;
+    --coach-blue: #3B82F6;
+    --coach-bg: #FFFFFF;
+}
+
+.coach-hero {
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.25);
+}
+.coach-hero .ico { font-size: 56px; }
+.coach-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.coach-hero p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+.coach-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 30px;
+}
+@media(max-width: 900px) {
+    .coach-grid { grid-template-columns: 1fr; }
+}
+
+.ccard {
+    background: var(--coach-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #E5E7EB;
+    margin-bottom: 24px;
+}
+.ccard h4 {
+    color: var(--coach-primary);
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #F3F4F6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Calculators */
+.calc-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.calc-group label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 6px;
+}
+.calc-group input, .calc-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #FAFAFA;
+}
+.calc-group input:focus, .calc-group select:focus {
+    outline: none;
+    border-color: var(--coach-primary);
+    background: #fff;
+}
+.calc-btn {
+    background: var(--coach-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 14px;
+}
+.calc-btn:hover { opacity: 0.95; }
+
+.calc-result {
+    display: none;
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #F5F3FF;
+    border: 1px solid #DDD6FE;
+    text-align: center;
+}
+.result-val { font-size: 1.3rem; font-weight: 900; color: #6D28D9; }
+
+/* Chat box */
+.chat-container {
+    height: 350px;
+    overflow-y: auto;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 14px;
+    background: #F9FAFB;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+.chat-bubble.coach {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+.chat-bubble.user {
+    background: var(--coach-primary);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+}
+.chat-input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+.chat-input:focus { outline: none; border-color: var(--coach-primary); }
+.chat-send-btn {
+    background: var(--coach-primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 20px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Program list */
+.prog-card {
+    border: 1.5px solid #EEF2F6;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.prog-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #F5F3FF;
+    color: var(--coach-primary);
+    font-size: 1.25rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.prog-details { flex: 1; }
+.prog-title { font-weight: 700; font-size: 0.92rem; color: #1F2937; margin-bottom: 2px; }
+.prog-desc { font-size: 0.78rem; color: #6B7280; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coach-hero">
+    <div class="ico">🏋️‍♀️</div>
+    <div>
+        <h2>Fitness Coaching Center</h2>
+        <p>Calculate your calorie requirements, explore workouts, and chat instantly with your AI Personal Trainer.</p>
+    </div>
+</div>
+
+<div class="coach-grid">
+
+    <!-- Column 1: AI Coach Chat -->
+    <div class="ccard" style="display:flex; flex-direction:column; justify-content:space-between; height: 100%; margin-bottom:0;">
+        <div>
+            <h4>💬 Talk to Your AI Fitness Coach</h4>
+            <div class="chat-container" id="chat-box">
+                <div class="chat-bubble coach">
+                    👋 Hello! I am Coach Max, your virtual health and fitness guide. Ask me anything about workouts, diet plans, fat loss, or muscle building! 
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-row">
+            <input type="text" id="user-msg-input" class="chat-input" placeholder="Type a message, e.g. How to lose weight?" onkeydown="if(event.key==='Enter') sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Column 2: Calculators & Workout Programs -->
+    <div>
+        <!-- Calculator -->
+        <div class="ccard">
+            <h4>📊 BMR &amp; Calorie Goal Calculator</h4>
+            <div class="calc-row">
+                <div class="calc-group">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="w_val" min="20" max="250" value="70">
+                </div>
+                <div class="calc-group">
+                    <label>Height (cm)</label>
+                    <input type="number" id="h_val" min="80" max="250" value="170">
+                </div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-group">
+                    <label>Age (years)</label>
+                    <input type="number" id="a_val" min="10" max="100" value="25">
+                </div>
+                <div class="calc-group">
+                    <label>Gender</label>
+                    <select id="g_val">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="calc-group">
+                <label>Activity Level</label>
+                <select id="act_val">
+                    <option value="1.2">Sedentary (Little/no exercise)</option>
+                    <option value="1.375">Lightly Active (1-3 days/wk)</option>
+                    <option value="1.55">Moderately Active (3-5 days/wk)</option>
+                    <option value="1.725">Very Active (6-7 days/wk)</option>
+                </select>
+            </div>
+            <button class="calc-btn" onclick="runCalculations()">🔥 Calculate Calories</button>
+
+            <!-- Results -->
+            <div class="calc-result" id="calc-result">
+                <div>Basal Metabolic Rate (BMR): <strong class="result-val"><span id="res-bmr">0</span> kcal</strong></div>
+                <div style="margin-top:8px;">Daily Maintenance Calories (TDEE): <strong class="result-val" style="color:var(--coach-success);"><span id="res-tdee">0</span> kcal</strong></div>
+                <div style="font-size:0.75rem; color:#6B7280; margin-top:8px;">Subtract 500 kcal for Weight Loss. Add 300 kcal for Muscle Gain.</div>
+            </div>
+        </div>
+
+        <!-- Workout Programs -->
+        <div class="ccard" style="margin-bottom:0;">
+            <h4>🏃‍♂️ Recommended Workout Programs</h4>
+            
+            <div class="prog-card">
+                <div class="prog-icon">💪</div>
+                <div class="prog-details">
+                    <div class="prog-title">Full-Body Strength (Beginner)</div>
+                    <div class="prog-desc">3 days/week · Squats, pushups, rows, planks. Built to develop functional strength.</div>
+                </div>
+            </div>
+
+            <div class="prog-card">
+                <div class="prog-icon">🔥</div>
+                <div class="prog-details">
+                    <div class="prog-title">HIIT Fat Burn Cardio</div>
+                    <div class="prog-desc">4 days/week · Jumping jacks, mountain climbers, burpees. High-intensity fat burner.</div>
+                </div>
+            </div>
+
+            <div class="prog-card" style="margin-bottom:0;">
+                <div class="prog-icon">🧘</div>
+                <div class="prog-details">
+                    <div class="prog-title">Yoga &amp; Flexibility Routine</div>
+                    <div class="prog-desc">Daily · Stretching, breathing, vinyasa flows. Promotes muscle recovery and joint mobility.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ========== BMR & TDEE Calculations ==========
+function runCalculations() {
+    const w = parseFloat(document.getElementById('w_val').value) || 0;
+    const h = parseFloat(document.getElementById('h_val').value) || 0;
+    const a = parseFloat(document.getElementById('a_val').value) || 0;
+    const g = document.getElementById('g_val').value;
+    const act = parseFloat(document.getElementById('act_val').value) || 1.2;
+
+    let bmr = 0;
+    if (g === 'male') {
+        bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    } else {
+        bmr = 10 * w + 6.25 * h - 5 * a - 161;
+    }
+
+    const tdee = bmr * act;
+
+    document.getElementById('res-bmr').textContent = Math.round(bmr);
+    document.getElementById('res-tdee').textContent = Math.round(tdee);
+    document.getElementById('calc-result').style.display = 'block';
+}
+
+// ========== Interactive Coach Chatbot ==========
+const chatBox = document.getElementById('chat-box');
+const inputEl = document.getElementById('user-msg-input');
+
+function appendMessage(text, sender) {
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender}`;
+    bubble.textContent = text;
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function getCoachReply(msg) {
+    const query = msg.toLowerCase();
+    
+    // Rule matching replies
+    if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
+        return "Hi there! Ready to crush some fitness goals today? Ask me about diets, workouts, or how to calculate your calorie target!";
+    }
+    if (query.includes('lose weight') || query.includes('fat loss') || query.includes('slimming')) {
+        return "For weight loss, you need a calorie deficit. Use the calorie calculator on the right to find your maintenance calories (TDEE), then eat 500 kcal less daily! Focus on high protein foods (to keep muscle) and lift weights 3 times a week.";
+    }
+    if (query.includes('gain muscle') || query.includes('bulk') || query.includes('muscle building')) {
+        return "To build muscle, eat in a slight caloric surplus (+300 to +500 kcal over TDEE), hit 1.6 to 2.2 grams of protein per kg of body weight daily, and follow progressive overload (increasing weights or reps over time). Full-Body Strength or Lean Muscle Splits work best!";
+    }
+    if (query.includes('diet') || query.includes('nutrition') || query.includes('eat')) {
+        return "A good nutrition program centers around whole foods. Try vegetables, fruits, healthy fats (olive oil, almonds), complex grains (brown rice, oats), and quality proteins. Go to our 'Diets' tab to view specific structured meal schedules!";
+    }
+    if (query.includes('workout') || query.includes('routine') || query.includes('exercise')) {
+        return "For beginners, I recommend a Full-Body Strength split 3 times a week. Perform Squats, Pushups, Dumbbell Rows, and Planks. Make sure to rest at least 48 hours between resistance training sessions for muscle repair.";
+    }
+    if (query.includes('water') || query.includes('hydration')) {
+        return "Stay hydrated! Drink at least 8 to 10 glasses (roughly 2.5 to 3 liters) of water daily. Hydration is crucial for energy production, kidney function, and joint lubrication.";
+    }
+    if (query.includes('thank') || query.includes('thanks')) {
+        return "You're very welcome! Keep up the dedication. Let me know if you need any other workout tips.";
+    }
+
+    // Default reply
+    return "Great question! Consistency is key in fitness. Try to move daily, track your steps, hit your target protein, and make sure you sleep 7-8 hours tonight. What specific exercises are you planning this week?";
+}
+
+function sendMessage() {
+    const val = inputEl.value.trim();
+    if (!val) return;
+
+    // User message
+    appendMessage(val, 'user');
+    inputEl.value = '';
+
+    // Show simulated typing loader
+    setTimeout(() => {
+        const reply = getCoachReply(val);
+        appendMessage(reply, 'coach');
+    }, 800);
+}
+</script>
+{% endblock %}

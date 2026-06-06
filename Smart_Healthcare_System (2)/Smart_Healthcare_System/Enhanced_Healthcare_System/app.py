@@ -1145,6 +1145,79 @@ def diet_plans():
     return render_template('diet_plan.html', patient=current_user)
 
 
+# ================= FOOD SCANNER =================
+
+@app.route('/food-scanner')
+@login_required
+def food_scanner():
+    if current_user.role != 'patient':
+        flash('Only patients can access the food scanner.', 'warning')
+        return redirect(url_for('index'))
+    return render_template('food_scanner.html', patient=current_user)
+
+
+@app.route('/api/food/log', methods=['POST'])
+@login_required
+def log_food_calories():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+        
+    data = request.get_json() or {}
+    try:
+        calories = int(data.get('calories', 0))
+    except (ValueError, TypeError):
+        calories = 0
+    food_name = data.get('food_name', 'Scanned Food')
+    
+    if calories <= 0:
+        return jsonify({'status': 'error', 'message': 'Invalid calories'}), 400
+        
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur  = conn.cursor()
+    
+    existing = cur.execute(
+        "SELECT id, calories, notes FROM wellness_log WHERE patient_id=? AND log_date=?",
+        (current_user.id, today)
+    ).fetchone()
+    
+    if existing:
+        new_cals = (existing['calories'] or 0) + calories
+        new_notes = (existing['notes'] or '').strip()
+        log_entry = f"Scanned: {food_name} (+{calories} kcal)"
+        if new_notes:
+            new_notes = f"{new_notes} | {log_entry}"
+        else:
+            new_notes = log_entry
+            
+        cur.execute("""
+            UPDATE wellness_log 
+            SET calories = ?, notes = ? 
+            WHERE id = ?
+        """, (new_cals, new_notes, existing['id']))
+    else:
+        new_notes = f"Scanned: {food_name} (+{calories} kcal)"
+        cur.execute("""
+            INSERT INTO wellness_log (patient_id, log_date, water_glasses, sleep_hours, steps, mood, exercise_min, calories, notes)
+            VALUES (?, ?, 0, 0, 0, 'okay', 0, ?, ?)
+        """, (current_user.id, today, calories, new_notes))
+        
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'message': f'Logged {calories} kcal for {food_name}!'})
+
+
+# ================= FITNESS COACHING =================
+
+@app.route('/fitness-coaching')
+@login_required
+def fitness_coaching():
+    if current_user.role != 'patient':
+        flash('Only patients can access fitness coaching.', 'warning')
+        return redirect(url_for('index'))
+    return render_template('fitness_coaching.html', patient=current_user)
+
+
 # ================= PROFILE MANAGEMENT =================
 
 @app.route('/profile')

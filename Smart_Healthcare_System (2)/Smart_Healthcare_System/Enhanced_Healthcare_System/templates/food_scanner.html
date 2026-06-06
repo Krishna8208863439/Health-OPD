@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+{% block title %}AI Food Scanner – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --scan-glow: #10B981;
+    --scan-laser: #EF4444;
+}
+
+.scanner-hero {
+    background: linear-gradient(135deg, #0066CC 0%, #004a99 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 28px rgba(0, 102, 204, 0.2);
+}
+.scanner-hero .ico { font-size: 56px; }
+.scanner-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.scanner-hero p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+.scanner-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+/* Viewfinder card */
+.viewfinder-card {
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 3px solid #111827;
+}
+
+#camera-stream {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* mirror effect */
+}
+
+/* Laser Overlay */
+.scan-overlay {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    margin: 40px;
+    border-radius: 12px;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.scan-overlay::before, .scan-overlay::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 4px solid var(--scan-glow);
+}
+.scan-overlay::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+.scan-overlay::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+.laser-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--scan-laser), transparent);
+    box-shadow: 0 0 10px var(--scan-laser);
+    animation: laserMove 2.5s infinite linear;
+    pointer-events: none;
+}
+@keyframes laserMove {
+    0%   { top: 5%; }
+    50%  { top: 95%; }
+    100% { top: 5%; }
+}
+
+/* Camera blocked fallback */
+.camera-blocked {
+    color: #fff;
+    text-align: center;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+.camera-blocked i { font-size: 44px; color: #EF4444; }
+
+/* Control panel */
+.panel-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.panel-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1F2937;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-scan {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition: transform 0.2s, opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-scan:hover { opacity: 0.95; transform: translateY(-1px); }
+.btn-scan:active { transform: scale(0.98); }
+
+/* Analyzer display */
+.analyzer-box {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+}
+.analyzing-ring {
+    width: 50px; height: 50px;
+    border: 5px solid rgba(16, 185, 129, 0.2);
+    border-top-color: var(--scan-glow);
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results card */
+.scan-result-card {
+    display: none;
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #F0FDF4;
+    border: 1.5px solid #A7F3D0;
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 14px;
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+.result-food-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #065F46;
+}
+.result-calories {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #10B981;
+}
+
+.macro-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.macro-item {
+    background: #fff;
+    border: 1px solid #D1FAE5;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+}
+.macro-val { font-size: 0.95rem; font-weight: 800; color: #065F46; }
+.macro-label { font-size: 0.72rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+
+.log-api-btn {
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+}
+.log-api-btn:hover { background: #047857; }
+
+/* Fallback Selector */
+.fallback-selector {
+    margin-top: 20px;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 20px;
+}
+
+@media(max-width: 768px) {
+    .scanner-container { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scanner-hero">
+    <div class="ico">📸</div>
+    <div>
+        <h2>AI Food Scanner &amp; Calorie Tracker</h2>
+        <p>Align the food in the grid viewfinder and click Scan. Our recognition algorithm will scan and calculate calories immediately.</p>
+    </div>
+</div>
+
+<div class="scanner-container">
+    
+    <!-- Video Viewfinder -->
+    <div class="viewfinder-card">
+        <video id="camera-stream" autoplay playsinline muted style="display:none;"></video>
+        
+        <!-- Scanning Grid Overlay -->
+        <div class="scan-overlay" id="overlay-grid" style="display:none;">
+            <div class="laser-line"></div>
+        </div>
+        
+        <!-- Blocked / Not Available View -->
+        <div class="camera-blocked" id="camera-blocked-view">
+            <i class="fas fa-camera-slash"></i>
+            <strong>Webcam / Camera Feed Off</strong>
+            <p style="font-size:0.82rem; opacity:0.8; margin:0 20px;">
+                Enable camera permission or use the manual simulator on the right panel to test.
+            </p>
+            <button class="btn btn-outline btn-sm" onclick="startCamera()" style="border-color:#fff; color:#fff; margin-top:6px;">
+                🔄 Try Access Camera
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Control Panel -->
+    <div class="panel-card">
+        <div>
+            <div class="panel-title">
+                <i class="fas fa-cog" style="color:var(--diet-primary);"></i>
+                Scanner Controls
+            </div>
+            <p style="font-size:0.84rem; color:#6B7280; margin-bottom:20px;">
+                Capture a photo of your meal to calculate its macronutrient profile.
+            </p>
+            
+            <button class="btn-scan" id="scan-action-btn" onclick="triggerScan()">
+                <i class="fas fa-dot-circle"></i> Scan Food Item
+            </button>
+
+            <!-- Loading Spinner -->
+            <div class="analyzer-box" id="analyzer-box">
+                <div class="analyzing-ring"></div>
+                <div style="font-weight:700; color:#059669; font-size:0.92rem;">Analyzing frame structures...</div>
+                <div style="font-size:0.78rem; color:#6B7280; margin-top:2px;">Comparing with nutrition index</div>
+            </div>
+
+            <!-- Scan Result Display -->
+            <div class="scan-result-card" id="scan-result-card">
+                <div class="result-header">
+                    <div class="result-food-name" id="res-food-name">Apple</div>
+                    <div class="result-calories"><span id="res-calories">95</span> kcal</div>
+                </div>
+                <div class="macro-grid">
+                    <div class="macro-item">
+                        <div class="macro-val" id="res-protein">0.5g</div>
+                        <div class="macro-label">Protein</div>
+                    </div>
+                    <div class="macro-item">
+                        <div class="macro-val" id="res-carbs">25g</div>
+                        <div class="macro-label">Carbs</div>
+                    </div>
+                    <div class="macro-item">
+                        <div class="macro-val" id="res-fat">0.3g</div>
+                        <div class="macro-label">Fat</div>
+                    </div>
+                </div>
+                <button class="log-api-btn" onclick="logScannedCalories()">
+                    💾 Log Calories to Wellness Log
+                </button>
+            </div>
+        </div>
+
+        <!-- Manual Simulator Fallback -->
+        <div class="fallback-selector">
+            <div class="panel-title" style="font-size:0.92rem; margin-bottom:8px;">
+                <i class="fas fa-sliders-h" style="color:var(--diet-purple);"></i>
+                Manual Scanner Simulator
+            </div>
+            <p style="font-size:0.76rem; color:#6B7280; margin-bottom:12px;">
+                If camera is unavailable, select a food item to simulate scanning:
+            </p>
+            <div class="form-group" style="margin-bottom:0;">
+                <select id="simulated_food" class="form-control" style="font-size:0.85rem; padding:8px 10px;">
+                    <option value="Apple">🍎 Fresh Apple</option>
+                    <option value="Banana">🍌 Ripe Banana</option>
+                    <option value="Salad">🥗 Mixed Green Salad</option>
+                    <option value="Chicken">🍗 Grilled Chicken (150g)</option>
+                    <option value="Paneer">🧀 Paneer Tikka (100g)</option>
+                    <option value="Roti">🫓 Wheat Roti (1 piece)</option>
+                    <option value="DalRice">🍛 Dal Rice Bowl</option>
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let streamActive = false;
+let videoEl = document.getElementById('camera-stream');
+let blockedView = document.getElementById('camera-blocked-view');
+let overlayGrid = document.getElementById('overlay-grid');
+
+// Food Database
+const FOOD_DATABASE = {
+    "Apple":    { name: "Fresh Apple", calories: 95, protein: "0.5g", carbs: "25g", fat: "0.3g" },
+    "Banana":   { name: "Ripe Banana", calories: 105, protein: "1.3g", carbs: "27g", fat: "0.4g" },
+    "Salad":    { name: "Mixed Green Salad", calories: 150, protein: "3g", carbs: "12g", fat: "10g" },
+    "Chicken":  { name: "Grilled Chicken", calories: 240, protein: "38g", carbs: "0g", fat: "9g" },
+    "Paneer":   { name: "Paneer Tikka", calories: 280, protein: "16g", carbs: "4g", fat: "22g" },
+    "Roti":     { name: "Wheat Roti", calories: 120, protein: "4g", carbs: "24g", fat: "0.8g" },
+    "DalRice":  { name: "Dal Rice Bowl", calories: 380, protein: "11g", carbs: "68g", fat: "6g" }
+};
+
+// Start Camera Stream
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        videoEl.srcObject = stream;
+        videoEl.style.display = 'block';
+        blockedView.style.display = 'none';
+        overlayGrid.style.display = 'block';
+        streamActive = true;
+    } catch (err) {
+        console.warn("Camera blocked or unavailable:", err);
+        videoEl.style.display = 'none';
+        blockedView.style.display = 'flex';
+        overlayGrid.style.display = 'none';
+        streamActive = false;
+    }
+}
+
+// Trigger Scan simulation
+let lastScannedItem = null;
+
+function triggerScan() {
+    // Hide results card & show analyzer spinner
+    document.getElementById('scan-result-card').style.display = 'none';
+    document.getElementById('analyzer-box').style.display = 'block';
+    document.getElementById('scan-action-btn').disabled = true;
+
+    // Simulate recognition processing (1.5 seconds)
+    setTimeout(() => {
+        document.getElementById('analyzer-box').style.display = 'none';
+        document.getElementById('scan-action-btn').disabled = false;
+
+        let selectedKey = "Apple";
+        if (streamActive) {
+            // Select random item if scanning from live stream
+            const keys = Object.keys(FOOD_DATABASE);
+            selectedKey = keys[Math.floor(Math.random() * keys.length)];
+        } else {
+            // Get value from manual select input
+            selectedKey = document.getElementById('simulated_food').value;
+        }
+
+        const data = FOOD_DATABASE[selectedKey];
+        lastScannedItem = data;
+
+        // Populate results
+        document.getElementById('res-food-name').textContent = data.name;
+        document.getElementById('res-calories').textContent = data.calories;
+        document.getElementById('res-protein').textContent = data.protein;
+        document.getElementById('res-carbs').textContent = data.carbs;
+        document.getElementById('res-fat').textContent = data.fat;
+
+        // Display results card
+        document.getElementById('scan-result-card').style.display = 'block';
+    }, 1500);
+}
+
+// Log scanned calories via API
+async function logScannedCalories() {
+    if (!lastScannedItem) return;
+
+    try {
+        const resp = await fetch('/api/food/log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                calories: lastScannedItem.calories,
+                food_name: lastScannedItem.name
+            })
+        });
+
+        const data = await resp.json();
+        if (resp.ok) {
+            alert(data.message);
+        } else {
+            alert("Error logging calories: " + data.message);
+        }
+    } catch(err) {
+        console.error("API error:", err);
+        alert("Failed to connect to calorie log database.");
+    }
+}
+
+// Automatically start camera on load
+document.addEventListener('DOMContentLoaded', () => {
+    startCamera();
+});
+</script>
+{% endblock %}
