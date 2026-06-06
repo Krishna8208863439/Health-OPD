@@ -165,6 +165,25 @@ def init_db():
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )
     """)
+    
+    # Migrate medicine_reminders table to ensure all new columns exist (handles old database files on pythonanywhere)
+    try:
+        cur.execute("SELECT start_date FROM medicine_reminders LIMIT 1")
+    except sqlite3.OperationalError:
+        print("Migrating medicine_reminders table...")
+        try:
+            cur.execute("ALTER TABLE medicine_reminders ADD COLUMN start_date TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE medicine_reminders ADD COLUMN end_date TEXT DEFAULT ''")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE medicine_reminders ADD COLUMN instructions TEXT DEFAULT ''")
+        except Exception:
+            pass
+        print("medicine_reminders table migrated successfully!")
 
     conn.commit()
     conn.close()
