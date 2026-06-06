@@ -3,51 +3,45 @@
 {% block title %}Prediction Result - HealthCare Plus{% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+<div style="max-width: 800px; margin: 0 auto;">
     
     <!-- Health Risk Score Card -->
     {% if health_risk %}
-    <div style="background: linear-gradient(135deg, {{ health_risk.color }}, {{ health_risk.color }}dd); color: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-        <h2>{{ health_risk.icon }} Health Risk Assessment</h2>
-        <div style="width: 150px; height: 150px; border-radius: 50%; background: white; color: {{ health_risk.color }}; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; margin: 20px auto; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+    <div class="result-hero" style="background: linear-gradient(135deg, {{ health_risk.color }} 0%, {{ health_risk.color }}cc 100%); color: white; border-radius: 20px; padding: 30px; margin-bottom: 24px; text-align: center; box-shadow: var(--shadow-lg);">
+        <h2 style="font-weight: 800; font-size: 1.6rem; margin-bottom: 8px;">{{ health_risk.icon }} Health Risk Assessment</h2>
+        <div class="confidence-ring" style="width: 130px; height: 130px; border-radius: 50%; background: white; color: {{ health_risk.color }}; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; margin: 20px auto; border: 5px solid rgba(255,255,255,.5); box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
             {{ health_risk.score }}
         </div>
-        <h3>{{ health_risk.category }}</h3>
-        <p style="margin: 0;">Based on age, symptoms, disease severity, history, and lifestyle factors</p>
+        <h3 style="font-weight: 700; font-size: 1.35rem; margin-bottom: 6px;">{{ health_risk.category }}</h3>
+        <p style="margin: 0; font-size: 0.88rem; opacity: 0.9;">Based on age, symptoms, disease severity, history, and lifestyle factors</p>
     </div>
     {% endif %}
     
     <div class="row">
         <!-- Disease Prediction -->
-        <div class="col-md-6">
+        <div class="col-md-6 col-12">
             <div class="card" style="margin-bottom: 20px;">
-                <div class="card-body">
-                    <h4><i class="fas fa-disease"></i> Predicted Disease</h4>
-                    <h2 style="color: #0066CC;">{{ prediction.disease }}</h2>
-                    <hr>
-                    <p><strong>Severity:</strong> {{ prediction.severity }}</p>
-                    <p><strong>Risk Percentage:</strong> {{ prediction.risk_percentage }}%</p>
-                    <p><strong>Confidence:</strong> {{ (prediction.probability * 100)|round(1) }}%</p>
-                </div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">
+                    <i class="fas fa-disease" style="margin-right: 8px;"></i>Predicted Disease
+                </h4>
+                <h2 style="color: var(--primary); font-weight: 800; font-size: 1.8rem; margin-bottom: 12px;">{{ prediction.disease }}</h2>
+                <hr style="border-top: 1px solid var(--border); margin: 12px 0;">
+                <p style="margin-bottom: 6px; font-size: 0.95rem;"><strong>Severity:</strong> <span style="font-weight: 600;">{{ prediction.severity }}</span></p>
+                <p style="margin-bottom: 6px; font-size: 0.95rem;"><strong>Risk Level:</strong> <span style="font-weight: 600;">{{ prediction.risk_percentage }}%</span></p>
+                <p style="margin-bottom: 0; font-size: 0.95rem;"><strong>Confidence:</strong> <span style="font-weight: 600;">{{ (prediction.probability * 100)|round(1) }}%</span></p>
             </div>
         </div>
         
         <!-- Patient Info -->
-        <div class="col-md-6">
+        <div class="col-md-6 col-12">
             <div class="card" style="margin-bottom: 20px;">
-                <div class="card-body">
-                    <h4><i class="fas fa-user"></i> Patient Information</h4>
-                    <p><strong>Name:</strong> {{ patient.full_name }}</p>
-                    <p><strong>Age:</strong> {{ patient.age }} years</p>
-                    <p><strong>City:</strong> {{ patient.city }}</p>
-                    <p><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
-                    {% if prediction.doctor_name %}
-                    <p><strong>Assigned Doctor:</strong> {{ prediction.doctor_name }}</p>
-                    {% endif %}
-                    {% if prediction.doctor_phone %}
-                    <p><strong>Doctor Contact:</strong> {{ prediction.doctor_phone }}</p>
-                    {% endif %}
-                </div>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">
+                    <i class="fas fa-user" style="margin-right: 8px;"></i>Patient Info
+                </h4>
+                <p style="margin-bottom: 6px; font-size: 0.95rem;"><strong>Name:</strong> {{ patient.full_name }}</p>
+                <p style="margin-bottom: 6px; font-size: 0.95rem;"><strong>Age:</strong> {{ patient.age }} years</p>
+                <p style="margin-bottom: 6px; font-size: 0.95rem;"><strong>City:</strong> {{ patient.city }}</p>
+                <p style="margin-bottom: 0; font-size: 0.95rem;"><strong>Patient ID:</strong> PT-{{ '%06d'|format(patient.id) }}</p>
             </div>
         </div>
     </div>
@@ -55,88 +49,96 @@
     <!-- Recommendations -->
     {% if recommendations %}
     <div class="card" style="margin-bottom: 20px;">
-        <div class="card-body">
-            <h4><i class="fas fa-clipboard-list"></i> Health Recommendations</h4>
-            {% for rec in recommendations %}
-            <div style="padding: 12px; background: #F9FAFB; border-left: 4px solid {{ health_risk.color }}; margin-bottom: 10px; border-radius: 5px;">
-                {{ rec }}
-            </div>
-            {% endfor %}
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">
+            <i class="fas fa-clipboard-list" style="margin-right: 8px;"></i>Health Recommendations
+        </h4>
+        {% for rec in recommendations %}
+        <div style="padding: 12px 16px; background: var(--bg-light); border-left: 4px solid {{ health_risk.color }}; margin-bottom: 8px; border-radius: 8px; font-size: 0.92rem; line-height: 1.5;">
+            {{ rec }}
         </div>
+        {% endfor %}
     </div>
     {% endif %}
     
     <!-- Doctor's Advice -->
     <div class="card" style="margin-bottom: 20px;">
-        <div class="card-body">
-            <h4><i class="fas fa-user-md"></i> Doctor's Advice</h4>
-            <p>{{ prediction.doctor_advice }}</p>
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">
+            <i class="fas fa-user-md" style="margin-right: 8px;"></i>Doctor's Advice
+        </h4>
+        <div style="padding: 14px; background: var(--primary-bg); border-radius: 8px; border-left: 4px solid var(--primary); font-size: 0.95rem; line-height: 1.5; color: var(--dark);">
+            {{ prediction.doctor_advice }}
+            {% if prediction.doctor_name %}
+            <div style="margin-top: 8px; font-weight: 700; font-size: 0.85rem; color: var(--muted);">
+                Assigned: {{ prediction.doctor_name }} {% if prediction.doctor_phone %} · {{ prediction.doctor_phone }}{% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
     
     <!-- Medicines -->
     <div class="card" style="margin-bottom: 20px;">
-        <div class="card-body">
-            <h4><i class="fas fa-pills"></i> Recommended Medicines</h4>
-            <div class="row">
-                {% for medicine in medicines %}
-                <div class="col-md-6" style="margin-bottom: 10px;">
-                    <div style="padding: 15px; background: #F8F9FA; border-radius: 8px;">
-                        <i class="fas fa-capsules" style="color: #28A745; margin-right: 10px;"></i>{{ medicine }}
-                    </div>
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">
+            <i class="fas fa-pills" style="margin-right: 8px;"></i>Recommended Medicines
+        </h4>
+        <div class="row">
+            {% for medicine in medicines %}
+            <div class="col-md-6 col-12" style="margin-bottom: 10px;">
+                <div style="padding: 12px 16px; background: var(--bg-light); border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem;">
+                    <i class="fas fa-capsules" style="color: var(--success); font-size: 1.1rem;"></i>
+                    <span>{{ medicine }}</span>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
         </div>
     </div>
     
     <!-- Hospitals with Google Maps -->
     <div class="card" style="margin-bottom: 20px;">
-        <div class="card-body">
-            <h4><i class="fas fa-hospital"></i> Recommended Hospitals Near You</h4>
-            {% if hospitals %}
-                {% for hospital in hospitals %}
-                <div style="background: white; border: 2px solid #E5E7EB; border-radius: 15px; padding: 20px; margin-bottom: 15px; transition: all 0.3s;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 300px;">
-                            <h5 style="margin-bottom: 10px;">{{ hospital.name }}</h5>
-                            <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 10px; {% if hospital.type == 'Government' %}background: #DBEAFE; color: #1E40AF;{% else %}background: #FEF3C7; color: #92400E;{% endif %}">
-                                {{ hospital.type }}
-                            </span>
-                            {% for spec in hospital.specialty[:3] %}
-                            <span style="display: inline-block; padding: 3px 10px; background: #E0F2FE; color: #0369A1; border-radius: 12px; font-size: 0.8rem; margin-right: 5px;">{{ spec }}</span>
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px;">
+            <i class="fas fa-hospital" style="margin-right: 8px;"></i>Hospitals Near You
+        </h4>
+        {% if hospitals %}
+            {% for hospital in hospitals %}
+            <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: all 0.3s;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                    <div style="flex: 1; min-width: 260px;">
+                        <h5 style="margin-bottom: 8px; font-weight: 700; color: var(--primary);">{{ hospital.name }}</h5>
+                        <div style="margin-bottom: 10px;">
+                            <span class="tag {% if hospital.type == 'Government' %}tag-gov{% else %}tag-priv{% endif %}">{{ hospital.type }}</span>
+                            {% for spec in hospital.specialty[:2] %}
+                            <span class="tag tag-spec">{{ spec }}</span>
                             {% endfor %}
-                            <p style="margin: 10px 0 5px 0;"><i class="fas fa-map-marker-alt"></i> {{ hospital.address }}</p>
-                            <p style="margin: 5px 0;"><i class="fas fa-phone"></i> {{ hospital.phone }}</p>
-                            <p style="margin: 5px 0;">
-                                <i class="fas fa-route"></i> {{ hospital.distance }} km away
-                                <i class="fas fa-star" style="color: #F59E0B; margin-left: 20px;"></i> {{ hospital.rating }}/5.0
-                            </p>
                         </div>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <a href="{{ get_maps_url(hospital) }}" target="_blank" style="background: #4285F4; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; margin-right: 10px; text-decoration: none; display: inline-block;">
-                            <i class="fas fa-map-marked-alt"></i> View on Maps
-                        </a>
-                        <a href="{{ get_directions_url(hospital) }}" target="_blank" style="background: #4285F4; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; text-decoration: none; display: inline-block;">
-                            <i class="fas fa-directions"></i> Get Directions
-                        </a>
+                        <p style="margin: 8px 0 4px 0; font-size: 0.88rem; color: var(--dark);"><i class="fas fa-map-marker-alt" style="color: var(--muted); margin-right: 6px;"></i> {{ hospital.address }}</p>
+                        <p style="margin: 4px 0; font-size: 0.88rem; color: var(--dark);"><i class="fas fa-phone" style="color: var(--muted); margin-right: 6px;"></i> {{ hospital.phone }}</p>
+                        <p style="margin: 4px 0; font-size: 0.88rem; color: var(--dark);">
+                            <i class="fas fa-route" style="color: var(--muted); margin-right: 6px;"></i> {{ hospital.distance }} km away
+                            <i class="fas fa-star" style="color: #F59E0B; margin-left: 14px; margin-right: 4px;"></i> {{ hospital.rating }}/5.0
+                        </p>
                     </div>
                 </div>
-                {% endfor %}
-            {% else %}
-                <p style="color: #6B7280;">No hospitals found matching your criteria. Try adjusting filters.</p>
-            {% endif %}
-        </div>
+                <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="{{ get_maps_url(hospital) }}" target="_blank" class="map-btn" style="margin: 0; padding: 6px 12px;">
+                        <i class="fas fa-map-marked-alt"></i> View on Maps
+                    </a>
+                    <a href="{{ get_directions_url(hospital) }}" target="_blank" class="map-btn" style="margin: 0; padding: 6px 12px; background: #34A853;">
+                        <i class="fas fa-directions"></i> Directions
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--muted); font-size: 0.9rem;">No hospitals found matching your criteria.</p>
+        {% endif %}
     </div>
     
-    <!-- Download PDF -->
-    <div style="text-align: center;">
-        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" style="background: #28A745; color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-size: 1.1rem; margin-right: 15px; display: inline-block;">
-            <i class="fas fa-download"></i> Download Medical Report (PDF)
+    <!-- Actions -->
+    <div class="action-bar" style="margin-top: 24px; gap: 10px;">
+        <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg btn-pdf">
+            <i class="fas fa-download"></i> Download Report (PDF)
         </a>
-        <a href="{{ url_for('symptom_entry') }}" style="background: #0066CC; color: white; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-size: 1.1rem; display: inline-block;">
-            <i class="fas fa-home"></i> New Prediction
+        <a href="{{ url_for('symptom_entry') }}" class="btn btn-primary btn-lg btn-new">
+            <i class="fas fa-redo"></i> New Assessment
         </a>
     </div>
 </div>

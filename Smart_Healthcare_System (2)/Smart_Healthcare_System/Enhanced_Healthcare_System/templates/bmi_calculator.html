@@ -3,505 +3,648 @@
 
 {% block extra_css %}
 <style>
-:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
-.calc-hero{
-    background:linear-gradient(135deg,#6f42c1 0%,#0066CC 100%);
-    border-radius:16px;padding:32px;color:#fff;
-    display:flex;align-items:center;gap:22px;
-    margin-bottom:28px;box-shadow:0 8px 32px rgba(111,66,193,.25);}
-.calc-hero .ico{font-size:56px;}
-.calc-hero h2{font-size:26px;font-weight:700;margin-bottom:4px;}
-.calc-hero p{font-size:14px;opacity:.9;margin:0;}
-.ccard{background:#fff;border-radius:14px;padding:28px;
-    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;}
-.ccard h4{color:var(--blue);font-size:17px;font-weight:700;
-    margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #E9ECEF;}
-.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
-.cf label{font-size:12px;font-weight:700;color:#666;
-    text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;}
-.cf input,.cf select{
-    width:100%;padding:10px 13px;border:2px solid #E9ECEF;
-    border-radius:8px;font-size:14px;background:#FAFAFA;transition:.2s;}
-.cf input:focus,.cf select:focus{border-color:var(--blue);outline:none;background:#fff;}
-.calc-btn{
-    background:linear-gradient(135deg,#6f42c1,#0066CC);
-    color:#fff;border:none;border-radius:10px;
-    padding:13px 36px;font-size:15px;font-weight:700;
-    cursor:pointer;transition:.2s;margin-top:16px;}
-.calc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(111,66,193,.35);}
+.calc-hero {
+  background: linear-gradient(135deg, #0D1117 0%, #6f42c1 100%);
+  border-radius: 18px; padding: 26px 22px 22px;
+  color: #fff; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 8px 28px rgba(111,66,193,.3);
+}
+.calc-hero .ch-icon { font-size: 2.8rem; flex-shrink: 0; }
+.calc-hero h2 { font-size: 1.35rem; font-weight: 800; margin-bottom: 3px; }
+.calc-hero p  { font-size: .82rem; opacity: .85; margin: 0; }
 
-/* Result display */
-.result-hidden{display:none;}
-.bmi-ring{
-    width:150px;height:150px;border-radius:50%;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    margin:0 auto 20px;border:8px solid #E9ECEF;
-    font-size:36px;font-weight:800;transition:.4s;}
-.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:16px;}
-.res-box{border-radius:12px;padding:16px;text-align:center;}
-.res-box .rv{font-size:26px;font-weight:800;}
-.res-box .rl{font-size:12px;font-weight:600;margin-top:4px;color:#666;}
+/* Calc tabs */
+.calc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.calc-tab {
+  padding: 8px 16px; border: 2px solid #E5E7EB;
+  border-radius: 20px; background: #fff;
+  color: #6B7280; font-size: .8rem; font-weight: 700;
+  cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.calc-tab.active { background: #0D1117; border-color: #0D1117; color: #fff; }
 
-/* BMI scale bar */
-.bmi-scale{display:flex;height:18px;border-radius:50px;overflow:hidden;margin:16px 0 6px;}
-.bmi-scale div{flex:1;transition:.3s;}
-.bmi-marker-row{display:flex;justify-content:space-between;font-size:11px;color:#888;padding:0 2px;}
-.bmi-pointer{
-    position:relative;height:6px;margin-top:-4px;}
-.bmi-needle{
-    position:absolute;top:-8px;width:12px;height:12px;
-    background:#0066CC;border-radius:50%;
-    transform:translateX(-50%);transition:.5s;
-    border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+/* Input card */
+.ccard {
+  background: #fff; border-radius: 14px;
+  padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  margin-bottom: 14px;
+}
+.ccard-title {
+  font-size: 1rem; font-weight: 700; color: #0066CC;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 2px solid #E5E7EB;
+  display: flex; align-items: center; gap: 8px;
+}
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+.cf label {
+  display: block; font-size: .72rem; font-weight: 700;
+  color: #6B7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px;
+}
+.cf input, .cf select {
+  width: 100%; padding: 11px 13px;
+  border: 2px solid #E5E7EB; border-radius: 10px;
+  font-size: .92rem; background: #F9FAFB;
+  font-family: inherit; -webkit-appearance: none; color: #1F2937;
+  transition: border-color .2s;
+}
+.cf input:focus, .cf select:focus { border-color: #6f42c1; outline: none; background: #fff; }
 
-/* Tips */
-.tip-list li{padding:8px 12px;border-left:3px solid var(--blue);
-    background:#F0F7FF;border-radius:0 6px 6px 0;margin-bottom:8px;font-size:14px;}
+.calc-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #0D1117, #6f42c1);
+  color: #fff; border: none; border-radius: 12px;
+  font-size: .95rem; font-weight: 700; font-family: inherit;
+  cursor: pointer; margin-top: 14px; transition: opacity .2s;
+}
+.calc-btn:active { opacity: .88; }
 
-/* ── Diet Plan ── */
-.diet-hero{
-    background:linear-gradient(135deg,#28A745 0%,#20c997 100%);
-    border-radius:14px;padding:22px 26px;color:#fff;
-    display:flex;align-items:center;gap:16px;margin-bottom:20px;}
-.diet-hero .dico{font-size:44px;}
-.diet-hero h3{font-size:20px;font-weight:700;margin:0 0 4px;}
-.diet-hero p{font-size:13px;opacity:.9;margin:0;}
+/* Results */
+.result-section { display: none; }
+.result-section.show { display: block; }
 
-.macro-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
-.macro-box{
-    flex:1;min-width:120px;border-radius:12px;padding:14px;text-align:center;
-    border:2px solid transparent;}
-.macro-box .mv{font-size:22px;font-weight:800;}
-.macro-box .ml{font-size:11px;font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;}
-.macro-carb {background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8;}
-.macro-prot {background:#F0FFF4;border-color:#BBF7D0;color:#166534;}
-.macro-fat  {background:#FFF7ED;border-color:#FED7AA;color:#C2410C;}
-.macro-cal  {background:#F5F3FF;border-color:#DDD6FE;color:#7C3AED;}
+/* BMI ring */
+.bmi-ring-wrap { text-align: center; margin-bottom: 20px; }
+.bmi-ring {
+  width: 140px; height: 140px; border-radius: 50%;
+  display: inline-flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border: 8px solid #E5E7EB;
+  font-size: 2.4rem; font-weight: 900;
+  transition: border-color .4s, color .4s;
+}
+.bmi-cat { font-size: 1rem; font-weight: 700; margin-top: 8px; }
 
-/* meal day tabs */
-.day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
-.day-tab{
-    padding:7px 16px;border-radius:50px;border:2px solid #E9ECEF;
-    background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;transition:.18s;}
-.day-tab.active{background:#28A745;border-color:#28A745;color:#fff;}
-.day-tab:hover:not(.active){border-color:#28A745;color:#28A745;}
-.day-panel{display:none;}
-.day-panel.active{display:block;}
+/* BMI bar */
+.bmi-scale-wrap { max-width: 480px; margin: 16px auto; }
+.bmi-bar { display: flex; height: 16px; border-radius: 50px; overflow: hidden; }
+.bmi-bar div { flex: 1; }
+.bmi-labels { display: flex; justify-content: space-between; font-size: .68rem; color: #9CA3AF; margin-top: 4px; }
+.bmi-marker { position: relative; height: 10px; margin-top: 2px; }
+.bmi-needle {
+  position: absolute; top: -4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #0D1117; border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  transform: translateX(-50%);
+  transition: left .5s cubic-bezier(.34,1.56,.64,1);
+}
 
-/* meal cards */
-.meal-timeline{border-left:3px solid #E9ECEF;padding-left:20px;margin-left:10px;}
-.meal-item{
-    position:relative;margin-bottom:20px;
-    background:#FAFAFA;border-radius:12px;padding:16px 18px;
-    border:1px solid #E9ECEF;}
-.meal-item::before{
-    content:'';position:absolute;left:-27px;top:18px;
-    width:12px;height:12px;border-radius:50%;
-    background:#28A745;border:3px solid #fff;
-    box-shadow:0 0 0 2px #28A745;}
-.meal-time{font-size:11px;font-weight:700;color:#28A745;
-    text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
-.meal-name{font-size:15px;font-weight:700;color:#1a202c;margin-bottom:8px;}
-.food-chips{display:flex;flex-wrap:wrap;gap:6px;}
-.food-chip{
-    background:#fff;border:1px solid #E9ECEF;border-radius:20px;
-    padding:4px 12px;font-size:12px;color:#444;
-    display:flex;align-items:center;gap:5px;}
-.food-chip .fc-cal{color:#7C3AED;font-weight:700;font-size:11px;}
-.meal-note{font-size:12px;color:#888;margin-top:8px;font-style:italic;}
+/* Results grid */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+.res-box {
+  border-radius: 12px; padding: 16px 12px; text-align: center;
+  border: 2px solid transparent;
+}
+.res-val   { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.res-label { font-size: .68rem; font-weight: 700; color: #6B7280; margin-top: 5px; text-transform: uppercase; letter-spacing: .4px; }
 
-/* food list table */
-.food-table{width:100%;border-collapse:collapse;font-size:13px;}
-.food-table thead tr{background:#0066CC;color:#fff;}
-.food-table th{padding:10px 12px;text-align:left;font-weight:600;}
-.food-table th:first-child{border-radius:8px 0 0 0;}
-.food-table th:last-child{border-radius:0 8px 0 0;}
-.food-table tbody tr{border-bottom:1px solid #F0F3F7;transition:.15s;}
-.food-table tbody tr:hover{background:#F7FAFF;}
-.food-table td{padding:9px 12px;}
-.tag-avoid{background:#FEE2E2;color:#991B1B;border-radius:20px;
-    padding:2px 10px;font-size:11px;font-weight:700;}
-.tag-eat{background:#D1FAE5;color:#065F46;border-radius:20px;
-    padding:2px 10px;font-size:11px;font-weight:700;}
-.tag-limit{background:#FEF3C7;color:#92400E;border-radius:20px;
-    padding:2px 10px;font-size:11px;font-weight:700;}
+/* Health tips panel */
+.htip {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px;
+  background: #F9FAFB; border-left: 4px solid #0066CC;
+  border-radius: 0 8px 8px 0; margin-bottom: 8px;
+  font-size: .85rem; color: #374151;
+}
+.htip i { color: #0066CC; flex-shrink: 0; margin-top: 2px; }
 
-/* hydration tracker */
-.water-cups{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
-.wcup{
-    width:44px;height:52px;border-radius:0 0 8px 8px;
-    border:2px solid #BFDBFE;background:#fff;
-    cursor:pointer;transition:.2s;position:relative;overflow:hidden;}
-.wcup.filled{background:#3B82F6;border-color:#1D4ED8;}
-.wcup::after{content:'💧';position:absolute;
-    bottom:4px;left:50%;transform:translateX(-50%);font-size:18px;}
+/* Body fat category */
+.bf-gauge { position: relative; height: 14px; border-radius: 50px; overflow: hidden; margin: 12px 0 4px; }
+.bf-fill   { height: 100%; border-radius: 50px; transition: width .5s; }
 
-@media(max-width:600px){
-    .calc-hero{flex-direction:column;text-align:center;}
-    .calc-grid{grid-template-columns:1fr 1fr;}
-    .results-grid{grid-template-columns:1fr 1fr;}
-    .macro-bar{gap:8px;}
-    .macro-box{min-width:80px;}
+/* Progress bar row */
+.pbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pbar-label { font-size: .78rem; font-weight: 600; color: #374151; width: 90px; flex-shrink: 0; }
+.pbar-track { flex: 1; height: 10px; background: #E5E7EB; border-radius: 10px; overflow: hidden; }
+.pbar-fill  { height: 100%; border-radius: 10px; transition: width .6s; }
+.pbar-val   { font-size: .78rem; font-weight: 700; color: #374151; width: 50px; text-align: right; flex-shrink: 0; }
+
+/* WHO table */
+.who-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.who-table thead tr { background: #0D1117; color: #fff; }
+.who-table th { padding: 10px 12px; text-align: left; font-size: .75rem; font-weight: 600; }
+.who-table th:first-child { border-radius: 8px 0 0 0; }
+.who-table th:last-child  { border-radius: 0 8px 0 0; }
+.who-table tbody tr { border-bottom: 1px solid #F0F3F7; }
+.who-table td { padding: 9px 12px; }
+
+@media(max-width:500px) {
+  .calc-hero { flex-direction: column; text-align: center; }
+  .res-grid  { grid-template-columns: 1fr 1fr; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Hero -->
 <div class="calc-hero">
-    <div class="ico">⚖️</div>
-    <div>
-        <h2>BMI & Health Calculator</h2>
-        <p>Calculate BMI, ideal body weight, daily calorie needs, and water intake</p>
-    </div>
+  <div class="ch-icon">⚖️</div>
+  <div>
+    <h2>BMI &amp; Health Calculator</h2>
+    <p>BMI · Ideal Weight · BMR · TDEE · Body Fat · Water Intake</p>
+  </div>
 </div>
 
-<!-- Input form -->
-<div class="ccard">
-    <h4>📊 Enter Your Measurements</h4>
+<!-- Calculator tabs -->
+<div class="calc-tabs">
+  <button class="calc-tab active" onclick="switchCalc('bmi',this)">⚖️ BMI</button>
+  <button class="calc-tab" onclick="switchCalc('bmr',this)">🔥 BMR / TDEE</button>
+  <button class="calc-tab" onclick="switchCalc('bodyfat',this)">💪 Body Fat</button>
+  <button class="calc-tab" onclick="switchCalc('water',this)">💧 Water Intake</button>
+  <button class="calc-tab" onclick="switchCalc('heartrate',this)">❤️ Heart Rate</button>
+</div>
+
+<!-- ═══════════ BMI CALCULATOR ═══════════ -->
+<div id="calc-bmi">
+  <div class="ccard">
+    <div class="ccard-title"><i class="fas fa-weight"></i> BMI Calculator</div>
     <div class="calc-grid">
-        <div class="cf">
-            <label>Height (cm)</label>
-            <input type="number" id="height" placeholder="e.g. 170" min="50" max="250" step="0.1">
-        </div>
-        <div class="cf">
-            <label>Weight (kg)</label>
-            <input type="number" id="weight" placeholder="e.g. 70" min="10" max="300" step="0.1">
-        </div>
-        <div class="cf">
-            <label>Age (years)</label>
-            <input type="number" id="calc_age" placeholder="e.g. 30" min="1" max="120"
-                   value="{{ patient.age if patient else '' }}">
-        </div>
-        <div class="cf">
-            <label>Gender</label>
-            <select id="gender">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-            </select>
-        </div>
-        <div class="cf">
-            <label>Activity Level</label>
-            <select id="activity">
-                <option value="1.2">Sedentary (no exercise)</option>
-                <option value="1.375">Light (1–3 days/week)</option>
-                <option value="1.55" selected>Moderate (3–5 days/week)</option>
-                <option value="1.725">Active (6–7 days/week)</option>
-                <option value="1.9">Very Active (athlete)</option>
-            </select>
-        </div>
+      <div class="cf">
+        <label>Height (cm)</label>
+        <input type="number" id="bmi-h" placeholder="e.g. 170" min="50" max="250">
+      </div>
+      <div class="cf">
+        <label>Weight (kg)</label>
+        <input type="number" id="bmi-w" placeholder="e.g. 70" min="10" max="300">
+      </div>
+      <div class="cf">
+        <label>Age</label>
+        <input type="number" id="bmi-age" placeholder="e.g. 28" value="{{ patient.age if patient else '' }}">
+      </div>
+      <div class="cf">
+        <label>Gender</label>
+        <select id="bmi-gender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
     </div>
-    <button class="calc-btn" onclick="calculate()">⚡ Calculate Now</button>
+    <button class="calc-btn" onclick="calcBMI()"><i class="fas fa-calculator"></i> Calculate BMI</button>
+  </div>
+
+  <div class="ccard result-section" id="bmi-result">
+    <div class="ccard-title"><i class="fas fa-chart-bar"></i> Your BMI Results</div>
+    <div class="bmi-ring-wrap">
+      <div class="bmi-ring" id="bmi-ring">—</div>
+      <div class="bmi-cat" id="bmi-cat">—</div>
+    </div>
+
+    <!-- Scale bar -->
+    <div class="bmi-scale-wrap">
+      <div class="bmi-bar">
+        <div style="background:#4FC3F7;flex:3.5;" title="Underweight &lt;18.5"></div>
+        <div style="background:#66BB6A;flex:6.5;" title="Normal 18.5–24.9"></div>
+        <div style="background:#FFA726;flex:5;"   title="Overweight 25–29.9"></div>
+        <div style="background:#EF5350;flex:10;"  title="Obese ≥30"></div>
+      </div>
+      <div class="bmi-marker"><div class="bmi-needle" id="bmi-needle" style="left:0%;"></div></div>
+      <div class="bmi-labels"><span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span></div>
+    </div>
+
+    <div class="res-grid">
+      <div class="res-box" style="background:#EFF6FF;border-color:#BFDBFE;">
+        <div class="res-val" id="r-bmi" style="color:#0066CC;">—</div>
+        <div class="res-label">BMI</div>
+      </div>
+      <div class="res-box" style="background:#F0FFF4;border-color:#BBF7D0;">
+        <div class="res-val" id="r-ibw" style="color:#28A745;">—</div>
+        <div class="res-label">Ideal Weight (kg)</div>
+      </div>
+      <div class="res-box" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div class="res-val" id="r-wt-lose" style="color:#EA580C;">—</div>
+        <div class="res-label">To Lose (kg)</div>
+      </div>
+      <div class="res-box" style="background:#F5F3FF;border-color:#DDD6FE;">
+        <div class="res-val" id="r-wt-gain" style="color:#7C3AED;">—</div>
+        <div class="res-label">To Gain (kg)</div>
+      </div>
+    </div>
+
+    <div id="bmi-tips" style="margin-top:16px;"></div>
+  </div>
 </div>
 
-<!-- Results (hidden until calculated) -->
-<div class="ccard result-hidden" id="results-card">
-    <h4>📋 Your Health Results</h4>
+<!-- ═══════════ BMR / TDEE ═══════════ -->
+<div id="calc-bmr" style="display:none;">
+  <div class="ccard">
+    <div class="ccard-title"><i class="fas fa-fire"></i> BMR &amp; Daily Calorie Needs</div>
+    <div class="calc-grid">
+      <div class="cf"><label>Height (cm)</label><input type="number" id="bmr-h" placeholder="e.g. 170"></div>
+      <div class="cf"><label>Weight (kg)</label><input type="number" id="bmr-w" placeholder="e.g. 70"></div>
+      <div class="cf"><label>Age</label><input type="number" id="bmr-age" placeholder="e.g. 28" value="{{ patient.age if patient else '' }}"></div>
+      <div class="cf">
+        <label>Gender</label>
+        <select id="bmr-gender"><option value="male">Male</option><option value="female">Female</option></select>
+      </div>
+      <div class="cf" style="grid-column:1/-1;">
+        <label>Activity Level</label>
+        <select id="bmr-activity">
+          <option value="1.2">Sedentary (desk job, no exercise)</option>
+          <option value="1.375">Light (1–3 days/week exercise)</option>
+          <option value="1.55" selected>Moderate (3–5 days/week)</option>
+          <option value="1.725">Active (6–7 days/week)</option>
+          <option value="1.9">Very Active (athlete / physical job)</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcBMR()"><i class="fas fa-fire"></i> Calculate Calories</button>
+  </div>
 
-    <!-- BMI display -->
-    <div style="text-align:center;">
-        <div class="bmi-ring" id="bmi-ring">0</div>
-        <div style="font-size:20px;font-weight:700;" id="bmi-category">—</div>
+  <div class="ccard result-section" id="bmr-result">
+    <div class="ccard-title"><i class="fas fa-chart-pie"></i> Your Calorie Results</div>
+    <div class="res-grid">
+      <div class="res-box" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div class="res-val" id="r-bmr" style="color:#EA580C;">—</div>
+        <div class="res-label">BMR (kcal/day)</div>
+      </div>
+      <div class="res-box" style="background:#F5F3FF;border-color:#DDD6FE;">
+        <div class="res-val" id="r-tdee" style="color:#7C3AED;">—</div>
+        <div class="res-label">TDEE (Maintenance)</div>
+      </div>
+      <div class="res-box" style="background:#F0FFF4;border-color:#BBF7D0;">
+        <div class="res-val" id="r-lose" style="color:#28A745;">—</div>
+        <div class="res-label">Lose 0.5 kg/week</div>
+      </div>
+      <div class="res-box" style="background:#EFF6FF;border-color:#BFDBFE;">
+        <div class="res-val" id="r-gain" style="color:#0066CC;">—</div>
+        <div class="res-label">Gain 0.5 kg/week</div>
+      </div>
     </div>
 
-    <!-- BMI scale -->
-    <div style="max-width:500px;margin:20px auto 0;">
-        <div class="bmi-scale">
-            <div style="background:#4FC3F7;flex:2.5;" title="Underweight (<18.5)"></div>
-            <div style="background:#66BB6A;flex:6.5;" title="Normal (18.5–24.9)"></div>
-            <div style="background:#FFA726;flex:5;"   title="Overweight (25–29.9)"></div>
-            <div style="background:#EF5350;flex:10;"  title="Obese (≥30)"></div>
-        </div>
-        <div class="bmi-marker-row">
-            <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
-        </div>
-        <div class="bmi-pointer">
-            <div class="bmi-needle" id="bmi-needle" style="left:0%;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:16px;">
-            <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
-        </div>
+    <div style="margin-top:16px;">
+      <div class="ccard-title" style="margin-top:0;font-size:.88rem;"><i class="fas fa-drumstick-bite"></i> Macronutrient Split</div>
+      <div id="macro-bars"></div>
     </div>
-
-    <!-- Other results -->
-    <div class="results-grid" style="margin-top:28px;">
-        <div class="res-box" style="background:#EFF6FF;border:2px solid #BFDBFE;">
-            <div class="rv" id="res-bmi" style="color:#0066CC;">—</div>
-            <div class="rl">BMI</div>
-        </div>
-        <div class="res-box" style="background:#F0FFF4;border:2px solid #BBF7D0;">
-            <div class="rv" id="res-ibw" style="color:#28A745;">—</div>
-            <div class="rl">Ideal Body Weight (kg)</div>
-        </div>
-        <div class="res-box" style="background:#FFF7ED;border:2px solid #FED7AA;">
-            <div class="rv" id="res-bmr" style="color:#EA580C;">—</div>
-            <div class="rl">BMR (kcal/day)</div>
-        </div>
-        <div class="res-box" style="background:#F5F3FF;border:2px solid #DDD6FE;">
-            <div class="rv" id="res-tdee" style="color:#7C3AED;">—</div>
-            <div class="rl">Daily Calorie Need (TDEE)</div>
-        </div>
-        <div class="res-box" style="background:#EFF6FF;border:2px solid #BFDBFE;">
-            <div class="rv" id="res-water" style="color:#0066CC;">—</div>
-            <div class="rl">Water Intake (L/day)</div>
-        </div>
-        <div class="res-box" style="background:#F0FFF4;border:2px solid #BBF7D0;">
-            <div class="rv" id="res-deficit" style="color:#28A745;">—</div>
-            <div class="rl">To Lose 0.5 kg/week</div>
-        </div>
-    </div>
+  </div>
 </div>
 
-<!-- Health tips (shown after calculation) -->
-<div class="ccard result-hidden" id="tips-card">
-    <h4>💡 Personalised Health Tips</h4>
-    <ul class="tip-list" id="tips-list"></ul>
+<!-- ═══════════ BODY FAT ═══════════ -->
+<div id="calc-bodyfat" style="display:none;">
+  <div class="ccard">
+    <div class="ccard-title"><i class="fas fa-dumbbell"></i> Body Fat % (Navy Method)</div>
+    <div class="calc-grid">
+      <div class="cf"><label>Gender</label>
+        <select id="bf-gender" onchange="toggleBFFields()">
+          <option value="male">Male</option><option value="female">Female</option>
+        </select>
+      </div>
+      <div class="cf"><label>Height (cm)</label><input type="number" id="bf-h" placeholder="170"></div>
+      <div class="cf"><label>Neck (cm)</label><input type="number" id="bf-neck" placeholder="e.g. 38"></div>
+      <div class="cf"><label>Waist (cm)</label><input type="number" id="bf-waist" placeholder="e.g. 85"></div>
+      <div class="cf" id="bf-hip-wrap" style="display:none;">
+        <label>Hips (cm) <span style="color:#DC3545;">*female</span></label>
+        <input type="number" id="bf-hip" placeholder="e.g. 95">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcBodyFat()"><i class="fas fa-percentage"></i> Calculate Body Fat</button>
+  </div>
+
+  <div class="ccard result-section" id="bf-result">
+    <div class="ccard-title"><i class="fas fa-chart-bar"></i> Body Composition</div>
+    <div class="res-grid">
+      <div class="res-box" style="background:#FFF7ED;border-color:#FED7AA;">
+        <div class="res-val" id="r-bf" style="color:#EA580C;">—</div>
+        <div class="res-label">Body Fat %</div>
+      </div>
+      <div class="res-box" style="background:#F0FFF4;border-color:#BBF7D0;">
+        <div class="res-val" id="r-lbm" style="color:#28A745;">—</div>
+        <div class="res-label">Lean Body Mass (kg)</div>
+      </div>
+      <div class="res-box" style="background:#F5F3FF;border-color:#DDD6FE;">
+        <div class="res-val" id="r-fat-mass" style="color:#7C3AED;">—</div>
+        <div class="res-label">Fat Mass (kg)</div>
+      </div>
+      <div class="res-box" style="background:#EFF6FF;border-color:#BFDBFE;">
+        <div class="res-val" id="r-bf-cat" style="color:#0066CC;font-size:1rem;">—</div>
+        <div class="res-label">Category</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <div style="font-size:.78rem;font-weight:700;color:#6B7280;margin-bottom:6px;">FAT PERCENTAGE GAUGE</div>
+      <div class="bf-gauge">
+        <div style="background:linear-gradient(90deg,#4FC3F7,#66BB6A,#FFA726,#EF5350);width:100%;height:100%;"></div>
+      </div>
+      <div id="bf-needle-wrap" style="position:relative;height:10px;">
+        <div id="bf-needle" style="position:absolute;top:-4px;left:0%;width:14px;height:14px;border-radius:50%;background:#0D1117;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transform:translateX(-50%);transition:left .5s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.65rem;color:#9CA3AF;margin-top:4px;">
+        <span>Essential 3–5%</span><span>Athlete 6–13%</span><span>Fit 14–24%</span><span>Obese 25%+</span>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ══════════════ DIET PLAN ══════════════ -->
-<div class="ccard result-hidden" id="diet-card">
-    <!-- Hero banner -->
-    <div class="diet-hero">
-        <div class="dico">🥗</div>
-        <div>
-            <h3 id="diet-plan-title">Your Personalised Diet Plan</h3>
-            <p id="diet-plan-sub">Based on your BMI, calorie needs and goal</p>
-        </div>
+<!-- ═══════════ WATER INTAKE ═══════════ -->
+<div id="calc-water" style="display:none;">
+  <div class="ccard">
+    <div class="ccard-title"><i class="fas fa-tint"></i> Daily Water Intake Calculator</div>
+    <div class="calc-grid">
+      <div class="cf"><label>Weight (kg)</label><input type="number" id="wt-w" placeholder="e.g. 70"></div>
+      <div class="cf">
+        <label>Activity Level</label>
+        <select id="wt-act">
+          <option value="1.0">Sedentary</option>
+          <option value="1.2" selected>Moderate</option>
+          <option value="1.4">Very Active</option>
+        </select>
+      </div>
+      <div class="cf">
+        <label>Climate</label>
+        <select id="wt-climate">
+          <option value="1.0">Temperate / Cool</option>
+          <option value="1.15">Hot / Humid</option>
+          <option value="1.25">Very Hot (summer / tropical)</option>
+        </select>
+      </div>
     </div>
+    <button class="calc-btn" onclick="calcWater()"><i class="fas fa-tint"></i> Calculate Water Need</button>
+  </div>
 
-    <!-- Goal selector -->
-    <div style="margin-bottom:20px;">
-        <label style="font-size:13px;font-weight:700;color:#555;display:block;margin-bottom:8px;">🎯 Select Your Goal:</label>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="day-tab active" id="goal-lose"   onclick="setGoal('lose',this)">🔻 Lose Weight</button>
-            <button class="day-tab"        id="goal-maintain" onclick="setGoal('maintain',this)">⚖️ Maintain Weight</button>
-            <button class="day-tab"        id="goal-gain"   onclick="setGoal('gain',this)">🔺 Gain Weight / Muscle</button>
-        </div>
+  <div class="ccard result-section" id="water-result">
+    <div class="ccard-title"><i class="fas fa-glass-water"></i> Your Hydration Target</div>
+    <div class="res-grid">
+      <div class="res-box" style="background:#EFF6FF;border-color:#BFDBFE;">
+        <div class="res-val" id="r-water-L" style="color:#0066CC;">—</div>
+        <div class="res-label">Litres / Day</div>
+      </div>
+      <div class="res-box" style="background:#F0FFF4;border-color:#BBF7D0;">
+        <div class="res-val" id="r-water-cups" style="color:#28A745;">—</div>
+        <div class="res-label">Glasses (250ml)</div>
+      </div>
     </div>
-
-    <!-- Macro targets -->
-    <h5 style="font-weight:700;color:#333;margin-bottom:12px;">📊 Daily Macro Targets</h5>
-    <div class="macro-bar">
-        <div class="macro-box macro-cal">
-            <div class="mv" id="macro-cal">—</div>
-            <div class="ml">Calories (kcal)</div>
-        </div>
-        <div class="macro-box macro-carb">
-            <div class="mv" id="macro-carb">—</div>
-            <div class="ml">Carbs (g)</div>
-        </div>
-        <div class="macro-box macro-prot">
-            <div class="mv" id="macro-prot">—</div>
-            <div class="ml">Protein (g)</div>
-        </div>
-        <div class="macro-box macro-fat">
-            <div class="mv" id="macro-fat">—</div>
-            <div class="ml">Fat (g)</div>
-        </div>
+    <div style="margin-top:16px;">
+      <div style="font-size:.78rem;font-weight:700;color:#6B7280;margin-bottom:8px;">TAP TO TRACK TODAY'S INTAKE</div>
+      <div id="water-cups-ui" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      <div id="water-track-text" style="margin-top:8px;font-size:.85rem;font-weight:700;color:#374151;"></div>
     </div>
-
-    <!-- 7-day meal plan tabs -->
-    <h5 style="font-weight:700;color:#333;margin-bottom:12px;">📅 7-Day Meal Plan</h5>
-    <div class="day-tabs">
-        <button class="day-tab active" onclick="switchDay('mon',this)">Mon</button>
-        <button class="day-tab" onclick="switchDay('tue',this)">Tue</button>
-        <button class="day-tab" onclick="switchDay('wed',this)">Wed</button>
-        <button class="day-tab" onclick="switchDay('thu',this)">Thu</button>
-        <button class="day-tab" onclick="switchDay('fri',this)">Fri</button>
-        <button class="day-tab" onclick="switchDay('sat',this)">Sat</button>
-        <button class="day-tab" onclick="switchDay('sun',this)">Sun</button>
-    </div>
-
-    <!-- Day panels injected by JS -->
-    <div id="meal-plan-container"></div>
+  </div>
 </div>
 
-<!-- ══════════════ FOOD DATABASE ══════════════ -->
-<div class="ccard result-hidden" id="food-card">
-    <h4>🍱 Indian Food Calorie Database</h4>
-    <p style="font-size:13px;color:#666;margin-bottom:16px;">
-        Calorie and macro values per standard serving. Use this to build your own meals.
-    </p>
-
-    <!-- Search -->
-    <div style="margin-bottom:16px;">
-        <input type="text" id="food-search" oninput="filterFood()"
-            placeholder="🔍 Search food — e.g. rice, roti, dal, chicken…"
-            style="width:100%;padding:11px 16px;border:2px solid #E9ECEF;
-            border-radius:10px;font-size:14px;">
+<!-- ═══════════ HEART RATE ZONES ═══════════ -->
+<div id="calc-heartrate" style="display:none;">
+  <div class="ccard">
+    <div class="ccard-title"><i class="fas fa-heartbeat"></i> Target Heart Rate Zones</div>
+    <div class="calc-grid">
+      <div class="cf"><label>Age</label><input type="number" id="hr-age" placeholder="e.g. 30" value="{{ patient.age if patient else '' }}"></div>
+      <div class="cf"><label>Resting Heart Rate (bpm)</label><input type="number" id="hr-resting" placeholder="e.g. 68" min="30" max="100"></div>
     </div>
+    <button class="calc-btn" onclick="calcHR()"><i class="fas fa-heartbeat"></i> Calculate Heart Rate Zones</button>
+  </div>
 
-    <!-- Category tabs -->
-    <div class="day-tabs" style="margin-bottom:16px;">
-        <button class="day-tab active" onclick="filterFoodCat('all',this)">All</button>
-        <button class="day-tab" onclick="filterFoodCat('grains',this)">🌾 Grains</button>
-        <button class="day-tab" onclick="filterFoodCat('protein',this)">🥩 Protein</button>
-        <button class="day-tab" onclick="filterFoodCat('dal',this)">🫘 Dal/Legumes</button>
-        <button class="day-tab" onclick="filterFoodCat('dairy',this)">🥛 Dairy</button>
-        <button class="day-tab" onclick="filterFoodCat('veg',this)">🥦 Vegetables</button>
-        <button class="day-tab" onclick="filterFoodCat('fruit',this)">🍎 Fruits</button>
-        <button class="day-tab" onclick="filterFoodCat('snack',this)">🍿 Snacks</button>
-        <button class="day-tab" onclick="filterFoodCat('drink',this)">🥤 Drinks</button>
+  <div class="ccard result-section" id="hr-result">
+    <div class="ccard-title"><i class="fas fa-chart-bar"></i> Heart Rate Zones</div>
+    <div class="res-grid">
+      <div class="res-box" style="background:#EFF6FF;border-color:#BFDBFE;">
+        <div class="res-val" id="r-hrmax" style="color:#0066CC;">—</div>
+        <div class="res-label">Max HR (bpm)</div>
+      </div>
+      <div class="res-box" style="background:#F0FFF4;border-color:#BBF7D0;">
+        <div class="res-val" id="r-hrr" style="color:#28A745;">—</div>
+        <div class="res-label">HR Reserve</div>
+      </div>
     </div>
-
-    <div style="overflow-x:auto;border-radius:10px;">
-        <table class="food-table" id="food-table">
-            <thead>
-                <tr>
-                    <th>Food Item</th>
-                    <th>Serving</th>
-                    <th>Calories</th>
-                    <th>Carbs (g)</th>
-                    <th>Protein (g)</th>
-                    <th>Fat (g)</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="food-tbody"></tbody>
-        </table>
-    </div>
+    <div id="hr-zones" style="margin-top:16px;"></div>
+  </div>
 </div>
 
-<!-- ══════════════ EAT & AVOID ══════════════ -->
-<div class="ccard result-hidden" id="eatavoid-card">
-    <h4>✅ What to Eat &amp; ❌ What to Avoid</h4>
-    <div id="eat-avoid-content"></div>
-</div>
-
-<!-- ══════════════ HYDRATION TRACKER ══════════════ -->
-<div class="ccard result-hidden" id="hydration-card">
-    <h4>💧 Daily Hydration Tracker</h4>
-    <p style="font-size:13px;color:#666;">
-        Your target: <strong id="water-target-text">—</strong> &nbsp;|&nbsp;
-        Click each cup to mark as consumed
-    </p>
-    <div class="water-cups" id="water-cups"></div>
-    <div style="margin-top:12px;font-size:14px;font-weight:600;" id="water-progress-text">0 / 0 cups consumed</div>
-    <button onclick="resetWater()"
-        style="margin-top:10px;background:#EFF6FF;border:2px solid #BFDBFE;color:#1D4ED8;
-        border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer;">
-        🔄 Reset
-    </button>
-</div>
-
-<!-- Reference table -->
+<!-- WHO BMI Reference -->
 <div class="ccard">
-    <h4>📖 BMI Classification (WHO)</h4>
-    <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <thead>
-            <tr style="background:#0066CC;color:#fff;">
-                <th style="padding:10px;text-align:left;border-radius:8px 0 0 0;">BMI Range</th>
-                <th style="padding:10px;text-align:left;">Category</th>
-                <th style="padding:10px;text-align:left;border-radius:0 8px 0 0;">Health Risk</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in [
-                ('< 18.5',   'Underweight',    'Malnutrition, weak immunity',  '#EFF6FF'),
-                ('18.5–24.9','Normal weight',  'Minimal risk',                 '#F0FFF4'),
-                ('25.0–29.9','Overweight',     'Moderate risk',                '#FFF7ED'),
-                ('30.0–34.9','Obese Class I',  'High risk',                    '#FEF2F2'),
-                ('35.0–39.9','Obese Class II', 'Very high risk',               '#FEE2E2'),
-                ('≥ 40.0',   'Obese Class III','Extremely high risk',          '#FEE2E2')
-            ] %}
-            <tr style="border-bottom:1px solid #F0F3F7;background:{{row[3]}};">
-                <td style="padding:10px;font-weight:700;">{{ row[0] }}</td>
-                <td style="padding:10px;">{{ row[1] }}</td>
-                <td style="padding:10px;color:#666;font-size:13px;">{{ row[2] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+  <div class="ccard-title"><i class="fas fa-table"></i> BMI Classification (WHO)</div>
+  <div style="overflow-x:auto;">
+  <table class="who-table">
+    <thead><tr><th>BMI Range</th><th>Category</th><th>Health Risk</th></tr></thead>
+    <tbody>
+      {% for row in [
+        ('<18.5',   'Underweight',     'Malnutrition, bone loss, weak immunity', '#EFF6FF'),
+        ('18.5–24.9','Normal weight',  'Minimal risk — ideal range',             '#F0FFF4'),
+        ('25.0–29.9','Overweight',     'Moderate risk of heart disease & diabetes','#FFF7ED'),
+        ('30.0–34.9','Obese Class I',  'High risk — medical advice recommended',  '#FEF2F2'),
+        ('35.0–39.9','Obese Class II', 'Very high risk',                          '#FEE2E2'),
+        ('≥40.0',   'Obese Class III','Extremely high risk — specialist care',    '#FEE2E2')
+      ] %}
+      <tr style="background:{{ row[3] }};"><td style="font-weight:700;">{{ row[0] }}</td><td>{{ row[1] }}</td><td style="color:#6B7280;font-size:.8rem;">{{ row[2] }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function calculate() {
-    const h   = parseFloat(document.getElementById('height').value);
-    const w   = parseFloat(document.getElementById('weight').value);
-    const age = parseInt(document.getElementById('calc_age').value);
-    const sex = document.getElementById('gender').value;
-    const act = parseFloat(document.getElementById('activity').value);
+/* ── Tab switch ── */
+function switchCalc(name, btn) {
+  ['bmi','bmr','bodyfat','water','heartrate'].forEach(id => {
+    document.getElementById('calc-' + id).style.display = id === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.calc-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
-    if (!h || !w || !age) { alert('Please enter height, weight, and age.'); return; }
+/* ── BMI ── */
+function calcBMI() {
+  const h = parseFloat(document.getElementById('bmi-h').value);
+  const w = parseFloat(document.getElementById('bmi-w').value);
+  const age = parseInt(document.getElementById('bmi-age').value) || 25;
+  const sex = document.getElementById('bmi-gender').value;
+  if (!h || !w) { alert('Enter height and weight.'); return; }
 
-    const hm  = h / 100;
-    const bmi = (w / (hm * hm)).toFixed(1);
+  const hm  = h / 100;
+  const bmi = (w / (hm * hm)).toFixed(1);
+  let ibw = sex === 'male' ? 50 + 2.3 * ((h - 152.4) / 2.54) : 45.5 + 2.3 * ((h - 152.4) / 2.54);
+  ibw = Math.max(ibw, 30).toFixed(1);
 
-    // Ideal Body Weight (Devine formula)
-    let ibw;
-    if (sex === 'male')   ibw = 50 + 2.3 * ((h - 152.4) / 2.54);
-    else                  ibw = 45.5 + 2.3 * ((h - 152.4) / 2.54);
-    ibw = Math.max(ibw, 30).toFixed(1);
+  let cat, color;
+  if      (bmi < 18.5) { cat = 'Underweight 🔵'; color = '#4FC3F7'; }
+  else if (bmi < 25)   { cat = 'Normal ✅';       color = '#28A745'; }
+  else if (bmi < 30)   { cat = 'Overweight ⚠️';   color = '#FFC107'; }
+  else                 { cat = 'Obese 🔴';         color = '#DC3545'; }
 
-    // BMR (Mifflin-St Jeor)
-    let bmr;
-    if (sex === 'male')   bmr = 10 * w + 6.25 * h - 5 * age + 5;
-    else                  bmr = 10 * w + 6.25 * h - 5 * age - 161;
-    bmr = Math.round(bmr);
+  document.getElementById('bmi-ring').textContent  = bmi;
+  document.getElementById('bmi-ring').style.borderColor = color;
+  document.getElementById('bmi-ring').style.color  = color;
+  document.getElementById('bmi-cat').textContent   = cat;
+  document.getElementById('bmi-cat').style.color   = color;
+  document.getElementById('r-bmi').textContent     = bmi;
+  document.getElementById('r-ibw').textContent     = ibw + ' kg';
 
-    const tdee    = Math.round(bmr * act);
-    const deficit = Math.round(tdee - 500);     // 0.5 kg/week loss
-    const water   = (w * 0.033).toFixed(1);
+  const diff = (w - parseFloat(ibw)).toFixed(1);
+  document.getElementById('r-wt-lose').textContent = diff > 0 ? diff + ' kg' : '—';
+  document.getElementById('r-wt-gain').textContent = diff < 0 ? Math.abs(diff) + ' kg' : '—';
 
-    // BMI category + colour
-    let cat, color;
-    if      (bmi < 18.5) { cat = 'Underweight 🔵'; color = '#4FC3F7'; }
-    else if (bmi < 25)   { cat = 'Normal Weight ✅'; color = '#28A745'; }
-    else if (bmi < 30)   { cat = 'Overweight ⚠️';  color = '#FFC107'; }
-    else if (bmi < 35)   { cat = 'Obese Class I 🔴'; color = '#DC3545'; }
-    else                 { cat = 'Obese Class II+ 🚨'; color = '#991B1B'; }
+  const pct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
+  document.getElementById('bmi-needle').style.left = pct + '%';
 
-    // Update DOM
-    const ring = document.getElementById('bmi-ring');
-    ring.textContent = bmi;
-    ring.style.borderColor = color;
-    ring.style.color = color;
-    document.getElementById('bmi-category').textContent = cat;
-    document.getElementById('bmi-category').style.color = color;
-    document.getElementById('res-bmi').textContent = bmi;
-    document.getElementById('res-ibw').textContent = ibw + ' kg';
-    document.getElementById('res-bmr').textContent = bmr.toLocaleString();
-    document.getElementById('res-tdee').textContent = tdee.toLocaleString();
-    document.getElementById('res-water').textContent = water + ' L';
-    document.getElementById('res-deficit').textContent = deficit.toLocaleString() + ' kcal';
+  const tips = bmi < 18.5
+    ? ['Increase calorie intake with nutrient-dense foods.', 'Add strength training to build muscle mass.', 'Consult a dietitian — unexplained weight loss needs investigation.']
+    : bmi < 25
+    ? ['Great BMI! Maintain with balanced diet and 150 min exercise/week.', 'Annual health check-ups keep you on track.', 'Focus on food quality, not just calories.']
+    : bmi < 30
+    ? ['Cut 300–500 kcal/day to lose weight safely.', '30 min brisk walking daily burns ~200 kcal.', 'Replace sugary drinks and processed snacks first.']
+    : ['Medical supervision recommended for weight loss.', 'Even 5% weight loss significantly reduces health risks.', 'Low-impact exercises like swimming are ideal.'];
 
-    // BMI needle position (scale 15–40 = 0–100%)
-    const pct = Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100));
-    document.getElementById('bmi-needle').style.left = pct + '%';
+  document.getElementById('bmi-tips').innerHTML = tips.map(t =>
+    `<div class="htip"><i class="fas fa-lightbulb"></i> ${t}</div>`).join('');
+  document.getElementById('bmi-result').classList.add('show');
+  document.getElementById('bmi-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
-    // Show results
-    document.getElementById('results-card').style.display = 'block';
-    document.getElementById('tips-card').style.display = 'block';
-    document.getElementById('results-card').classList.remove('result-hidden');
-    document.getElementById('tips-card').classList.remove('result-hidden');
+/* ── BMR / TDEE ── */
+function calcBMR() {
+  const h   = parseFloat(document.getElementById('bmr-h').value);
+  const w   = parseFloat(document.getElementById('bmr-w').value);
+  const age = parseInt(document.getElementById('bmr-age').value) || 25;
+  const sex = document.getElementById('bmr-gender').value;
+  const act = parseFloat(document.getElementById('bmr-activity').value);
+  if (!h || !w) { alert('Enter height and weight.'); return; }
 
-    // Tips
-    const tips = [];
-    if (bmi < 18.5) {
-        tips.push('Increase calorie intake with nutrient-dense foods: nuts, eggs, dairy, whole grains.');
-        tips.push('Do strength training 3×/week to build healthy muscle mass.');
-        tips.push('Consult a dietitian — unexpected weight loss may need investigation.');
-    } else if (bmi < 25) {
-        tips.push('Great BMI! Maintain it with balanced diet and 150 min/week moderate exercise.');
-        tips.push('Eat plenty of fruits, vegetables, lean protein, and whole grains.');
-        tips.push('Regular health check-ups once a year are still recommended.');
-    } else if (bmi < 30) {
-        tips.push('Aim to reduce calorie intake by ' + (tdee - deficit) + ' kcal/day to lose 0.5 kg/week.');
-        tips.push('Add 30 min brisk walking daily — it burns ~200 kcal.');
-        tips.push('Cut sugary drinks and ultra-processed foods first — they are the easiest calories to cut.');
-    } else {
-        tips.push('A medically supervised weight-loss plan is recommended at this BMI.');
-        tips.push('Even losing 5–10% of body weight significantly reduces health risks.');
-        tips.push('Consult your doctor before starting any intense exercise programme.');
-    }
-    tips.push('Drink at least ' + water + ' litres of water daily for your weight.');
-    tips.push('Your estimated daily calorie maintenance (TDEE) is ' + tdee.toLocaleString() + ' kcal.');
+  const bmr  = Math.round(sex === 'male' ? 10*w + 6.25*h - 5*age + 5 : 10*w + 6.25*h - 5*age - 161);
+  const tdee = Math.round(bmr * act);
 
-    const ul = document.getElementById('tips-list');
-    ul.innerHTML = tips.map(t => '<li>' + t + '</li>').join('');
+  document.getElementById('r-bmr').textContent  = bmr.toLocaleString();
+  document.getElementById('r-tdee').textContent = tdee.toLocaleString();
+  document.getElementById('r-lose').textContent = (tdee - 500).toLocaleString();
+  document.getElementById('r-gain').textContent = (tdee + 500).toLocaleString();
 
-    document.getElementById('results-card').scrollIntoView({behavior:'smooth', block:'start'});
+  // Macros (moderate: 40% carb, 30% prot, 30% fat)
+  const carb = Math.round(tdee * 0.40 / 4);
+  const prot = Math.round(tdee * 0.30 / 4);
+  const fat  = Math.round(tdee * 0.30 / 9);
+  document.getElementById('macro-bars').innerHTML = `
+    <div class="pbar-row"><span class="pbar-label">🌾 Carbs</span><div class="pbar-track"><div class="pbar-fill" style="width:40%;background:#3B82F6;"></div></div><span class="pbar-val">${carb}g</span></div>
+    <div class="pbar-row"><span class="pbar-label">🥩 Protein</span><div class="pbar-track"><div class="pbar-fill" style="width:30%;background:#28A745;"></div></div><span class="pbar-val">${prot}g</span></div>
+    <div class="pbar-row"><span class="pbar-label">🫒 Fat</span><div class="pbar-track"><div class="pbar-fill" style="width:30%;background:#F59E0B;"></div></div><span class="pbar-val">${fat}g</span></div>
+  `;
+  document.getElementById('bmr-result').classList.add('show');
+  document.getElementById('bmr-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Body Fat ── */
+function toggleBFFields() {
+  const isFemale = document.getElementById('bf-gender').value === 'female';
+  document.getElementById('bf-hip-wrap').style.display = isFemale ? '' : 'none';
+}
+function calcBodyFat() {
+  const sex   = document.getElementById('bf-gender').value;
+  const h     = parseFloat(document.getElementById('bf-h').value);
+  const neck  = parseFloat(document.getElementById('bf-neck').value);
+  const waist = parseFloat(document.getElementById('bf-waist').value);
+  const hip   = parseFloat(document.getElementById('bf-hip').value) || 0;
+  if (!h || !neck || !waist) { alert('Enter height, neck and waist measurements.'); return; }
+  if (sex === 'female' && !hip) { alert('Enter hip measurement for females.'); return; }
+
+  let bf;
+  if (sex === 'male') {
+    bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(h)) - 450;
+  } else {
+    bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(h)) - 450;
+  }
+  bf = Math.max(3, Math.min(60, parseFloat(bf.toFixed(1))));
+
+  const w = parseFloat(document.getElementById('bmi-w').value) || 70;
+  const fatMass = (w * bf / 100).toFixed(1);
+  const lbm     = (w - parseFloat(fatMass)).toFixed(1);
+
+  let cat;
+  if (sex === 'male') {
+    cat = bf < 6 ? 'Essential Fat' : bf < 14 ? '⚡ Athlete' : bf < 18 ? '✅ Fit' : bf < 25 ? 'Average' : '⚠️ Obese';
+  } else {
+    cat = bf < 14 ? 'Essential Fat' : bf < 21 ? '⚡ Athlete' : bf < 25 ? '✅ Fit' : bf < 32 ? 'Average' : '⚠️ Obese';
+  }
+
+  document.getElementById('r-bf').textContent       = bf + '%';
+  document.getElementById('r-lbm').textContent      = lbm + ' kg';
+  document.getElementById('r-fat-mass').textContent = fatMass + ' kg';
+  document.getElementById('r-bf-cat').textContent   = cat;
+
+  const maxBF = sex === 'male' ? 40 : 50;
+  const pct   = Math.min(100, (bf / maxBF) * 100);
+  document.getElementById('bf-needle').style.left = pct + '%';
+
+  document.getElementById('bf-result').classList.add('show');
+  document.getElementById('bf-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Water ── */
+let waterConsumed = 0;
+function calcWater() {
+  const w   = parseFloat(document.getElementById('wt-w').value);
+  const act = parseFloat(document.getElementById('wt-act').value);
+  const cli = parseFloat(document.getElementById('wt-climate').value);
+  if (!w) { alert('Enter your weight.'); return; }
+
+  const litres = parseFloat((w * 0.033 * act * cli).toFixed(1));
+  const cups   = Math.ceil(litres / 0.25);
+
+  document.getElementById('r-water-L').textContent    = litres + ' L';
+  document.getElementById('r-water-cups').textContent = cups + ' cups';
+
+  // Build cup tracker
+  waterConsumed = 0;
+  const ui = document.getElementById('water-cups-ui');
+  ui.innerHTML = '';
+  for (let i = 0; i < cups; i++) {
+    const btn = document.createElement('button');
+    btn.innerHTML = '💧';
+    btn.title = `Cup ${i+1}`;
+    btn.style.cssText = 'width:46px;height:54px;border:2px solid #BFDBFE;border-radius:0 0 10px 10px;background:#fff;font-size:1.3rem;cursor:pointer;transition:background .15s;';
+    btn.dataset.idx = i;
+    btn.addEventListener('click', function() {
+      const filled = this.style.background !== 'rgb(255, 255, 255)';
+      this.style.background = filled ? '#fff' : '#3B82F6';
+      this.style.borderColor = filled ? '#BFDBFE' : '#1D4ED8';
+      waterConsumed += filled ? -1 : 1;
+      document.getElementById('water-track-text').textContent = `${waterConsumed} / ${cups} cups consumed (${(waterConsumed * 0.25).toFixed(2)} L)`;
+    });
+    ui.appendChild(btn);
+  }
+  document.getElementById('water-track-text').textContent = `0 / ${cups} cups consumed`;
+  document.getElementById('water-result').classList.add('show');
+  document.getElementById('water-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Heart Rate Zones ── */
+function calcHR() {
+  const age     = parseInt(document.getElementById('hr-age').value);
+  const resting = parseInt(document.getElementById('hr-resting').value) || 65;
+  if (!age) { alert('Enter your age.'); return; }
+
+  const maxHR = 220 - age;
+  const hrr   = maxHR - resting;
+
+  document.getElementById('r-hrmax').textContent = maxHR + ' bpm';
+  document.getElementById('r-hrr').textContent   = hrr + ' bpm';
+
+  const zones = [
+    { name: 'Zone 1 — Recovery',    pct: [50, 60], color: '#4FC3F7', desc: 'Very light. Warm-up, cool-down.' },
+    { name: 'Zone 2 — Fat Burn',    pct: [60, 70], color: '#66BB6A', desc: 'Light. Best for fat burning & base fitness.' },
+    { name: 'Zone 3 — Aerobic',     pct: [70, 80], color: '#FFA726', desc: 'Moderate. Improves cardiovascular fitness.' },
+    { name: 'Zone 4 — Threshold',   pct: [80, 90], color: '#EF5350', desc: 'Hard. Increases speed & endurance.' },
+    { name: 'Zone 5 — Max Effort',  pct: [90,100], color: '#B71C1C', desc: 'Very hard. Short bursts only.' },
+  ];
+
+  document.getElementById('hr-zones').innerHTML = zones.map(z => {
+    const lo = Math.round(resting + z.pct[0]/100 * hrr);
+    const hi = Math.round(resting + z.pct[1]/100 * hrr);
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:#F9FAFB;border-left:4px solid ${z.color};">
+        <div style="width:10px;height:10px;border-radius:50%;background:${z.color};flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:.85rem;font-weight:700;color:#1F2937;">${z.name}</div>
+          <div style="font-size:.75rem;color:#6B7280;">${z.desc}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:.9rem;font-weight:800;color:${z.color};">${lo}–${hi}</div>
+          <div style="font-size:.65rem;color:#9CA3AF;">bpm</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('hr-result').classList.add('show');
+  document.getElementById('hr-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 {% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Manage Appointments – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+.da-hero { background:linear-gradient(135deg,#0066CC,#28A745); color:#fff; border-radius:16px; padding:28px 32px; display:flex; align-items:center; gap:22px; margin-bottom:24px; }
+.da-hero .ico { font-size:52px; }
+.da-hero h2 { font-size:1.5rem; font-weight:700; margin-bottom:4px; }
+.stats-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:14px; margin-bottom:22px; }
+.stat-tile { background:#fff; border-radius:12px; padding:18px; box-shadow:0 3px 12px rgba(0,0,0,.07); text-align:center; }
+.stat-tile .sv { font-size:2rem; font-weight:800; }
+.stat-tile .sl { font-size:.75rem; color:#6B7280; font-weight:600; text-transform:uppercase; }
+.st-pending   { border-top:4px solid #FFC107; } .st-pending   .sv { color:#D97706; }
+.st-confirmed { border-top:4px solid #28A745; } .st-confirmed .sv { color:#15803D; }
+.st-today     { border-top:4px solid #0066CC; } .st-today     .sv { color:#0066CC; }
+.st-total     { border-top:4px solid #6f42c1; } .st-total     .sv { color:#6f42c1; }
+
+.filter-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.ftab { padding:7px 18px; border:2px solid #E5E7EB; border-radius:20px; background:#fff; color:#6B7280; font-size:.82rem; font-weight:600; cursor:pointer; transition:.15s; }
+.ftab.active, .ftab:hover { border-color:#0066CC; background:#EFF6FF; color:#0066CC; }
+
+.appt-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+.appt-card { background:#fff; border-radius:14px; padding:20px; box-shadow:0 3px 14px rgba(0,0,0,.07); border-left:5px solid #E5E7EB; }
+.appt-card.pending   { border-left-color:#FFC107; }
+.appt-card.confirmed { border-left-color:#28A745; }
+.appt-card.cancelled { border-left-color:#DC3545; opacity:.75; }
+.appt-card.completed { border-left-color:#6c757d; }
+.patient-name { font-size:1.05rem; font-weight:700; color:#0066CC; margin-bottom:4px; }
+.appt-dt { font-size:.9rem; font-weight:700; color:#1F2937; margin-bottom:6px; }
+.appt-meta { font-size:.82rem; color:#6B7280; margin-bottom:3px; }
+.sp { display:inline-block; padding:3px 10px; border-radius:12px; font-size:.72rem; font-weight:700; text-transform:uppercase; }
+.sp-pending   { background:#FFF3CD; color:#856404; }
+.sp-confirmed { background:#D4EDDA; color:#155724; }
+.sp-cancelled { background:#F8D7DA; color:#721C24; }
+.sp-completed { background:#E2E8F0; color:#4A5568; }
+
+.update-form { margin-top:14px; padding-top:12px; border-top:1px solid #F0F3F7; }
+.update-form label { font-size:.75rem; font-weight:700; color:#6B7280; text-transform:uppercase; display:block; margin-bottom:5px; }
+.update-form select, .update-form textarea {
+    width:100%; padding:8px 12px; border:2px solid #E9ECEF; border-radius:8px;
+    font-size:.85rem; font-family:inherit; background:#FAFAFA; margin-bottom:8px;
+}
+.update-form select:focus, .update-form textarea:focus { outline:none; border-color:#0066CC; }
+.update-form textarea { resize:vertical; min-height:60px; }
+.upd-btn { background:#0066CC; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-weight:700; font-size:.85rem; cursor:pointer; }
+.upd-btn:hover { background:#0052A3; }
+.empty-state { text-align:center; padding:48px; color:#aaa; }
+.empty-state i { font-size:3rem; display:block; margin-bottom:12px; }
+@media(max-width:640px){ .da-hero{flex-direction:column;text-align:center;} .appt-grid{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="da-hero">
+    <div class="ico">📋</div>
+    <div>
+        <h2>Appointment Management</h2>
+        <p>Review, confirm, reschedule, and add notes to patient appointments.</p>
+    </div>
+</div>
+
+{% set pending_list   = appointments | selectattr('status','equalto','pending')   | list %}
+{% set confirmed_list = appointments | selectattr('status','equalto','confirmed') | list %}
+{% set today_list     = appointments | selectattr('appointment_date','equalto',today) | list %}
+
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-tile st-total">   <div class="sv">{{ appointments|length }}</div><div class="sl">Total</div></div>
+    <div class="stat-tile st-pending"> <div class="sv">{{ pending_list|length }}</div><div class="sl">⏳ Pending</div></div>
+    <div class="stat-tile st-confirmed"><div class="sv">{{ confirmed_list|length }}</div><div class="sl">✅ Confirmed</div></div>
+    <div class="stat-tile st-today">   <div class="sv">{{ today_list|length }}</div><div class="sl">📅 Today</div></div>
+</div>
+
+<!-- Filter tabs -->
+<div class="filter-tabs">
+    <button class="ftab active" onclick="filterAppt('all',this)">All ({{ appointments|length }})</button>
+    <button class="ftab" onclick="filterAppt('pending',this)">⏳ Pending ({{ pending_list|length }})</button>
+    <button class="ftab" onclick="filterAppt('confirmed',this)">✅ Confirmed ({{ confirmed_list|length }})</button>
+    <button class="ftab" onclick="filterAppt('today',this)">📅 Today ({{ today_list|length }})</button>
+    <button class="ftab" onclick="filterAppt('cancelled',this)">✕ Cancelled</button>
+</div>
+
+{% if appointments %}
+<div class="appt-grid" id="appt-grid">
+    {% for a in appointments %}
+    <div class="appt-card {{ a.status }}" data-status="{{ a.status }}" data-date="{{ a.appointment_date }}">
+        <div class="patient-name">👤 {{ a.patient_name }}</div>
+        <div class="appt-meta">Age: {{ a.age }} · 📞 {{ a.contact }} · ✉️ {{ a.email }}</div>
+        <div class="appt-dt">📅 {{ a.appointment_date }} &nbsp; ⏰ {{ a.appointment_time }}</div>
+        <div class="appt-meta">🏥 {{ a.visit_type.replace('_',' ').title() }}</div>
+        {% if a.reason %}<div class="appt-meta" style="color:#555;">💬 {{ a.reason[:100] }}{{ '…' if a.reason|length > 100 else '' }}</div>{% endif %}
+        {% if a.doctor_notes %}<div class="appt-meta" style="color:#0066CC;">📝 Doctor notes: {{ a.doctor_notes }}</div>{% endif %}
+        <div style="margin-top:8px;">
+            <span class="sp sp-{{ a.status }}">
+                {% if a.status == 'pending' %}⏳ Pending
+                {% elif a.status == 'confirmed' %}✅ Confirmed
+                {% elif a.status == 'cancelled' %}✕ Cancelled
+                {% else %}✔ Completed{% endif %}
+            </span>
+        </div>
+        {% if a.status not in ['cancelled'] %}
+        <div class="update-form">
+            <form method="POST" action="{{ url_for('update_appointment', appt_id=a.id) }}">
+                <label>Update Status</label>
+                <select name="status">
+                    <option value="confirmed"  {% if a.status == 'confirmed'  %}selected{% endif %}>✅ Confirm</option>
+                    <option value="completed"  {% if a.status == 'completed'  %}selected{% endif %}>✔ Mark Completed</option>
+                    <option value="pending"    {% if a.status == 'pending'    %}selected{% endif %}>⏳ Keep Pending</option>
+                    <option value="cancelled"  {% if a.status == 'cancelled'  %}selected{% endif %}>✕ Cancel</option>
+                </select>
+                <label>Doctor Notes (optional)</label>
+                <textarea name="doctor_notes" placeholder="Add prescription, advice, follow-up instructions…">{{ a.doctor_notes or '' }}</textarea>
+                <button type="submit" class="upd-btn"><i class="fas fa-save"></i> Update</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-calendar-check"></i>
+    <h4>No appointments booked yet.</h4>
+    <p>Patient appointments will appear here once patients book them.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const today = '{{ today }}';
+function filterAppt(filter, btn) {
+    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.appt-card').forEach(card => {
+        const st   = card.dataset.status;
+        const dt   = card.dataset.date;
+        let show = false;
+        if (filter === 'all')       show = true;
+        else if (filter === 'today') show = dt === today;
+        else                         show = st === filter;
+        card.style.display = show ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

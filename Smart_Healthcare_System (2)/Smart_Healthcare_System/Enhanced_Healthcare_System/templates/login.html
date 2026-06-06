@@ -1,31 +1,234 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0D1117">
+  <title>Login – HealthCare Plus</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;}
+body{
+  min-height:100dvh;
+  background: linear-gradient(135deg, #0D1117 0%, #1a2332 50%, #0066CC 100%);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
 
-{% block title %}Login - HealthCare Plus{% endblock %}
+/* Floating background shapes */
+.bg-shape{position:fixed;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none;}
+.bg-shape-1{width:400px;height:400px;top:-100px;right:-100px;}
+.bg-shape-2{width:300px;height:300px;bottom:-80px;left:-80px;}
+.bg-shape-3{width:200px;height:200px;top:40%;left:10%;}
 
-{% block content %}
-<div style="max-width: 500px; margin: 50px auto;">
-    <div class="card">
-        <div class="card-header">
-            🔐 Login to Your Account
-        </div>
-        
-        <form method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
-        </form>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <p>Don't have an account? <a href="{{ url_for('signup') }}" style="color: var(--primary-blue); font-weight: 600;">Sign Up</a></p>
-        </div>
+/* Card */
+.auth-card{
+  background:#fff;
+  border-radius:24px;
+  padding:40px 36px;
+  width:100%; max-width:420px;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+  position:relative; z-index:1;
+  animation:cardIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cardIn{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* Logo */
+.auth-logo{text-align:center;margin-bottom:32px;}
+.logo-circle{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,#0D1117,#0066CC);
+  border-radius:20px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:2rem;margin-bottom:16px;
+  box-shadow:0 8px 24px rgba(0,102,204,.4);
+}
+.auth-title{font-size:1.55rem;font-weight:800;color:#0D1117;margin-bottom:5px;}
+.auth-sub  {font-size:.85rem;color:#6B7280;}
+
+/* Flash messages */
+.flash-box{
+  border-radius:10px;padding:11px 14px;margin-bottom:18px;
+  font-size:.84rem;font-weight:600;
+  display:flex;align-items:center;gap:9px;
+}
+.flash-success{background:#D4EDDA;color:#155724;border-left:4px solid #28A745;}
+.flash-danger {background:#F8D7DA;color:#721C24;border-left:4px solid #DC3545;}
+.flash-info   {background:#EFF6FF;color:#1E40AF;border-left:4px solid #0066CC;}
+
+/* Form fields */
+.field{margin-bottom:16px;}
+.field label{
+  display:block;margin-bottom:6px;
+  font-size:.75rem;font-weight:700;color:#6B7280;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.field-wrap{position:relative;}
+.field-wrap input{
+  width:100%;padding:13px 16px 13px 42px;
+  border:2px solid #E5E7EB;border-radius:12px;
+  font-size:.95rem;font-family:inherit;background:#F9FAFB;
+  color:#1F2937;transition:border-color .2s,box-shadow .2s,background .2s;
+  -webkit-appearance:none;
+}
+.field-wrap input:focus{
+  outline:none;border-color:#0066CC;background:#fff;
+  box-shadow:0 0 0 3px rgba(0,102,204,.12);
+}
+.field-icon{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  color:#9CA3AF;font-size:.9rem;pointer-events:none;
+}
+.field-wrap input:focus ~ .field-icon,
+.field-wrap input:not(:placeholder-shown) ~ .field-icon{color:#0066CC;}
+
+/* Password toggle */
+.pwd-toggle{
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#9CA3AF;cursor:pointer;
+  font-size:.9rem;padding:2px;
+}
+.pwd-toggle:hover{color:#0066CC;}
+
+/* Submit button */
+.submit-btn{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,#0D1117,#0066CC);
+  color:#fff;border:none;border-radius:12px;
+  font-size:1rem;font-weight:700;font-family:inherit;
+  cursor:pointer;margin-top:8px;
+  transition:opacity .2s,transform .15s;
+  box-shadow:0 4px 16px rgba(0,102,204,.35);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.submit-btn:hover  {opacity:.92;}
+.submit-btn:active {transform:scale(.98);opacity:.85;}
+
+/* Footer link */
+.auth-footer{
+  text-align:center;margin-top:22px;
+  font-size:.87rem;color:#6B7280;
+}
+.auth-footer a{color:#0066CC;font-weight:700;text-decoration:none;}
+.auth-footer a:hover{text-decoration:underline;}
+
+/* Divider */
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:#D1D5DB;font-size:.78rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#E5E7EB;}
+
+/* Back to app hint */
+.app-hint{
+  text-align:center;margin-top:14px;
+  font-size:.75rem;color:rgba(255,255,255,.5);
+}
+
+@media(max-width:480px){
+  .auth-card{padding:28px 22px;border-radius:20px;}
+  .auth-title{font-size:1.35rem;}
+}
+</style>
+</head>
+<body>
+<!-- Background shapes -->
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="auth-card">
+
+  <!-- Logo -->
+  <div class="auth-logo">
+    <div class="logo-circle">🏥</div>
+    <div class="auth-title">Welcome Back</div>
+    <div class="auth-sub">Sign in to your HealthCare+ account</div>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-box flash-{{ category }}">
+      <span>{% if category=='success' %}✅{% elif category=='danger' %}❌{% else %}ℹ️{% endif %}</span>
+      <span>{{ message }}</span>
     </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <!-- Form -->
+  <form method="POST" action="{{ url_for('login') }}" id="login-form" novalidate>
+
+    <div class="field">
+      <label for="email">Email Address</label>
+      <div class="field-wrap">
+        <input type="email" id="email" name="email"
+               placeholder="you@example.com"
+               required autocomplete="email"
+               autofocus>
+        <i class="fas fa-envelope field-icon"></i>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="field-wrap">
+        <input type="password" id="password" name="password"
+               placeholder="••••••••"
+               required autocomplete="current-password">
+        <i class="fas fa-lock field-icon"></i>
+        <button type="button" class="pwd-toggle" onclick="togglePwd()" id="pwd-toggle-btn">
+          <i class="fas fa-eye" id="pwd-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" id="submit-btn">
+      <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+
+  </form>
+
+  <div class="divider">or</div>
+
+  <div class="auth-footer">
+    Don't have an account?
+    <a href="{{ url_for('signup') }}">Create one — it's free</a>
+  </div>
+
 </div>
-{% endblock %}
+
+<div class="app-hint">HealthCare Plus © 2026 · Secure login</div>
+
+<script>
+/* Password show/hide */
+function togglePwd() {
+  const input = document.getElementById('password');
+  const icon  = document.getElementById('pwd-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+/* Loading state on submit */
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  const email = document.getElementById('email').value.trim();
+  const pwd   = document.getElementById('password').value.trim();
+  if (!email || !pwd) {
+    e.preventDefault();
+    return;
+  }
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+  btn.disabled = true;
+});
+</script>
+</body>
+</html>

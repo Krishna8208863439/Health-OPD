@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Lab Results – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+.lab-hero { background:linear-gradient(135deg,#6f42c1,#0066CC); color:#fff; border-radius:16px; padding:32px; display:flex; align-items:center; gap:22px; margin-bottom:24px; box-shadow:0 8px 28px rgba(111,66,193,.3); }
+.lab-hero .ico { font-size:56px; }
+.lab-hero h2 { font-size:1.6rem; font-weight:700; margin-bottom:4px; }
+.lcard { background:#fff; border-radius:14px; padding:26px 28px; box-shadow:0 3px 14px rgba(0,0,0,.07); margin-bottom:22px; }
+.lcard h4 { color:#0066CC; font-size:1.05rem; font-weight:700; margin-bottom:18px; padding-bottom:10px; border-bottom:2px solid #EEF2F7; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+.fg label { font-size:.78rem; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:5px; }
+.fg input, .fg select, .fg textarea { width:100%; padding:10px 13px; border:2px solid #E9ECEF; border-radius:8px; font-size:.9rem; background:#FAFAFA; font-family:inherit; }
+.fg input:focus,.fg select:focus,.fg textarea:focus { outline:none; border-color:#0066CC; background:#fff; }
+.span-full { grid-column:1/-1; }
+.save-btn { background:linear-gradient(135deg,#6f42c1,#0052A3); color:#fff; border:none; border-radius:8px; padding:12px 30px; font-weight:700; cursor:pointer; float:right; margin-top:12px; }
+.save-btn:hover { opacity:.9; }
+
+/* Results table */
+.results-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+.results-table thead tr { background:linear-gradient(135deg,#6f42c1,#0066CC); color:#fff; }
+.results-table th { padding:12px 14px; text-align:left; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+.results-table th:first-child { border-radius:10px 0 0 0; }
+.results-table th:last-child  { border-radius:0 10px 0 0; }
+.results-table tbody tr { border-bottom:1px solid #F0F3F7; transition:background .15s; }
+.results-table tbody tr:hover { background:#F7FAFF; }
+.results-table td { padding:11px 14px; vertical-align:middle; }
+.status-normal   { background:#D4EDDA; color:#155724; padding:3px 10px; border-radius:12px; font-size:.76rem; font-weight:700; }
+.status-abnormal { background:#F8D7DA; color:#721C24; padding:3px 10px; border-radius:12px; font-size:.76rem; font-weight:700; }
+.status-pending  { background:#FFF3CD; color:#856404; padding:3px 10px; border-radius:12px; font-size:.76rem; font-weight:700; }
+.del-btn { background:none; border:2px solid #DC3545; color:#DC3545; border-radius:6px; padding:4px 10px; font-size:.78rem; font-weight:700; cursor:pointer; }
+.del-btn:hover { background:#DC3545; color:#fff; }
+.empty-state { text-align:center; padding:40px; color:#aaa; }
+.empty-state i { font-size:2.5rem; display:block; margin-bottom:10px; }
+
+/* Common tests quick-fill */
+.quick-fill { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.qf-btn { background:#EFF6FF; color:#0066CC; border:1.5px solid #BFDBFE; border-radius:8px; padding:6px 12px; font-size:.78rem; font-weight:600; cursor:pointer; }
+.qf-btn:hover { background:#DBEAFE; }
+
+@media(max-width:640px){ .lab-hero{flex-direction:column;text-align:center;} .form-grid{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lab-hero">
+    <div class="ico">🧪</div>
+    <div>
+        <h2>Lab Results Tracker</h2>
+        <p>Log blood tests, urine reports, X-rays, and other lab results. Track trends and get abnormal alerts.</p>
+        <span style="background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:.82rem;display:inline-block;margin-top:8px;">{{ results|length }} results logged</span>
+    </div>
+</div>
+
+<!-- Add result -->
+<div class="lcard">
+    <h4>➕ Add New Lab Result</h4>
+    <!-- Quick fill buttons -->
+    <div class="quick-fill">
+        <span style="font-size:.78rem;color:#6B7280;align-self:center;">Quick fill:</span>
+        <button class="qf-btn" onclick="quickFill('Hemoglobin','g/dL','12-17')">🩸 Hemoglobin</button>
+        <button class="qf-btn" onclick="quickFill('Fasting Blood Sugar','mg/dL','70-100')">🍬 Blood Sugar</button>
+        <button class="qf-btn" onclick="quickFill('HbA1c','%','<5.7')">📊 HbA1c</button>
+        <button class="qf-btn" onclick="quickFill('Total Cholesterol','mg/dL','<200')">❤️ Cholesterol</button>
+        <button class="qf-btn" onclick="quickFill('TSH','mIU/L','0.4-4.0')">🦋 TSH</button>
+        <button class="qf-btn" onclick="quickFill('Creatinine','mg/dL','0.6-1.2')">🫘 Creatinine</button>
+        <button class="qf-btn" onclick="quickFill('Vitamin D','ng/mL','20-50')">☀️ Vitamin D</button>
+        <button class="qf-btn" onclick="quickFill('Platelet Count','×10³/µL','150-400')">🔬 Platelets</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_lab_result') }}">
+        <div class="form-grid">
+            <div class="fg">
+                <label>Test Name *</label>
+                <input type="text" name="test_name" id="test_name" required placeholder="e.g. Hemoglobin">
+            </div>
+            <div class="fg">
+                <label>Test Date *</label>
+                <input type="date" name="test_date" value="{{ today }}" max="{{ today }}" required>
+            </div>
+            <div class="fg">
+                <label>Result Value</label>
+                <input type="text" name="result_value" id="result_value" placeholder="e.g. 13.5">
+            </div>
+            <div class="fg">
+                <label>Unit</label>
+                <input type="text" name="unit" id="unit" placeholder="e.g. g/dL">
+            </div>
+            <div class="fg">
+                <label>Normal Range</label>
+                <input type="text" name="normal_range" id="normal_range" placeholder="e.g. 12-17 or <200">
+            </div>
+            <div class="fg">
+                <label>Lab / Hospital Name</label>
+                <input type="text" name="lab_name" placeholder="e.g. SRL Diagnostics">
+            </div>
+            <div class="fg span-full">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="e.g. Fasting sample, 8-hour fast">
+            </div>
+        </div>
+        <button type="submit" class="save-btn">💾 Save Result</button>
+        <div style="clear:both;"></div>
+    </form>
+</div>
+
+<!-- Results list -->
+<div class="lcard">
+    <h4>📋 My Lab Results ({{ results|length }})</h4>
+    {% if results %}
+    <div style="overflow-x:auto;">
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Date</th>
+                <th>Result</th>
+                <th>Normal Range</th>
+                <th>Lab</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results %}
+            <tr>
+                <td style="font-weight:700;color:#1F2937;">{{ r.test_name }}</td>
+                <td style="white-space:nowrap;">{{ r.test_date }}</td>
+                <td style="font-weight:700;{% if r.status == 'abnormal' %}color:#DC3545;{% else %}color:#28A745;{% endif %}">
+                    {{ r.result_value }}{% if r.unit %} <small style="color:#6B7280;font-weight:400;">{{ r.unit }}</small>{% endif %}
+                </td>
+                <td style="color:#6B7280;font-size:.83rem;">{{ r.normal_range or '—' }}</td>
+                <td style="font-size:.83rem;">{{ r.lab_name or '—' }}</td>
+                <td>
+                    {% if r.status == 'abnormal' %}
+                        <span class="status-abnormal">⚠️ Abnormal</span>
+                    {% elif r.status == 'normal' %}
+                        <span class="status-normal">✅ Normal</span>
+                    {% else %}
+                        <span class="status-pending">⏳ Pending</span>
+                    {% endif %}
+                </td>
+                <td style="color:#6B7280;font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.notes or '—' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_lab_result', rid=r.id) }}" onsubmit="return confirm('Delete this result?');">
+                        <button type="submit" class="del-btn"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-flask"></i>
+        No lab results yet. Add your first test result above.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Abnormal alert banner -->
+{% set abnormals = results | selectattr('status','equalto','abnormal') | list %}
+{% if abnormals %}
+<div style="background:#FEF2F2;border:2px solid #FCA5A5;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+    <strong style="color:#DC3545;">⚠️ {{ abnormals|length }} Abnormal Result{{ 's' if abnormals|length > 1 }}:</strong>
+    {% for a in abnormals %}
+    <span style="background:#F8D7DA;color:#721C24;border-radius:8px;padding:3px 10px;margin:4px;display:inline-block;font-size:.82rem;">
+        {{ a.test_name }} = {{ a.result_value }} {{ a.unit }} (Normal: {{ a.normal_range }})
+    </span>
+    {% endfor %}
+    <p style="font-size:.82rem;color:#B91C1C;margin-top:8px;margin-bottom:0;">Please consult your doctor for abnormal results.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function quickFill(name, unit, range) {
+    document.getElementById('test_name').value = name;
+    document.getElementById('unit').value = unit;
+    document.getElementById('normal_range').value = range;
+    document.getElementById('result_value').focus();
+}
+</script>
+{% endblock %}

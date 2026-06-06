@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+{% block title %}Nearest Hospitals – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Page header ── */
+.nh-hero {
+  background: linear-gradient(135deg, #0D1117 0%, #0066CC 100%);
+  border-radius: 18px;
+  padding: 24px 20px 20px;
+  color: #fff;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.nh-hero::after {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+}
+.nh-hero h1 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+.nh-hero p  { font-size: .82rem; opacity: .8; margin: 0; }
+
+/* ── Status pill ── */
+#status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: .75rem;
+  margin-top: 10px;
+  max-width: 100%;
+}
+#status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #86efac;
+  flex-shrink: 0;
+  animation: blink 1.6s infinite;
+}
+@keyframes blink {
+  0%,100% { box-shadow: 0 0 0 0 rgba(134,239,172,.7); }
+  50%      { box-shadow: 0 0 0 4px rgba(134,239,172,0); }
+}
+
+/* ── Locate button ── */
+#locate-btn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  background: linear-gradient(135deg, #0D1117, #0066CC);
+  color: #fff; border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: .95rem; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  margin-bottom: 16px;
+  justify-content: center;
+  transition: opacity .2s;
+  box-shadow: 0 4px 16px rgba(0,102,204,.3);
+}
+#locate-btn:active { opacity: .85; transform: scale(.98); }
+
+/* ── Filters row ── */
+.filters-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.filters-row select,
+.filters-row input {
+  flex: 1; min-width: 100px;
+  padding: 10px 12px;
+  border: 2px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: .85rem;
+  background: #fff;
+  color: #1F2937;
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+.filters-row select:focus,
+.filters-row input:focus {
+  outline: none;
+  border-color: #0066CC;
+}
+
+/* ── Search box ── */
+#search-box {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: .92rem;
+  font-family: inherit;
+  background: #fff;
+  margin-bottom: 14px;
+}
+#search-box:focus { outline: none; border-color: #0066CC; }
+
+/* ── Nearest banner ── */
+#nearest-banner {
+  background: linear-gradient(135deg, #DC3545, #9B1C2C);
+  border-radius: 16px;
+  padding: 16px 18px;
+  color: #fff;
+  margin-bottom: 14px;
+  display: none;
+  box-shadow: 0 4px 16px rgba(220,53,69,.3);
+}
+.nb-label  { font-size: .68rem; opacity: .8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.nb-name   { font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; }
+.nb-info   { font-size: .78rem; opacity: .9; margin-bottom: 12px; line-height: 1.6; }
+.nb-btns   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.nb-btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  background: rgba(255,255,255,.2);
+  border: 1.5px solid rgba(255,255,255,.3);
+  color: #fff; border-radius: 10px;
+  padding: 10px 6px;
+  font-size: .75rem; font-weight: 700;
+  text-decoration: none;
+  font-family: inherit; cursor: pointer;
+  transition: background .15s;
+}
+.nb-btn:active { background: rgba(255,255,255,.35); }
+
+/* ── Results count ── */
+.results-count {
+  font-size: .8rem;
+  color: #6B7280;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+/* ── Hospital card ── */
+.hosp-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  border-left: 4px solid #E5E7EB;
+  transition: border-color .2s, box-shadow .2s;
+}
+.hosp-card:hover   { border-left-color: #0066CC; box-shadow: 0 4px 18px rgba(0,102,204,.15); }
+.hosp-card.top-1   { border-left-color: #F59E0B; }
+.hosp-card.top-2   { border-left-color: #6B7280; }
+.hosp-card.top-3   { border-left-color: #CD7F32; }
+.hosp-card.emerg   { border-left-color: #DC3545; }
+
+/* Card top row */
+.hc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.hc-rank-name { flex: 1; }
+.hc-rank { font-size: .75rem; font-weight: 700; color: #6B7280; margin-bottom: 2px; }
+.hc-name { font-size: .98rem; font-weight: 800; color: #1F2937; line-height: 1.3; }
+.hc-type-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: .68rem; font-weight: 700;
+  flex-shrink: 0; white-space: nowrap;
+}
+.hc-gov { background: #DBEAFE; color: #1D4ED8; }
+.hc-pvt { background: #FEF3C7; color: #92400E; }
+
+/* Specs tags */
+.hc-specs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.hc-spec {
+  background: #F3F4F6; color: #374151;
+  border-radius: 6px; padding: 2px 8px;
+  font-size: .68rem; font-weight: 600;
+}
+.hc-spec.emerg-spec { background: #FEE2E2; color: #991B1B; }
+
+/* Info rows */
+.hc-info { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.hc-row  {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: .82rem; color: #4B5563; line-height: 1.4;
+}
+.hc-row i { color: #0066CC; width: 14px; flex-shrink: 0; margin-top: 2px; font-size: .82rem; }
+.hc-row a { color: #0066CC; font-weight: 700; text-decoration: none; }
+
+/* Meta chips */
+.hc-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.meta-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 8px; padding: 4px 10px;
+  font-size: .73rem; font-weight: 700;
+}
+.chip-dist   { background: #EFF6FF; color: #1D4ED8; }
+.chip-rating { background: #FFFBEB; color: #92400E; }
+.chip-beds   { background: #F3EEFF; color: #6B21A8; }
+.chip-24h    { background: #DCFCE7; color: #15803D; }
+
+/* Action buttons — 3 equal */
+.hc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.hc-btn {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  font-size: .7rem; font-weight: 700;
+  text-decoration: none;
+  border: none; cursor: pointer;
+  color: #fff;
+  transition: opacity .15s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+.hc-btn i { font-size: 1.05rem; }
+.hc-btn:active { opacity: .78; }
+.btn-call  { background: #EA4335; }
+.btn-route { background: #34A853; }
+.btn-map   { background: #4285F4; }
+
+/* Loading overlay */
+#loading-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; color: #fff; font-size: .95rem; font-weight: 700;
+}
+.spinner {
+  width: 44px; height: 44px;
+  border: 4px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* No results */
+#no-results {
+  display: none;
+  text-align: center;
+  padding: 40px 20px;
+  color: #9CA3AF;
+}
+#no-results i { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+
+/* Emergency hotlines card */
+.hotlines-card {
+  background: linear-gradient(135deg, #1F2937, #111827);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  color: #fff;
+}
+.hotlines-title { font-size: .88rem; font-weight: 800; margin-bottom: 10px; }
+.hotlines-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hl-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1.5px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fff; text-decoration: none;
+  font-size: .8rem; font-weight: 700;
+  transition: background .15s;
+}
+.hl-btn:active { background: rgba(255,255,255,.2); }
+.hl-btn i { font-size: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <span>Detecting your location…</span>
+</div>
+
+<!-- Hero -->
+<div class="nh-hero">
+  <h1><i class="fas fa-hospital-symbol"></i> Nearest Hospital Finder</h1>
+  <p>Find hospitals near you with phone numbers and directions</p>
+  <div id="status-pill">
+    <div id="status-dot"></div>
+    <span id="status-text">Tap "Use My Location" to find nearby hospitals</span>
+  </div>
+</div>
+
+<!-- Locate button -->
+<button id="locate-btn" onclick="getLocation()">
+  <i class="fas fa-crosshairs"></i> Use My Location
+</button>
+
+<!-- Search -->
+<input id="search-box" type="text" placeholder="🔍  Search hospital name, city or specialty…" oninput="renderList()">
+
+<!-- Filters -->
+<div class="filters-row">
+  <select id="f-type" onchange="renderList()">
+    <option value="">All Types</option>
+    <option value="Government">🏛 Government</option>
+    <option value="Private">🏢 Private</option>
+  </select>
+  <select id="f-spec" onchange="renderList()">
+    <option value="">All Specialties</option>
+    <option value="Emergency">🚨 Emergency</option>
+    <option value="Cardiology">❤️ Cardiology</option>
+    <option value="Neurology">🧠 Neurology</option>
+    <option value="Oncology">🎗 Oncology</option>
+    <option value="General Medicine">🩺 General</option>
+    <option value="Surgery">🔪 Surgery</option>
+  </select>
+  <input id="f-dist" type="number" placeholder="Max km" min="1" max="9999" oninput="renderList()" style="max-width:90px;">
+</div>
+
+<!-- Emergency Hotlines -->
+<div class="hotlines-card">
+  <div class="hotlines-title">🚨 Emergency Hotlines — Tap to Call</div>
+  <div class="hotlines-grid">
+    <a class="hl-btn" href="tel:108"><i class="fas fa-ambulance"></i> 108 — Ambulance</a>
+    <a class="hl-btn" href="tel:112"><i class="fas fa-phone"></i> 112 — National</a>
+    <a class="hl-btn" href="tel:104"><i class="fas fa-notes-medical"></i> 104 — Health</a>
+    <a class="hl-btn" href="tel:102"><i class="fas fa-baby"></i> 102 — Maternity</a>
+  </div>
+</div>
+
+<!-- Nearest hospital banner -->
+<div id="nearest-banner">
+  <div class="nb-label">🥇 Nearest Hospital From You</div>
+  <div class="nb-name"  id="nb-name">—</div>
+  <div class="nb-info"  id="nb-info">—</div>
+  <div class="nb-btns">
+    <a class="nb-btn" id="nb-call"  href="#"><i class="fas fa-phone"></i> Call Now</a>
+    <a class="nb-btn" id="nb-route" href="#" target="_blank"><i class="fas fa-directions"></i> Route</a>
+    <a class="nb-btn" id="nb-map"   href="#" target="_blank"><i class="fas fa-map-marked-alt"></i> Map</a>
+  </div>
+</div>
+
+<!-- Results count -->
+<div class="results-count" id="results-count"></div>
+
+<!-- Hospital list -->
+<div id="hospital-list"></div>
+<div id="no-results">
+  <i class="fas fa-hospital-alt"></i>
+  No hospitals match your filters.<br>Try relaxing the distance or type filter.
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── All hospitals from backend ── */
+const ALL_HOSPITALS = {{ hospitals_json | safe }};
+
+let userLat = null, userLng = null;
+let rendered = [];
+
+/* ── Helpers ── */
+function haversine(a, b, c, d) {
+  const R = 6371, r = v => v * Math.PI / 180;
+  const x = Math.sin(r(c-a)/2)**2 + Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+function eta(km) {
+  const m = Math.round((km / 40) * 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m/60)}h ${m%60}m`;
+}
+
+function dirUrl(h) {
+  const dest = (h.lat && h.lng && h.lat !== 0)
+    ? `${h.lat},${h.lng}` : encodeURIComponent(h.address);
+  const orig = (userLat !== null) ? `${userLat},${userLng}` : 'My+Location';
+  return `https://www.google.com/maps/dir/?api=1&origin=${orig}&destination=${dest}&travelmode=driving`;
+}
+
+function mapUrl(h) {
+  return (h.lat && h.lng && h.lat !== 0)
+    ? `https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.address)}`;
+}
+
+function setStatus(msg, ok = true) {
+  document.getElementById('status-text').innerHTML = msg;
+  document.getElementById('status-dot').style.background = ok ? '#86efac' : '#FCA5A5';
+}
+
+/* ── Get live GPS ── */
+function getLocation() {
+  if (!navigator.geolocation) { setStatus('Geolocation not supported', false); return; }
+  document.getElementById('loading-overlay').style.display = 'flex';
+  setStatus('📡 Detecting location…');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      setStatus(`📍 Location found: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`);
+      renderList();
+    },
+    err => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      const msgs = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Timeout' };
+      setStatus('⚠️ ' + (msgs[err.code] || err.message) + ' — showing all hospitals', false);
+      renderList();
+    },
+    { timeout: 14000, enableHighAccuracy: true }
+  );
+}
+
+/* ── Render hospital list ── */
+function renderList() {
+  const ft  = document.getElementById('f-type').value;
+  const fs  = document.getElementById('f-spec').value;
+  const fd  = parseFloat(document.getElementById('f-dist').value) || null;
+  const sq  = (document.getElementById('search-box').value || '').toLowerCase().trim();
+
+  let list = ALL_HOSPITALS.map(h => {
+    let d = h.distance;
+    if (userLat !== null && h.lat !== 0 && h.lng !== 0)
+      d = haversine(userLat, userLng, h.lat, h.lng);
+    return { ...h, distance: parseFloat(d.toFixed(2)) };
+  }).filter(h => {
+    if (ft && h.type !== ft) return false;
+    if (fs && !h.specialty.includes(fs)) return false;
+    if (fd !== null && h.distance > fd) return false;
+    if (sq && !h.name.toLowerCase().includes(sq) &&
+        !(h.city||'').toLowerCase().includes(sq) &&
+        !h.address.toLowerCase().includes(sq) &&
+        !h.specialty.join(' ').toLowerCase().includes(sq)) return false;
+    return true;
+  });
+
+  if (userLat !== null) list.sort((a, b) => a.distance - b.distance);
+  rendered = list;
+
+  const listEl = document.getElementById('hospital-list');
+  const noRes  = document.getElementById('no-results');
+  const count  = document.getElementById('results-count');
+  listEl.innerHTML = '';
+
+  if (list.length === 0) {
+    noRes.style.display = 'block';
+    count.textContent = '';
+    document.getElementById('nearest-banner').style.display = 'none';
+    return;
+  }
+  noRes.style.display = 'none';
+  count.textContent = `${list.length} hospital${list.length !== 1 ? 's' : ''} found${userLat !== null ? ' · sorted by distance' : ''}`;
+
+  /* Nearest banner */
+  if (userLat !== null) {
+    const n = list[0];
+    document.getElementById('nearest-banner').style.display = 'block';
+    document.getElementById('nb-name').textContent = n.name;
+    document.getElementById('nb-info').innerHTML =
+      `📞 ${n.phone}  ·  🚗 ${n.distance.toFixed(1)} km  ·  ⏱ ${eta(n.distance)}  ·  ⭐ ${n.rating}`;
+    document.getElementById('nb-call').href  = `tel:${n.phone}`;
+    document.getElementById('nb-route').href = dirUrl(n);
+    document.getElementById('nb-map').href   = mapUrl(n);
+  } else {
+    document.getElementById('nearest-banner').style.display = 'none';
+  }
+
+  /* Cards */
+  list.forEach((h, idx) => {
+    const rankClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
+    const hasEmerg  = h.specialty.includes('Emergency');
+    const rankLabel = idx === 0 && userLat !== null ? '🥇 Nearest' :
+                      idx === 1 && userLat !== null ? '🥈 2nd Nearest' :
+                      idx === 2 && userLat !== null ? '🥉 3rd Nearest' : `#${idx+1}`;
+
+    const typeBadge = h.type === 'Government'
+      ? '<span class="hc-type-badge hc-gov">🏛 Govt</span>'
+      : '<span class="hc-type-badge hc-pvt">🏢 Pvt</span>';
+
+    const specTags = h.specialty.slice(0, 4).map(s =>
+      `<span class="hc-spec${s === 'Emergency' ? ' emerg-spec' : ''}">${s}</span>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = `hosp-card ${rankClass} ${hasEmerg ? 'emerg' : ''}`;
+    card.innerHTML = `
+      <div class="hc-top">
+        <div class="hc-rank-name">
+          <div class="hc-rank">${rankLabel}</div>
+          <div class="hc-name">${h.name}</div>
+        </div>
+        ${typeBadge}
+      </div>
+
+      <div class="hc-specs">${specTags}</div>
+
+      <div class="hc-meta">
+        ${userLat !== null ? `<span class="meta-chip chip-dist"><i class="fas fa-route"></i> ${h.distance.toFixed(1)} km</span>` : ''}
+        ${userLat !== null ? `<span class="meta-chip chip-dist" style="background:#F0FDF4;color:#15803D;"><i class="fas fa-clock"></i> ~${eta(h.distance)}</span>` : ''}
+        <span class="meta-chip chip-rating"><i class="fas fa-star"></i> ${h.rating}/5</span>
+        ${h.beds ? `<span class="meta-chip chip-beds"><i class="fas fa-bed"></i> ${h.beds} beds</span>` : ''}
+        ${h['24hrs'] ? '<span class="meta-chip chip-24h"><i class="fas fa-circle"></i> 24h Open</span>' : ''}
+      </div>
+
+      <div class="hc-info">
+        <div class="hc-row">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>${h.address}</span>
+        </div>
+        <div class="hc-row">
+          <i class="fas fa-phone"></i>
+          <a href="tel:${h.phone}" onclick="event.stopPropagation()">${h.phone}</a>
+        </div>
+        ${h.city ? `<div class="hc-row"><i class="fas fa-city"></i><span>${h.city}</span></div>` : ''}
+      </div>
+
+      <div class="hc-actions">
+        <a class="hc-btn btn-call"  href="tel:${h.phone}">
+          <i class="fas fa-phone"></i> Call
+        </a>
+        <a class="hc-btn btn-route" href="${dirUrl(h)}" target="_blank">
+          <i class="fas fa-directions"></i> Route
+        </a>
+        <a class="hc-btn btn-map"   href="${mapUrl(h)}" target="_blank">
+          <i class="fas fa-map-marked-alt"></i> Map
+        </a>
+      </div>
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+/* ── Auto-request location on page load ── */
+window.addEventListener('load', () => {
+  renderList();
+  if (navigator.geolocation) getLocation();
+});
+</script>
+{% endblock %}

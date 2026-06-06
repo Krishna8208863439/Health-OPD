@@ -19,7 +19,7 @@ from model import train_model
 from analytics import AnalyticsEngine
 from medicine_db import MEDICINE_DATABASE, HOSPITAL_DATABASE
 from risk_calculator import calculate_health_risk_score, get_risk_recommendations
-from hospital_finder import find_hospitals, get_google_maps_url, get_directions_url
+from hospital_finder import find_hospitals, get_google_maps_url, get_directions_url, HOSPITALS_BY_CITY
 from symptom_engine import (
     assess_symptoms, get_severity, get_medicines_for_disease,
     SYMPTOMS, SYMPTOM_GROUPS
@@ -173,7 +173,7 @@ def init_db():
     print("Database initialized successfully!")
 
 def init_extra_tables():
-    """Create extra feature tables: health_vitals, appointments."""
+    """Create extra feature tables: health_vitals, appointments, messages, lab_results, wellness_log."""
     conn = get_db()
     cur  = conn.cursor()
     cur.execute("""
@@ -201,9 +201,63 @@ def init_extra_tables():
         visit_type        TEXT    DEFAULT 'consultation',
         reason            TEXT    DEFAULT '',
         status            TEXT    DEFAULT 'pending',
+        doctor_notes      TEXT    DEFAULT '',
         created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )""")
+    # Safe migration: add doctor_notes if missing
+    try:
+        cur.execute("ALTER TABLE appointments ADD COLUMN doctor_notes TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    # Patient-Doctor messaging
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id   INTEGER NOT NULL,
+        receiver_id INTEGER NOT NULL,
+        body        TEXT    NOT NULL,
+        is_read     INTEGER DEFAULT 0,
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sender_id)   REFERENCES users(id),
+        FOREIGN KEY (receiver_id) REFERENCES users(id)
+    )""")
+
+    # Lab results tracker
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS lab_results (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id  INTEGER NOT NULL,
+        test_name   TEXT    NOT NULL,
+        test_date   TEXT    NOT NULL,
+        result_value TEXT   DEFAULT '',
+        unit        TEXT    DEFAULT '',
+        normal_range TEXT   DEFAULT '',
+        lab_name    TEXT    DEFAULT '',
+        notes       TEXT    DEFAULT '',
+        status      TEXT    DEFAULT 'normal',
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    # Daily wellness log
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS wellness_log (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        log_date      TEXT    NOT NULL,
+        water_glasses INTEGER DEFAULT 0,
+        sleep_hours   REAL    DEFAULT 0,
+        steps         INTEGER DEFAULT 0,
+        mood          TEXT    DEFAULT 'okay',
+        exercise_min  INTEGER DEFAULT 0,
+        calories      INTEGER DEFAULT 0,
+        notes         TEXT    DEFAULT '',
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
     conn.commit()
     conn.close()
     print("Extra tables initialized!")
@@ -441,7 +495,42 @@ def index():
     if current_user.is_authenticated:
         if current_user.role == 'doctor':
             return redirect(url_for('dashboard'))
-        return redirect(url_for('symptom_assessment'))
+        # Patient home dashboard
+        conn = get_db()
+        cur  = conn.cursor()
+        today    = datetime.now().strftime('%Y-%m-%d')
+        hour     = datetime.now().hour
+        greeting = 'Morning' if hour < 12 else ('Afternoon' if hour < 17 else 'Evening')
+
+        total_predictions  = cur.execute("SELECT COUNT(*) FROM predictions WHERE patient_id=?", (current_user.id,)).fetchone()[0]
+        reminders_count    = cur.execute("SELECT COUNT(*) FROM medicine_reminders WHERE patient_id=? AND is_active=1", (current_user.id,)).fetchone()[0]
+        vitals_count       = cur.execute("SELECT COUNT(*) FROM health_vitals WHERE patient_id=?", (current_user.id,)).fetchone()[0]
+        appointments_count = cur.execute("SELECT COUNT(*) FROM appointments WHERE patient_id=? AND status NOT IN ('cancelled')", (current_user.id,)).fetchone()[0]
+
+        latest_vitals      = cur.execute("SELECT * FROM health_vitals WHERE patient_id=? ORDER BY date DESC LIMIT 1", (current_user.id,)).fetchone()
+        last_prediction    = cur.execute("SELECT * FROM predictions WHERE patient_id=? ORDER BY timestamp DESC LIMIT 1", (current_user.id,)).fetchone()
+        today_wellness     = cur.execute("SELECT * FROM wellness_log WHERE patient_id=? AND log_date=?", (current_user.id, today)).fetchone()
+        upcoming_reminders = cur.execute(
+            "SELECT * FROM medicine_reminders WHERE patient_id=? AND is_active=1 ORDER BY reminder_time ASC LIMIT 5",
+            (current_user.id,)
+        ).fetchall()
+        conn.close()
+
+        stats = {
+            'total_predictions':   total_predictions,
+            'reminders_count':     reminders_count,
+            'vitals_count':        vitals_count,
+            'appointments_count':  appointments_count,
+        }
+        return render_template('home.html',
+            patient=current_user,
+            greeting=greeting,
+            stats=stats,
+            latest_vitals=dict(latest_vitals) if latest_vitals else None,
+            last_prediction=dict(last_prediction) if last_prediction else None,
+            today_wellness=dict(today_wellness) if today_wellness else None,
+            upcoming_reminders=[dict(r) for r in upcoming_reminders],
+        )
     return redirect(url_for('login'))
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -482,7 +571,7 @@ def signup():
         conn.commit()
         conn.close()
         
-        flash('Account created successfully! Please login.', 'success')
+        flash('✅ Account created successfully! Please login.', 'success')
         return redirect(url_for('login'))
     
     return render_template('signup.html')
@@ -518,11 +607,11 @@ def login():
                           user['full_name'], user['age'], user['contact'], user['role'],
                           city, smoking, blood_pressure, blood_sugar)
             login_user(user_obj)
-            flash(f'Welcome back, {user["full_name"]}!', 'success')
+            flash(f'Welcome back, {user["full_name"]}! 👋', 'success')
             
             if user['role'] == 'doctor':
                 return redirect(url_for('dashboard'))
-            return redirect(url_for('symptom_entry'))
+            return redirect(url_for('index'))
         else:
             flash('Invalid email or password!', 'danger')
     
@@ -971,6 +1060,29 @@ def analytics_data():
             'data': [row[1] for row in daily_data]
         }
     })
+
+@app.route('/nearest-hospitals')
+@login_required
+def nearest_hospitals():
+    """Nearest hospital finder page with live GPS, map, phone & route."""
+    import json
+
+    # Flatten all hospitals from every city into one list
+    all_hospitals = []
+    for city_key, city_list in HOSPITALS_BY_CITY.items():
+        if city_key == "Default":
+            continue
+        for h in city_list:
+            # Include city label so the JS knows which city each hospital belongs to
+            entry = dict(h)
+            entry['city'] = city_key
+            all_hospitals.append(entry)
+
+    hospitals_json = json.dumps(all_hospitals)
+    return render_template('nearest_hospitals.html',
+                           patient=current_user,
+                           hospitals_json=hospitals_json)
+
 
 @app.route('/emergency')
 @login_required
@@ -1642,6 +1754,314 @@ def _background_alarm_worker():
 # Start the alarm background thread once (daemon so it stops with the server)
 _alarm_thread = threading.Thread(target=_background_alarm_worker, daemon=True)
 _alarm_thread.start()
+
+
+# ================= MESSAGING (Patient ↔ Doctor) =================
+
+@app.route('/messages')
+@login_required
+def messages():
+    conn = get_db()
+    cur  = conn.cursor()
+    if current_user.role == 'patient':
+        # List all doctors patient has messaged or can message
+        doctors = cur.execute("SELECT id, full_name, username FROM users WHERE role='doctor'").fetchall()
+        # Get conversation partner from query param
+        partner_id = request.args.get('with', type=int)
+        partner = None
+        conv = []
+        if partner_id:
+            partner = cur.execute("SELECT id, full_name FROM users WHERE id=?", (partner_id,)).fetchone()
+            conv = cur.execute("""
+                SELECT m.*, u.full_name as sender_name
+                FROM messages m JOIN users u ON m.sender_id = u.id
+                WHERE (m.sender_id=? AND m.receiver_id=?)
+                   OR (m.sender_id=? AND m.receiver_id=?)
+                ORDER BY m.created_at ASC
+            """, (current_user.id, partner_id, partner_id, current_user.id)).fetchall()
+            # Mark received as read
+            cur.execute("UPDATE messages SET is_read=1 WHERE receiver_id=? AND sender_id=?",
+                        (current_user.id, partner_id))
+            conn.commit()
+    else:
+        # Doctor: list all patients who messaged them
+        doctors = []
+        partner_id = request.args.get('with', type=int)
+        partner = None
+        conv = []
+        if partner_id:
+            partner = cur.execute("SELECT id, full_name FROM users WHERE id=?", (partner_id,)).fetchone()
+            conv = cur.execute("""
+                SELECT m.*, u.full_name as sender_name
+                FROM messages m JOIN users u ON m.sender_id = u.id
+                WHERE (m.sender_id=? AND m.receiver_id=?)
+                   OR (m.sender_id=? AND m.receiver_id=?)
+                ORDER BY m.created_at ASC
+            """, (current_user.id, partner_id, partner_id, current_user.id)).fetchall()
+            cur.execute("UPDATE messages SET is_read=1 WHERE receiver_id=? AND sender_id=?",
+                        (current_user.id, partner_id))
+            conn.commit()
+
+    # Unread count per conversation partner
+    inbox = cur.execute("""
+        SELECT sender_id, u.full_name, COUNT(*) as cnt
+        FROM messages m JOIN users u ON m.sender_id = u.id
+        WHERE m.receiver_id=? AND m.is_read=0
+        GROUP BY m.sender_id
+    """, (current_user.id,)).fetchall()
+
+    # Conversation list
+    threads = cur.execute("""
+        SELECT DISTINCT
+            CASE WHEN sender_id=? THEN receiver_id ELSE sender_id END as partner_id,
+            u.full_name as partner_name,
+            u.role as partner_role
+        FROM messages m JOIN users u
+          ON u.id = CASE WHEN m.sender_id=? THEN m.receiver_id ELSE m.sender_id END
+        WHERE sender_id=? OR receiver_id=?
+        ORDER BY m.created_at DESC
+    """, (current_user.id, current_user.id, current_user.id, current_user.id)).fetchall()
+
+    conn.close()
+    return render_template('messages.html',
+                           patient=current_user,
+                           doctors=[dict(d) for d in doctors],
+                           partner=dict(partner) if partner else None,
+                           partner_id=partner_id,
+                           conv=[dict(c) for c in conv],
+                           inbox=[dict(i) for i in inbox],
+                           threads=[dict(t) for t in threads])
+
+
+@app.route('/messages/send', methods=['POST'])
+@login_required
+def send_message():
+    receiver_id = request.form.get('receiver_id', type=int)
+    body        = request.form.get('body', '').strip()
+    if not receiver_id or not body:
+        flash('Cannot send empty message.', 'danger')
+        return redirect(url_for('messages'))
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute("INSERT INTO messages (sender_id, receiver_id, body) VALUES (?,?,?)",
+                (current_user.id, receiver_id, body))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('messages', **{'with': receiver_id}))
+
+
+@app.route('/api/messages/unread')
+@login_required
+def unread_count():
+    conn = get_db()
+    cur  = conn.cursor()
+    cnt  = cur.execute("SELECT COUNT(*) FROM messages WHERE receiver_id=? AND is_read=0",
+                       (current_user.id,)).fetchone()[0]
+    conn.close()
+    return jsonify({'unread': cnt})
+
+
+# ================= LAB RESULTS TRACKER =================
+
+@app.route('/lab-results')
+@login_required
+def lab_results():
+    conn = get_db()
+    cur  = conn.cursor()
+    rows = cur.execute(
+        "SELECT * FROM lab_results WHERE patient_id=? ORDER BY test_date DESC",
+        (current_user.id,)
+    ).fetchall()
+    conn.close()
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template('lab_results.html',
+                           patient=current_user,
+                           results=[dict(r) for r in rows],
+                           today=today)
+
+
+@app.route('/lab-results/add', methods=['POST'])
+@login_required
+def add_lab_result():
+    conn = get_db()
+    cur  = conn.cursor()
+    val   = request.form.get('result_value','').strip()
+    unit  = request.form.get('unit','').strip()
+    nrng  = request.form.get('normal_range','').strip()
+    # Auto-determine status
+    status = 'normal'
+    try:
+        v = float(val)
+        if nrng and '-' in nrng:
+            lo, hi = nrng.split('-')
+            if v < float(lo.strip()) or v > float(hi.strip()):
+                status = 'abnormal'
+        elif nrng and '<' in nrng:
+            hi = float(nrng.replace('<','').strip())
+            if v >= hi:
+                status = 'abnormal'
+        elif nrng and '>' in nrng:
+            lo = float(nrng.replace('>','').strip())
+            if v <= lo:
+                status = 'abnormal'
+    except Exception:
+        status = 'normal'
+
+    cur.execute("""
+        INSERT INTO lab_results
+            (patient_id, test_name, test_date, result_value, unit,
+             normal_range, lab_name, notes, status)
+        VALUES (?,?,?,?,?,?,?,?,?)
+    """, (
+        current_user.id,
+        request.form.get('test_name','').strip(),
+        request.form.get('test_date', datetime.now().strftime('%Y-%m-%d')),
+        val, unit, nrng,
+        request.form.get('lab_name','').strip(),
+        request.form.get('notes','').strip(),
+        status
+    ))
+    conn.commit()
+    conn.close()
+    flash('✅ Lab result saved!', 'success')
+    return redirect(url_for('lab_results'))
+
+
+@app.route('/lab-results/delete/<int:rid>', methods=['POST'])
+@login_required
+def delete_lab_result(rid):
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute("DELETE FROM lab_results WHERE id=? AND patient_id=?", (rid, current_user.id))
+    conn.commit()
+    conn.close()
+    flash('Lab result deleted.', 'info')
+    return redirect(url_for('lab_results'))
+
+
+# ================= DAILY WELLNESS LOG =================
+
+@app.route('/wellness')
+@login_required
+def wellness():
+    conn = get_db()
+    cur  = conn.cursor()
+    rows = cur.execute(
+        "SELECT * FROM wellness_log WHERE patient_id=? ORDER BY log_date DESC LIMIT 30",
+        (current_user.id,)
+    ).fetchall()
+    today = datetime.now().strftime('%Y-%m-%d')
+    today_log = cur.execute(
+        "SELECT * FROM wellness_log WHERE patient_id=? AND log_date=?",
+        (current_user.id, today)
+    ).fetchone()
+    conn.close()
+    return render_template('wellness.html',
+                           patient=current_user,
+                           logs=[dict(r) for r in rows],
+                           today=today,
+                           today_log=dict(today_log) if today_log else None)
+
+
+@app.route('/wellness/save', methods=['POST'])
+@login_required
+def save_wellness():
+    log_date = request.form.get('log_date', datetime.now().strftime('%Y-%m-%d'))
+    conn = get_db()
+    cur  = conn.cursor()
+    existing = cur.execute(
+        "SELECT id FROM wellness_log WHERE patient_id=? AND log_date=?",
+        (current_user.id, log_date)
+    ).fetchone()
+
+    def _i(k, default=0):
+        try: return int(request.form.get(k, default) or default)
+        except: return default
+    def _f2(k, default=0):
+        try: return float(request.form.get(k, default) or default)
+        except: return default
+
+    vals = (
+        _i('water_glasses'), _f2('sleep_hours'), _i('steps'),
+        request.form.get('mood','okay'),
+        _i('exercise_min'), _i('calories'),
+        request.form.get('notes','').strip()
+    )
+
+    if existing:
+        cur.execute("""
+            UPDATE wellness_log SET water_glasses=?, sleep_hours=?, steps=?,
+            mood=?, exercise_min=?, calories=?, notes=?
+            WHERE patient_id=? AND log_date=?
+        """, (*vals, current_user.id, log_date))
+    else:
+        cur.execute("""
+            INSERT INTO wellness_log
+                (patient_id, log_date, water_glasses, sleep_hours, steps,
+                 mood, exercise_min, calories, notes)
+            VALUES (?,?,?,?,?,?,?,?,?)
+        """, (current_user.id, log_date, *vals))
+
+    conn.commit()
+    conn.close()
+    flash('✅ Wellness log saved!', 'success')
+    return redirect(url_for('wellness'))
+
+
+@app.route('/wellness/delete/<int:wid>', methods=['POST'])
+@login_required
+def delete_wellness(wid):
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute("DELETE FROM wellness_log WHERE id=? AND patient_id=?", (wid, current_user.id))
+    conn.commit()
+    conn.close()
+    flash('Entry deleted.', 'info')
+    return redirect(url_for('wellness'))
+
+
+# ================= DOCTOR APPOINTMENT MANAGEMENT =================
+
+@app.route('/doctor/appointments')
+@login_required
+@role_required('doctor')
+def doctor_appointments():
+    conn = get_db()
+    cur  = conn.cursor()
+    rows = cur.execute("""
+        SELECT a.*, u.full_name as patient_name, u.age, u.contact, u.email
+        FROM appointments a JOIN users u ON a.patient_id = u.id
+        ORDER BY a.appointment_date ASC, a.appointment_time ASC
+    """).fetchall()
+    conn.close()
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template('doctor_appointments.html',
+                           doctor=current_user,
+                           appointments=[dict(r) for r in rows],
+                           today=today)
+
+
+@app.route('/doctor/appointments/update/<int:appt_id>', methods=['POST'])
+@login_required
+@role_required('doctor')
+def update_appointment(appt_id):
+    status       = request.form.get('status', 'confirmed')
+    doctor_notes = request.form.get('doctor_notes', '').strip()
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute(
+        "UPDATE appointments SET status=?, doctor_notes=? WHERE id=?",
+        (status, doctor_notes, appt_id)
+    )
+    conn.commit()
+    conn.close()
+    flash(f'✅ Appointment {status}.', 'success')
+    return redirect(url_for('doctor_appointments'))
+
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_file(os.path.join(os.path.dirname(__file__), 'static', 'sw.js'), mimetype='application/javascript')
 
 
 if __name__ == '__main__':

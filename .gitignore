@@ -37,3 +37,8 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+# ML Cache
+model_cache.pkl
+*.pkl
+

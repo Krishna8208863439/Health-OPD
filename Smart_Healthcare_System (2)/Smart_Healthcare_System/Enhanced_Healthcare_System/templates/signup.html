@@ -1,119 +1,296 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0D1117">
+  <title>Sign Up – HealthCare Plus</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;}
+body{
+  min-height:100dvh;
+  background:linear-gradient(135deg,#0D1117 0%,#1a2332 50%,#0066CC 100%);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 16px 40px;
+}
+.bg-shape{position:fixed;border-radius:50%;background:rgba(255,255,255,.03);pointer-events:none;}
+.bg-shape-1{width:400px;height:400px;top:-100px;right:-100px;}
+.bg-shape-2{width:300px;height:300px;bottom:-80px;left:-80px;}
 
-{% block title %}Sign Up - HealthCare Plus{% endblock %}
+.auth-card{
+  background:#fff;border-radius:24px;padding:36px 32px;
+  width:100%;max-width:500px;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+  position:relative;z-index:1;
+  animation:cardIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cardIn{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 
-{% block content %}
-<div style="max-width: 600px; margin: 50px auto;">
-    <div class="card">
-        <div class="card-header">
-            📝 Create Your Account
-        </div>
-        
-        <form method="POST" action="{{ url_for('signup') }}">
-            <div class="form-group">
-                <label for="full_name">Full Name *</label>
-                <input type="text" class="form-control" id="full_name" name="full_name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="age">Age *</label>
-                <input type="number" class="form-control" id="age" name="age" min="1" max="120" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="username">Username *</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Email Address *</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="contact">Contact Number</label>
-                <input type="tel" class="form-control" id="contact" name="contact" placeholder="+1-234-567-8900">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password *</label>
-                <input type="password" class="form-control" id="password" name="password" minlength="6" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="role">Account Type *</label>
-                <select class="form-control" id="role" name="role" required>
-                    <option value="patient">Patient</option>
-                    <option value="doctor">Doctor</option>
-                </select>
-            </div>
-            
-            <hr style="margin: 30px 0;">
-            <h5 style="color: #0066CC; margin-bottom: 20px;">🏥 Additional Information (Optional)</h5>
-            
-            <div class="form-group">
-                <label for="city">City</label>
-                <select class="form-control" id="city" name="city">
-                    <option value="Default">Other/Not Listed</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Bengaluru">Bengaluru</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Kolkata">Kolkata</option>
-                    <option value="Chennai">Chennai</option>
-                    <option value="Pune">Pune</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Jaipur">Jaipur</option>
-                    <option value="Kolhapur">Kolhapur</option>
-                    <option value="Kagal">Kagal</option>
-                    <option value="Agra">Agra</option>
-                    <option value="New York">New York</option>
-                    <option value="Los Angeles">Los Angeles</option>
-                    <option value="Chicago">Chicago</option>
-                    <option value="Houston">Houston</option>
-                </select>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="smoking">Smoking</label>
-                        <select class="form-control" id="smoking" name="smoking">
-                            <option value="no">No</option>
-                            <option value="yes">Yes</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="blood_pressure">Blood Pressure</label>
-                        <select class="form-control" id="blood_pressure" name="blood_pressure">
-                            <option value="normal">Normal</option>
-                            <option value="low">Low</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="blood_sugar">Blood Sugar</label>
-                        <select class="form-control" id="blood_sugar" name="blood_sugar">
-                            <option value="normal">Normal</option>
-                            <option value="prediabetic">Pre-diabetic</option>
-                            <option value="high">High/Diabetic</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
-        </form>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <p>Already have an account? <a href="{{ url_for('login') }}" style="color: var(--primary-blue); font-weight: 600;">Login</a></p>
-        </div>
+.auth-logo{text-align:center;margin-bottom:28px;}
+.logo-circle{
+  width:68px;height:68px;
+  background:linear-gradient(135deg,#0D1117,#0066CC);
+  border-radius:18px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.9rem;margin-bottom:14px;
+  box-shadow:0 8px 24px rgba(0,102,204,.4);
+}
+.auth-title{font-size:1.45rem;font-weight:800;color:#0D1117;margin-bottom:4px;}
+.auth-sub  {font-size:.83rem;color:#6B7280;}
+
+/* Flash */
+.flash-box{border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:.83rem;font-weight:600;display:flex;align-items:center;gap:9px;}
+.flash-success{background:#D4EDDA;color:#155724;border-left:4px solid #28A745;}
+.flash-danger {background:#F8D7DA;color:#721C24;border-left:4px solid #DC3545;}
+.flash-info   {background:#EFF6FF;color:#1E40AF;border-left:4px solid #0066CC;}
+
+/* Fields */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field{margin-bottom:14px;}
+.field label{display:block;margin-bottom:5px;font-size:.72rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.5px;}
+.field-wrap{position:relative;}
+.field-wrap input,.field-wrap select{
+  width:100%;padding:12px 14px 12px 40px;
+  border:2px solid #E5E7EB;border-radius:10px;
+  font-size:.9rem;font-family:inherit;background:#F9FAFB;
+  color:#1F2937;-webkit-appearance:none;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.field-wrap input:focus,.field-wrap select:focus{
+  outline:none;border-color:#0066CC;background:#fff;
+  box-shadow:0 0 0 3px rgba(0,102,204,.12);
+}
+.field-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9CA3AF;font-size:.85rem;pointer-events:none;}
+.no-icon input,.no-icon select{padding-left:14px;}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:.85rem;}
+.pwd-toggle:hover{color:#0066CC;}
+
+/* Medical section */
+.med-section{
+  background:#F8FAFF;border:1.5px solid #DBEAFE;
+  border-radius:14px;padding:16px 18px;margin:18px 0 16px;
+}
+.med-title{
+  font-size:.82rem;font-weight:800;color:#0066CC;
+  margin-bottom:14px;display:flex;align-items:center;gap:6px;
+}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* Submit */
+.submit-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#0D1117,#0066CC);
+  color:#fff;border:none;border-radius:12px;
+  font-size:.97rem;font-weight:700;font-family:inherit;
+  cursor:pointer;margin-top:6px;
+  transition:opacity .2s,transform .15s;
+  box-shadow:0 4px 16px rgba(0,102,204,.35);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.submit-btn:hover{opacity:.92;}
+.submit-btn:active{transform:scale(.98);}
+
+.auth-footer{text-align:center;margin-top:18px;font-size:.86rem;color:#6B7280;}
+.auth-footer a{color:#0066CC;font-weight:700;text-decoration:none;}
+.auth-footer a:hover{text-decoration:underline;}
+.app-hint{text-align:center;margin-top:14px;font-size:.73rem;color:rgba(255,255,255,.45);}
+
+@media(max-width:480px){
+  .auth-card{padding:24px 18px;border-radius:18px;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="logo-circle">📝</div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-sub">Join HealthCare+ and manage your health</div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-box flash-{{ category }}">
+      <span>{% if category=='success' %}✅{% elif category=='danger' %}❌{% else %}ℹ️{% endif %}</span>
+      <span>{{ message }}</span>
     </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('signup') }}" id="signup-form" novalidate>
+
+    <!-- Full name -->
+    <div class="field">
+      <label>Full Name *</label>
+      <div class="field-wrap">
+        <input type="text" name="full_name" placeholder="Your full name" required autocomplete="name">
+        <i class="fas fa-user field-icon"></i>
+      </div>
+    </div>
+
+    <!-- Age + Role -->
+    <div class="grid-2">
+      <div class="field">
+        <label>Age *</label>
+        <div class="field-wrap">
+          <input type="number" name="age" placeholder="e.g. 28" min="1" max="120" required>
+          <i class="fas fa-birthday-cake field-icon"></i>
+        </div>
+      </div>
+      <div class="field">
+        <label>Account Type *</label>
+        <div class="field-wrap">
+          <select name="role" required>
+            <option value="patient">🧑 Patient</option>
+            <option value="doctor">👨‍⚕️ Doctor</option>
+          </select>
+          <i class="fas fa-id-card field-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Username -->
+    <div class="field">
+      <label>Username *</label>
+      <div class="field-wrap">
+        <input type="text" name="username" placeholder="johndoe99" required autocomplete="username">
+        <i class="fas fa-at field-icon"></i>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="field">
+      <label>Email Address *</label>
+      <div class="field-wrap">
+        <input type="email" name="email" placeholder="you@example.com" required autocomplete="email">
+        <i class="fas fa-envelope field-icon"></i>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="field">
+      <label>Contact Number</label>
+      <div class="field-wrap">
+        <input type="tel" name="contact" placeholder="+91-XXXXX-XXXXX" autocomplete="tel">
+        <i class="fas fa-phone field-icon"></i>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="field">
+      <label>Password *</label>
+      <div class="field-wrap">
+        <input type="password" id="su-password" name="password" placeholder="Min. 6 characters" minlength="6" required autocomplete="new-password">
+        <i class="fas fa-lock field-icon"></i>
+        <button type="button" class="pwd-toggle" onclick="toggleSuPwd()">
+          <i class="fas fa-eye" id="su-pwd-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Medical Background -->
+    <div class="med-section">
+      <div class="med-title"><i class="fas fa-heartbeat"></i> Medical Background <span style="font-weight:400;color:#6B7280;font-size:.75rem;">(optional)</span></div>
+
+      <div class="field" style="margin-bottom:12px;">
+        <label>City</label>
+        <div class="field-wrap">
+          <select name="city">
+            <option value="Default">Other / Not Listed</option>
+            <option value="Mumbai">Mumbai</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Bengaluru">Bengaluru</option>
+            <option value="Hyderabad">Hyderabad</option>
+            <option value="Kolkata">Kolkata</option>
+            <option value="Chennai">Chennai</option>
+            <option value="Pune">Pune</option>
+            <option value="Ahmedabad">Ahmedabad</option>
+            <option value="Jaipur">Jaipur</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Chandigarh">Chandigarh</option>
+            <option value="Bhopal">Bhopal</option>
+            <option value="Nagpur">Nagpur</option>
+            <option value="Kolhapur">Kolhapur</option>
+            <option value="Nashik">Nashik</option>
+            <option value="Surat">Surat</option>
+            <option value="Coimbatore">Coimbatore</option>
+            <option value="Patna">Patna</option>
+            <option value="Agra">Agra</option>
+            <option value="New York">New York</option>
+            <option value="Los Angeles">Los Angeles</option>
+            <option value="London">London</option>
+          </select>
+          <i class="fas fa-city field-icon"></i>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field no-icon" style="margin-bottom:0;">
+          <label>Smoking</label>
+          <div class="field-wrap">
+            <select name="smoking">
+              <option value="no">🚭 No</option>
+              <option value="yes">🚬 Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="field no-icon" style="margin-bottom:0;">
+          <label>Blood Pressure</label>
+          <div class="field-wrap">
+            <select name="blood_pressure">
+              <option value="normal">Normal</option>
+              <option value="low">Low</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="field no-icon" style="margin-bottom:0;">
+          <label>Blood Sugar</label>
+          <div class="field-wrap">
+            <select name="blood_sugar">
+              <option value="normal">Normal</option>
+              <option value="prediabetic">Pre-dia</option>
+              <option value="high">Diabetic</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" id="su-btn">
+      <i class="fas fa-user-plus"></i> Create Account
+    </button>
+  </form>
+
+  <div class="auth-footer">
+    Already have an account? <a href="{{ url_for('login') }}">Sign In</a>
+  </div>
 </div>
-{% endblock %}
+
+<div class="app-hint">HealthCare Plus © 2026 · Your data is secure</div>
+
+<script>
+function toggleSuPwd() {
+  const input = document.getElementById('su-password');
+  const icon  = document.getElementById('su-pwd-icon');
+  input.type  = input.type === 'password' ? 'text' : 'password';
+  icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+document.getElementById('signup-form').addEventListener('submit', function() {
+  const btn = document.getElementById('su-btn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account…';
+  btn.disabled  = true;
+});
+</script>
+</body>
+</html>

@@ -1,240 +1,223 @@
 {% extends "base.html" %}
-{% block title %}Book Appointment – HealthCare Plus{% endblock %}
+{% block title %}My Appointments – HealthCare Plus{% endblock %}
 
 {% block extra_css %}
 <style>
-:root{--blue:#0066CC;--green:#28A745;--red:#DC3545;--yellow:#FFC107;}
-.appt-hero{
-    background:linear-gradient(135deg,#28A745 0%,#0066CC 100%);
-    border-radius:16px;padding:32px;color:#fff;
-    display:flex;align-items:center;gap:22px;
-    margin-bottom:28px;box-shadow:0 8px 32px rgba(40,167,69,.25);}
-.appt-hero .ico{font-size:56px;}
-.appt-hero h2{font-size:26px;font-weight:700;margin-bottom:4px;}
-.appt-hero p{font-size:14px;opacity:.9;margin:0;}
-.acard{background:#fff;border-radius:14px;padding:28px;
-    box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:22px;}
-.acard h4{color:var(--blue);font-size:17px;font-weight:700;
-    margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid #E9ECEF;}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
-.fg label{font-size:12px;font-weight:700;color:#666;text-transform:uppercase;
-    letter-spacing:.4px;display:block;margin-bottom:6px;}
-.fg input,.fg select,.fg textarea{
-    width:100%;padding:10px 13px;border:2px solid #E9ECEF;
-    border-radius:8px;font-size:14px;background:#FAFAFA;
-    font-family:inherit;transition:.2s;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{
-    border-color:var(--blue);outline:none;background:#fff;}
-.fg textarea{resize:vertical;min-height:80px;}
-.span-full{grid-column:1/-1;}
-.book-btn{
-    background:linear-gradient(135deg,var(--green),#1e7e34);
-    color:#fff;border:none;border-radius:10px;
-    padding:13px 36px;font-size:15px;font-weight:700;
-    cursor:pointer;transition:.2s;float:right;margin-top:16px;}
-.book-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(40,167,69,.35);}
+.appt-hero {
+  background: linear-gradient(135deg, #0D1117 0%, #28A745 100%);
+  border-radius: 18px; padding: 26px 22px 22px;
+  color: #fff; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 8px 28px rgba(40,167,69,.25);
+}
+.appt-hero .ah-icon { font-size: 2.8rem; flex-shrink: 0; }
+.appt-hero h2 { font-size: 1.35rem; font-weight: 800; margin-bottom: 3px; }
+.appt-hero p  { font-size: .82rem; opacity: .85; margin: 0; }
 
-/* Appointments cards */
-.appt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.appt-card{
-    background:#fff;border-radius:12px;padding:20px;
-    box-shadow:0 2px 10px rgba(0,0,0,.07);
-    border-left:5px solid var(--green);
-    transition:.2s;position:relative;}
-.appt-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1);}
-.appt-card.pending {border-left-color:#FFC107;}
-.appt-card.confirmed{border-left-color:#28A745;}
-.appt-card.cancelled{border-left-color:#DC3545;opacity:.7;}
-.appt-card.completed{border-left-color:#6c757d;}
-.appt-doc{font-size:16px;font-weight:700;color:#0066CC;margin-bottom:4px;}
-.appt-dt{font-size:20px;font-weight:800;color:#333;margin-bottom:8px;}
-.appt-meta{font-size:13px;color:#666;margin-bottom:4px;}
-.status-pill{
-    display:inline-block;padding:3px 12px;border-radius:20px;
-    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-.sp-pending  {background:#FFF3CD;color:#856404;}
-.sp-confirmed{background:#D4EDDA;color:#155724;}
-.sp-cancelled{background:#F8D7DA;color:#721C24;}
-.sp-completed{background:#E2E8F0;color:#4A5568;}
-.cancel-btn{
-    position:absolute;top:14px;right:14px;
-    background:none;border:2px solid #DC3545;color:#DC3545;
-    border-radius:8px;padding:4px 10px;font-size:12px;
-    font-weight:700;cursor:pointer;transition:.2s;}
-.cancel-btn:hover{background:#DC3545;color:#fff;}
-.empty-state{
-    text-align:center;padding:48px 20px;color:#aaa;}
-.empty-state .eico{font-size:64px;display:block;margin-bottom:12px;}
+/* Filter tabs */
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.ftab {
+  padding: 7px 16px; border: 2px solid #E5E7EB; border-radius: 20px;
+  background: #fff; color: #6B7280; font-size: .8rem; font-weight: 700;
+  cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.ftab.active, .ftab:hover { border-color: #0066CC; background: #EFF6FF; color: #0066CC; }
 
-/* Doctor cards for selection */
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
-.doc-chip{
-    border:2px solid #E9ECEF;border-radius:10px;padding:12px;
-    cursor:pointer;transition:.2s;text-align:center;background:#FAFAFA;}
-.doc-chip:hover,.doc-chip.selected{border-color:#0066CC;background:#EFF6FF;}
-.doc-chip .dc-name{font-size:13px;font-weight:700;color:#333;}
-.doc-chip .dc-spec{font-size:11px;color:#888;margin-top:3px;}
-.doc-chip .dc-ico{font-size:32px;margin-bottom:8px;}
+/* Appointment cards */
+.appt-list { display: flex; flex-direction: column; gap: 12px; }
+.appt-card {
+  background: #fff; border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  border-left: 5px solid #E5E7EB;
+  position: relative; transition: box-shadow .2s;
+}
+.appt-card:hover    { box-shadow: 0 4px 18px rgba(0,0,0,.1); }
+.appt-card.pending  { border-left-color: #FFC107; }
+.appt-card.confirmed{ border-left-color: #28A745; }
+.appt-card.cancelled{ border-left-color: #DC3545; opacity: .7; }
+.appt-card.completed{ border-left-color: #6B7280; }
 
-@media(max-width:600px){
-    .appt-hero{flex-direction:column;text-align:center;}
-    .form-grid{grid-template-columns:1fr;}
-    .appt-grid{grid-template-columns:1fr;}
+.ac-doc  { font-size: 1rem; font-weight: 800; color: #0066CC; margin-bottom: 5px; }
+.ac-dt {
+  font-size: .95rem; font-weight: 700; color: #1F2937;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ac-meta  { font-size: .8rem; color: #6B7280; margin-bottom: 3px; }
+.ac-reason {
+  font-size: .8rem; color: #374151; margin-top: 8px;
+  background: #F9FAFB; border-radius: 8px; padding: 8px 12px;
+  border-left: 3px solid #E5E7EB;
+}
+.ac-notes {
+  font-size: .8rem; color: #1D4ED8; margin-top: 6px;
+  background: #EFF6FF; border-radius: 8px; padding: 8px 12px;
+  border-left: 3px solid #0066CC;
+}
+
+.status-pill {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+}
+.sp-pending  { background: #FFF3CD; color: #856404; }
+.sp-confirmed{ background: #D4EDDA; color: #155724; }
+.sp-cancelled{ background: #F8D7DA; color: #721C24; }
+.sp-completed{ background: #E2E8F0; color: #4A5568; }
+
+.cancel-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: 2px solid #DC3545; color: #DC3545;
+  border-radius: 8px; padding: 4px 12px;
+  font-size: .75rem; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: all .15s;
+}
+.cancel-btn:hover { background: #DC3545; color: #fff; }
+
+.empty-state {
+  text-align: center; padding: 48px 20px;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  color: #9CA3AF;
+}
+.empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; color: #D1D5DB; }
+.empty-state h4 { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 6px; }
+.empty-state p  { font-size: .85rem; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-tile {
+  background: #fff; border-radius: 12px;
+  padding: 14px 12px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
+}
+.stat-tile .sv { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.stat-tile .sl { font-size: .68rem; color: #6B7280; font-weight: 600; margin-top: 4px; text-transform: uppercase; }
+.st-all       { border-top: 3px solid #0066CC; } .st-all       .sv { color: #0066CC; }
+.st-pending   { border-top: 3px solid #FFC107; } .st-pending   .sv { color: #D97706; }
+.st-confirmed { border-top: 3px solid #28A745; } .st-confirmed .sv { color: #15803D; }
+.st-completed { border-top: 3px solid #6B7280; } .st-completed .sv { color: #4B5563; }
+
+@media(max-width:600px) {
+  .appt-hero { flex-direction: column; text-align: center; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Hero -->
 <div class="appt-hero">
-    <div class="ico">📅</div>
-    <div>
-        <h2>Book an Appointment</h2>
-        <p>Schedule a consultation with our specialist doctors at HealthCare Plus Hospital</p>
-    </div>
+  <div class="ah-icon">📅</div>
+  <div>
+    <h2>My Appointments</h2>
+    <p>View and manage your scheduled consultations</p>
+  </div>
 </div>
 
-<!-- Book new appointment -->
-<div class="acard">
-    <h4>➕ Schedule New Appointment</h4>
-    <form method="POST" action="/appointments/book">
-        <div class="form-grid">
-            <div class="fg">
-                <label>Doctor / Specialist</label>
-                <select name="doctor_name" required>
-                    <option value="">— Select a Doctor —</option>
-                    <optgroup label="General Medicine">
-                        <option>Dr. Sandeep Budhiraja, MD – General Medicine</option>
-                        <option>Dr. Amit Sharma, MD – General Medicine</option>
-                    </optgroup>
-                    <optgroup label="Cardiology">
-                        <option>Dr. Devi Shetty, MS – Cardiology</option>
-                        <option>Dr. Naresh Trehan, MD – Cardiology</option>
-                    </optgroup>
-                    <optgroup label="Pulmonology">
-                        <option>Dr. Randeep Guleria, DM – Pulmonology</option>
-                        <option>Dr. S.K. Jindal, DM – Pulmonology</option>
-                    </optgroup>
-                    <optgroup label="Neurology">
-                        <option>Dr. Ashok Panagariya, DM – Neurology</option>
-                        <option>Dr. K. Sridhar, MCh – Neurology</option>
-                    </optgroup>
-                    <optgroup label="Gastroenterology">
-                        <option>Dr. S.K. Sarin, DM – Gastroenterology</option>
-                    </optgroup>
-                    <optgroup label="Nephrology / Urology">
-                        <option>Dr. Sanjay Pandya, MCh – Nephrology</option>
-                    </optgroup>
-                    <optgroup label="Endocrinology">
-                        <option>Dr. A.K. Das, MD – Endocrinology</option>
-                        <option>Dr. Shashank Joshi, MD – Endocrinology</option>
-                    </optgroup>
-                    <optgroup label="Infectious Disease">
-                        <option>Dr. Rajesh Chawla, MD – Infectious Disease</option>
-                    </optgroup>
-                    <optgroup label="Orthopedics">
-                        <option>Dr. S. Rajasekaran, MS – Orthopedics</option>
-                    </optgroup>
-                    <optgroup label="Dermatology">
-                        <option>Dr. Niti Khunger, MD – Dermatology</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div class="fg">
-                <label>Appointment Date</label>
-                <input type="date" name="appointment_date" id="appt-date" required min="{{ today }}">
-            </div>
-            <div class="fg">
-                <label>Preferred Time</label>
-                <select name="appointment_time" required>
-                    <option value="">— Select —</option>
-                    <option>09:00 AM</option><option>09:30 AM</option>
-                    <option>10:00 AM</option><option>10:30 AM</option>
-                    <option>11:00 AM</option><option>11:30 AM</option>
-                    <option>12:00 PM</option>
-                    <option>02:00 PM</option><option>02:30 PM</option>
-                    <option>03:00 PM</option><option>03:30 PM</option>
-                    <option>04:00 PM</option><option>04:30 PM</option>
-                    <option>05:00 PM</option>
-                </select>
-            </div>
-            <div class="fg">
-                <label>Type of Visit</label>
-                <select name="visit_type">
-                    <option value="consultation">General Consultation</option>
-                    <option value="followup">Follow-up Visit</option>
-                    <option value="emergency">Emergency / Urgent</option>
-                    <option value="test_review">Test / Report Review</option>
-                    <option value="preventive">Preventive Checkup</option>
-                </select>
-            </div>
-            <div class="fg span-full">
-                <label>Reason / Symptoms (optional)</label>
-                <textarea name="reason" placeholder="e.g. Recurring headaches, chest discomfort, follow-up for diabetes…"></textarea>
-            </div>
-        </div>
-        <button type="submit" class="book-btn">📅 Book Appointment</button>
-        <div style="clear:both;"></div>
+<!-- Stats -->
+{% set pending_list   = appointments | selectattr('status','equalto','pending')   | list %}
+{% set confirmed_list = appointments | selectattr('status','equalto','confirmed') | list %}
+{% set completed_list = appointments | selectattr('status','equalto','completed') | list %}
+<div class="stats-row">
+  <div class="stat-tile st-all">
+    <div class="sv">{{ appointments|length }}</div>
+    <div class="sl">Total</div>
+  </div>
+  <div class="stat-tile st-pending">
+    <div class="sv">{{ pending_list|length }}</div>
+    <div class="sl">⏳ Pending</div>
+  </div>
+  <div class="stat-tile st-confirmed">
+    <div class="sv">{{ confirmed_list|length }}</div>
+    <div class="sl">✅ Confirmed</div>
+  </div>
+  <div class="stat-tile st-completed">
+    <div class="sv">{{ completed_list|length }}</div>
+    <div class="sl">✔ Done</div>
+  </div>
+</div>
+
+<!-- Filter tabs -->
+<div class="filter-tabs">
+  <button class="ftab active" onclick="filterAppts('all',this)">All ({{ appointments|length }})</button>
+  <button class="ftab" onclick="filterAppts('pending',this)">⏳ Pending ({{ pending_list|length }})</button>
+  <button class="ftab" onclick="filterAppts('confirmed',this)">✅ Confirmed ({{ confirmed_list|length }})</button>
+  <button class="ftab" onclick="filterAppts('completed',this)">✔ Completed</button>
+  <button class="ftab" onclick="filterAppts('cancelled',this)">✕ Cancelled</button>
+</div>
+
+<!-- Appointments list -->
+{% if appointments %}
+<div class="appt-list" id="appt-list">
+  {% for a in appointments %}
+  <div class="appt-card {{ a.status }}" data-status="{{ a.status }}">
+
+    {% if a.status in ['pending', 'confirmed'] %}
+    <form method="POST" action="/appointments/cancel/{{ a.id }}"
+          onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
+      <button type="submit" class="cancel-btn">✕ Cancel</button>
     </form>
-</div>
-
-<!-- My appointments -->
-<div class="acard">
-    <h4>📋 My Appointments
-        <span style="background:#E3F2FD;color:#1565C0;border-radius:20px;
-            padding:3px 12px;font-size:13px;margin-left:8px;">
-            {{ appointments|length }} total
-        </span>
-    </h4>
-
-    {% if appointments %}
-    <div class="appt-grid">
-        {% for a in appointments %}
-        <div class="appt-card {{ a.status }}">
-            {% if a.status in ['pending','confirmed'] %}
-            <form method="POST" action="/appointments/cancel/{{ a.id }}"
-                  onsubmit="return confirm('Cancel this appointment?');" style="display:inline;">
-                <button type="submit" class="cancel-btn">✕ Cancel</button>
-            </form>
-            {% endif %}
-            <div class="appt-doc">👨‍⚕️ {{ a.doctor_name }}</div>
-            <div class="appt-dt">📅 {{ a.appointment_date }} &nbsp; ⏰ {{ a.appointment_time }}</div>
-            <div class="appt-meta">🏥 {{ a.visit_type.replace('_',' ').title() }}</div>
-            {% if a.reason %}
-            <div class="appt-meta" style="margin-top:6px;color:#555;">💬 {{ a.reason[:80] }}{{ '…' if a.reason|length > 80 else '' }}</div>
-            {% endif %}
-            <div style="margin-top:10px;">
-                <span class="status-pill sp-{{ a.status }}">
-                    {% if a.status == 'pending' %}⏳ Pending
-                    {% elif a.status == 'confirmed' %}✅ Confirmed
-                    {% elif a.status == 'cancelled' %}✕ Cancelled
-                    {% else %}✔ Completed{% endif %}
-                </span>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <span class="eico">📅</span>
-        <h4>No appointments yet</h4>
-        <p>Book your first appointment with a specialist above.</p>
-    </div>
     {% endif %}
+
+    <div class="ac-doc"><i class="fas fa-user-md"></i> {{ a.doctor_name }}</div>
+    <div class="ac-dt">
+      <span>📅 {{ a.appointment_date }}</span>
+      <span style="background:#F3F4F6;padding:3px 10px;border-radius:8px;font-size:.85rem;font-weight:700;">
+        ⏰ {{ a.appointment_time }}
+      </span>
+    </div>
+    <div class="ac-meta"><i class="fas fa-tag"></i> {{ a.visit_type.replace('_',' ').title() }}</div>
+
+    {% if a.reason %}
+    <div class="ac-reason"><i class="fas fa-comment-dots"></i> {{ a.reason[:120] }}{{ '…' if a.reason|length > 120 }}</div>
+    {% endif %}
+
+    {% if a.get('doctor_notes') %}
+    <div class="ac-notes"><i class="fas fa-notes-medical"></i> <strong>Doctor's note:</strong> {{ a.doctor_notes }}</div>
+    {% endif %}
+
+    <div style="margin-top:10px;">
+      <span class="status-pill sp-{{ a.status }}">
+        {% if a.status == 'pending'    %}⏳ Pending
+        {% elif a.status == 'confirmed'%}✅ Confirmed
+        {% elif a.status == 'cancelled'%}✕ Cancelled
+        {% else %}✔ Completed{% endif %}
+      </span>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
-<!-- Info box -->
-<div style="background:#EFF6FF;border:2px solid #BFDBFE;border-radius:12px;padding:18px 22px;font-size:13px;color:#1E40AF;">
-    ℹ️ <strong>Note:</strong> Appointments are confirmed within 2 hours during working hours (9 AM – 5 PM, Mon–Sat).
-    For emergencies, please go to the nearest hospital or call <strong>108</strong>.
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-calendar-times"></i>
+  <h4>No appointments yet</h4>
+  <p>Your scheduled appointments will appear here once booked.</p>
 </div>
+{% endif %}
+
+<!-- Info note -->
+<div style="background:#EFF6FF;border:2px solid #BFDBFE;border-radius:12px;padding:14px 18px;font-size:.82rem;color:#1E40AF;margin-top:8px;">
+  ℹ️ For emergencies call <strong><a href="tel:108" style="color:#1E40AF;">108</a></strong> immediately.
+  Appointment confirmations are sent within 2 hours during working hours (9 AM – 5 PM, Mon–Sat).
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
-    const di = document.getElementById('appt-date');
-    if (di) { di.min = today; }
-});
+function filterAppts(filter, btn) {
+  document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.appt-card').forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.status === filter) ? '' : 'none';
+  });
+}
 </script>
 {% endblock %}

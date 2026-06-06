@@ -5,21 +5,22 @@
 {% block extra_css %}
 <style>
     .reminder-hero {
-        background: linear-gradient(135deg, #0066CC 0%, #28A745 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--success) 100%);
         color: white;
         border-radius: 16px;
-        padding: 32px;
-        margin-bottom: 28px;
+        padding: 24px;
+        margin-bottom: 24px;
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
+        box-shadow: var(--shadow);
     }
     .reminder-hero .icon-box {
-        font-size: 56px;
+        font-size: 44px;
         line-height: 1;
     }
-    .reminder-hero h2 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-    .reminder-hero p  { font-size: 15px; opacity: 0.9; margin: 0; }
+    .reminder-hero h2 { font-size: 1.45rem; font-weight: 800; margin-bottom: 4px; }
+    .reminder-hero p  { font-size: 0.88rem; opacity: 0.9; margin: 0; }
 
     /* Alarm banner */
     #alarm-banner {
@@ -27,171 +28,168 @@
         position: fixed;
         top: 0; left: 0; right: 0;
         z-index: 9999;
-        background: linear-gradient(90deg, #DC3545, #c0392b);
+        background: linear-gradient(90deg, var(--danger), #c0392b);
         color: #fff;
-        padding: 18px 24px;
+        padding: 14px 20px;
         text-align: center;
-        font-size: 20px;
+        font-size: 1.1rem;
         font-weight: 700;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         animation: alarmPulse 1s infinite;
     }
     #alarm-banner .alarm-close {
         float: right;
         cursor: pointer;
-        font-size: 26px;
+        font-size: 22px;
         line-height: 1;
-        margin-left: 16px;
+        margin-left: 12px;
     }
     @keyframes alarmPulse {
-        0%,100% { background: #DC3545; }
+        0%,100% { background: var(--danger); }
         50%      { background: #ff6b6b; }
     }
 
     /* Permission banner */
     #permission-banner {
-        background: #FFF3CD;
-        border: 2px solid #FFC107;
-        border-radius: 10px;
-        padding: 16px 20px;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning);
+        border-radius: 12px;
+        padding: 14px 16px;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
+        font-size: 0.88rem;
+        color: var(--dark);
     }
 
     /* Add form card */
     .add-form-card {
         background: #fff;
-        border-radius: 14px;
-        padding: 28px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        margin-bottom: 28px;
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
     }
     .add-form-card h4 {
-        color: #0066CC;
-        font-weight: 700;
-        font-size: 20px;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #E9ECEF;
-        padding-bottom: 12px;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 1.15rem;
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
     }
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-        margin-bottom: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
     }
-    .form-group label { font-weight: 600; font-size: 13px; color: #555; margin-bottom: 6px; display: block; }
-    .form-group input, .form-group select, .form-group textarea {
-        width: 100%;
-        padding: 10px 14px;
-        border: 2px solid #E9ECEF;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: border-color .2s;
-        background: #FAFAFA;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-        border-color: #0066CC;
-        outline: none;
-        background: #fff;
-    }
+    .form-group label { font-weight: 700; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; display: block; text-transform: uppercase; }
+    
     .btn-add {
-        background: linear-gradient(135deg, #28A745, #20c997);
+        background: var(--success);
         color: #fff;
         border: none;
         border-radius: 10px;
-        padding: 12px 32px;
-        font-size: 16px;
-        font-weight: 600;
+        padding: 10px 24px;
+        font-size: 0.95rem;
+        font-weight: 700;
         cursor: pointer;
         transition: transform .2s, box-shadow .2s;
     }
-    .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(40,167,69,.35); }
+    .btn-add:hover { background: var(--success-hover); }
 
     /* Reminder cards */
     .reminders-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
     }
     .reminder-card {
         background: #fff;
-        border-radius: 14px;
-        padding: 22px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        border-left: 5px solid #28A745;
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow);
+        border-left: 6px solid var(--success);
         position: relative;
+        border-top: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
         transition: transform .2s, box-shadow .2s;
     }
-    .reminder-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-    .reminder-card.inactive { border-left-color: #6c757d; opacity: .75; }
-    .reminder-card.ringing  { border-left-color: #DC3545; animation: cardRing 0.8s infinite; }
+    .reminder-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .reminder-card.inactive { border-left-color: var(--muted); opacity: .75; }
+    .reminder-card.ringing  { border-left-color: var(--danger); animation: cardRing 0.8s infinite; }
     @keyframes cardRing {
-        0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.6); }
-        50%      { box-shadow: 0 0 0 12px rgba(220,53,69,0); }
+        0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,.5); }
+        50%      { box-shadow: 0 0 0 10px rgba(220,53,69,0); }
     }
-    .reminder-card .med-name  { font-size: 18px; font-weight: 700; color: #0066CC; margin-bottom: 6px; }
-    .reminder-card .med-time  { font-size: 28px; font-weight: 800; color: #28A745; margin-bottom: 8px; }
-    .reminder-card.inactive .med-time { color: #6c757d; }
-    .reminder-card .med-meta  { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .reminder-card .med-name  { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+    .reminder-card .med-time  { font-size: 2rem; font-weight: 800; color: var(--success); margin-bottom: 6px; }
+    .reminder-card.inactive .med-time { color: var(--muted); }
+    .reminder-card .med-meta  { font-size: 0.85rem; color: var(--dark); margin-bottom: 3px; }
     .badge-freq {
         display: inline-block;
         padding: 3px 10px;
         border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        background: #E3F2FD;
-        color: #1565C0;
-        margin-bottom: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: var(--primary-bg);
+        color: var(--primary);
+        margin-bottom: 10px;
     }
     .reminder-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
     .btn-toggle {
-        flex: 1; border: none; border-radius: 8px; padding: 8px 14px;
-        font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+        flex: 1; border: none; border-radius: 8px; padding: 8px 12px;
+        font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: .2s;
     }
-    .btn-toggle.on  { background: #FFF3CD; color: #856404; }
-    .btn-toggle.off { background: #D4EDDA; color: #155724; }
+    .btn-toggle.on  { background: var(--warning-bg); color: var(--warning); }
+    .btn-toggle.off { background: var(--success-bg); color: var(--success); }
     .btn-del {
-        border: none; border-radius: 8px; padding: 8px 14px;
-        background: #F8D7DA; color: #721C24;
-        font-size: 13px; font-weight: 600; cursor: pointer; transition: .2s;
+        border: none; border-radius: 8px; padding: 8px 12px;
+        background: var(--danger-bg); color: var(--danger);
+        font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: .2s;
     }
-    .btn-del:hover    { background: #DC3545; color: #fff; }
+    .btn-del:hover    { background: var(--danger); color: #fff; }
     .btn-toggle:hover { opacity: .85; }
 
     .empty-state {
-        text-align: center; padding: 60px 20px; color: #999;
+        text-align: center; padding: 40px 20px; color: var(--muted);
     }
-    .empty-state .icon { font-size: 72px; margin-bottom: 16px; display: block; }
-    .empty-state h4 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state .icon { font-size: 54px; margin-bottom: 12px; display: block; }
+    .empty-state h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
 
-    /* Notification bell */
+    /* Floating bell button placed safely above mobile bottom navbar */
     .bell-btn {
         position: fixed;
-        bottom: 30px; right: 30px;
-        background: #0066CC;
+        bottom: calc(var(--tab-h) + var(--safe-b) + 16px);
+        right: 16px;
+        background: var(--primary);
         color: #fff;
         border: none;
         border-radius: 50%;
-        width: 60px; height: 60px;
-        font-size: 26px;
+        width: 56px; height: 56px;
+        font-size: 22px;
         cursor: pointer;
-        box-shadow: 0 4px 18px rgba(0,102,204,.45);
-        z-index: 1000;
+        box-shadow: 0 4px 18px rgba(0,102,204,.35);
+        z-index: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: .2s;
     }
-    .bell-btn:hover { background: #0052A3; transform: scale(1.1); }
+    .bell-btn:hover { background: var(--primary-hover); transform: scale(1.05); }
     .bell-badge {
         position: absolute;
-        top: -4px; right: -4px;
-        background: #DC3545;
+        top: -2px; right: -2px;
+        background: var(--danger);
         color: #fff;
         border-radius: 50%;
-        width: 22px; height: 22px;
-        font-size: 11px;
+        width: 18px; height: 18px;
+        font-size: 10px;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -220,7 +218,7 @@
         <strong>🔔 Enable Alarm Notifications</strong><br>
         <small>Allow notifications so you receive alarms <b>even when the browser is minimized</b>.</small>
     </div>
-    <button onclick="requestNotificationPermission()" class="btn-add" style="white-space:nowrap; padding:10px 20px;">
+    <button onclick="requestNotificationPermission()" class="btn-add" style="white-space:nowrap; padding:8px 16px; font-size: 0.85rem;">
         Enable Alarms
     </button>
 </div>
@@ -241,19 +239,19 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Medicine Name *</label>
-                <input type="text" name="medicine_name" placeholder="e.g. Paracetamol 500mg" required>
+                <input type="text" name="medicine_name" class="form-control" placeholder="e.g. Paracetamol 500mg" required>
             </div>
             <div class="form-group">
                 <label>Dosage</label>
-                <input type="text" name="dosage" placeholder="e.g. 1 tablet">
+                <input type="text" name="dosage" class="form-control" placeholder="e.g. 1 tablet">
             </div>
             <div class="form-group">
                 <label>Alarm Time *</label>
-                <input type="time" name="reminder_time" required>
+                <input type="time" name="reminder_time" class="form-control" required>
             </div>
             <div class="form-group">
                 <label>Frequency</label>
-                <select name="frequency">
+                <select name="frequency" class="form-control">
                     <option value="daily">Daily</option>
                     <option value="twice_daily">Twice Daily</option>
                     <option value="thrice_daily">Three Times Daily</option>
@@ -265,25 +263,25 @@
         <div class="form-row">
             <div class="form-group">
                 <label>Start Date</label>
-                <input type="date" name="start_date" id="start_date">
+                <input type="date" name="start_date" id="start_date" class="form-control">
             </div>
             <div class="form-group">
                 <label>End Date</label>
-                <input type="date" name="end_date" id="end_date">
+                <input type="date" name="end_date" id="end_date" class="form-control">
             </div>
             <div class="form-group">
                 <label>Instructions (optional)</label>
-                <input type="text" name="instructions" placeholder="e.g. After meals, With water">
+                <input type="text" name="instructions" class="form-control" placeholder="e.g. After meals, With water">
             </div>
         </div>
-        <button type="submit" class="btn-add">🔔 Set Alarm</button>
+        <button type="submit" class="btn btn-primary mt-2">🔔 Set Alarm</button>
     </form>
 </div>
 
 <!-- Active Reminders -->
-<h4 style="font-size:20px; font-weight:700; color:#0066CC; margin-bottom:16px;">
+<h4 style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-bottom:16px; display: flex; align-items: center; gap: 8px;">
     🔔 Your Medicine Alarms
-    <span style="background:#E3F2FD; color:#1565C0; border-radius:20px; padding:3px 12px; font-size:14px; margin-left:8px;">
+    <span style="background: var(--primary-bg); color: var(--primary); border-radius: 20px; padding: 3px 12px; font-size: 0.82rem;">
         {{ reminders|length }} set
     </span>
 </h4>
@@ -309,9 +307,9 @@
         <div class="med-meta" style="margin-top:8px;">
             Status: 
             {% if r.is_active %}
-            <span style="color:#28A745; font-weight:700;">✅ Active</span>
+            <span style="color:var(--success); font-weight:700;">Active</span>
             {% else %}
-            <span style="color:#6c757d; font-weight:700;">⏸ Paused</span>
+            <span style="color:var(--muted); font-weight:700;">Paused</span>
             {% endif %}
         </div>
         <div class="reminder-actions">
@@ -492,7 +490,7 @@ async function checkReminders() {
                     const swReg = await navigator.serviceWorker.ready;
                     swReg.showNotification('💊 Medicine Reminder', {
                         body: `Time to take: ${r.medicine_name}${r.dosage ? ' — ' + r.dosage : ''}`,
-                        icon: '/static/assets/hospital_logo.png',
+                        icon: '/static/assets/icon-192.png',
                         vibrate: [200, 100, 200, 100, 200],
                         tag: `reminder-${r.id}`,
                         requireInteraction: true,

@@ -1,0 +1,426 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   🏥 HealthCare+ Premium Mobile-First Design System Override
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ── */
+:root {
+  --primary-hsl: 210, 100%, 45%;
+  --primary: hsl(var(--primary-hsl));
+  --primary-hover: hsl(210, 100%, 38%);
+  --primary-bg: hsl(210, 100%, 97%);
+  
+  --success-hsl: 145, 63%, 42%;
+  --success: hsl(var(--success-hsl));
+  --success-hover: hsl(145, 63%, 35%);
+  --success-bg: hsl(145, 63%, 97%);
+  
+  --danger-hsl: 355, 78%, 56%;
+  --danger: hsl(var(--danger-hsl));
+  --danger-bg: hsl(355, 78%, 97%);
+  
+  --warning-hsl: 38, 92%, 50%;
+  --warning: hsl(var(--warning-hsl));
+  --warning-bg: hsl(38, 92%, 97%);
+  
+  --dark-hsl: 220, 15%, 16%;
+  --dark: hsl(var(--dark-hsl));
+  
+  --muted-hsl: 220, 10%, 46%;
+  --muted: hsl(var(--muted-hsl));
+  
+  --bg-light: hsl(210, 20%, 98%);
+  --card: #ffffff;
+  --border: hsl(210, 14%, 93%);
+  
+  --shadow: 0 8px 30px rgba(0, 102, 204, 0.03), 0 2px 8px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 16px 40px rgba(0, 102, 204, 0.06), 0 4px 16px rgba(0, 0, 0, 0.03);
+  
+  --radius: 16px;
+  --radius-lg: 24px;
+  --nav-h: 64px;
+  --tab-h: 66px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Base Reset & Animations ── */
+body {
+  background: var(--bg-light) !important;
+  color: var(--dark) !important;
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-height: 100vh;
+  margin-bottom: calc(var(--tab-h) + var(--safe-b));
+}
+
+#page-wrap {
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Interactive Elements ── */
+.btn, .bnav-btn, .sev-btn, .sym-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active, .sev-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* ── Premium Cards ── */
+.card {
+  background: var(--card) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  padding: 24px !important;
+  margin-bottom: 20px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.card-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  padding: 0 0 16px 0 !important;
+  margin-bottom: 20px !important;
+}
+
+/* ── Mobile Form Controls ── */
+.form-group label {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+}
+
+.form-control {
+  background: #fafbfc !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 12px !important;
+  color: var(--dark) !important;
+  font-size: 1rem !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-control:focus {
+  background: #ffffff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px hsla(210, 100%, 45%, 0.1) !important;
+}
+
+/* ── PWA Floating & Sticky Navbars ── */
+#topnav {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--border) !important;
+  position: sticky !important;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+
+.topnav-logo {
+  color: var(--primary) !important;
+}
+
+.topnav-logo .logo-icon {
+  background: var(--primary-bg) !important;
+  color: var(--primary);
+  border-radius: 12px !important;
+  font-size: 1.3rem !important;
+}
+
+#bottomnav {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  border-top: 1px solid var(--border) !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.04) !important;
+  height: calc(var(--tab-h) + var(--safe-b)) !important;
+}
+
+.bottomnav-inner {
+  height: var(--tab-h) !important;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.bnav-btn {
+  color: var(--muted) !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+}
+
+.bnav-btn.active {
+  color: var(--primary) !important;
+}
+
+.bnav-btn i {
+  font-size: 1.35rem !important;
+  margin-bottom: 4px;
+}
+
+/* SOS Navigation link button glow */
+.dnav-link.sos, .bnav-btn.sos-btn {
+  color: var(--danger) !important;
+}
+.bnav-btn.sos-btn i {
+  animation: sosIconPulse 2s infinite ease-in-out;
+}
+
+@keyframes sosIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(220, 53, 69, 0.4)); }
+}
+
+/* ── Blur Background Drawer overlay ── */
+#drawer-overlay {
+  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.3) !important;
+}
+
+#drawer {
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  overflow: hidden;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.drawer-header {
+  background: linear-gradient(135deg, var(--primary) 0%, hsl(210, 100%, 38%) 100%) !important;
+  padding: 30px 24px 24px !important;
+}
+
+.drawer-link {
+  border-radius: 12px !important;
+  margin: 4px 12px !important;
+  padding: 10px 16px !important;
+  font-weight: 600 !important;
+}
+
+.drawer-link:hover, .drawer-link.active {
+  background: var(--primary-bg) !important;
+  color: var(--primary) !important;
+}
+
+/* ── Custom Touch Checklist Pills ── */
+.sym-grid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.sym-item {
+  border: 2px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+  align-items: center !important;
+}
+
+.sym-item:hover {
+  border-color: var(--primary) !important;
+  background: var(--primary-bg) !important;
+}
+
+.sym-item.checked {
+  border-color: var(--success) !important;
+  background: var(--success-bg) !important;
+}
+
+.sym-item label {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: var(--dark) !important;
+}
+
+/* ── Chat Messages (Premium bubble layout) ── */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px 8px;
+}
+
+.message-bubble {
+  max-width: 75%;
+  border-radius: 18px;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.message-bubble.sent {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.received {
+  align-self: flex-start;
+  background: #ffffff;
+  color: var(--dark);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.chat-input-bar {
+  position: fixed;
+  bottom: calc(var(--tab-h) + var(--safe-b));
+  left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  z-index: 800;
+}
+
+.chat-input-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-inner input {
+  flex: 1;
+  border-radius: 24px !important;
+}
+
+.chat-input-inner button {
+  border-radius: 50% !important;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+/* ── Alarms & Reminders ── */
+.reminder-card {
+  border-left: 6px solid var(--success) !important;
+  box-shadow: var(--shadow) !important;
+  border-radius: var(--radius) !important;
+  padding: 20px !important;
+}
+
+.reminder-card.inactive {
+  border-left-color: var(--muted) !important;
+}
+
+.reminder-card.ringing {
+  border-left-color: var(--danger) !important;
+  animation: alarmPulse 1.2s infinite ease-in-out;
+}
+
+.reminder-card .med-time {
+  font-size: 2.2rem !important;
+  color: var(--primary) !important;
+  font-weight: 800 !important;
+}
+
+.reminder-card.inactive .med-time {
+  color: var(--muted) !important;
+}
+
+/* ── Progress Indicators & Vitals ── */
+.vital-metric-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px !important;
+}
+
+.vital-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-bg);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.vital-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.progress-bar-premium {
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar-fill-premium {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s ease;
+}
+
+/* ── Results Dashboard & Score ── */
+.result-hero {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.confidence-ring {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 4px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ── Custom UI for Login/Signup Centered viewports ── */
+.mobile-auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--nav-h) - var(--tab-h) - 40px);
+  padding: 16px;
+}
+
+.mobile-auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Media Queries ── */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px 12px 0 !important;
+  }
+  
+  .card {
+    padding: 20px 16px !important;
+  }
+  
+  .sym-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

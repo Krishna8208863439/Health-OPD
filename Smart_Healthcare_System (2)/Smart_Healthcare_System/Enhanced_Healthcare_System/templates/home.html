@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+{% block title %}Home – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Hero ── */
+.home-hero {
+  background: linear-gradient(135deg, #0D1117 0%, #1a2332 60%, #0066CC 100%);
+  border-radius: 18px;
+  padding: 28px 24px 24px;
+  color: #fff;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+}
+.home-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; left: 20px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(0,102,204,.3);
+}
+.hero-greeting { font-size: .82rem; opacity: .7; font-weight: 500; margin-bottom: 4px; }
+.hero-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+.hero-sub { font-size: .82rem; opacity: .75; margin-bottom: 18px; }
+.hero-stats { display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
+.hero-stat {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 70px;
+}
+.hero-stat .sv { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.hero-stat .sl { font-size: .62rem; opacity: .7; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+
+/* ── Quick Action Grid ── */
+.qa-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.qa-btn {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 8px 12px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transition: transform .15s, box-shadow .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.qa-btn:active { transform: scale(.95); }
+.qa-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.qa-icon {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.qa-label { font-size: .7rem; font-weight: 700; color: #374151; line-height: 1.2; }
+.qa-btn.sos-qa { background: linear-gradient(135deg, #DC3545, #9B1C2C); color: #fff; }
+.qa-btn.sos-qa .qa-label { color: #fff; }
+
+/* Icon colors */
+.ic-blue   { background: #EFF6FF; color: #0066CC; }
+.ic-green  { background: #D4EDDA; color: #155724; }
+.ic-purple { background: #F3EEFF; color: #6f42c1; }
+.ic-orange { background: #FFF3E0; color: #E65100; }
+.ic-teal   { background: #E0F7FA; color: #00796B; }
+.ic-pink   { background: #FCE4EC; color: #C62828; }
+.ic-yellow { background: #FFF9C4; color: #F57F17; }
+.ic-red    { background: #FFEBEE; color: #DC3545; }
+
+/* ── Section Header ── */
+.sec-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.sec-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.sec-link { font-size: .78rem; font-weight: 600; color: var(--blue); }
+
+/* ── Feature cards row ── */
+.feat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.feat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+  display: flex; flex-direction: column; gap: 8px;
+  transition: transform .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.feat-card:hover { transform: translateY(-2px); }
+.feat-card:active { transform: scale(.97); }
+.feat-icon { font-size: 1.6rem; }
+.feat-title { font-size: .88rem; font-weight: 700; color: var(--text); }
+.feat-desc { font-size: .72rem; color: var(--muted); line-height: 1.4; }
+.feat-arrow { font-size: .7rem; color: var(--blue); font-weight: 700; margin-top: auto; }
+
+/* ── Vitals summary ── */
+.vital-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.vital-mini {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border-top: 3px solid var(--border);
+}
+.vital-mini .vm-val { font-size: 1.1rem; font-weight: 800; color: var(--text); line-height: 1; }
+.vital-mini .vm-unit { font-size: .6rem; color: var(--muted); margin-bottom: 4px; }
+.vital-mini .vm-label { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
+.vm-bp   { border-top-color: #3B82F6; }
+.vm-sug  { border-top-color: #28A745; }
+.vm-hr   { border-top-color: #EF4444; }
+.vm-wt   { border-top-color: #6f42c1; }
+.vm-tmp  { border-top-color: #F59E0B; }
+.vm-bmi  { border-top-color: #EC4899; }
+
+/* ── Reminder mini cards ── */
+.reminder-mini {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 12px;
+  padding: 12px 14px; box-shadow: var(--shadow);
+  margin-bottom: 8px;
+}
+.rm-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.rm-name { font-weight: 700; font-size: .88rem; }
+.rm-time { font-size: .75rem; color: var(--muted); }
+.rm-dose { font-size: .72rem; color: var(--blue); font-weight: 600; }
+
+/* ── Wellness today ── */
+.wellness-bar-card {
+  background: #fff; border-radius: 14px;
+  padding: 16px; box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.wb-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.wb-icon { font-size: 1.1rem; width: 28px; text-align: center; }
+.wb-label { font-size: .78rem; font-weight: 600; color: var(--muted); width: 60px; flex-shrink: 0; }
+.wb-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.wb-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+.wb-val { font-size: .75rem; font-weight: 700; color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
+
+/* ── Emergency strip ── */
+.sos-strip {
+  background: linear-gradient(135deg, #DC3545, #9B1C2C);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px;
+  color: #fff; margin-bottom: 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(220,53,69,.35);
+  animation: sosGlowCard 3s infinite;
+}
+@keyframes sosGlowCard {
+  0%,100%{ box-shadow: 0 4px 16px rgba(220,53,69,.35); }
+  50%{ box-shadow: 0 4px 28px rgba(220,53,69,.6); }
+}
+.sos-strip .sos-icon { font-size: 2rem; flex-shrink: 0; }
+.sos-strip .sos-title { font-weight: 800; font-size: 1rem; }
+.sos-strip .sos-sub { font-size: .75rem; opacity: .85; }
+.sos-strip .sos-arr { margin-left: auto; font-size: 1.2rem; opacity: .7; }
+
+/* ── Recent prediction ── */
+.pred-card {
+  background: #fff; border-radius: 14px;
+  padding: 16px; box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.pred-disease { font-size: 1.1rem; font-weight: 800; color: var(--blue); }
+.pred-meta { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+
+@media(max-width:480px) {
+  .qa-grid { grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .qa-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+  .feat-row { grid-template-columns: 1fr 1fr; }
+  .vital-mini-grid { grid-template-columns: repeat(3,1fr); }
+}
+@media(max-width:360px) {
+  .qa-grid { grid-template-columns: repeat(4,1fr); gap: 6px; }
+  .qa-label { font-size: .62rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<div class="home-hero">
+  <div class="hero-greeting">Good {{ greeting }}, 👋</div>
+  <div class="hero-name">{{ patient.full_name }}</div>
+  <div class="hero-sub">{{ patient.city }} · {{ 'Patient' if patient.role == 'patient' else 'Doctor' }}</div>
+  <div class="hero-stats" style="position:relative;z-index:1;">
+    <div class="hero-stat">
+      <div class="sv">{{ stats.total_predictions }}</div>
+      <div class="sl">Reports</div>
+    </div>
+    <div class="hero-stat">
+      <div class="sv">{{ stats.reminders_count }}</div>
+      <div class="sl">Meds</div>
+    </div>
+    <div class="hero-stat">
+      <div class="sv">{{ stats.vitals_count }}</div>
+      <div class="sl">Vitals</div>
+    </div>
+    <div class="hero-stat">
+      <div class="sv">{{ stats.appointments_count }}</div>
+      <div class="sl">Appts</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUICK ACTIONS ── -->
+<div class="sec-hdr"><span class="sec-title">Quick Actions</span></div>
+<div class="qa-grid">
+  <a class="qa-btn" href="{{ url_for('symptom_assessment') }}">
+    <div class="qa-icon ic-blue"><i class="fas fa-stethoscope"></i></div>
+    <span class="qa-label">Assess</span>
+  </a>
+  <a class="qa-btn" href="{{ url_for('nearest_hospitals') }}">
+    <div class="qa-icon ic-green"><i class="fas fa-hospital-symbol"></i></div>
+    <span class="qa-label">Hospitals</span>
+  </a>
+  <a class="qa-btn" href="{{ url_for('vitals') }}">
+    <div class="qa-icon ic-purple"><i class="fas fa-heartbeat"></i></div>
+    <span class="qa-label">Vitals</span>
+  </a>
+  <a class="qa-btn" href="{{ url_for('wellness') }}">
+    <div class="qa-icon ic-teal"><i class="fas fa-leaf"></i></div>
+    <span class="qa-label">Wellness</span>
+  </a>
+  <a class="qa-btn" href="{{ url_for('reminders') }}">
+    <div class="qa-icon ic-yellow"><i class="fas fa-pills"></i></div>
+    <span class="qa-label">Meds</span>
+  </a>
+  <a class="qa-btn sos-qa" href="{{ url_for('emergency') }}">
+    <div class="qa-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-ambulance"></i></div>
+    <span class="qa-label">SOS</span>
+  </a>
+</div>
+
+<!-- ── SOS STRIP ── -->
+<a class="sos-strip" href="{{ url_for('nearest_hospitals') }}">
+  <div class="sos-icon">🚨</div>
+  <div>
+    <div class="sos-title">Find Nearest Hospital</div>
+    <div class="sos-sub">Live GPS · Phone · Route · 24h Emergency</div>
+  </div>
+  <div class="sos-arr"><i class="fas fa-chevron-right"></i></div>
+</a>
+
+<!-- ── TODAY'S WELLNESS ── -->
+{% if today_wellness %}
+<div class="sec-hdr">
+  <span class="sec-title">Today's Wellness</span>
+  <a class="sec-link" href="{{ url_for('wellness') }}">Update →</a>
+</div>
+<div class="wellness-bar-card">
+  <div class="wb-row">
+    <span class="wb-icon">💧</span>
+    <span class="wb-label">Water</span>
+    <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.water_glasses*100//8,100]|min }}%;background:#3B82F6;"></div></div>
+    <span class="wb-val">{{ today_wellness.water_glasses }}/8</span>
+  </div>
+  <div class="wb-row">
+    <span class="wb-icon">😴</span>
+    <span class="wb-label">Sleep</span>
+    {% set sp = [(today_wellness.sleep_hours * 100 / 8)|round|int, 100]|min %}
+    <div class="wb-bar"><div class="wb-fill" style="width:{{ sp }}%;background:#6f42c1;"></div></div>
+    <span class="wb-val">{{ today_wellness.sleep_hours }}h</span>
+  </div>
+  <div class="wb-row">
+    <span class="wb-icon">👣</span>
+    <span class="wb-label">Steps</span>
+    <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.steps*100//10000,100]|min }}%;background:#28A745;"></div></div>
+    <span class="wb-val">{{ '{:,}'.format(today_wellness.steps) }}</span>
+  </div>
+  <div class="wb-row" style="margin-bottom:0;">
+    <span class="wb-icon">🏃</span>
+    <span class="wb-label">Exercise</span>
+    <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.exercise_min*100//30,100]|min }}%;background:#EF4444;"></div></div>
+    <span class="wb-val">{{ today_wellness.exercise_min }}m</span>
+  </div>
+</div>
+{% else %}
+<div class="sec-hdr">
+  <span class="sec-title">Today's Wellness</span>
+  <a class="sec-link" href="{{ url_for('wellness') }}">Log Now →</a>
+</div>
+<a href="{{ url_for('wellness') }}" style="display:block;background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:20px;text-align:center;color:var(--muted);text-decoration:none;">
+  <i class="fas fa-leaf" style="font-size:2rem;color:var(--green);display:block;margin-bottom:8px;"></i>
+  <span style="font-size:.88rem;font-weight:600;">Log today's wellness — water, sleep, steps & mood</span>
+</a>
+{% endif %}
+
+<!-- ── LATEST VITALS ── -->
+{% if latest_vitals %}
+<div class="sec-hdr">
+  <span class="sec-title">Latest Vitals</span>
+  <a class="sec-link" href="{{ url_for('vitals') }}">View All →</a>
+</div>
+<div class="vital-mini-grid">
+  {% if latest_vitals.systolic_bp and latest_vitals.diastolic_bp %}
+  <div class="vital-mini vm-bp">
+    <div class="vm-val">{{ latest_vitals.systolic_bp|int }}/{{ latest_vitals.diastolic_bp|int }}</div>
+    <div class="vm-unit">mmHg</div>
+    <div class="vm-label">BP</div>
+  </div>
+  {% endif %}
+  {% if latest_vitals.blood_sugar %}
+  <div class="vital-mini vm-sug">
+    <div class="vm-val">{{ latest_vitals.blood_sugar|int }}</div>
+    <div class="vm-unit">mg/dL</div>
+    <div class="vm-label">Sugar</div>
+  </div>
+  {% endif %}
+  {% if latest_vitals.heart_rate %}
+  <div class="vital-mini vm-hr">
+    <div class="vm-val">{{ latest_vitals.heart_rate|int }}</div>
+    <div class="vm-unit">bpm</div>
+    <div class="vm-label">Heart Rate</div>
+  </div>
+  {% endif %}
+  {% if latest_vitals.weight_kg %}
+  <div class="vital-mini vm-wt">
+    <div class="vm-val">{{ latest_vitals.weight_kg }}</div>
+    <div class="vm-unit">kg</div>
+    <div class="vm-label">Weight</div>
+  </div>
+  {% endif %}
+  {% if latest_vitals.temperature_c %}
+  <div class="vital-mini vm-tmp">
+    <div class="vm-val">{{ latest_vitals.temperature_c }}</div>
+    <div class="vm-unit">°C</div>
+    <div class="vm-label">Temp</div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ── RECENT PREDICTION ── -->
+{% if last_prediction %}
+<div class="sec-hdr">
+  <span class="sec-title">Last Prediction</span>
+  <a class="sec-link" href="{{ url_for('history') }}">History →</a>
+</div>
+<div class="pred-card">
+  <div class="pred-disease">{{ last_prediction.disease }}</div>
+  <div class="pred-meta">
+    {% if 'LOW' in last_prediction.severity %}
+      <span class="severity-badge severity-low">{{ last_prediction.severity }}</span>
+    {% elif 'MEDIUM' in last_prediction.severity %}
+      <span class="severity-badge severity-medium">{{ last_prediction.severity }}</span>
+    {% else %}
+      <span class="severity-badge severity-high">{{ last_prediction.severity }}</span>
+    {% endif %}
+    &nbsp; Risk: {{ last_prediction.risk_percentage }}% · {{ last_prediction.timestamp[:10] }}
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary btn-sm"><i class="fas fa-redo"></i> Re-assess</a>
+    {% if last_prediction.pdf_path %}
+    <a href="{{ url_for('download_pdf', filename=last_prediction.pdf_path) }}" class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Report</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── UPCOMING REMINDERS ── -->
+{% if upcoming_reminders %}
+<div class="sec-hdr">
+  <span class="sec-title">Today's Medicines</span>
+  <a class="sec-link" href="{{ url_for('reminders') }}">Manage →</a>
+</div>
+{% for r in upcoming_reminders[:3] %}
+<div class="reminder-mini">
+  <div class="rm-dot" style="background:{% if loop.index == 1 %}var(--green){% elif loop.index == 2 %}var(--blue){% else %}var(--purple){% endif %};"></div>
+  <div style="flex:1;">
+    <div class="rm-name">{{ r.medicine_name }}</div>
+    <div style="display:flex;gap:8px;">
+      <span class="rm-time">⏰ {{ r.reminder_time }}</span>
+      {% if r.dosage %}<span class="rm-dose">{{ r.dosage }}</span>{% endif %}
+    </div>
+  </div>
+  <span style="font-size:.7rem;color:var(--muted);white-space:nowrap;">{{ r.frequency }}</span>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── MORE FEATURES ── -->
+<div class="sec-hdr" style="margin-top:8px;"><span class="sec-title">More Tools</span></div>
+<div class="feat-row">
+  <a class="feat-card" href="{{ url_for('lab_results') }}">
+    <div class="feat-icon">🧪</div>
+    <div class="feat-title">Lab Results</div>
+    <div class="feat-desc">Track blood tests, reports & abnormal alerts</div>
+    <div class="feat-arrow">View →</div>
+  </a>
+  <a class="feat-card" href="{{ url_for('bmi_calculator') }}">
+    <div class="feat-icon">⚖️</div>
+    <div class="feat-title">BMI Calculator</div>
+    <div class="feat-desc">Check your body mass index instantly</div>
+    <div class="feat-arrow">Calculate →</div>
+  </a>
+  <a class="feat-card" href="{{ url_for('health_tips') }}">
+    <div class="feat-icon">💡</div>
+    <div class="feat-title">Health Tips</div>
+    <div class="feat-desc">Daily tips on nutrition, sleep & wellness</div>
+    <div class="feat-arrow">Read →</div>
+  </a>
+  <a class="feat-card" href="{{ url_for('profile') }}">
+    <div class="feat-icon">👤</div>
+    <div class="feat-title">My Profile</div>
+    <div class="feat-desc">Update health info, city & password</div>
+    <div class="feat-arrow">Edit →</div>
+  </a>
+</div>
+
+{% endblock %}
