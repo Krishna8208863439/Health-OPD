@@ -12,7 +12,7 @@ __pycache__/
 *.sqlite3
 
 # Generated PDF reports
-static/reports/*.pdf
+**/static/reports/*.pdf
 
 # Virtual environments
 venv/
