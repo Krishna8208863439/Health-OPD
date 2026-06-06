@@ -352,41 +352,58 @@ let audioCtx = null;
 let alarmNodes = [];
 let alarmPlaying = false;
 
+// Initialize/Resume AudioContext on user interaction to bypass browser autoplay blocks
+function initAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+document.addEventListener('click', initAudioContext, { passive: true });
+document.addEventListener('touchstart', initAudioContext, { passive: true });
+
 function createAlarmSound() {
     stopAlarmSound();
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    initAudioContext();
+    
+    if (audioCtx && audioCtx.state === 'suspended') {
+        console.warn("AudioContext is suspended. Click the page to enable alarm sound.");
+    }
     
     function beepOnce(startTime) {
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, startTime);
-        osc.frequency.setValueAtTime(660, startTime + 0.15);
-        gainNode.gain.setValueAtTime(0.8, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+        // Alternating high-frequency piercing tones (988Hz and 1318Hz)
+        osc.frequency.setValueAtTime(988, startTime);
+        osc.frequency.setValueAtTime(1318, startTime + 0.12);
+        gainNode.gain.setValueAtTime(0.9, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
         osc.start(startTime);
-        osc.stop(startTime + 0.4);
+        osc.stop(startTime + 0.35);
         alarmNodes.push(osc);
     }
 
-    // Play beep pattern: 3 beeps, repeat
+    // Play fast piercing chimes continuously
     let t = audioCtx.currentTime;
-    for (let rep = 0; rep < 100; rep++) {
+    for (let rep = 0; rep < 150; rep++) {
         beepOnce(t);
-        beepOnce(t + 0.45);
-        beepOnce(t + 0.9);
-        t += 2.0;  // pause between triplets
+        beepOnce(t + 0.35);
+        beepOnce(t + 0.7);
+        t += 1.6;
     }
     alarmPlaying = true;
 }
 
 function stopAlarmSound() {
-    if (audioCtx) {
-        try { audioCtx.close(); } catch(e){}
-        audioCtx = null;
-    }
+    alarmNodes.forEach(node => {
+        try { node.stop(); } catch(e){}
+    });
     alarmNodes = [];
     alarmPlaying = false;
 }

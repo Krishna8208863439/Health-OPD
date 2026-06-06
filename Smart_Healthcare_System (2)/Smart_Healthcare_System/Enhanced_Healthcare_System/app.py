@@ -105,6 +105,10 @@ def init_db():
             cur.execute("ALTER TABLE users ADD COLUMN blood_sugar TEXT DEFAULT 'normal'")
         except:
             pass
+        try:
+            cur.execute("ALTER TABLE users ADD COLUMN diet_goal TEXT DEFAULT 'Balanced'")
+        except:
+            pass
         print("Users table migrated successfully!")
     
     # Migrate existing predictions table if needed
@@ -261,7 +265,7 @@ init_extra_tables()
 
 # ================= USER CLASS =================
 class User(UserMixin):
-    def __init__(self, id, username, email, full_name, age, contact, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal'):
+    def __init__(self, id, username, email, full_name, age, contact, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal', diet_goal='Balanced'):
         self.id = id
         self.username = username
         self.email = email
@@ -273,6 +277,7 @@ class User(UserMixin):
         self.smoking = smoking
         self.blood_pressure = blood_pressure
         self.blood_sugar = blood_sugar
+        self.diet_goal = diet_goal
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -287,15 +292,17 @@ def load_user(user_id):
             smoking = user['smoking'] if 'smoking' in user.keys() else 'no'
             blood_pressure = user['blood_pressure'] if 'blood_pressure' in user.keys() else 'normal'
             blood_sugar = user['blood_sugar'] if 'blood_sugar' in user.keys() else 'normal'
+            diet_goal = user['diet_goal'] if 'diet_goal' in user.keys() else 'Balanced'
         except:
             city = 'Default'
             smoking = 'no'
             blood_pressure = 'normal'
             blood_sugar = 'normal'
+            diet_goal = 'Balanced'
         
         return User(user['id'], user['username'], user['email'], 
                    user['full_name'], user['age'], user['contact'], user['role'],
-                   city, smoking, blood_pressure, blood_sugar)
+                   city, smoking, blood_pressure, blood_sugar, diet_goal)
     return None
 
 # ================= ROLE DECORATOR =================
@@ -591,15 +598,17 @@ def login():
                 smoking = user['smoking'] if 'smoking' in user.keys() else 'no'
                 blood_pressure = user['blood_pressure'] if 'blood_pressure' in user.keys() else 'normal'
                 blood_sugar = user['blood_sugar'] if 'blood_sugar' in user.keys() else 'normal'
+                diet_goal = user['diet_goal'] if 'diet_goal' in user.keys() else 'Balanced'
             except:
                 city = 'Default'
                 smoking = 'no'
                 blood_pressure = 'normal'
                 blood_sugar = 'normal'
+                diet_goal = 'Balanced'
             
             user_obj = User(user['id'], user['username'], user['email'],
                           user['full_name'], user['age'], user['contact'], user['role'],
-                          city, smoking, blood_pressure, blood_sugar)
+                          city, smoking, blood_pressure, blood_sugar, diet_goal)
             login_user(user_obj)
             flash(f'Welcome back, {user["full_name"]}! 👋', 'success')
             
@@ -1108,6 +1117,32 @@ def delete_vitals(vid):
     conn.close()
     flash('Vitals entry deleted.', 'info')
     return redirect(url_for('vitals'))
+
+
+# ================= DIET PLANS =================
+
+@app.route('/diet-plans', methods=['GET', 'POST'])
+@login_required
+def diet_plans():
+    if current_user.role != 'patient':
+        flash('Only patients can access diet plans.', 'warning')
+        return redirect(url_for('index'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    if request.method == 'POST':
+        goal = request.form.get('diet_goal', 'Balanced')
+        cur.execute("UPDATE users SET diet_goal = ? WHERE id = ?", (goal, current_user.id))
+        conn.commit()
+        # Update current user object in session
+        current_user.diet_goal = goal
+        flash(f'Active diet plan successfully updated to: {goal}!', 'success')
+        conn.close()
+        return redirect(url_for('diet_plans'))
+        
+    conn.close()
+    return render_template('diet_plan.html', patient=current_user)
 
 
 # ================= PROFILE MANAGEMENT =================

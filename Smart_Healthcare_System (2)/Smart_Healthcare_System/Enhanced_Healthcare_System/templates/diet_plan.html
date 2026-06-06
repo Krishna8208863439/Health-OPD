@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% block title %}Diet Plans - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --diet-primary: #0066CC;
+    --diet-green: #10B981;
+    --diet-orange: #F59E0B;
+    --diet-red: #EF4444;
+    --diet-purple: #8B5CF6;
+    --diet-card-bg: #FFFFFF;
+}
+
+.diet-hero {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+}
+.diet-hero .ico {
+    font-size: 56px;
+}
+.diet-hero h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+.diet-hero p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.active-banner {
+    background: #ECFDF5;
+    border: 2px solid #A7F3D0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #065F46;
+}
+.active-banner strong {
+    font-size: 1.05rem;
+}
+
+.diet-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+.diet-option-btn {
+    background: #fff;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    font-size: 0.92rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.diet-option-btn .btn-emoji {
+    font-size: 24px;
+}
+.diet-option-btn:hover {
+    border-color: var(--diet-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.diet-option-btn.active {
+    border-color: var(--diet-green);
+    background: #ECFDF5;
+    color: #047857;
+}
+
+.meal-card {
+    background: var(--diet-card-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #E5E7EB;
+    padding: 28px;
+    margin-bottom: 24px;
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+.meal-card.active-meal {
+    display: block;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.meal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #F3F4F6;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+.meal-card-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1F2937;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.meal-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+}
+.badge-weight { background: var(--diet-primary); }
+.badge-muscle { background: var(--diet-purple); }
+.badge-diabetic { background: var(--diet-orange); }
+.badge-heart { background: var(--diet-red); }
+.badge-balanced { background: var(--diet-green); }
+
+.meal-description {
+    font-size: 0.9rem;
+    color: #4B5563;
+    margin-bottom: 24px;
+    line-height: 1.55;
+}
+
+.meal-timeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.meal-block {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px;
+}
+.meal-block-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.meal-block-content {
+    font-size: 0.92rem;
+    color: #1F2937;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.select-diet-btn {
+    background: var(--diet-green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.94rem;
+    transition: all 0.18s;
+}
+.select-diet-btn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+.select-diet-btn.is-active-btn {
+    background: #E5E7EB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+@media(max-width: 600px) {
+    .diet-hero { flex-direction: column; text-align: center; }
+    .meal-card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="diet-hero">
+    <div class="ico">🥗</div>
+    <div>
+        <h2>Personalized Diet Plans</h2>
+        <p>Choose a diet plan tailored to your medical condition and lifestyle goals. Track and optimize your daily nutrition.</p>
+    </div>
+</div>
+
+{% if patient.diet_goal %}
+<div class="active-banner">
+    <div>
+        🎯 Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong>
+    </div>
+    <span style="background:rgba(16,185,129,0.15); border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:700;">Active Plan</span>
+</div>
+{% endif %}
+
+<!-- Selection Tabs -->
+<div class="diet-selector">
+    <button class="diet-option-btn active" id="btn-Weight" onclick="showDiet('Weight')">
+        <span class="btn-emoji">🏃‍♂️</span>
+        <span>Weight Loss</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Muscle" onclick="showDiet('Muscle')">
+        <span class="btn-emoji">💪</span>
+        <span>Muscle Gain</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Diabetic" onclick="showDiet('Diabetic')">
+        <span class="btn-emoji">🩸</span>
+        <span>Diabetic Care</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Heart" onclick="showDiet('Heart')">
+        <span class="btn-emoji">❤️</span>
+        <span>Heart Healthy</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Balanced" onclick="showDiet('Balanced')">
+        <span class="btn-emoji">🍽️</span>
+        <span>Balanced Indian</span>
+    </button>
+</div>
+
+<!-- Plan Cards -->
+<div class="diet-details">
+
+    <!-- 1. Weight Loss -->
+    <div class="meal-card active-meal" id="diet-Weight">
+        <div class="meal-card-header">
+            <div class="meal-card-title">🏃‍♂️ Weight Loss Diet Plan</div>
+            <span class="meal-badge badge-weight">Low Carb</span>
+        </div>
+        <div class="meal-description">
+            Designed to help reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.
+        </div>
+        <div class="meal-timeline">
+            <div class="meal-block">
+                <div class="meal-block-title">🍳 Breakfast</div>
+                <div class="meal-block-content">Veggie omelette (2 eggs) or Tofu scramble with spinach, accompanied by unsweetened green tea.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🍲 Lunch</div>
+                <div class="meal-block-content">Grilled chicken breast or boiled paneer salad with cucumbers, bell peppers, tomatoes, and olive oil dressing.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥜 Snack</div>
+                <div class="meal-block-content">A handful of almonds (8-10) or dry roasted chickpeas (makhana).</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥗 Dinner</div>
+                <div class="meal-block-content">Sautéed broccoli, beans, and carrots with grilled salmon or paneer/tofu blocks. No rice/wheat.</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('diet_plans') }}">
+            <input type="hidden" name="diet_goal" value="Weight Loss">
+            {% if patient.diet_goal == 'Weight Loss' %}
+            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            {% else %}
+            <button type="submit" class="select-diet-btn">🎯 Select Weight Loss Plan</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 2. Muscle Gain -->
+    <div class="meal-card" id="diet-Muscle">
+        <div class="meal-card-header">
+            <div class="meal-card-title">💪 Muscle Gain Diet Plan</div>
+            <span class="meal-badge badge-muscle">High Protein</span>
+        </div>
+        <div class="meal-description">
+            Focuses on muscle hypertrophy and tissue repair. Provides clean caloric surplus with high proteins, moderate complex carbs, and healthy fats to support active recovery.
+        </div>
+        <div class="meal-timeline">
+            <div class="meal-block">
+                <div class="meal-block-title">🍳 Breakfast</div>
+                <div class="meal-block-content">Oatmeal (1 cup cooked) with milk, peanut butter, chopped banana, and 3 boiled egg whites.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🍲 Lunch</div>
+                <div class="meal-block-content">Chicken breast curry (200g) or Soya chunks curry with brown rice (1.5 cups) and mixed green salad.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥜 Snack</div>
+                <div class="meal-block-content">Whey protein shake or 150g Greek yogurt topped with pumpkin seeds and walnuts.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥗 Dinner</div>
+                <div class="meal-block-content">Baked paneer or grilled fish with sweet potato mash, sautéed asparagus, and black dal.</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('diet_plans') }}">
+            <input type="hidden" name="diet_goal" value="Muscle Gain">
+            {% if patient.diet_goal == 'Muscle Gain' %}
+            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            {% else %}
+            <button type="submit" class="select-diet-btn">🎯 Select Muscle Gain Plan</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 3. Diabetic Care -->
+    <div class="meal-card" id="diet-Diabetic">
+        <div class="meal-card-header">
+            <div class="meal-card-title">🩸 Diabetic Care Diet Plan</div>
+            <span class="meal-badge badge-diabetic">Low Glycemic Index</span>
+        </div>
+        <div class="meal-description">
+            Formulated specifically to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.
+        </div>
+        <div class="meal-timeline">
+            <div class="meal-block">
+                <div class="meal-block-title">🍳 Breakfast</div>
+                <div class="meal-block-content">Methi (fenugreek) paratha cooked with minimal oil or Moong dal chilla with garlic chutney.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🍲 Lunch</div>
+                <div class="meal-block-content">Chickpea (chana) curry or rajma with 1 multigrain roti, curd, and a large plate of raw salad.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥜 Snack</div>
+                <div class="meal-block-content">Sprouted moong salad with onion, tomato, lemon juice, and green coriander.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥗 Dinner</div>
+                <div class="meal-block-content">Grilled tofu or chicken breast with cauliflower rice, sautéed bell peppers, and spinach soup.</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('diet_plans') }}">
+            <input type="hidden" name="diet_goal" value="Diabetic Care">
+            {% if patient.diet_goal == 'Diabetic Care' %}
+            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            {% else %}
+            <button type="submit" class="select-diet-btn">🎯 Select Diabetic Care Plan</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 4. Heart Healthy -->
+    <div class="meal-card" id="diet-Heart">
+        <div class="meal-card-header">
+            <div class="meal-card-title">❤️ Heart Healthy Diet Plan</div>
+            <span class="meal-badge badge-heart">Low Sodium</span>
+        </div>
+        <div class="meal-description">
+            Reduces stress on blood vessels and heart muscle by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.
+        </div>
+        <div class="meal-timeline">
+            <div class="meal-block">
+                <div class="meal-block-title">🍳 Breakfast</div>
+                <div class="meal-block-content">Fruit bowl (apple, papaya, guava) topped with chia seeds, with a cup of unsweetened almond milk.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🍲 Lunch</div>
+                <div class="meal-block-content">Oats khichdi with plenty of vegetables (carrots, peas, beans), raw salad, and flaxseed dressing.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥜 Snack</div>
+                <div class="meal-block-content">An apple or pear slices paired with a cup of light green tea. No salt.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥗 Dinner</div>
+                <div class="meal-block-content">Baked cod/salmon or tofu clear vegetable soup with a slice of whole wheat multigrain toast.</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('diet_plans') }}">
+            <input type="hidden" name="diet_goal" value="Heart Healthy">
+            {% if patient.diet_goal == 'Heart Healthy' %}
+            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            {% else %}
+            <button type="submit" class="select-diet-btn">🎯 Select Heart Healthy Plan</button>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- 5. Balanced Indian -->
+    <div class="meal-card" id="diet-Balanced">
+        <div class="meal-card-header">
+            <div class="meal-card-title">🍽️ Balanced Indian Diet Plan</div>
+            <span class="meal-badge badge-balanced">General Wellness</span>
+        </div>
+        <div class="meal-description">
+            A balanced approach using traditional Indian cooking and ingredients. Provides a wholesome mix of macro and micro nutrients for general health maintenance.
+        </div>
+        <div class="meal-timeline">
+            <div class="meal-block">
+                <div class="meal-block-title">🍳 Breakfast</div>
+                <div class="meal-block-content">Vegetable Poha or Rava Idli (2) with sambhar and mint-coriander chutney.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🍲 Lunch</div>
+                <div class="meal-block-content">Whole wheat chapati (2), dal fry, mix-veg sabji (dry), curd (1 cup), and fresh salad.</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥜 Snack</div>
+                <div class="meal-block-content">Roasted makhana (foxnuts) or roasted chana with hot tea/coffee (minimal sugar).</div>
+            </div>
+            <div class="meal-block">
+                <div class="meal-block-title">🥗 Dinner</div>
+                <div class="meal-block-content">Moong dal khichdi with 1 teaspoon ghee, aloo-palak sabji, and roasted papad.</div>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('diet_plans') }}">
+            <input type="hidden" name="diet_goal" value="Balanced">
+            {% if patient.diet_goal == 'Balanced' %}
+            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            {% else %}
+            <button type="submit" class="select-diet-btn">🎯 Select Balanced Plan</button>
+            {% endif %}
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showDiet(dietType) {
+    // Hide all meal cards
+    document.querySelectorAll('.meal-card').forEach(card => {
+        card.classList.remove('active-meal');
+    });
+    // Show target card
+    document.getElementById('diet-' + dietType).classList.add('active-meal');
+
+    // Update active button state
+    document.querySelectorAll('.diet-option-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('btn-' + dietType).classList.add('active');
+}
+
+// Automatically show correct tab if patient has an active diet goal
+document.addEventListener('DOMContentLoaded', () => {
+    const activeGoal = "{{ patient.diet_goal }}";
+    if (activeGoal === 'Weight Loss') showDiet('Weight');
+    else if (activeGoal === 'Muscle Gain') showDiet('Muscle');
+    else if (activeGoal === 'Diabetic Care') showDiet('Diabetic');
+    else if (activeGoal === 'Heart Healthy') showDiet('Heart');
+    else if (activeGoal === 'Balanced') showDiet('Balanced');
+});
+</script>
+{% endblock %}

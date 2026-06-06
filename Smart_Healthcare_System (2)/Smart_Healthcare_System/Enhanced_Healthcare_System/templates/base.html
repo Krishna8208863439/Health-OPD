@@ -194,6 +194,7 @@ a{color:inherit;text-decoration:none;}
       <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> Hospitals</a>
       <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> Vitals</a>
       <a class="dnav-a" href="{{ url_for('wellness') }}"><i class="fas fa-leaf"></i> Wellness</a>
+      <a class="dnav-a" href="{{ url_for('diet_plans') }}"><i class="fas fa-apple-alt"></i> Diets</a>
       <a class="dnav-a" href="{{ url_for('reminders') }}"><i class="fas fa-pills"></i> Meds</a>
       <a class="dnav-a sos-link" href="{{ url_for('emergency') }}"><i class="fas fa-ambulance"></i> SOS</a>
       <a class="user-pill" href="{{ url_for('profile') }}">
@@ -211,6 +212,7 @@ a{color:inherit;text-decoration:none;}
   </div>
 
   <div class="topnav-right">
+    <div id="nav-clock" style="color: #fff; font-family: monospace; font-size: 0.85rem; font-weight: 700; background: rgba(255,255,255,0.08); padding: 5px 10px; border-radius: 6px; margin-right: 8px; border: 1px solid rgba(255,255,255,0.15);"></div>
     <button id="hamburger" onclick="openDrawer()" aria-label="Menu"><i class="fas fa-bars"></i></button>
   </div>
   {% endif %}
@@ -241,6 +243,7 @@ a{color:inherit;text-decoration:none;}
       <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span>Nearest Hospitals</a>
       <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span>Health Vitals</a>
       <a class="drawer-item" href="{{ url_for('wellness') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-leaf"></i></span>Daily Wellness</a>
+      <a class="drawer-item" href="{{ url_for('diet_plans') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-apple-alt"></i></span>Diet Plans</a>
       <a class="drawer-item" href="{{ url_for('lab_results') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-flask"></i></span>Lab Results</a>
       <a class="drawer-item" href="{{ url_for('bmi_calculator') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-weight"></i></span>BMI &amp; Health Calculator</a>
       <div class="drawer-sec">Appointments &amp; Meds</div>
@@ -345,6 +348,23 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPro
 document.getElementById('install-btn')?.addEventListener('click',()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;dismissInstall();});}});
 function dismissInstall(){document.getElementById('install-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');}
 window.addEventListener('appinstalled',dismissInstall);
+
+/* 12-Hour Clock Ticker */
+function updateClock() {
+  const clockEl = document.getElementById('nav-clock');
+  if (!clockEl) return;
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const hoursStr = hours.toString().padStart(2, '0');
+  clockEl.textContent = hoursStr + ':' + minutes + ':' + seconds + ' ' + ampm;
+}
+setInterval(updateClock, 1000);
+updateClock();
 </script>
 {% block extra_js %}{% endblock %}
 </body>
