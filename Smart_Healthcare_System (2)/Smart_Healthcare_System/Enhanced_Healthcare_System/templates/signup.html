@@ -100,9 +100,49 @@ body{
 .app-hint{text-align:center;margin-top:14px;font-size:.73rem;color:rgba(255,255,255,.45);}
 
 @media(max-width:480px){
-  .auth-card{padding:24px 18px;border-radius:18px;}
-  .grid-2,.grid-3{grid-template-columns:1fr;}
+  body {
+    padding: 10px 8px 24px;
+  }
+  .auth-card{
+    padding: 20px 14px;
+    border-radius: 16px;
+    margin: 8px 0;
+  }
+  .auth-logo {
+    margin-bottom: 16px;
+  }
+  .logo-circle {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  .auth-title{font-size:1.25rem;}
+  .field {
+    margin-bottom: 10px;
+  }
+  .field-wrap input, .field-wrap select {
+    padding: 10px 12px 10px 34px;
+    font-size: 0.85rem;
+  }
+  .field-icon {
+    left: 10px;
+    font-size: 0.8rem;
+  }
+  .med-section {
+    padding: 12px 10px;
+    margin: 12px 0 10px;
+  }
+  .med-title {
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+  }
+  .grid-2, .grid-3 {
+    gap: 8px;
+    grid-template-columns:1fr;
+  }
 }
+
 </style>
 </head>
 <body>

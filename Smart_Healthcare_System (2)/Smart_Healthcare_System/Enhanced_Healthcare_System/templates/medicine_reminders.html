@@ -232,6 +232,14 @@
     </div>
 </div>
 
+<!-- Audio activation reminder -->
+<div id="audio-lock-banner" class="alert alert-warning d-flex justify-content-between align-items-center" style="border-radius: 12px; margin-bottom: 20px; padding: 12px 16px; border: 1.5px solid #ffeeba;">
+    <div>
+        <strong>🔊 Alarm Sound Status:</strong> <span id="audio-status-text" style="color:#856404; font-weight:700;">Tap anywhere on the screen to enable alarm sound</span>
+    </div>
+    <button class="btn btn-warning btn-sm" onclick="unlockAudio(event)" style="font-weight:700;">🔊 Enable Sound</button>
+</div>
+
 <!-- Add Reminder Form -->
 <div class="add-form-card">
     <h4>➕ Add New Reminder</h4>
@@ -349,7 +357,7 @@
 <script>
 // ========== Alarm Audio (Web Audio API – no file needed) ==========
 let audioCtx = null;
-let alarmNodes = [];
+let alarmInterval = null;
 let alarmPlaying = false;
 
 // Initialize/Resume AudioContext on user interaction to bypass browser autoplay blocks
@@ -361,50 +369,116 @@ function initAudioContext() {
         audioCtx.resume();
     }
 }
-document.addEventListener('click', initAudioContext, { passive: true });
-document.addEventListener('touchstart', initAudioContext, { passive: true });
+
+function updateAudioStatusUI() {
+    const text = document.getElementById('audio-status-text');
+    const banner = document.getElementById('audio-lock-banner');
+    if (audioCtx && audioCtx.state !== 'suspended') {
+        if (text) {
+            text.textContent = 'Active & Ready';
+            text.style.color = '#155724';
+        }
+        if (banner) {
+            banner.className = "alert alert-success d-flex justify-content-between align-items-center";
+            banner.style.borderColor = "#c3e6cb";
+            banner.style.background = "#d4edda";
+            const btn = banner.querySelector('button');
+            if (btn) {
+                btn.className = "btn btn-success btn-sm";
+                btn.innerHTML = "🔊 Sound Armed";
+            }
+        }
+    }
+}
+
+function unlockAudio(e) {
+    if (e) e.stopPropagation();
+    initAudioContext();
+    if (audioCtx) {
+        audioCtx.resume().then(() => {
+            updateAudioStatusUI();
+            playTestTone();
+        });
+    }
+}
+
+function playTestTone() {
+    try {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.35);
+    } catch(e) {
+        console.error("Test tone error:", e);
+    }
+}
+
+// Global listeners to automatically arm when user touches or clicks the page
+document.addEventListener('click', () => {
+    initAudioContext();
+    if (audioCtx) {
+        audioCtx.resume().then(updateAudioStatusUI);
+    }
+}, { passive: true });
+
+document.addEventListener('touchstart', () => {
+    initAudioContext();
+    if (audioCtx) {
+        audioCtx.resume().then(updateAudioStatusUI);
+    }
+}, { passive: true });
 
 function createAlarmSound() {
     stopAlarmSound();
     initAudioContext();
     
     if (audioCtx && audioCtx.state === 'suspended') {
-        console.warn("AudioContext is suspended. Click the page to enable alarm sound.");
+        console.warn("AudioContext is suspended. Tap the screen to unlock sound.");
     }
     
-    function beepOnce(startTime) {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        osc.type = 'sine';
-        // Alternating high-frequency piercing tones (988Hz and 1318Hz)
-        osc.frequency.setValueAtTime(988, startTime);
-        osc.frequency.setValueAtTime(1318, startTime + 0.12);
-        gainNode.gain.setValueAtTime(0.9, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
-        osc.start(startTime);
-        osc.stop(startTime + 0.35);
-        alarmNodes.push(osc);
-    }
-
-    // Play fast piercing chimes continuously
-    let t = audioCtx.currentTime;
-    for (let rep = 0; rep < 150; rep++) {
-        beepOnce(t);
-        beepOnce(t + 0.35);
-        beepOnce(t + 0.7);
-        t += 1.6;
-    }
+    let toggle = false;
+    alarmInterval = setInterval(() => {
+        try {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            // Piercing high-low siren tones (988Hz and 1318Hz)
+            const freq = toggle ? 1318 : 988;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.48);
+            toggle = !toggle;
+        } catch(e) {
+            console.error("Alarm chime generation error:", e);
+        }
+    }, 280); // Beep fast (every 280ms)
+    
     alarmPlaying = true;
 }
 
 function stopAlarmSound() {
-    alarmNodes.forEach(node => {
-        try { node.stop(); } catch(e){}
-    });
-    alarmNodes = [];
+    if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+    }
     alarmPlaying = false;
 }
 
@@ -547,6 +621,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     const sd = document.getElementById('start_date');
     if (sd && !sd.value) sd.value = today;
+
+    // Check initial audio state
+    initAudioContext();
+    updateAudioStatusUI();
 
     checkNotificationPermission();
 
