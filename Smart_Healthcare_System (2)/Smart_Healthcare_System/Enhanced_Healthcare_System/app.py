@@ -612,20 +612,27 @@ def predict():
             symptoms_dict[col] = 1 if symptom_values[i] > 100 else 0
         else:
             symptoms_dict[col] = 1 if symptom_values[i] == 1 else 0
-    
+
     patient_data = {
         'age': current_user.age,
         'smoking': current_user.smoking,
         'blood_pressure': current_user.blood_pressure,
         'blood_sugar': current_user.blood_sugar
     }
-    
+
     health_risk = calculate_health_risk_score(
-        patient_data, 
-        symptoms_dict, 
+        patient_data,
+        symptoms_dict,
         severity,
         past_history_count
     )
+
+    # ── Get medicines from MEDICINE_DATABASE ──────────────────────────────────
+    severity_key = severity.split()[0]  # LOW / MEDIUM / HIGH
+    disease_meds = MEDICINE_DATABASE.get(disease, MEDICINE_DATABASE.get("Common Cold", {}))
+    medicines = disease_meds.get(severity_key, disease_meds.get("LOW", ["Consult a doctor"]))
+    if not isinstance(medicines, list):
+        medicines = ["Consult a doctor"]
     
     # Get hospital filters from form
     hospital_type = request.form.get('hospital_type')  # Government/Private
@@ -710,7 +717,7 @@ def predict():
     }
     
     severity_key = severity.split()[0]  # Extract LOW, MEDIUM, or HIGH
-    
+
     # Prepare prediction data
     prediction_data = {
         'disease': disease,
