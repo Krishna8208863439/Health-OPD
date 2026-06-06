@@ -129,16 +129,20 @@ body{
 
 @media(max-width:480px){
   body {
-    padding: 16px 12px 24px;
-    background: linear-gradient(135deg,#0D1117 0%,#1a2332 50%,#0066CC 100%);
+    padding: 0;
+    background: #fff;
   }
   .auth-card{
-    padding: 24px 16px;
-    border-radius: 16px;
-    margin: 8px 0;
+    padding: 32px 20px 48px;
+    border-radius: 0;
+    margin: 0;
     width: 100%;
     max-width: 100%;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+    min-height: 100dvh;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .auth-title{font-size:1.3rem;}
   .field-wrap input {
@@ -149,9 +153,8 @@ body{
     left: 11px;
     font-size: 0.8rem;
   }
-  .app-hint {
-    color: rgba(255,255,255,0.5);
-    margin-top: 14px;
+  .bg-shape, .app-hint {
+    display: none !important;
   }
 }
 </style>

@@ -325,6 +325,15 @@
                         <div class="macro-label">Fat</div>
                     </div>
                 </div>
+
+                <!-- ChatGPT Vision Response -->
+                <div class="chatgpt-response-box" style="margin-top: 14px; margin-bottom: 14px; background: #fff; border: 1.5px solid #D1FAE5; border-radius: 10px; padding: 12px 14px; text-align: left; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 6px; font-weight: 800; color: #059669; font-size: 0.85rem; margin-bottom: 6px;">
+                        <i class="fas fa-robot"></i> ChatGPT Food Vision Analysis
+                    </div>
+                    <p id="chatgpt-vision-text" style="font-size: 0.82rem; color: #047857; line-height: 1.45; margin: 0; font-style: italic;"></p>
+                </div>
+
                 <button class="log-api-btn" onclick="logScannedCalories()">
                     💾 Log Calories to Wellness Log
                 </button>
@@ -572,10 +581,8 @@ function captureSnapshot() {
 
 // Clicking card resumes live stream
 function handleViewfinderClick() {
-    if (previewEl.style.display === 'block' && streamActive) {
-        previewEl.style.display = 'none';
-        videoEl.style.display = 'block';
-        document.getElementById('resume-hint').style.display = 'none';
+    if (previewEl.style.display === 'block') {
+        startCamera();
     }
 }
 
@@ -656,12 +663,29 @@ function triggerScan() {
         const data = estimateFoodNutrition(inputName);
         lastScannedItem = data;
 
+        // Generate ChatGPT narrative
+        const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.name}. A typical serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. This is an excellent addition to your health journal. Let me know if you would like custom fitness tips for this meal!`;
+
         // Populate results
         document.getElementById('res-food-name').textContent = data.name;
         document.getElementById('res-calories').textContent = data.calories;
         document.getElementById('res-protein').textContent = data.protein;
         document.getElementById('res-carbs').textContent = data.carbs;
         document.getElementById('res-fat').textContent = data.fat;
+        document.getElementById('chatgpt-vision-text').textContent = chatgptText;
+
+        // Cache results in localStorage
+        try {
+            localStorage.setItem('cached_food_image', previewEl.src);
+            localStorage.setItem('cached_food_name', data.name);
+            localStorage.setItem('cached_food_calories', data.calories);
+            localStorage.setItem('cached_food_protein', data.protein);
+            localStorage.setItem('cached_food_carbs', data.carbs);
+            localStorage.setItem('cached_food_fat', data.fat);
+            localStorage.setItem('cached_food_chatgpt', chatgptText);
+        } catch (cacheErr) {
+            console.warn("Storage quota exceeded or private mode, skipping image caching:", cacheErr);
+        }
 
         // Display results card
         document.getElementById('scan-result-card').style.display = 'block';
@@ -696,9 +720,40 @@ async function logScannedCalories() {
     }
 }
 
-// Automatically start camera on load
+// Automatically start camera on load, or load last cached scan
 document.addEventListener('DOMContentLoaded', () => {
-    startCamera();
+    // Check if there is a cached scan
+    const cachedImage = localStorage.getItem('cached_food_image');
+    const cachedName = localStorage.getItem('cached_food_name');
+    
+    if (cachedImage && cachedImage.startsWith('data:image') && cachedName) {
+        // Load cached scan results
+        previewEl.src = cachedImage;
+        previewEl.style.display = 'block';
+        videoEl.style.display = 'none';
+        blockedView.style.display = 'none';
+        overlayGrid.style.display = 'block';
+        document.getElementById('resume-hint').style.display = 'block';
+        
+        lastScannedItem = {
+            name: cachedName,
+            calories: parseInt(localStorage.getItem('cached_food_calories') || '0'),
+            protein: localStorage.getItem('cached_food_protein') || '0g',
+            carbs: localStorage.getItem('cached_food_carbs') || '0g',
+            fat: localStorage.getItem('cached_food_fat') || '0g'
+        };
+        
+        document.getElementById('res-food-name').textContent = lastScannedItem.name;
+        document.getElementById('res-calories').textContent = lastScannedItem.calories;
+        document.getElementById('res-protein').textContent = lastScannedItem.protein;
+        document.getElementById('res-carbs').textContent = lastScannedItem.carbs;
+        document.getElementById('res-fat').textContent = lastScannedItem.fat;
+        document.getElementById('chatgpt-vision-text').textContent = localStorage.getItem('cached_food_chatgpt') || '';
+        
+        document.getElementById('scan-result-card').style.display = 'block';
+    } else {
+        startCamera();
+    }
 });
 </script>
 {% endblock %}

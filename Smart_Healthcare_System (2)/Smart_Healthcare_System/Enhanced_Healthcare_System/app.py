@@ -35,6 +35,7 @@ login_manager.login_view = 'login'
 def get_db():
     conn = sqlite3.connect("healthcare.db", check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
     return conn
 
 def init_db():
@@ -185,6 +186,24 @@ def init_db():
             pass
         print("medicine_reminders table migrated successfully!")
 
+    try:
+        cur.execute("ALTER TABLE users ADD COLUMN is_approved INTEGER DEFAULT 1")
+    except Exception:
+        pass
+
+    # Check if admin user exists
+    try:
+        admin_user = cur.execute("SELECT * FROM users WHERE role = 'admin' OR username = 'admin'").fetchone()
+        if not admin_user:
+            print("Inserting default admin user...")
+            password_hash = generate_password_hash("admin123")
+            cur.execute("""
+                INSERT INTO users (username, email, password_hash, full_name, age, role, is_approved)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, ("admin", "admin@healthcare.com", password_hash, "System Administrator", 30, "admin", 1))
+    except Exception as e:
+        print(f"Error initializing admin user: {e}")
+
     conn.commit()
     conn.close()
     print("Database initialized successfully!")
@@ -284,7 +303,7 @@ init_extra_tables()
 
 # ================= USER CLASS =================
 class User(UserMixin):
-    def __init__(self, id, username, email, full_name, age, contact, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal', diet_goal='Balanced'):
+    def __init__(self, id, username, email, full_name, age, contact, role, city='Default', smoking='no', blood_pressure='normal', blood_sugar='normal', diet_goal='Balanced', is_approved=1):
         self.id = id
         self.username = username
         self.email = email
@@ -297,6 +316,7 @@ class User(UserMixin):
         self.blood_pressure = blood_pressure
         self.blood_sugar = blood_sugar
         self.diet_goal = diet_goal
+        self.is_approved = is_approved
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -312,16 +332,18 @@ def load_user(user_id):
             blood_pressure = user['blood_pressure'] if 'blood_pressure' in user.keys() else 'normal'
             blood_sugar = user['blood_sugar'] if 'blood_sugar' in user.keys() else 'normal'
             diet_goal = user['diet_goal'] if 'diet_goal' in user.keys() else 'Balanced'
+            is_approved = user['is_approved'] if 'is_approved' in user.keys() else 1
         except:
             city = 'Default'
             smoking = 'no'
             blood_pressure = 'normal'
             blood_sugar = 'normal'
             diet_goal = 'Balanced'
+            is_approved = 1
         
         return User(user['id'], user['username'], user['email'], 
                    user['full_name'], user['age'], user['contact'], user['role'],
-                   city, smoking, blood_pressure, blood_sugar, diet_goal)
+                   city, smoking, blood_pressure, blood_sugar, diet_goal, is_approved)
     return None
 
 # ================= ROLE DECORATOR =================
@@ -584,14 +606,18 @@ def signup():
         
         # Create user
         password_hash = generate_password_hash(password)
+        is_approved = 0 if role == 'doctor' else 1
         cur.execute("""
-            INSERT INTO users (username, email, password_hash, full_name, age, contact, city, smoking, blood_pressure, blood_sugar, role)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (username, email, password_hash, full_name, age, contact, city, smoking, blood_pressure, blood_sugar, role))
+            INSERT INTO users (username, email, password_hash, full_name, age, contact, city, smoking, blood_pressure, blood_sugar, role, is_approved)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (username, email, password_hash, full_name, age, contact, city, smoking, blood_pressure, blood_sugar, role, is_approved))
         conn.commit()
         conn.close()
         
-        flash('✅ Account created successfully! Please login.', 'success')
+        if role == 'doctor':
+            flash('✅ Doctor account registered successfully! Please wait for administrator approval before logging in.', 'info')
+        else:
+            flash('✅ Account created successfully! Please login.', 'success')
         return redirect(url_for('login'))
     
     return render_template('signup.html')
@@ -611,6 +637,17 @@ def login():
         conn.close()
         
         if user and check_password_hash(user['password_hash'], password):
+            # Check approval status
+            try:
+                is_approved = user['is_approved'] if 'is_approved' in user.keys() else 1
+            except:
+                is_approved = 1
+                
+            if user['role'] == 'doctor' and not is_approved:
+                flash('❌ Your doctor account is pending administrator approval.', 'danger')
+                conn.close()
+                return redirect(url_for('login'))
+                
             # Handle both old and new database schemas
             try:
                 city = user['city'] if 'city' in user.keys() else 'Default'
@@ -627,7 +664,7 @@ def login():
             
             user_obj = User(user['id'], user['username'], user['email'],
                           user['full_name'], user['age'], user['contact'], user['role'],
-                          city, smoking, blood_pressure, blood_sugar, diet_goal)
+                          city, smoking, blood_pressure, blood_sugar, diet_goal, is_approved)
             login_user(user_obj)
             flash(f'Welcome back, {user["full_name"]}! 👋', 'success')
             
@@ -1963,6 +2000,59 @@ def update_appointment(appt_id):
     conn.close()
     flash(f'✅ Appointment {status}.', 'success')
     return redirect(url_for('doctor_appointments'))
+
+
+# ================= ADMIN ROUTES =================
+@app.route('/admin/doctors')
+@login_required
+def admin_doctors():
+    if current_user.role != 'admin':
+        flash('Access denied. Administrator permissions required.', 'danger')
+        return redirect(url_for('index'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    pending_doctors = cur.execute("SELECT * FROM users WHERE role = 'doctor' AND is_approved = 0").fetchall()
+    approved_doctors = cur.execute("SELECT * FROM users WHERE role = 'doctor' AND is_approved = 1").fetchall()
+    conn.close()
+    
+    return render_template('admin_doctors.html', 
+                           pending_doctors=[dict(d) for d in pending_doctors],
+                           approved_doctors=[dict(d) for d in approved_doctors])
+
+
+@app.route('/admin/approve-doctor/<int:doctor_id>', methods=['POST'])
+@login_required
+def approve_doctor(doctor_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Administrator permissions required.', 'danger')
+        return redirect(url_for('index'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET is_approved = 1 WHERE id = ? AND role = 'doctor'", (doctor_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Doctor account approved successfully!', 'success')
+    return redirect(url_for('admin_doctors'))
+
+
+@app.route('/admin/reject-doctor/<int:doctor_id>', methods=['POST'])
+@login_required
+def reject_doctor(doctor_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Administrator permissions required.', 'danger')
+        return redirect(url_for('index'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = ? AND role = 'doctor'", (doctor_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Doctor account rejected and deleted.', 'info')
+    return redirect(url_for('admin_doctors'))
 
 
 @app.route('/sw.js')
