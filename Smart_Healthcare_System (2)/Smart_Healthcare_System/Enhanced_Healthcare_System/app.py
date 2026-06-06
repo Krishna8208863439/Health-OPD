@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
 from reportlab.lib.pagesizes import A4
@@ -15,8 +14,6 @@ import time
 from functools import wraps
 
 # Import services
-from model import train_model
-from analytics import AnalyticsEngine
 from medicine_db import MEDICINE_DATABASE, HOSPITAL_DATABASE
 from risk_calculator import calculate_health_risk_score, get_risk_recommendations
 from hospital_finder import find_hospitals, get_google_maps_url, get_directions_url
@@ -33,9 +30,6 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-# ================= ML MODEL =================
-model, disease_map, accuracy = train_model()
 
 # ================= DATABASE SETUP =================
 def get_db():
@@ -543,229 +537,9 @@ def symptom_entry():
 @app.route('/predict', methods=['POST'])
 @login_required
 def predict():
-    # IMPORTANT: In the training data:
-    # 1 = HAS the symptom
-    # 2 = DOESN'T have the symptom
-    # This is OPPOSITE of what we might expect!
-    
-    # Convert checkbox values to model format
-    def convert_symptom(value):
-        # Checkbox checked (1) → Model value 1 (HAS symptom)
-        # Checkbox unchecked (0) → Model value 2 (NO symptom)
-        return 1 if int(value) == 1 else 2
-    
-    # For fever, if checked, use a typical fever temperature (102)
-    # If not checked, use normal temperature (98)
-    fever_value = 102 if int(request.form.get('fever', 0)) == 1 else 98
-    
-    symptom_values = [
-        convert_symptom(request.form.get('bodypain', 0)),
-        convert_symptom(request.form.get('Hollow', 0)),
-        convert_symptom(request.form.get('cold_cough', 0)),
-        convert_symptom(request.form.get('cough', 0)),
-        fever_value,  # Special handling for fever
-        convert_symptom(request.form.get('chest_pain', 0)),
-        convert_symptom(request.form.get('breathing_problem', 0)),
-        convert_symptom(request.form.get('throat_pain', 0)),
-        convert_symptom(request.form.get('head_pain', 0)),
-        convert_symptom(request.form.get('stomach_pain', 0)),
-        convert_symptom(request.form.get('diarrhea', 0)),
-        convert_symptom(request.form.get('omitting', 0)),
-        convert_symptom(request.form.get('back_pain', 0)),
-        convert_symptom(request.form.get('swollen_feet', 0))
-    ]
-    
-    # Column names must match training data exactly
-    column_names = ['bodypain', 'Hollow', 'cold and cough', 'cough', 'fever',
-                   'chest pain', 'breathing problem', 'Throat pain', 'head pain',
-                   'stomach pain', 'diarrhea', 'omitting', 'back pain', 'Swollen feet']
-    
-    # Create DataFrame for prediction with correct column order
-    df = pd.DataFrame([symptom_values], columns=column_names)
-    
-    # Debug: Print the input to verify
-    print(f"Input symptoms: {df.values[0]}")
-    
-    # Make prediction
-    pid = model.predict(df)[0]
-    prob = max(model.predict_proba(df)[0])
-    
-    print(f"Predicted PID: {pid}, Probability: {prob}")
-    
-    risk, severity = calculate_risk(prob)
-    disease = disease_map[pid]
-    
-    print(f"Disease: {disease}, Severity: {severity}")
-    
-    # Get past history count
-    conn = get_db()
-    cur = conn.cursor()
-    past_history_count = cur.execute(
-        "SELECT COUNT(*) FROM predictions WHERE patient_id = ?", 
-        (current_user.id,)
-    ).fetchone()[0]
-    
-    # Calculate comprehensive health risk score
-    symptoms_dict = {}
-    for i, col in enumerate(column_names):
-        if col == 'fever':
-            symptoms_dict[col] = 1 if symptom_values[i] > 100 else 0
-        else:
-            symptoms_dict[col] = 1 if symptom_values[i] == 1 else 0
-
-    patient_data = {
-        'age': current_user.age,
-        'smoking': current_user.smoking,
-        'blood_pressure': current_user.blood_pressure,
-        'blood_sugar': current_user.blood_sugar
-    }
-
-    health_risk = calculate_health_risk_score(
-        patient_data,
-        symptoms_dict,
-        severity,
-        past_history_count
-    )
-
-    # ── Get medicines from MEDICINE_DATABASE ──────────────────────────────────
-    severity_key = severity.split()[0]  # LOW / MEDIUM / HIGH
-    disease_meds = MEDICINE_DATABASE.get(disease, MEDICINE_DATABASE.get("Common Cold", {}))
-    medicines = disease_meds.get(severity_key, disease_meds.get("LOW", ["Consult a doctor"]))
-    if not isinstance(medicines, list):
-        medicines = ["Consult a doctor"]
-    
-    # Get hospital filters from form
-    hospital_type = request.form.get('hospital_type')  # Government/Private
-    max_distance = request.form.get('max_distance')
-    if max_distance:
-        max_distance = float(max_distance)
-        
-    user_lat = request.form.get('user_lat')
-    user_lng = request.form.get('user_lng')
-    try:
-        user_lat = float(user_lat) if user_lat else None
-    except ValueError:
-        user_lat = None
-        
-    try:
-        user_lng = float(user_lng) if user_lng else None
-    except ValueError:
-        user_lng = None
-    
-    # Find hospitals
-    hospitals_list = find_hospitals(
-        city=current_user.city,
-        hospital_type=hospital_type,
-        disease=disease,
-        max_distance=max_distance,
-        user_lat=user_lat,
-        user_lng=user_lng
-    )
-    
-    # Referred Hospital and Doctor Assignment
-    if hospitals_list:
-        referred_hospital = hospitals_list[0]['name']
-        doctor_phone = hospitals_list[0]['phone']
-    else:
-        referred_hospital = "City General Hospital"
-        doctor_phone = "+91-XXX-XXX-XXXX"
-
-    # Map diseases to specialties and doctor names
-    specialty_docs = {
-        "Cardiology": ["Dr. Devi Shetty, MS", "Dr. Naresh Trehan, MD", "Dr. K. K. Talwar, DM"],
-        "Oncology": ["Dr. Suresh Advani, MD", "Dr. Rajendra Badwe, MS", "Dr. S. H. Advani, MD"],
-        "Neurology": ["Dr. Ashok Panagariya, DM", "Dr. K. Sridhar, MCh", "Dr. Mukul Varma, DM"],
-        "General Medicine": ["Dr. Sandeep Budhiraja, MD", "Dr. Randeep Guleria, DM", "Dr. Rajesh Chawla, MD"],
-        "Emergency": ["Dr. Amit Sharma, MD", "Dr. S. K. Sarin, DM", "Dr. Balram Bhargava, DM"]
-    }
-    
-    # Map diseases to specialties
-    disease_specialty_map = {
-        "Pneumonia": "Emergency",
-        "Pneumonia or TB": "Emergency", 
-        "Pneumonia or TB or COVID": "Emergency",
-        "Bronchitis": "Emergency",
-        "Influenza": "Emergency",
-        "Seasonal Influenza": "Emergency",
-        "Asthma": "Emergency",
-        "Stomach Infection": "General Medicine",
-        "Gastroenteritis": "General Medicine",
-        "Food Poisoning": "General Medicine",
-        "Typhoid Fever": "General Medicine",
-        "Migraine": "Neurology",
-        "Hypertension": "Cardiology",
-        "Diabetes": "General Medicine",
-        "Common Cold": "General Medicine",
-        "cold and cough": "General Medicine",
-        "Dengue": "Emergency",
-        "Kidney Infection or Stone": "General Medicine",
-        "Allergic Side Effects": "General Medicine",
-        "Acidity": "General Medicine"
-    }
-    
-    spec = disease_specialty_map.get(disease, "General Medicine")
-    doc_list = specialty_docs.get(spec, specialty_docs["General Medicine"])
-    
-    # Use referred_hospital hash to select a deterministic doctor from the list
-    h_idx = sum(ord(c) for c in referred_hospital) % len(doc_list)
-    doctor_name = doc_list[h_idx]
-    
-    doctor_advice = {
-        "LOW": "Monitor symptoms at home. Stay hydrated and get adequate rest. Consult a doctor if symptoms worsen.",
-        "MEDIUM": "Consult a doctor within 24 hours. Follow prescribed medications and monitor your condition closely.",
-        "HIGH": "Seek immediate medical attention. Visit the emergency department or call an ambulance if symptoms are severe."
-    }
-    
-    severity_key = severity.split()[0]  # Extract LOW, MEDIUM, or HIGH
-
-    # Prepare prediction data
-    prediction_data = {
-        'disease': disease,
-        'risk_percentage': risk,
-        'health_risk_score': health_risk['score'],
-        'health_risk_category': health_risk['category'],
-        'health_risk_color': health_risk['color'],
-        'health_risk_icon': health_risk['icon'],
-        'severity': severity,
-        'probability': prob,
-        'medicines': ', '.join(medicines),
-        'hospitals': ', '.join([h['name'] for h in hospitals_list[:5]]),
-        'doctor_advice': doctor_advice[severity_key],
-        'doctor_name': doctor_name,
-        'doctor_phone': doctor_phone,
-        'referred_hospital': referred_hospital
-    }
-    
-    # Generate PDF
-    pdf_filename = generate_pdf(current_user, prediction_data)
-    
-    # Save to database
-    symptom_count = sum(1 for v in symptoms_dict.values() if v == 1)
-    
-    cur.execute("""
-        INSERT INTO predictions (patient_id, disease, risk_percentage, health_risk_score, 
-                               health_risk_category, severity, probability, symptoms, symptom_count,
-                               medicines, hospitals, doctor_advice, pdf_path, doctor_name, doctor_phone, referred_hospital)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (current_user.id, disease, risk, health_risk['score'], health_risk['category'],
-          severity, prob, str(symptoms_dict), symptom_count, prediction_data['medicines'],
-          prediction_data['hospitals'], prediction_data['doctor_advice'], pdf_filename, doctor_name, doctor_phone, referred_hospital))
-    conn.commit()
-    conn.close()
-    
-    # Get recommendations
-    recommendations = get_risk_recommendations(health_risk['score'])
-    
-    return render_template('result_enhanced.html', 
-                         patient=current_user,
-                         prediction=prediction_data,
-                         health_risk=health_risk,
-                         recommendations=recommendations,
-                         pdf_file=pdf_filename,
-                         medicines=medicines,
-                         hospitals=hospitals_list,
-                         get_maps_url=get_google_maps_url,
-                         get_directions_url=get_directions_url)
+    # Legacy route — redirect to the new rule-based assessment
+    flash('Please use the new Symptom Assessment for accurate results.', 'info')
+    return redirect(url_for('symptom_assessment'))
 
 @app.route('/history')
 @login_required
