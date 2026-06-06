@@ -247,9 +247,14 @@
     
     <!-- Viewfinder Area -->
     <div>
-        <div class="viewfinder-card">
+        <div class="viewfinder-card" onclick="handleViewfinderClick()" style="cursor:pointer; position:relative;">
             <video id="camera-stream" autoplay playsinline muted style="display:none;"></video>
             <img id="uploaded-image-preview" style="display:none; width:100%; height:100%; object-fit:contain; position:absolute; inset:0; z-index:5;">
+            
+            <!-- Tap to Resume Hint -->
+            <div id="resume-hint" style="display:none; position:absolute; bottom:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.75); color:#fff; padding:6px 14px; border-radius:20px; font-size:0.75rem; z-index:20; pointer-events:none; font-weight:700; border:1px solid rgba(255,255,255,0.2); box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                <i class="fas fa-sync-alt fa-spin" style="margin-right:4px;"></i> Tap card to resume live camera
+            </div>
             
             <!-- Scanning Grid Overlay -->
             <div class="scan-overlay" id="overlay-grid" style="display:none; z-index:10;">
@@ -263,7 +268,7 @@
                 <p style="font-size:0.82rem; opacity:0.8; margin:0 20px;">
                     Enable camera permission, or upload any food image file below.
                 </p>
-                <button class="btn btn-outline btn-sm" onclick="startCamera()" style="border-color:#fff; color:#fff; margin-top:6px;">
+                <button class="btn btn-outline btn-sm" onclick="startCamera(event)" style="border-color:#fff; color:#fff; margin-top:6px;">
                     🔄 Try Access Camera
                 </button>
             </div>
@@ -497,23 +502,76 @@ function estimateFoodNutrition(foodName) {
 }
 
 // Start Camera Stream
-async function startCamera() {
+// Start Camera Stream
+async function startCamera(e) {
+    if (e) e.stopPropagation();
     try {
         previewEl.style.display = 'none';
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        document.getElementById('resume-hint').style.display = 'none';
+        
+        let stream;
+        try {
+            // Attempt environment camera first (back camera on phone)
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        } catch (constraintErr) {
+            console.warn("Back camera environment constraint failed, falling back to general video:", constraintErr);
+            // General fallback (will use desktop webcam or default front camera)
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
+        
         videoEl.srcObject = stream;
         videoEl.style.display = 'block';
         blockedView.style.display = 'none';
         overlayGrid.style.display = 'block';
         streamActive = true;
+        
+        try {
+            await videoEl.play();
+        } catch(pErr) {
+            console.warn("Play interrupted:", pErr);
+        }
     } catch (err) {
-        console.warn("Camera blocked or unavailable:", err);
+        console.warn("Camera blocked or unavailable completely:", err);
         videoEl.style.display = 'none';
         if (previewEl.style.display !== 'block') {
             blockedView.style.display = 'flex';
             overlayGrid.style.display = 'none';
         }
         streamActive = false;
+    }
+}
+
+// Draw video frame to canvas to simulate capturing a frozen frame
+function captureSnapshot() {
+    if (streamActive && videoEl) {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoEl.videoWidth || 640;
+            canvas.height = videoEl.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            
+            // Mirror frame drawing to match mirrored video viewport
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+            
+            previewEl.src = canvas.toDataURL('image/jpeg');
+            previewEl.style.display = 'block';
+            videoEl.style.display = 'none';
+            document.getElementById('resume-hint').style.display = 'block';
+        } catch (e) {
+            console.warn("Failed to capture video snapshot:", e);
+        }
+    }
+}
+
+// Clicking card resumes live stream
+function handleViewfinderClick() {
+    if (previewEl.style.display === 'block' && streamActive) {
+        previewEl.style.display = 'none';
+        videoEl.style.display = 'block';
+        document.getElementById('resume-hint').style.display = 'none';
     }
 }
 
@@ -532,6 +590,7 @@ function handleImageUpload(event) {
         videoEl.style.display = 'none';
         blockedView.style.display = 'none';
         overlayGrid.style.display = 'block';
+        document.getElementById('resume-hint').style.display = 'none';
         
         // Infer food name from file metadata (clean filename)
         const rawName = file.name.split('.')[0].replace(/[-_]/g, ' ');
@@ -556,6 +615,12 @@ let lastScannedItem = null;
 function triggerScan() {
     // Hide results card & show analyzer spinner
     document.getElementById('scan-result-card').style.display = 'none';
+    
+    // Capture snapshot if camera feed is active to freeze the image during scan
+    if (streamActive && videoEl.style.display !== 'none') {
+        captureSnapshot();
+    }
+    
     document.getElementById('analyzer-box').style.display = 'block';
     document.getElementById('scan-action-btn').disabled = true;
 
