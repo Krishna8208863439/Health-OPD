@@ -129,12 +129,20 @@ body{
 
 @media(max-width:480px){
   body {
-    padding: 10px 8px 24px;
+    padding: 0;
+    background: #fff;
   }
   .auth-card{
-    padding: 24px 16px;
-    border-radius: 16px;
-    margin: 8px 0;
+    padding: 32px 20px 48px;
+    border-radius: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
   .auth-title{font-size:1.3rem;}
   .field-wrap input {
@@ -144,6 +152,10 @@ body{
   .field-icon {
     left: 11px;
     font-size: 0.8rem;
+  }
+  .app-hint {
+    color: #6B7280;
+    margin-top: 20px;
   }
 }
 </style>
