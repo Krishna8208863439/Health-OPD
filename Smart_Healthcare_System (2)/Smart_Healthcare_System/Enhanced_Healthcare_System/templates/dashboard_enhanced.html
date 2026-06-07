@@ -121,6 +121,50 @@
         </div>
     </div>
 
+    <!-- Connected Patients Section -->
+    <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 30px;">
+        <h5><i class="fas fa-user-friends"></i> Connected Patients</h5>
+        {% if stats.connected_patients %}
+        <div style="overflow-x: auto;">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Contact</th>
+                        <th>City</th>
+                        <th>Diet Goal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in stats.connected_patients %}
+                    <tr>
+                        <td><strong>PT-{{ '%06d'|format(patient.id) }}</strong></td>
+                        <td>{{ patient.full_name }}</td>
+                        <td>{{ patient.age }} yrs</td>
+                        <td>{{ patient.contact or 'N/A' }}</td>
+                        <td>{{ patient.city }}</td>
+                        <td><span class="badge bg-secondary">{{ patient.diet_goal }}</span></td>
+                        <td>
+                            <a href="{{ url_for('doctor_patient_view', patient_id=patient.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Logs &amp; Adherence
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 30px; color: #6B7280;">
+            <i class="fas fa-user-slash" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+            <p style="margin: 0; font-size: 0.95rem;">No connected patients found. Patients will appear here once they schedule an appointment or message you.</p>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Age-wise Disease Distribution -->
     <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
         <h5><i class="fas fa-chart-bar"></i> Age-wise Disease Distribution</h5>

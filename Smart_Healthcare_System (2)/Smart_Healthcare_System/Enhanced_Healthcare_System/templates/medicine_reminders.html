@@ -209,7 +209,10 @@
 <!-- Alarm banner (shown when a reminder fires) -->
 <div id="alarm-banner">
     <span id="alarm-text">💊 Time to take your medicine!</span>
-    <span class="alarm-close" onclick="dismissAlarm()">✕</span>
+    <div style="margin-top: 8px; display: flex; justify-content: center; gap: 12px; margin-bottom: 4px;">
+        <button onclick="handleAlarmAction('taken')" style="font-weight:700; padding:6px 16px; border-radius:6px; border:none; cursor:pointer; background:#28a745; color:white; font-size:0.85rem;">✅ Taken</button>
+        <button onclick="handleAlarmAction('snooze')" style="font-weight:700; padding:6px 16px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.85rem;">⏰ Snooze 10m</button>
+    </div>
 </div>
 
 <!-- Permission request banner -->
@@ -492,27 +495,71 @@ function stopAlarmSound() {
 
 // ========== Show / dismiss alarm banner ==========
 let activeAlarms = [];
+let currentAlarmReminder = null;
 
-function showAlarmBanner(medicineName, dosage) {
+function showAlarmBanner(medicineName, dosage, reminderId) {
+    currentAlarmReminder = { id: reminderId, name: medicineName, dosage: dosage };
     const banner = document.getElementById('alarm-banner');
     document.getElementById('alarm-text').textContent =
-        `💊 ALARM: Time to take ${medicineName}${dosage ? ' — ' + dosage : ''}! Click ✕ to dismiss.`;
+        `💊 ALARM: Time to take ${medicineName}${dosage ? ' — ' + dosage : ''}!`;
     banner.style.display = 'block';
-    document.body.style.paddingTop = '70px';
+    document.body.style.paddingTop = '95px';
     createAlarmSound();
 
     // Vibrate device if supported
     if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
 }
 
-function dismissAlarm() {
-    document.getElementById('alarm-banner').style.display = 'none';
+async function handleAlarmAction(action) {
+    const banner = document.getElementById('alarm-banner');
+    banner.style.display = 'none';
     document.body.style.paddingTop = '0';
     stopAlarmSound();
+    
+    if (!currentAlarmReminder) return;
+    
+    const reminderId = currentAlarmReminder.id;
+    const medicineName = currentAlarmReminder.name;
+    
+    if (action === 'taken') {
+        try {
+            const resp = await fetch('/api/medication/log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reminder_id: reminderId,
+                    status: 'taken'
+                })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                alert(`✅ Marked ${medicineName} as taken!`);
+                window.location.reload();
+            } else {
+                alert("Error logging medication: " + data.message);
+            }
+        } catch(e) {
+            console.error("API error:", e);
+        }
+    } else if (action === 'snooze') {
+        alert(`⏰ Alarm for ${medicineName} snoozed for 10 minutes.`);
+        const cachedReminder = currentAlarmReminder;
+        setTimeout(() => {
+            showAlarmBanner(cachedReminder.name, cachedReminder.dosage, cachedReminder.id);
+        }, 10 * 60 * 1000);
+    }
+    
+    currentAlarmReminder = null;
+}
+
+function dismissAlarm() {
+    handleAlarmAction('dismiss');
 }
 
 function testAlarm() {
-    showAlarmBanner('Test Medicine', '1 tablet');
+    showAlarmBanner('Test Medicine', '1 tablet', 9999);
 }
 
 // ========== Notification Permission ==========
@@ -586,7 +633,7 @@ async function checkReminders() {
                 firedToday.add(key);
 
                 // 1. Show in-page alarm banner (always works)
-                showAlarmBanner(r.medicine_name, r.dosage);
+                showAlarmBanner(r.medicine_name, r.dosage, r.id);
 
                 // 2. Send OS notification via SW (works when tab is background)
                 if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {

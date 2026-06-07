@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Insights - {{ patient.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --patient-primary: #0066CC;
+    --patient-green: #10B981;
+    --patient-yellow: #F59E0B;
+    --patient-red: #EF4444;
+}
+
+.patient-header {
+    background: linear-gradient(135deg, var(--patient-primary) 0%, #0c82f2 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+}
+
+.score-badge-card {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 14px;
+    padding: 12px 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.score-num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    display: block;
+}
+
+.score-lbl {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+}
+
+.grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media(max-width: 992px) {
+    .grid-3col {
+        grid-template-columns: 1fr;
+    }
+}
+
+.log-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
+}
+
+.log-card h4 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1F2937;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #F3F4F6;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-status {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.badge-taken { background: #ECFDF5; color: #065F46; }
+.badge-skipped { background: #FEF2F2; color: #991B1B; }
+
+.badge-success { background: #ECFDF5; color: #065F46; }
+.badge-warning { background: #FFFBEB; color: #78350F; }
+.badge-danger { background: #FEF2F2; color: #991B1B; }
+
+.log-item {
+    padding: 10px 0;
+    border-bottom: 1px dashed #E5E7EB;
+}
+.log-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Patient Header -->
+<div class="patient-header">
+    <div>
+        <h2 style="font-weight: 800; margin: 0;">Patient Report: {{ patient.full_name }}</h2>
+        <p style="margin: 4px 0 0 0; opacity: 0.9;">
+            Age: {{ patient.age }} years &middot; City: {{ patient.city }} &middot; Contact: {{ patient.contact or 'N/A' }}
+        </p>
+        <p style="margin: 6px 0 0 0; font-size: 0.9rem;">
+            Active Diet Goal: <strong style="text-decoration: underline;">{{ patient.diet_goal }}</strong>
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="score-badge-card">
+            <span class="score-num">{{ health_score }}</span>
+            <span class="score-lbl">Health Score</span>
+        </div>
+        <a href="{{ url_for('doctor_export_patient_report', patient_id=patient.id) }}" class="btn btn-success" style="box-shadow: 0 4px 14px rgba(40,167,69,0.3); font-weight: 700;">
+            <i class="fas fa-file-pdf"></i> Export Health Report
+        </a>
+    </div>
+</div>
+
+<div class="grid-3col">
+    <!-- Medication Logs -->
+    <div class="log-card">
+        <h4><i class="fas fa-pills" style="color: #6f42c1;"></i> Medication Log (Today)</h4>
+        {% if medication_logs %}
+            {% for log in medication_logs %}
+            <div class="log-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 0.9rem; color: #374151;">{{ log.medicine_name }}</strong>
+                    <span class="badge-status badge-{{ log.status }}">{{ log.status }}</span>
+                </div>
+                <div style="font-size: 0.78rem; color: #9CA3AF;">
+                    Scheduled: {{ log.reminder_time }} &middot; Date: {{ log.log_date }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 10px; color: #9CA3AF;">
+                <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                <p style="font-size: 0.82rem; margin: 0;">No medication logs found for today.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Food Logs -->
+    <div class="log-card">
+        <h4><i class="fas fa-apple-alt" style="color: #10B981;"></i> Diet Scanner Log</h4>
+        {% if food_logs %}
+            {% for log in food_logs %}
+            <div class="log-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 0.9rem; color: #374151;">{{ log.food_name }}</strong>
+                    <span class="badge-status badge-{{ log.goal_fitness }}">{{ 'recommended' if log.goal_fitness == 'success' else ('moderation' if log.goal_fitness == 'warning' else 'avoid') }}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: #4B5563; margin-bottom: 2px;">
+                    <strong>{{ log.calories }} kcal</strong> &middot; P: {{ log.protein }} | C: {{ log.carbs }} | F: {{ log.fat }}
+                </div>
+                <div style="font-size: 0.72rem; color: #9CA3AF;">
+                    Logged on: {{ log.log_date }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 10px; color: #9CA3AF;">
+                <i class="fas fa-camera" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                <p style="font-size: 0.82rem; margin: 0;">No scanned meals found in logs.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Symptom Logs -->
+    <div class="log-card">
+        <h4><i class="fas fa-stethoscope" style="color: #EF4444;"></i> Symptom Journal</h4>
+        {% if symptom_logs %}
+            {% for log in symptom_logs %}
+            <div class="log-item" style="padding-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 0.9rem; font-weight: 700;">
+                        {% if log.mood == 'happy' %}😃{% elif log.mood == 'okay' %}😐{% elif log.mood == 'tired' %}😴{% else %}🤒{% endif %}
+                        {{ log.mood|title }}
+                    </span>
+                    <span class="badge-status badge-{{ 'success' if log.severity == 'mild' else ('warning' if log.severity == 'moderate' else 'danger') }}">
+                        {{ log.severity }}
+                    </span>
+                </div>
+                <p style="font-size: 0.85rem; color: #4B5563; line-height: 1.4; margin: 4px 0;">
+                    "{{ log.symptoms }}"
+                </p>
+                <div style="font-size: 0.72rem; color: #9CA3AF;">
+                    Journal Date: {{ log.log_date }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px 10px; color: #9CA3AF;">
+                <i class="fas fa-book-medical" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                <p style="font-size: 0.82rem; margin: 0;">No symptom journal entries logged yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

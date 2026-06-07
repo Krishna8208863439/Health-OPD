@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Symptom Journal &amp; Export – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --journal-primary: #0066CC;
+    --journal-green: #10B981;
+    --journal-yellow: #F59E0B;
+    --journal-red: #EF4444;
+}
+
+.journal-hero {
+    background: linear-gradient(135deg, var(--journal-primary) 0%, #0c82f2 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+}
+.journal-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.journal-hero p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+.export-card {
+    background: #EFF6FF;
+    border: 1.5px solid #BFDBFE;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.export-card h5 { margin: 0 0 4px 0; color: #1E3A8A; font-weight: 800; font-size: 1.05rem; }
+.export-card p { margin: 0; font-size: 0.85rem; color: #3B82F6; }
+
+.btn-export {
+    background: var(--journal-primary);
+    color: white;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 102, 204, 0.3);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+.btn-export:hover { background: #0052a3; transform: translateY(-1px); }
+
+.journal-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 24px;
+}
+
+.card-entry {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
+}
+.card-entry h4 { font-size: 1.2rem; font-weight: 800; color: #1F2937; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+
+.mood-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.mood-option {
+    flex: 1;
+    background: #F3F4F6;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.mood-option.selected {
+    border-color: var(--journal-primary);
+    background: #EFF6FF;
+}
+.mood-option .emoji { font-size: 24px; display: block; margin-bottom: 4px; }
+.mood-option .label { font-size: 0.75rem; font-weight: 700; color: #4B5563; }
+
+.timeline {
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid #E5E7EB;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+.timeline-dot {
+    position: absolute;
+    left: -27px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #E5E7EB;
+    border: 2px solid white;
+}
+.dot-mild { background: var(--journal-green); }
+.dot-moderate { background: var(--journal-yellow); }
+.dot-severe { background: var(--journal-red); }
+
+.timeline-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    border: 1px solid #E5E7EB;
+}
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.timeline-date { font-size: 0.8rem; color: #9CA3AF; font-weight: 700; }
+.badge-sev {
+    font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; text-transform: uppercase;
+}
+.badge-mild { background: #ECFDF5; color: #065F46; }
+.badge-moderate { background: #FFFBEB; color: #78350F; }
+.badge-severe { background: #FEF2F2; color: #991B1B; }
+
+@media(max-width: 768px) {
+    .journal-hero { flex-direction: column; text-align: center; }
+    .journal-grid { grid-template-columns: 1fr; }
+    .export-card { flex-direction: column; text-align: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="journal-hero">
+    <div>
+        <h2>Daily Symptom Journal</h2>
+        <p>Log your daily feelings and track symptoms. Export a complete clinical report of your nutrition, alarms, and journal history.</p>
+    </div>
+    <span style="font-size: 56px;">📓</span>
+</div>
+
+<!-- Export card -->
+<div class="export-card">
+    <div>
+        <h5>📄 Export Comprehensive Health Report</h5>
+        <p>Includes your daily health scores, food logs, medicine adherence logs, and symptoms.</p>
+    </div>
+    <a href="{{ url_for('export_health_report') }}" class="btn-export">
+        <i class="fas fa-file-pdf"></i> Export Health Report PDF
+    </a>
+</div>
+
+<div class="journal-grid">
+    <!-- Log Entry Form -->
+    <div class="card-entry">
+        <h4>✍️ Log How You Feel Today</h4>
+        <form method="POST" action="/symptom-journal">
+            <!-- Hidden input to store selected mood -->
+            <input type="hidden" name="mood" id="selected-mood" value="okay">
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Current Mood</label>
+                <div class="mood-selector">
+                    <div class="mood-option" onclick="selectMood('happy', this)">
+                        <span class="emoji">😃</span>
+                        <span class="label">Happy</span>
+                    </div>
+                    <div class="mood-option selected" onclick="selectMood('okay', this)">
+                        <span class="emoji">😐</span>
+                        <span class="label">Okay</span>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('tired', this)">
+                        <span class="emoji">😴</span>
+                        <span class="label">Tired</span>
+                    </div>
+                    <div class="mood-option" onclick="selectMood('sick', this)">
+                        <span class="emoji">🤒</span>
+                        <span class="label">Sick</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Symptom Severity</label>
+                <select name="severity" class="form-control" style="font-size:0.9rem; padding:10px;">
+                    <option value="mild">Mild (Normal day-to-day, negligible discomfort)</option>
+                    <option value="moderate">Moderate (Noticeable, but manageable)</option>
+                    <option value="severe">Severe (Requires immediate care/disrupts routine)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Symptom Description / Text Journal</label>
+                <textarea name="symptoms" rows="5" class="form-control" placeholder="Write down how you feel (e.g. slight headache, sore throat, or just feeling great and energized!)..." required style="font-size:0.9rem; padding:12px; line-height:1.5;"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">💾 Save Journal Entry</button>
+        </form>
+    </div>
+
+    <!-- Recent History Timeline -->
+    <div class="card-entry" style="background:#F9FAFB;">
+        <h4>⏳ Recent Symptom Logs</h4>
+        
+        {% if entries %}
+        <div class="timeline">
+            {% for entry in entries %}
+            <div class="timeline-item">
+                <div class="timeline-dot dot-{{ entry.severity }}"></div>
+                <div class="timeline-card">
+                    <div class="timeline-header">
+                        <span class="timeline-date">{{ entry.log_date }}</span>
+                        <span class="badge-sev badge-{{ entry.severity }}">{{ entry.severity }}</span>
+                    </div>
+                    <div style="font-size: 0.95rem; font-weight:700; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
+                        {% if entry.mood == 'happy' %}😃{% elif entry.mood == 'okay' %}😐{% elif entry.mood == 'tired' %}😴{% else %}🤒{% endif %}
+                        Mood: {{ entry.mood.title() }}
+                    </div>
+                    <p style="font-size: 0.88rem; color:#4B5563; line-height:1.5; margin:0;">
+                        {{ entry.symptoms }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:40px 10px; color:#9CA3AF;">
+            <span style="font-size:48px; display:block; margin-bottom:12px;">✍️</span>
+            <h5>No journal entries logged yet</h5>
+            <p style="font-size:0.82rem; margin:0;">Start by logging how you feel today using the form on the left.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectMood(mood, element) {
+    document.getElementById('selected-mood').value = mood;
+    document.querySelectorAll('.mood-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    element.classList.add('selected');
+}
+</script>
+{% endblock %}

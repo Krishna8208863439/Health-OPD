@@ -94,33 +94,17 @@ def init_db():
     """)
     
     # Migrate existing users table if needed
-    try:
-        # Check if new columns exist
-        cur.execute("SELECT city FROM users LIMIT 1")
-    except sqlite3.OperationalError:
-        # Add new columns to existing users table
-        print("Migrating users table...")
+    for col, default_val in [
+        ('city', "'Default'"),
+        ('smoking', "'no'"),
+        ('blood_pressure', "'normal'"),
+        ('blood_sugar', "'normal'"),
+        ('diet_goal', "'Balanced'")
+    ]:
         try:
-            cur.execute("ALTER TABLE users ADD COLUMN city TEXT DEFAULT 'Default'")
-        except:
+            cur.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT DEFAULT {default_val}")
+        except Exception:
             pass
-        try:
-            cur.execute("ALTER TABLE users ADD COLUMN smoking TEXT DEFAULT 'no'")
-        except:
-            pass
-        try:
-            cur.execute("ALTER TABLE users ADD COLUMN blood_pressure TEXT DEFAULT 'normal'")
-        except:
-            pass
-        try:
-            cur.execute("ALTER TABLE users ADD COLUMN blood_sugar TEXT DEFAULT 'normal'")
-        except:
-            pass
-        try:
-            cur.execute("ALTER TABLE users ADD COLUMN diet_goal TEXT DEFAULT 'Balanced'")
-        except:
-            pass
-        print("Users table migrated successfully!")
     
     # Migrate existing predictions table if needed
     try:
@@ -304,6 +288,46 @@ def init_extra_tables():
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )""")
 
+    # New tables: food_logs, medication_logs, symptom_journal
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS food_logs (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        food_name     TEXT NOT NULL,
+        calories      INTEGER NOT NULL,
+        protein       TEXT DEFAULT '0g',
+        carbs         TEXT DEFAULT '0g',
+        fat           TEXT DEFAULT '0g',
+        goal_fitness  TEXT DEFAULT 'success',
+        log_date      TEXT NOT NULL,
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS medication_logs (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        reminder_id   INTEGER NOT NULL,
+        log_date      TEXT NOT NULL,
+        status        TEXT NOT NULL, -- 'taken', 'skipped'
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id),
+        FOREIGN KEY (reminder_id) REFERENCES medicine_reminders(id)
+    )""")
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS symptom_journal (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        log_date      TEXT NOT NULL,
+        mood          TEXT DEFAULT 'okay',
+        symptoms      TEXT NOT NULL,
+        severity      TEXT DEFAULT 'mild',
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
     conn.commit()
     conn.close()
     print("Extra tables initialized!")
@@ -377,6 +401,58 @@ def calculate_risk(prob):
         return risk, "MEDIUM 🟡"
     else:
         return risk, "HIGH 🔴"
+
+def get_daily_health_score(patient_id, date_str):
+    """
+    Calculate health score (1-100) for a given patient and date.
+    Medication Adherence (50 pts): (taken reminders / total active reminders) * 50
+    Diet Alignment (50 pts): Baseline 30 pts. Recommended (+15 pts), Caution (+5 pts), Limit (-10 pts)
+    """
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 1. Medication Adherence Component
+    reminders = cur.execute("""
+        SELECT id FROM medicine_reminders
+        WHERE patient_id = ?
+          AND is_active = 1
+          AND (start_date = '' OR start_date <= ?)
+          AND (end_date = '' OR end_date >= ?)
+    """, (patient_id, date_str, date_str)).fetchall()
+    
+    med_score = 50.0
+    if reminders:
+        total_reminders = len(reminders)
+        taken = cur.execute("""
+            SELECT COUNT(*) FROM medication_logs
+            WHERE patient_id = ?
+              AND log_date = ?
+              AND status = 'taken'
+        """, (patient_id, date_str)).fetchone()[0]
+        med_score = round((min(taken, total_reminders) / total_reminders) * 50.0, 1)
+        
+    # 2. Diet Alignment Component
+    foods = cur.execute("""
+        SELECT goal_fitness FROM food_logs
+        WHERE patient_id = ?
+          AND log_date = ?
+    """, (patient_id, date_str)).fetchall()
+    
+    diet_score = 30.0 # Baseline
+    if foods:
+        score_delta = 0
+        for f in foods:
+            fit = f['goal_fitness']
+            if fit == 'success':
+                score_delta += 15
+            elif fit == 'warning':
+                score_delta += 5
+            elif fit == 'danger':
+                score_delta -= 10
+        diet_score = max(0.0, min(50.0, diet_score + score_delta))
+        
+    conn.close()
+    return int(med_score + diet_score)
 
 def generate_pdf(patient, prediction_data):
     """Generate professional PDF with hospital branding"""
@@ -566,6 +642,7 @@ def index():
             "SELECT * FROM medicine_reminders WHERE patient_id=? AND is_active=1 ORDER BY reminder_time ASC LIMIT 5",
             (current_user.id,)
         ).fetchall()
+        score = get_daily_health_score(current_user.id, today)
         conn.close()
 
         stats = {
@@ -582,6 +659,7 @@ def index():
             last_prediction=dict(last_prediction) if last_prediction else None,
             today_wellness=dict(today_wellness) if today_wellness else None,
             upcoming_reminders=[dict(r) for r in upcoming_reminders],
+            health_score=score
         )
     return redirect(url_for('login'))
 
@@ -801,6 +879,21 @@ def dashboard():
         SELECT AVG(health_risk_score) FROM predictions
     """).fetchone()[0] or 0
     
+    connected_patients = cur.execute("""
+        SELECT DISTINCT u.id, u.full_name, u.email, u.age, u.contact, u.city, u.diet_goal
+        FROM users u
+        WHERE u.role = 'patient' AND (
+            u.id IN (
+                SELECT patient_id FROM appointments 
+                WHERE doctor_name = ?
+            ) OR u.id IN (
+                SELECT sender_id FROM messages WHERE receiver_id = ?
+            ) OR u.id IN (
+                SELECT receiver_id FROM messages WHERE sender_id = ?
+            )
+        )
+    """, (current_user.full_name, current_user.id, current_user.id)).fetchall()
+    
     conn.close()
     
     stats = {
@@ -811,7 +904,8 @@ def dashboard():
         'avg_risk_score': round(avg_risk_score, 1),
         'high_risk_patients': high_risk_patients,
         'disease_stats': disease_stats,
-        'age_disease_stats': age_disease_stats
+        'age_disease_stats': age_disease_stats,
+        'connected_patients': [dict(p) for p in connected_patients]
     }
     
     return render_template('dashboard_enhanced.html', 
@@ -1292,8 +1386,19 @@ def log_food_calories():
         return jsonify({'status': 'error', 'message': 'Invalid calories'}), 400
         
     today = datetime.now().strftime('%Y-%m-%d')
+    protein = data.get('protein', '0g')
+    carbs = data.get('carbs', '0g')
+    fat = data.get('fat', '0g')
+    goal_fitness = data.get('goal_fitness', 'success')
+
     conn = get_db()
     cur  = conn.cursor()
+
+    # Log to detailed food tracker
+    cur.execute("""
+        INSERT INTO food_logs (patient_id, food_name, calories, protein, carbs, fat, goal_fitness, log_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (current_user.id, food_name, calories, protein, carbs, fat, goal_fitness, today))
     
     existing = cur.execute(
         "SELECT id, calories, notes FROM wellness_log WHERE patient_id=? AND log_date=?",
@@ -2116,6 +2221,269 @@ def reject_doctor(doctor_id):
     
     flash('Doctor account rejected and deleted.', 'info')
     return redirect(url_for('admin_doctors'))
+
+
+@app.route('/api/medication/log', methods=['POST'])
+@login_required
+def log_medication():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    data = request.get_json() or {}
+    reminder_id = data.get('reminder_id')
+    status = data.get('status', 'taken') # 'taken', 'skipped'
+    
+    if not reminder_id:
+        return jsonify({'status': 'error', 'message': 'Reminder ID is required.'}), 400
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Check if already logged today
+    existing = cur.execute("""
+        SELECT id FROM medication_logs
+        WHERE patient_id = ? AND reminder_id = ? AND log_date = ?
+    """, (current_user.id, reminder_id, today)).fetchone()
+    
+    if existing:
+        cur.execute("""
+            UPDATE medication_logs SET status = ?
+            WHERE id = ?
+        """, (status, existing['id']))
+    else:
+        cur.execute("""
+            INSERT INTO medication_logs (patient_id, reminder_id, log_date, status)
+            VALUES (?, ?, ?, ?)
+        """, (current_user.id, reminder_id, today, status))
+        
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'status': 'success', 'message': f'Medication logged as {status}!'})
+
+
+@app.route('/symptom-journal', methods=['GET', 'POST'])
+@login_required
+def symptom_journal():
+    if current_user.role != 'patient':
+        flash('Only patients can access the symptom journal.', 'warning')
+        return redirect(url_for('index'))
+        
+    conn = get_db()
+    cur = conn.cursor()
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    if request.method == 'POST':
+        mood = request.form.get('mood', 'okay')
+        symptoms = request.form.get('symptoms', '').strip()
+        severity = request.form.get('severity', 'mild')
+        
+        if not symptoms:
+            flash('Symptom entry cannot be empty.', 'danger')
+        else:
+            existing = cur.execute("""
+                SELECT id FROM symptom_journal
+                WHERE patient_id = ? AND log_date = ?
+            """, (current_user.id, today)).fetchone()
+            
+            if existing:
+                cur.execute("""
+                    UPDATE symptom_journal
+                    SET mood = ?, symptoms = ?, severity = ?
+                    WHERE id = ?
+                """, (mood, symptoms, severity, existing['id']))
+            else:
+                cur.execute("""
+                    INSERT INTO symptom_journal (patient_id, log_date, mood, symptoms, severity)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (current_user.id, today, mood, symptoms, severity))
+            conn.commit()
+            flash('✅ Symptom entry saved successfully!', 'success')
+            
+    entries = cur.execute("""
+        SELECT * FROM symptom_journal
+        WHERE patient_id = ?
+        ORDER BY log_date DESC LIMIT 30
+    """, (current_user.id,)).fetchall()
+    
+    conn.close()
+    return render_template('symptom_journal.html', patient=current_user, entries=[dict(e) for e in entries], today=today)
+
+
+@app.route('/export-health-report')
+@login_required
+def export_health_report():
+    if current_user.role != 'patient':
+        flash('Only patients can export health reports.', 'warning')
+        return redirect(url_for('index'))
+
+    import health_report_pdf
+    
+    patient_id = current_user.id
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    food_logs = cur.execute("""
+        SELECT * FROM food_logs
+        WHERE patient_id = ? AND log_date = ?
+        ORDER BY created_at ASC
+    """, (patient_id, today)).fetchall()
+    
+    med_logs = cur.execute("""
+        SELECT ml.*, mr.medicine_name, mr.reminder_time
+        FROM medication_logs ml
+        JOIN medicine_reminders mr ON ml.reminder_id = mr.id
+        WHERE ml.patient_id = ? AND ml.log_date = ?
+    """, (patient_id, today)).fetchall()
+    
+    symptom_logs = cur.execute("""
+        SELECT * FROM symptom_journal
+        WHERE patient_id = ? AND log_date = ?
+    """, (patient_id, today)).fetchall()
+    
+    score = get_daily_health_score(patient_id, today)
+    conn.close()
+    
+    filename = f"Health_Report_{current_user.full_name.replace(' ', '_')}_{today}.pdf"
+    reports_dir = os.path.join(os.path.dirname(__file__), "static", "reports")
+    os.makedirs(reports_dir, exist_ok=True)
+    file_path = os.path.join(reports_dir, filename)
+    
+    try:
+        health_report_pdf.generate_health_report(
+            patient_name=current_user.full_name,
+            age=current_user.age,
+            contact=current_user.contact,
+            diet_goal=getattr(current_user, 'diet_goal', 'Balanced'),
+            health_score=score,
+            food_logs=[dict(f) for f in food_logs],
+            medication_logs=[dict(m) for m in med_logs],
+            symptom_logs=[dict(s) for s in symptom_logs],
+            file_path=file_path
+        )
+        return send_file(file_path, as_attachment=True, download_name=filename)
+    except Exception as e:
+        flash(f"Error generating health report: {str(e)}", "danger")
+        return redirect(url_for('symptom_journal'))
+
+
+@app.route('/doctor/patient/<int:patient_id>')
+@login_required
+@role_required('doctor')
+def doctor_patient_view(patient_id):
+    conn = get_db()
+    cur = conn.cursor()
+    
+    patient_row = cur.execute("SELECT * FROM users WHERE id = ? AND role = 'patient'", (patient_id,)).fetchone()
+    if not patient_row:
+        flash('Patient not found.', 'danger')
+        conn.close()
+        return redirect(url_for('dashboard'))
+        
+    patient_obj = User(
+        patient_row['id'], patient_row['username'], patient_row['email'],
+        patient_row['full_name'], patient_row['age'], patient_row['contact'], patient_row['role'],
+        patient_row['city'], patient_row['smoking'], patient_row['blood_pressure'], patient_row['blood_sugar'],
+        patient_row['diet_goal'], patient_row['is_approved']
+    )
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    food_logs = cur.execute("""
+        SELECT * FROM food_logs
+        WHERE patient_id = ?
+        ORDER BY log_date DESC, created_at DESC LIMIT 30
+    """, (patient_id,)).fetchall()
+    
+    med_logs = cur.execute("""
+        SELECT ml.*, mr.medicine_name, mr.reminder_time
+        FROM medication_logs ml
+        JOIN medicine_reminders mr ON ml.reminder_id = mr.id
+        WHERE ml.patient_id = ?
+        ORDER BY ml.log_date DESC, ml.created_at DESC LIMIT 30
+    """, (patient_id,)).fetchall()
+    
+    symptom_logs = cur.execute("""
+        SELECT * FROM symptom_journal
+        WHERE patient_id = ?
+        ORDER BY log_date DESC LIMIT 30
+    """, (patient_id,)).fetchall()
+    
+    score = get_daily_health_score(patient_id, today)
+    conn.close()
+    
+    return render_template(
+        'doctor_patient_view.html',
+        doctor=current_user,
+        patient=patient_obj,
+        food_logs=[dict(f) for f in food_logs],
+        medication_logs=[dict(m) for m in med_logs],
+        symptom_logs=[dict(s) for s in symptom_logs],
+        health_score=score
+    )
+
+
+@app.route('/doctor/patient/<int:patient_id>/export')
+@login_required
+@role_required('doctor')
+def doctor_export_patient_report(patient_id):
+    conn = get_db()
+    cur = conn.cursor()
+    
+    patient_row = cur.execute("SELECT * FROM users WHERE id = ? AND role = 'patient'", (patient_id,)).fetchone()
+    if not patient_row:
+        flash('Patient not found.', 'danger')
+        conn.close()
+        return redirect(url_for('dashboard'))
+        
+    import health_report_pdf
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    food_logs = cur.execute("""
+        SELECT * FROM food_logs
+        WHERE patient_id = ? AND log_date = ?
+        ORDER BY created_at ASC
+    """, (patient_id, today)).fetchall()
+    
+    med_logs = cur.execute("""
+        SELECT ml.*, mr.medicine_name, mr.reminder_time
+        FROM medication_logs ml
+        JOIN medicine_reminders mr ON ml.reminder_id = mr.id
+        WHERE ml.patient_id = ? AND ml.log_date = ?
+    """, (patient_id, today)).fetchall()
+    
+    symptom_logs = cur.execute("""
+        SELECT * FROM symptom_journal
+        WHERE patient_id = ? AND log_date = ?
+    """, (patient_id, today)).fetchall()
+    
+    score = get_daily_health_score(patient_id, today)
+    conn.close()
+    
+    filename = f"Health_Report_{patient_row['full_name'].replace(' ', '_')}_{today}.pdf"
+    reports_dir = os.path.join(os.path.dirname(__file__), "static", "reports")
+    os.makedirs(reports_dir, exist_ok=True)
+    file_path = os.path.join(reports_dir, filename)
+    
+    try:
+        health_report_pdf.generate_health_report(
+            patient_name=patient_row['full_name'],
+            age=patient_row['age'],
+            contact=patient_row['contact'],
+            diet_goal=patient_row['diet_goal'] if 'diet_goal' in patient_row.keys() else 'Balanced',
+            health_score=score,
+            food_logs=[dict(f) for f in food_logs],
+            medication_logs=[dict(m) for m in med_logs],
+            symptom_logs=[dict(s) for s in symptom_logs],
+            file_path=file_path
+        )
+        return send_file(file_path, as_attachment=True, download_name=filename)
+    except Exception as e:
+        flash(f"Error generating patient health report: {str(e)}", "danger")
+        return redirect(url_for('doctor_patient_view', patient_id=patient_id))
 
 
 @app.route('/sw.js')

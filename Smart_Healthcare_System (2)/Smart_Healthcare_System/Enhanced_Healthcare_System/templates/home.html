@@ -207,6 +207,81 @@
   .qa-grid { grid-template-columns: repeat(4,1fr); gap: 6px; }
   .qa-label { font-size: .62rem; }
 }
+
+/* ── Health Score Widget ── */
+.health-score-container {
+  display: flex;
+  background: white;
+  border-radius: 18px;
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #E5E7EB;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.health-score-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+.health-score-gauge {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: conic-gradient(var(--score-color) calc(var(--score-percent) * 1%), #F3F4F6 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.health-score-gauge::before {
+  content: '';
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  background: white;
+  border-radius: 50%;
+}
+.health-score-value {
+  position: relative;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1F2937;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.health-score-value span {
+  font-size: 0.58rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.health-score-info {
+  flex: 1;
+}
+.health-score-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1F2937;
+  margin-bottom: 3px;
+}
+.health-score-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+@media(max-width: 540px) {
+  .health-score-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+}
 </style>
 {% endblock %}
 
@@ -234,6 +309,32 @@
       <div class="sv">{{ stats.appointments_count }}</div>
       <div class="sl">Appts</div>
     </div>
+</div>
+
+<!-- ── DAILY HEALTH SCORE ── -->
+{% set score = health_score|default(100) %}
+{% set score_color = '#EF4444' %}
+{% if score >= 80 %}
+  {% set score_color = '#10B981' %}
+  {% set score_desc = "Excellent! Your medication adherence and dietary choices are outstanding today. Keep up the perfect work!" %}
+{% elif score >= 60 %}
+  {% set score_color = '#F59E0B' %}
+  {% set score_desc = "Good progress! You are on the right track, but there is room to improve. Make sure to take all scheduled medications and log your meals." %}
+{% else %}
+  {% set score_color = '#EF4444' %}
+  {% set score_desc = "Attention needed. Your daily health score is lower than recommended. Ensure you complete your medication schedules and log healthy food choices to boost your score." %}
+{% endif %}
+
+<div class="health-score-container">
+  <div class="health-score-gauge" style="--score-color: {{ score_color }}; --score-percent: {{ score }};">
+    <div class="health-score-value">
+      {{ score }}
+      <span>Score</span>
+    </div>
+  </div>
+  <div class="health-score-info">
+    <div class="health-score-title">Your Daily Health Score</div>
+    <p class="health-score-desc">{{ score_desc }}</p>
   </div>
 </div>
 

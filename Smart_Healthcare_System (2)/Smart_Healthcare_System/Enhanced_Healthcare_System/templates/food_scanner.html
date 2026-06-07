@@ -780,7 +780,11 @@ async function logScannedCalories() {
             },
             body: JSON.stringify({
                 calories: lastScannedItem.calories,
-                food_name: lastScannedItem.name
+                food_name: lastScannedItem.name,
+                protein: lastScannedItem.protein,
+                carbs: lastScannedItem.carbs,
+                fat: lastScannedItem.fat,
+                goal_fitness: localStorage.getItem('cached_food_goal_color') || 'success'
             })
         });
 
