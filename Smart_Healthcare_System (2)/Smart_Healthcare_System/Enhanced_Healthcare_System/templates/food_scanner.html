@@ -326,6 +326,17 @@
                     </div>
                 </div>
 
+                <!-- Dietary Goal Alignment Card -->
+                <div id="goal-fit-card" style="margin-top: 14px; margin-bottom: 14px; border-radius: 10px; padding: 14px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display:none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                            🎯 Active Diet Goal: <span id="goal-fit-title" style="text-decoration: underline;">Goal</span>
+                        </span>
+                        <span id="goal-fit-badge" style="font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 20px;">FITS GOAL</span>
+                    </div>
+                    <p id="goal-fit-rationale" style="font-size: 0.84rem; line-height: 1.5; margin: 0;"></p>
+                </div>
+
                 <!-- ChatGPT Vision Response -->
                 <div class="chatgpt-response-box" style="margin-top: 14px; margin-bottom: 14px; background: #fff; border: 1.5px solid #D1FAE5; border-radius: 10px; padding: 12px 14px; text-align: left; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.05);">
                     <div style="display: flex; align-items: center; gap: 6px; font-weight: 800; color: #059669; font-size: 0.85rem; margin-bottom: 6px;">
@@ -620,12 +631,13 @@ function syncCustomFoodName(val) {
     }
 }
 
-// Trigger Scan simulation
+// Trigger Scan calling backend API
 let lastScannedItem = null;
 
 function triggerScan() {
     // Hide results card & show analyzer spinner
     document.getElementById('scan-result-card').style.display = 'none';
+    document.getElementById('goal-fit-card').style.display = 'none';
     
     // Capture snapshot if camera feed is active to freeze the image during scan
     if (streamActive && videoEl.style.display !== 'none') {
@@ -635,61 +647,125 @@ function triggerScan() {
     document.getElementById('analyzer-box').style.display = 'block';
     document.getElementById('scan-action-btn').disabled = true;
 
-    // Simulate recognition processing (1.5 seconds)
-    setTimeout(() => {
+    // Build the request payload
+    let payload = {};
+    let customName = document.getElementById('custom_food_name').value.trim();
+    
+    if (customName) {
+        payload.food_name = customName;
+    }
+    
+    // If there is an image in previewEl (either from file upload or camera freeze)
+    if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
+        payload.image_data = previewEl.src;
+    }
+
+    // Call backend API
+    fetch('/api/food/scan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || "Failed to scan food.") });
+        }
+        return response.json();
+    })
+    .then(data => {
         document.getElementById('analyzer-box').style.display = 'none';
         document.getElementById('scan-action-btn').disabled = false;
 
-        let inputName = document.getElementById('custom_food_name').value.trim();
-        
-        if (!inputName) {
-            if (streamActive) {
-                // Select random item if scanning from live stream
-                const keys = Object.keys(FOOD_DATABASE);
-                const randomKey = keys[Math.floor(Math.random() * keys.length)];
-                inputName = FOOD_DATABASE[randomKey].name;
+        if (data.status === 'success') {
+            // Keep a local copy for saving to logs later
+            lastScannedItem = {
+                name: data.food_name,
+                calories: data.calories,
+                protein: data.protein,
+                carbs: data.carbs,
+                fat: data.fat
+            };
+
+            // Build API status description text
+            let apiInfo = "";
+            if (data.api_vision_used !== "N/A" || data.api_nutrition_used !== "N/A") {
+                apiInfo = `[LIVE MODE] Identified using ${data.api_vision_used || 'Local Vision'} and nutrition via ${data.api_nutrition_used || 'Local Catalog'}.`;
             } else {
-                const sel = document.getElementById('simulated_food').value;
-                if (sel) {
-                    inputName = FOOD_DATABASE[sel.toLowerCase()] ? FOOD_DATABASE[sel.toLowerCase()].name : sel;
-                } else {
-                    inputName = "Apple"; // default fallback
-                }
+                apiInfo = `[DEMO MODE] Identified using local smart heuristics. Configure API keys in environment variables for live connection.`;
             }
-            document.getElementById('custom_food_name').value = inputName;
+
+            // Construct GPT vision description narrative
+            const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.food_name} with high confidence (${data.confidence}%). A serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. ${apiInfo}`;
+
+            // Update DOM elements
+            document.getElementById('res-food-name').textContent = data.food_name;
+            document.getElementById('res-calories').textContent = data.calories;
+            document.getElementById('res-protein').textContent = data.protein;
+            document.getElementById('res-carbs').textContent = data.carbs;
+            document.getElementById('res-fat').textContent = data.fat;
+            document.getElementById('chatgpt-vision-text').textContent = chatgptText;
+
+            // Update dietary goal fitness alignment card
+            const goalFitCard = document.getElementById('goal-fit-card');
+            const goalFitTitle = document.getElementById('goal-fit-title');
+            const goalFitBadge = document.getElementById('goal-fit-badge');
+            const goalFitRationale = document.getElementById('goal-fit-rationale');
+
+            goalFitTitle.textContent = data.diet_goal;
+            goalFitRationale.textContent = data.rationale;
+            
+            // Apply status color coding styles
+            if (data.color_class === 'success') {
+                goalFitCard.style.background = '#ECFDF5';
+                goalFitCard.style.border = '2px solid #A7F3D0';
+                goalFitCard.style.color = '#065F46';
+                goalFitBadge.style.background = '#10B981';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '✓ FITS GOAL';
+            } else if (data.color_class === 'warning') {
+                goalFitCard.style.background = '#FFFBEB';
+                goalFitCard.style.border = '2px solid #FDE68A';
+                goalFitCard.style.color = '#78350F';
+                goalFitBadge.style.background = '#F59E0B';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '⚠️ CAUTION FIT';
+            } else { // danger / doesn't fit
+                goalFitCard.style.background = '#FEF2F2';
+                goalFitCard.style.border = '2px solid #FCA5A5';
+                goalFitCard.style.color = '#991B1B';
+                goalFitBadge.style.background = '#EF4444';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '✕ DOES NOT FIT';
+            }
+            goalFitCard.style.display = 'block';
+
+            // Cache results in localStorage
+            try {
+                localStorage.setItem('cached_food_image', previewEl.src);
+                localStorage.setItem('cached_food_name', data.food_name);
+                localStorage.setItem('cached_food_calories', data.calories);
+                localStorage.setItem('cached_food_protein', data.protein);
+                localStorage.setItem('cached_food_carbs', data.carbs);
+                localStorage.setItem('cached_food_fat', data.fat);
+                localStorage.setItem('cached_food_chatgpt', chatgptText);
+                localStorage.setItem('cached_food_goal_title', data.diet_goal);
+                localStorage.setItem('cached_food_goal_rationale', data.rationale);
+                localStorage.setItem('cached_food_goal_color', data.color_class);
+            } catch (cacheErr) {
+                console.warn("Storage quota exceeded or private mode, skipping caching:", cacheErr);
+            }
+
+            // Display results card
+            document.getElementById('scan-result-card').style.display = 'block';
         }
-
-        // Get nutrition estimates
-        const data = estimateFoodNutrition(inputName);
-        lastScannedItem = data;
-
-        // Generate ChatGPT narrative
-        const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.name}. A typical serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. This is an excellent addition to your health journal. Let me know if you would like custom fitness tips for this meal!`;
-
-        // Populate results
-        document.getElementById('res-food-name').textContent = data.name;
-        document.getElementById('res-calories').textContent = data.calories;
-        document.getElementById('res-protein').textContent = data.protein;
-        document.getElementById('res-carbs').textContent = data.carbs;
-        document.getElementById('res-fat').textContent = data.fat;
-        document.getElementById('chatgpt-vision-text').textContent = chatgptText;
-
-        // Cache results in localStorage
-        try {
-            localStorage.setItem('cached_food_image', previewEl.src);
-            localStorage.setItem('cached_food_name', data.name);
-            localStorage.setItem('cached_food_calories', data.calories);
-            localStorage.setItem('cached_food_protein', data.protein);
-            localStorage.setItem('cached_food_carbs', data.carbs);
-            localStorage.setItem('cached_food_fat', data.fat);
-            localStorage.setItem('cached_food_chatgpt', chatgptText);
-        } catch (cacheErr) {
-            console.warn("Storage quota exceeded or private mode, skipping image caching:", cacheErr);
-        }
-
-        // Display results card
-        document.getElementById('scan-result-card').style.display = 'block';
-    }, 1500);
+    })
+    .catch(err => {
+        document.getElementById('analyzer-box').style.display = 'none';
+        document.getElementById('scan-action-btn').disabled = false;
+        alert(err.message || "An error occurred while analyzing the food.");
+    });
 }
 
 // Log scanned calories via API
@@ -749,6 +825,44 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('res-carbs').textContent = lastScannedItem.carbs;
         document.getElementById('res-fat').textContent = lastScannedItem.fat;
         document.getElementById('chatgpt-vision-text').textContent = localStorage.getItem('cached_food_chatgpt') || '';
+        
+        // Restore goal fitness card
+        const cachedGoalTitle = localStorage.getItem('cached_food_goal_title');
+        const cachedGoalRationale = localStorage.getItem('cached_food_goal_rationale');
+        const cachedGoalColor = localStorage.getItem('cached_food_goal_color');
+        if (cachedGoalTitle && cachedGoalRationale) {
+            const goalFitCard = document.getElementById('goal-fit-card');
+            const goalFitTitle = document.getElementById('goal-fit-title');
+            const goalFitBadge = document.getElementById('goal-fit-badge');
+            const goalFitRationale = document.getElementById('goal-fit-rationale');
+
+            goalFitTitle.textContent = cachedGoalTitle;
+            goalFitRationale.textContent = cachedGoalRationale;
+            
+            if (cachedGoalColor === 'success') {
+                goalFitCard.style.background = '#ECFDF5';
+                goalFitCard.style.border = '2px solid #A7F3D0';
+                goalFitCard.style.color = '#065F46';
+                goalFitBadge.style.background = '#10B981';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '✓ FITS GOAL';
+            } else if (cachedGoalColor === 'warning') {
+                goalFitCard.style.background = '#FFFBEB';
+                goalFitCard.style.border = '2px solid #FDE68A';
+                goalFitCard.style.color = '#78350F';
+                goalFitBadge.style.background = '#F59E0B';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '⚠️ CAUTION FIT';
+            } else {
+                goalFitCard.style.background = '#FEF2F2';
+                goalFitCard.style.border = '2px solid #FCA5A5';
+                goalFitCard.style.color = '#991B1B';
+                goalFitBadge.style.background = '#EF4444';
+                goalFitBadge.style.color = '#FFFFFF';
+                goalFitBadge.textContent = '✕ DOES NOT FIT';
+            }
+            goalFitCard.style.display = 'block';
+        }
         
         document.getElementById('scan-result-card').style.display = 'block';
     } else {

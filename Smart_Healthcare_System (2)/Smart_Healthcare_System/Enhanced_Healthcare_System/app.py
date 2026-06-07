@@ -1212,6 +1212,59 @@ def food_scanner():
     return render_template('food_scanner.html', patient=current_user)
 
 
+@app.route('/api/food/scan', methods=['POST'])
+@login_required
+def scan_food():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    import food_scanner_service
+
+    data = request.get_json() or {}
+    food_name = data.get('food_name', '').strip()
+    image_data = data.get('image_data', '')
+
+    api_vision_used = "N/A"
+    api_nutrition_used = "N/A"
+    confidence = 1.0
+
+    # Step 1: Vision identification if image is provided and name is not explicitly passed
+    if image_data and not food_name:
+        try:
+            food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data)
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'Vision analysis failed: {str(e)}'}), 500
+
+    if not food_name:
+        return jsonify({'status': 'error', 'message': 'Please provide a food name or upload a clear food image.'}), 400
+
+    # Step 2: Fetch nutrition info
+    try:
+        nutrition, api_nutrition_used = food_scanner_service.get_food_nutrition(food_name)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Nutrition lookup failed: {str(e)}'}), 500
+
+    # Step 3: Check dietary goal compatibility
+    diet_goal = getattr(current_user, 'diet_goal', 'Balanced')
+    fits, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
+
+    return jsonify({
+        'status': 'success',
+        'food_name': nutrition['name'],
+        'calories': nutrition['calories'],
+        'protein': f"{nutrition['protein']}g",
+        'carbs': f"{nutrition['carbs']}g",
+        'fat': f"{nutrition['fat']}g",
+        'diet_goal': diet_goal,
+        'fits_goal': fits,
+        'rationale': rationale,
+        'color_class': color_class,
+        'api_vision_used': api_vision_used,
+        'api_nutrition_used': api_nutrition_used,
+        'confidence': round(confidence * 100)
+    })
+
+
 @app.route('/api/food/log', methods=['POST'])
 @login_required
 def log_food_calories():
