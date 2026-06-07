@@ -328,6 +328,18 @@ def init_extra_tables():
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )""")
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS opd_tickets (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id        INTEGER NOT NULL,
+        department        TEXT NOT NULL,
+        token_number      INTEGER NOT NULL,
+        queue_date        TEXT NOT NULL,
+        status            TEXT DEFAULT 'waiting',
+        created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
     conn.commit()
     conn.close()
     print("Extra tables initialized!")
@@ -2484,6 +2496,172 @@ def doctor_export_patient_report(patient_id):
     except Exception as e:
         flash(f"Error generating patient health report: {str(e)}", "danger")
         return redirect(url_for('doctor_patient_view', patient_id=patient_id))
+
+
+# ================= OPD LIVE QUEUE DESK =================
+
+def get_serving_token(department, today):
+    conn = get_db()
+    cur = conn.cursor()
+    tickets = cur.execute("""
+        SELECT token_number, created_at FROM opd_tickets
+        WHERE department = ? AND queue_date = ? AND status != 'cancelled'
+        ORDER BY token_number ASC
+    """, (department, today)).fetchall()
+    
+    if not tickets:
+        conn.close()
+        return 0
+        
+    oldest_created_str = tickets[0]['created_at']
+    try:
+        oldest_time = datetime.strptime(oldest_created_str, "%Y-%m-%d %H:%M:%S")
+    except Exception:
+        oldest_time = datetime.now()
+        
+    elapsed_minutes = (datetime.now() - oldest_time).total_seconds() / 60.0
+    serving_index = int(elapsed_minutes // 10)
+    max_token = tickets[-1]['token_number']
+    serving_token = min(tickets[0]['token_number'] + serving_index, max_token)
+    conn.close()
+    return serving_token
+
+@app.route('/opd-desk')
+@login_required
+def opd_desk():
+    if current_user.role != 'patient':
+        flash('Only patients can access the OPD Desk.', 'warning')
+        return redirect(url_for('index'))
+        
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Query patient's active ticket for today
+    ticket = cur.execute("""
+        SELECT * FROM opd_tickets
+        WHERE patient_id = ? AND queue_date = ? AND status != 'cancelled'
+        LIMIT 1
+    """, (current_user.id, today)).fetchone()
+    
+    ticket_dict = dict(ticket) if ticket else None
+    
+    serving_token = 0
+    patients_ahead = 0
+    est_wait_time = 0
+    
+    if ticket_dict:
+        serving_token = get_serving_token(ticket_dict['department'], today)
+        
+        # Calculate patients ahead who are currently waiting
+        patients_ahead_row = cur.execute("""
+            SELECT COUNT(*) FROM opd_tickets
+            WHERE department = ? AND queue_date = ? 
+              AND token_number >= ? AND token_number < ?
+              AND status != 'cancelled'
+        """, (ticket_dict['department'], today, serving_token, ticket_dict['token_number'])).fetchone()
+        patients_ahead = patients_ahead_row[0] if patients_ahead_row else 0
+        
+        # 10 minutes estimated per patient ahead
+        est_wait_time = patients_ahead * 10
+        
+        # Update active serving state dynamically
+        if ticket_dict['token_number'] < serving_token:
+            ticket_dict['status'] = 'completed'
+        elif ticket_dict['token_number'] == serving_token:
+            ticket_dict['status'] = 'serving'
+            
+    conn.close()
+    
+    return render_template(
+        'opd_desk.html',
+        patient=current_user,
+        ticket=ticket_dict,
+        serving_token=serving_token,
+        patients_ahead=patients_ahead,
+        est_wait_time=est_wait_time,
+        today=today
+    )
+
+@app.route('/api/opd/generate', methods=['POST'])
+@login_required
+def generate_opd_ticket():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+        
+    department = request.form.get('department', '').strip()
+    if not department:
+        return jsonify({'status': 'error', 'message': 'Department is required.'}), 400
+        
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Verify no active ticket exists for today
+    existing = cur.execute("""
+        SELECT id FROM opd_tickets
+        WHERE patient_id = ? AND queue_date = ? AND status != 'cancelled'
+    """, (current_user.id, today)).fetchone()
+    
+    if existing:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'You already have an active OPD ticket for today.'}), 400
+        
+    # Get next token number
+    max_token_row = cur.execute("""
+        SELECT MAX(token_number) FROM opd_tickets
+        WHERE department = ? AND queue_date = ?
+    """, (department, today)).fetchone()
+    
+    next_token = (max_token_row[0] or 0) + 1
+    created_at_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    cur.execute("""
+        INSERT INTO opd_tickets (patient_id, department, token_number, queue_date, status, created_at)
+        VALUES (?, ?, ?, ?, 'waiting', ?)
+    """, (current_user.id, department, next_token, today, created_at_str))
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({
+        'status': 'success',
+        'message': f'OPD Ticket generated successfully for {department}! Your Token Number is {next_token}.',
+        'token_number': next_token,
+        'department': department
+    })
+
+@app.route('/api/opd/cancel/<int:ticket_id>', methods=['POST'])
+@login_required
+def cancel_opd_ticket(ticket_id):
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Verify ownership
+    ticket = cur.execute("""
+        SELECT id FROM opd_tickets WHERE id = ? AND patient_id = ?
+    """, (ticket_id, current_user.id)).fetchone()
+    
+    if not ticket:
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Ticket not found or unauthorized.'}), 404
+        
+    cur.execute("UPDATE opd_tickets SET status = 'cancelled' WHERE id = ?", (ticket_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'status': 'success', 'message': 'OPD Ticket cancelled successfully.'})
+
+@app.route('/api/opd/serving-status')
+@login_required
+def opd_serving_status():
+    today = datetime.now().strftime('%Y-%m-%d')
+    department = request.args.get('department')
+    if not department:
+        return jsonify({'status': 'error', 'message': 'Department is required.'}), 400
+        
+    serving = get_serving_token(department, today)
+    return jsonify({'status': 'success', 'serving_token': serving})
 
 
 @app.route('/sw.js')

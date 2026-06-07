@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block title %}OPD Live Queue Desk – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --opd-primary: #0066CC;
+    --opd-green: #10B981;
+    --opd-yellow: #F59E0B;
+    --opd-red: #EF4444;
+}
+
+.opd-hero {
+    background: linear-gradient(135deg, var(--opd-primary) 0%, #0c82f2 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+}
+.opd-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.opd-hero p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+.opd-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr;
+    gap: 24px;
+}
+
+@media(max-width: 768px) {
+    .opd-hero { flex-direction: column; text-align: center; }
+    .opd-grid { grid-template-columns: 1fr; }
+}
+
+.opd-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border: 1px solid #E5E7EB;
+}
+.opd-card h4 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #1F2937;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Department Selection Presets */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.preset-btn {
+    background: #F3F4F6;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.preset-btn:hover { background: #E5E7EB; }
+.preset-btn.selected {
+    border-color: var(--opd-primary);
+    background: #EFF6FF;
+    color: var(--opd-primary);
+}
+
+/* Visual Ticket UI */
+.ticket-container {
+    background: linear-gradient(135deg, #1E3A8A 0%, #0D1117 100%);
+    color: white;
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+    margin-bottom: 20px;
+}
+.ticket-container::before, .ticket-container::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--bg);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.ticket-container::before { left: -10px; }
+.ticket-container::after { right: -10px; }
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed rgba(255,255,255,0.2);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.ticket-dept { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #93C5FD; }
+.ticket-date { font-size: 0.75rem; opacity: 0.7; }
+
+.ticket-body {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.ticket-token {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    display: block;
+    margin-bottom: 4px;
+    background: linear-gradient(185deg, #FFFFFF, #93C5FD);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.ticket-token-lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; }
+
+/* Live Queue Steps */
+.queue-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 24px 0;
+}
+.queue-steps::before {
+    content: '';
+    position: absolute;
+    height: 3px;
+    background: rgba(255,255,255,0.15);
+    width: 100%;
+    top: 15px;
+    left: 0;
+    z-index: 1;
+}
+.queue-step-progress {
+    position: absolute;
+    height: 3px;
+    background: var(--opd-green);
+    top: 15px;
+    left: 0;
+    z-index: 1;
+    transition: width 0.4s ease;
+}
+.queue-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+.qs-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #374151;
+    border: 3px solid #1E293B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: all 0.3s;
+    color: rgba(255,255,255,0.4);
+}
+.queue-step.active .qs-dot {
+    background: var(--opd-green);
+    border-color: #10B981;
+    color: white;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+.queue-step.current .qs-dot {
+    background: var(--opd-yellow);
+    border-color: #F59E0B;
+    color: white;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+.qs-label { font-size: 0.68rem; font-weight: 700; display: block; color: rgba(255,255,255,0.5); }
+.queue-step.active .qs-label, .queue-step.current .qs-label { color: white; }
+
+/* Status details list */
+.stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #FAFBFC;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+}
+.stat-row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.stat-lbl { font-size: 0.82rem; color: #4B5563; font-weight: 600; }
+.stat-val { font-size: 0.95rem; font-weight: 800; color: #1F2937; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="opd-hero">
+    <div>
+        <h2>🏥 OPD Virtual Queue Desk</h2>
+        <p>Book online OPD tickets, check your queue status in real-time, and view serving schedules dynamically.</p>
+    </div>
+    <span style="font-size: 56px;">🕒</span>
+</div>
+
+<div class="opd-grid">
+    <!-- Action/Form Card -->
+    <div class="opd-card">
+        {% if ticket %}
+        <h4><i class="fas fa-ticket-alt" style="color:var(--opd-primary);"></i> Active OPD Session</h4>
+        <p style="font-size: 0.85rem; color:#6B7280; line-height: 1.5; margin-bottom: 20px;">
+            You have already generated an OPD ticket for today. Monitor progress in real-time on the right. If you cannot attend, please cancel your ticket.
+        </p>
+        <button onclick="cancelTicket({{ ticket.id }})" class="btn btn-danger w-100" style="padding:12px; font-weight:700;">
+            ✕ Cancel Active Ticket
+        </button>
+        {% else %}
+        <h4><i class="fas fa-notes-medical" style="color:var(--opd-green);"></i> Request OPD Ticket</h4>
+        <form id="opd-ticket-form">
+            <!-- Hidden input for selected department -->
+            <input type="hidden" name="department" id="selected-dept" value="General Medicine">
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Choose Department</label>
+                <div class="preset-grid">
+                    <div class="preset-btn selected" onclick="selectDept('General Medicine', this)">Gen Medicine</div>
+                    <div class="preset-btn" onclick="selectDept('Pediatrics', this)">Pediatrics</div>
+                    <div class="preset-btn" onclick="selectDept('Cardiology', this)">Cardiology</div>
+                    <div class="preset-btn" onclick="selectDept('Orthopedics', this)">Orthopedics</div>
+                    <div class="preset-btn" onclick="selectDept('Ophthalmology', this)">Eye Care</div>
+                    <div class="preset-btn" onclick="selectDept('Dermatology', this)">Dermatology</div>
+                </div>
+            </div>
+            
+            <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:12px; font-size:0.78rem; color:#1E40AF; margin-bottom:18px; line-height: 1.4;">
+                ℹ️ Each patient is allocated approximately 10 minutes. Your ticket is valid only for today ({{ today }}).
+            </div>
+            
+            <button type="button" onclick="generateTicket()" id="generate-btn" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">
+                🎫 Generate OPD Ticket
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Live Status Card -->
+    <div class="opd-card" style="background:#F9FAFB;">
+        <h4><i class="fas fa-clock" style="color:var(--opd-yellow);"></i> Real-Time Queue Monitor</h4>
+        
+        {% if ticket %}
+        <!-- Live Ticket Card -->
+        <div class="ticket-container">
+            <div class="ticket-header">
+                <span class="ticket-dept" id="live-dept">{{ ticket.department }}</span>
+                <span class="ticket-date">{{ ticket.queue_date }}</span>
+            </div>
+            <div class="ticket-body">
+                <span class="ticket-token" id="live-token-num">{{ "%02d"|format(ticket.token_number) }}</span>
+                <span class="ticket-token-lbl">Your Token Number</span>
+            </div>
+            
+            <!-- Live Progress Steps -->
+            <div class="queue-steps">
+                {% set progress_width = '0%' %}
+                {% set s1, s2, s3, s4 = '', '', '', '' %}
+                
+                {% if ticket.status == 'waiting' %}
+                    {% set progress_width = '33.3%' %}
+                    {% set s1, s2 = 'active', 'current' %}
+                {% elif ticket.status == 'serving' %}
+                    {% set progress_width = '66.6%' %}
+                    {% set s1, s2, s3 = 'active', 'active', 'current' %}
+                {% elif ticket.status == 'completed' %}
+                    {% set progress_width = '100%' %}
+                    {% set s1, s2, s3, s4 = 'active', 'active', 'active', 'active' %}
+                {% endif %}
+                
+                <div class="queue-step-progress" style="width: {{ progress_width }};" id="step-progress-bar"></div>
+                
+                <div class="queue-step {{ s1 }}" id="step-issued">
+                    <div class="qs-dot">1</div>
+                    <span class="qs-label">Issued</span>
+                </div>
+                <div class="queue-step {{ s2 }}" id="step-queue">
+                    <div class="qs-dot">2</div>
+                    <span class="qs-label">In Queue</span>
+                </div>
+                <div class="queue-step {{ s3 }}" id="step-serving">
+                    <div class="qs-dot">3</div>
+                    <span class="qs-label">Serving</span>
+                </div>
+                <div class="queue-step {{ s4 }}" id="step-done">
+                    <div class="qs-dot">4</div>
+                    <span class="qs-label">Done</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Statistics list -->
+        <div class="stat-list">
+            <div class="stat-row-item">
+                <span class="stat-lbl">Currently Serving Token:</span>
+                <span class="stat-val" id="lbl-serving">{{ serving_token }}</span>
+            </div>
+            <div class="stat-row-item" style="border-top:1px dashed #E5E7EB; padding-top:8px;">
+                <span class="stat-lbl">Patients Ahead of You:</span>
+                <span class="stat-val" id="lbl-ahead">{{ patients_ahead }}</span>
+            </div>
+            <div class="stat-row-item" style="border-top:1px dashed #E5E7EB; padding-top:8px;">
+                <span class="stat-lbl">Estimated Wait Time:</span>
+                <span class="stat-val" id="lbl-wait" style="color:var(--opd-primary);">{{ est_wait_time }} mins</span>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- Empty State -->
+        <div style="text-align:center; padding:50px 10px; color:#9CA3AF;">
+            <span style="font-size:48px; display:block; margin-bottom:12px;">🎟️</span>
+            <h5>No active OPD ticket today</h5>
+            <p style="font-size:0.82rem; margin:0;">Request a ticket using the form on the left to activate queue tracking.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectDept(dept, element) {
+    document.getElementById('selected-dept').value = dept;
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    element.classList.add('selected');
+}
+
+function generateTicket() {
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    
+    const dept = document.getElementById('selected-dept').value;
+    
+    const formData = new FormData();
+    formData.append('department', dept);
+    
+    fetch('/api/opd/generate', {
+        method: 'POST',
+        body: formData
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert("Error: " + data.message);
+            btn.disabled = false;
+            btn.textContent = '🎫 Generate OPD Ticket';
+        }
+    })
+    .catch(err => {
+        console.error("API error:", err);
+        alert("Failed to connect to backend server.");
+        btn.disabled = false;
+        btn.textContent = '🎫 Generate OPD Ticket';
+    });
+}
+
+function cancelTicket(ticketId) {
+    if (!confirm('Are you sure you want to cancel your active OPD ticket? This cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`/api/opd/cancel/${ticketId}`, {
+        method: 'POST'
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("API error:", err);
+        alert("Failed to cancel ticket.");
+    });
+}
+
+// ========== Live Queue Polling Scheduler ==========
+{% if ticket %}
+const myTokenNum = parseInt("{{ ticket.token_number }}");
+const department = "{{ ticket.department }}";
+
+function updateQueueStatus() {
+    fetch(`/api/opd/serving-status?department=${encodeURIComponent(department)}`)
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const serving = parseInt(data.serving_token);
+            
+            // Calculate patients ahead
+            let patientsAhead = myTokenNum - serving;
+            if (patientsAhead < 0) patientsAhead = 0;
+            
+            // Update UI elements
+            document.getElementById('lbl-serving').textContent = serving;
+            document.getElementById('lbl-ahead').textContent = patientsAhead;
+            document.getElementById('lbl-wait').textContent = `${patientsAhead * 10} mins`;
+            
+            // Update Visual Steps
+            const pBar = document.getElementById('step-progress-bar');
+            const stepIssued = document.getElementById('step-issued');
+            const stepQueue = document.getElementById('step-queue');
+            const stepServing = document.getElementById('step-serving');
+            const stepDone = document.getElementById('step-done');
+            
+            // Clear current states
+            [stepIssued, stepQueue, stepServing, stepDone].forEach(step => {
+                step.className = 'queue-step';
+            });
+            
+            if (myTokenNum < serving) {
+                // Completed
+                pBar.style.width = '100%';
+                [stepIssued, stepQueue, stepServing, stepDone].forEach(step => step.classList.add('active'));
+            } else if (myTokenNum === serving) {
+                // Serving
+                pBar.style.width = '66.6%';
+                stepIssued.classList.add('active');
+                stepQueue.classList.add('active');
+                stepServing.classList.add('active', 'current');
+            } else {
+                // In Queue
+                pBar.style.width = '33.3%';
+                stepIssued.classList.add('active');
+                stepQueue.classList.add('active', 'current');
+            }
+        }
+    })
+    .catch(err => console.warn("Failed to fetch serving status:", err));
+}
+
+// Poll status every 10 seconds
+setInterval(updateQueueStatus, 10000);
+updateQueueStatus();
+{% endif %}
+</script>
+{% endblock %}
