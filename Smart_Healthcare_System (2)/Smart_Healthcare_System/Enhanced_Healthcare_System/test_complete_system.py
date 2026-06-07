@@ -15,8 +15,8 @@ def test_complete_system():
     print("\n1. Testing model training...")
     try:
         model, disease_map, accuracy = train_model()
-        print(f"✓ Model trained successfully with accuracy: {accuracy:.2%}")
-        print(f"✓ Disease mapping created with {len(disease_map)} diseases")
+        print(f"[PASS] Model trained successfully with accuracy: {accuracy:.2%}")
+        print(f"[PASS] Disease mapping created with {len(disease_map)} diseases")
         
         # Print disease mapping
         print("\nDisease mapping:")
@@ -24,7 +24,7 @@ def test_complete_system():
             print(f"  PID {pid}: {disease}")
             
     except Exception as e:
-        print(f"✗ Model training failed: {e}")
+        print(f"[FAIL] Model training failed: {e}")
         return False
     
     # Test prediction for new diseases
@@ -66,12 +66,12 @@ def test_complete_system():
             print(f"  Expected: {test_case['expected_disease']}")
             
             if predicted_disease == test_case['expected_disease']:
-                print("  ✓ CORRECT prediction")
+                print("  [PASS] CORRECT prediction")
             else:
                 print("  ⚠ Different prediction (may still be valid)")
                 
         except Exception as e:
-            print(f"  ✗ Prediction failed: {e}")
+            print(f"  [FAIL] Prediction failed: {e}")
     
     # Test medicine database
     print("\n3. Testing medicine recommendations...")
@@ -85,7 +85,7 @@ def test_complete_system():
                 print(f"  {severity}: {len(medicines)} medicines")
                 print(f"    Example: {medicines[0]}")
         else:
-            print(f"✗ {disease} not found in medicine database")
+            print(f"[FAIL] {disease} not found in medicine database")
     
     # Test hospital finder
     print("\n4. Testing hospital recommendations...")
@@ -98,7 +98,7 @@ def test_complete_system():
             if hospitals:
                 print(f"  Best option: {hospitals[0]['name']} ({hospitals[0]['distance']}km)")
     
-    print("\n✓ Complete system test finished!")
+    print("\n[PASS] Complete system test finished!")
     return True
 
 if __name__ == "__main__":

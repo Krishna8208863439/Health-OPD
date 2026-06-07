@@ -384,6 +384,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Load TensorFlow.js and MobileNet -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+
 let streamActive = false;
 let videoEl = document.getElementById('camera-stream');
 let blockedView = document.getElementById('camera-blocked-view');
@@ -653,13 +657,48 @@ function triggerScan() {
     
     if (customName) {
         payload.food_name = customName;
+        sendScanRequest(payload);
+    } else if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
+        // Use TensorFlow.js MobileNet to classify the image
+        document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Loading Vision AI Model...</div><div style="font-size:0.78rem; color:#6B7280; margin-top:2px;">(Running locally in browser)</div>';
+        
+        mobilenet.load().then(model => {
+            document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Analyzing image pixels...</div>';
+            
+            const img = new Image();
+            img.src = previewEl.src;
+            img.onload = () => {
+                model.classify(img).then(predictions => {
+                    if (predictions && predictions.length > 0) {
+                        let topPrediction = predictions[0].className.split(',')[0];
+                        payload.food_name = topPrediction;
+                        payload.image_data = previewEl.src; // still send image data if needed
+                        sendScanRequest(payload, "TensorFlow.js MobileNet (Local AI)", Math.round(predictions[0].probability * 100));
+                    } else {
+                        throw new Error("Could not recognize food in the image.");
+                    }
+                }).catch(err => {
+                    console.error("Classification error:", err);
+                    payload.image_data = previewEl.src;
+                    sendScanRequest(payload);
+                });
+            };
+        }).catch(err => {
+            console.error("TFJS load error:", err);
+            payload.image_data = previewEl.src;
+            sendScanRequest(payload);
+        });
+    } else {
+        document.getElementById('analyzer-box').style.display = 'none';
+        document.getElementById('scan-action-btn').disabled = false;
+        alert("Please capture or upload an image first.");
     }
-    
-    // If there is an image in previewEl (either from file upload or camera freeze)
-    if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
-        payload.image_data = previewEl.src;
-    }
+}
 
+function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) {
+    // Reset analyzer box HTML in case it was changed by TFJS
+    document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Analyzing food patterns...</div><div style="font-size:0.78rem; color:#6B7280; margin-top:2px;">Comparing with nutrition index</div>';
+    
     // Call backend API
     fetch('/api/food/scan', {
         method: 'POST',
@@ -689,15 +728,18 @@ function triggerScan() {
             };
 
             // Build API status description text
+            let finalVisionApi = visionApiUsed || data.api_vision_used;
+            let finalConfidence = confidenceScore || data.confidence;
+            
             let apiInfo = "";
-            if (data.api_vision_used !== "N/A" || data.api_nutrition_used !== "N/A") {
-                apiInfo = `[LIVE MODE] Identified using ${data.api_vision_used || 'Local Vision'} and nutrition via ${data.api_nutrition_used || 'Local Catalog'}.`;
+            if (finalVisionApi !== "N/A" || data.api_nutrition_used !== "N/A") {
+                apiInfo = `[LIVE MODE] Identified using ${finalVisionApi !== "N/A" ? finalVisionApi : 'Local Vision'} and nutrition via ${data.api_nutrition_used || 'Local Catalog'}.`;
             } else {
                 apiInfo = `[DEMO MODE] Identified using local smart heuristics. Configure API keys in environment variables for live connection.`;
             }
 
             // Construct GPT vision description narrative
-            const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.food_name} with high confidence (${data.confidence}%). A serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. ${apiInfo}`;
+            const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.food_name} with high confidence (${finalConfidence}%). A serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. ${apiInfo}`;
 
             // Update DOM elements
             document.getElementById('res-food-name').textContent = data.food_name;

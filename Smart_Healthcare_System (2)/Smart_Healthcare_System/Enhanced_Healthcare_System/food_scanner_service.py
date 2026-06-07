@@ -137,6 +137,33 @@ def get_food_nutrition(food_name):
     """
     clean_name = food_name.strip().lower()
 
+    # Try Open Food Facts API (Free, no key required)
+    try:
+        url = f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={clean_name}&search_simple=1&action=process&json=1&page_size=1"
+        headers = {'User-Agent': 'SmartHealthcareApp/1.0'}
+        response = requests.get(url, headers=headers, timeout=6)
+        if response.status_code == 200:
+            data = response.json()
+            if 'products' in data and len(data['products']) > 0:
+                p = data['products'][0]
+                nutriments = p.get('nutriments', {})
+                # Try to get energy and fallback to 0 if not found
+                energy = nutriments.get('energy-kcal_100g')
+                if energy is None:
+                    energy = nutriments.get('energy-kcal_value', 0)
+                
+                nutrition = {
+                    "name": p.get('product_name', food_name).title(),
+                    "calories": round(float(energy or 0)),
+                    "protein": round(float(nutriments.get('proteins_100g', 0) or 0), 1),
+                    "carbs": round(float(nutriments.get('carbohydrates_100g', 0) or 0), 1),
+                    "fat": round(float(nutriments.get('fat_100g', 0) or 0), 1)
+                }
+                if nutrition["calories"] > 0:
+                    return nutrition, "Open Food Facts API"
+    except Exception as e:
+        print(f"[NUTRITION SERVICE] Open Food Facts API failed: {e}. Trying next option...")
+
     # Try CalorieNinjas API if configured
     cal_ninjas_key = os.environ.get("CALORIENINJAS_API_KEY")
     if cal_ninjas_key:

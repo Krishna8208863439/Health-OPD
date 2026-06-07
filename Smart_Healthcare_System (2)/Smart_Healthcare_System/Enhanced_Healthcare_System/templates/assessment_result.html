@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Assessment Result – HealthCare Plus{% endblock %}
+{% block title %}Assessment Result - HealthCare Plus{% endblock %}
 
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
 
     <!-- Disclaimer -->
     <div style="background: var(--warning-bg); border-left: 4px solid var(--warning); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.88rem; color: var(--warning); line-height: 1.5;">
-        ⚠️ <strong>Medical Disclaimer:</strong> This tool provides a preliminary symptom assessment only and is NOT a substitute for professional medical diagnosis. Always consult a licensed doctor. In emergency, call <strong>108</strong> immediately.
+        [!] <strong>Medical Disclaimer:</strong> This tool provides a preliminary symptom assessment only and is NOT a substitute for professional medical diagnosis. Always consult a licensed doctor. In emergency, call <strong>108</strong> immediately.
     </div>
 
-    <!-- ── PRIMARY RESULT ── -->
+    <!-- -- PRIMARY RESULT -- -->
     <div class="result-hero" style="background: linear-gradient(135deg, {{top_result.color}} 0%, {{top_result.color}}cc 100%); color: #fff; border-radius: 20px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-lg);">
         <div class="hero-top" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 240px;">
@@ -19,10 +19,10 @@
                 <span style="display: inline-block; padding: 4px 14px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 0.85rem; font-weight: 700;">{{ severity }}</span>
                 <div style="margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px;">
                     {% for s in top_result.matched_strong %}
-                    <span class="sym-tag-matched" style="background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600;">✓ {{s.replace('_',' ').title()}}</span>
+                    <span class="sym-tag-matched" style="background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600;">[x] {{s.replace('_',' ').title()}}</span>
                     {% endfor %}
                     {% for s in top_result.matched_moderate %}
-                    <span class="sym-tag-matched" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; opacity: 0.8;">◎ {{s.replace('_',' ').title()}}</span>
+                    <span class="sym-tag-matched" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; opacity: 0.8;">[*] {{s.replace('_',' ').title()}}</span>
                     {% endfor %}
                 </div>
             </div>
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <!-- ── ALTERNATIVE DIAGNOSES ── -->
+    <!-- -- ALTERNATIVE DIAGNOSES -- -->
     {% if alt_results %}
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
@@ -57,40 +57,40 @@
     </div>
     {% endif %}
 
-    <!-- ── MEDICINES ── -->
+    <!-- -- MEDICINES -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-pills"></i> Recommended Medicines
         </h4>
 
         {% if medicines.PRIMARY %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;">🔵 Primary Treatment (Prescription)</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;"> Primary Treatment (Prescription)</div>
         {% for m in medicines.PRIMARY %}
-        <div class="med-item {% if '⚠️' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}" style="padding: 10px 14px; border-left: 4px solid var(--primary); background: var(--primary-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
+        <div class="med-item {% if '[!]' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}" style="padding: 10px 14px; border-left: 4px solid var(--primary); background: var(--primary-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
         {% endfor %}
         {% endif %}
 
         {% if medicines.SECONDARY %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;">🟢 Supporting Medications</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;"> Supporting Medications</div>
         {% for m in medicines.SECONDARY %}
         <div class="med-item" style="padding: 10px 14px; border-left: 4px solid var(--success); background: var(--success-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
         {% endfor %}
         {% endif %}
 
         {% if medicines.HOME_REMEDIES %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;">🟡 Home Care & Remedies</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;"> Home Care & Remedies</div>
         {% for m in medicines.HOME_REMEDIES %}
         <div class="med-item" style="padding: 10px 14px; border-left: 4px solid var(--warning); background: var(--warning-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
         {% endfor %}
         {% endif %}
 
         <div style="background: var(--danger-bg); border-radius: 12px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--border);">
-            <div style="font-size: 1.5rem; line-height: 1;">🏥</div>
+            <div style="font-size: 1.5rem; line-height: 1;">[Hospital]</div>
             <p style="font-size: 0.88rem; line-height: 1.5; color: var(--dark); margin: 0;"><strong>When to see a doctor:</strong><br>{{ medicines.WHEN_TO_SEE_DOCTOR }}</p>
         </div>
     </div>
 
-    <!-- ── HOSPITALS ── -->
+    <!-- -- HOSPITALS -- -->
     {% if hospitals %}
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
@@ -128,7 +128,7 @@
     </div>
     {% endif %}
 
-    <!-- ── DOCTOR INFO ── -->
+    <!-- -- DOCTOR INFO -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-user-md"></i> Assigned Doctor Advice
@@ -153,7 +153,7 @@
         </div>
     </div>
 
-    <!-- ── PATIENT INFO ── -->
+    <!-- -- PATIENT INFO -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-user"></i> Patient Information
@@ -166,7 +166,7 @@
         </div>
     </div>
 
-    <!-- ── ACTIONS ── -->
+    <!-- -- ACTIONS -- -->
     <div class="action-bar" style="margin-top: 24px; gap: 10px; justify-content: center;">
         {% if pdf_file %}
         <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg btn-pdf">
