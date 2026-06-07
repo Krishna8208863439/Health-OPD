@@ -9,9 +9,19 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors
 import os
 import io
+import sys
 import threading
 import time
 from functools import wraps
+
+# Force UTF-8 encoding for stdout and stderr to prevent UnicodeEncodeError on Windows terminals
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 # Import services
 from medicine_db import MEDICINE_DATABASE, HOSPITAL_DATABASE
