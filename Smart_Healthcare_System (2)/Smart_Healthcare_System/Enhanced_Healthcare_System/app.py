@@ -42,8 +42,11 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # ================= DATABASE SETUP =================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "healthcare.db")
+
 def get_db():
-    conn = sqlite3.connect("healthcare.db", check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
@@ -2673,7 +2676,7 @@ def serve_sw():
 def debug_diagnostics():
     import sys
     db_status = "Unknown"
-    db_path = os.path.abspath('healthcare.db')
+    db_path = DB_PATH
     try:
         conn = get_db()
         cur = conn.cursor()
