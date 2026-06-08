@@ -24,7 +24,9 @@ self.addEventListener('push', (event) => {
         requireInteraction: true,
         actions: [
             { action: 'taken', title: '✅ Taken' },
-            { action: 'snooze', title: '⏰ Snooze 10 min' }
+            { action: 'snooze5', title: '⏰ 5 min' },
+            { action: 'snooze10', title: '⏰ 10 min' },
+            { action: 'snooze15', title: '⏰ 15 min' }
         ],
         data: data
     };
@@ -40,18 +42,22 @@ self.addEventListener('notificationclick', (event) => {
         event.waitUntil(
             clients.openWindow('/reminders')
         );
-    } else if (event.action === 'snooze') {
-        // Snooze: show again after 10 minutes
+    } else if (event.action && event.action.startsWith('snooze')) {
+        const mins = event.action === 'snooze5' ? 5 : event.action === 'snooze15' ? 15 : 10;
         const reminderData = event.notification.data || {};
+        const body = reminderData.medicine_name
+            ? `Time to take ${reminderData.medicine_name} ${reminderData.dosage || ''}`
+            : (reminderData.body || 'Time to take your medicine!');
         setTimeout(() => {
             self.registration.showNotification('⏰ Snoozed Reminder', {
-                body: reminderData.body || 'Time to take your medicine!',
+                body: body,
                 icon: '/static/assets/hospital_logo.png',
                 vibrate: [200, 100, 200, 100, 200],
                 tag: 'medicine-reminder-snoozed',
-                requireInteraction: true
+                requireInteraction: true,
+                data: reminderData
             });
-        }, 10 * 60 * 1000);
+        }, mins * 60 * 1000);
     } else {
         event.waitUntil(
             clients.matchAll({ type: 'window' }).then((windowClients) => {
@@ -86,11 +92,17 @@ async function checkRemindersInBackground() {
         if (data.reminders && data.reminders.length > 0) {
             for (const reminder of data.reminders) {
                 await self.registration.showNotification('💊 Medicine Reminder', {
-                    body: `Time to take: ${reminder.medicine_name} - ${reminder.dosage}`,
+                    body: `Time to take ${reminder.medicine_name}${reminder.dosage ? ' — ' + reminder.dosage : ''}`,
                     icon: '/static/assets/hospital_logo.png',
                     vibrate: [200, 100, 200, 100, 200],
                     tag: `reminder-${reminder.id}`,
                     requireInteraction: true,
+                    actions: [
+                        { action: 'taken', title: '✅ Taken' },
+                        { action: 'snooze5', title: '⏰ 5m' },
+                        { action: 'snooze10', title: '⏰ 10m' },
+                        { action: 'snooze15', title: '⏰ 15m' }
+                    ],
                     data: reminder
                 });
             }

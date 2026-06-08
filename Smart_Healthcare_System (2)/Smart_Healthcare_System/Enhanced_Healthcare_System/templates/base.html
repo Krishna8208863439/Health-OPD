@@ -190,7 +190,9 @@ a{color:inherit;text-decoration:none;}
   {% if current_user.is_authenticated %}
   <div id="desktop-nav">
     {% if current_user.role == 'patient' %}
+      <a class="dnav-a" href="{{ url_for('health_dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a>
       <a class="dnav-a" href="{{ url_for('symptom_assessment') }}"><i class="fas fa-stethoscope"></i> Assess</a>
+      <a class="dnav-a" href="{{ url_for('ai_assistant') }}"><i class="fas fa-robot"></i> AI</a>
       <a class="dnav-a" href="{{ url_for('symptom_journal') }}"><i class="fas fa-book-medical"></i> Journal</a>
       <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> Hospitals</a>
       <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> Vitals</a>
@@ -248,7 +250,9 @@ a{color:inherit;text-decoration:none;}
   <div class="drawer-nav">
     {% if current_user.role == 'patient' %}
       <div class="drawer-sec">Health Tools</div>
+      <a class="drawer-item" href="{{ url_for('health_dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-pie"></i></span>Health Dashboard</a>
       <a class="drawer-item" href="{{ url_for('symptom_assessment') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-stethoscope"></i></span>Symptom Assessment</a>
+      <a class="drawer-item" href="{{ url_for('ai_assistant') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-robot"></i></span>AI Health Assistant</a>
       <a class="drawer-item" href="{{ url_for('symptom_journal') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-book-medical"></i></span>Symptom Journal</a>
       <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span>Nearest Hospitals</a>
       <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span>Health Vitals</a>

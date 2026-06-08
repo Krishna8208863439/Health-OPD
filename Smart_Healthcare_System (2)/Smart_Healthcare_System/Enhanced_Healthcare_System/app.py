@@ -31,6 +31,10 @@ from symptom_engine import (
     assess_symptoms, get_severity, get_medicines_for_disease,
     SYMPTOMS, SYMPTOM_GROUPS
 )
+from ai_health_service import (
+    analyze_natural_symptoms, generate_diet_plan, ai_chat_response,
+    FIRST_AID_GUIDES, DISCLAIMER as HEALTH_DISCLAIMER
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
@@ -346,6 +350,42 @@ def init_extra_tables():
         created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES users(id)
     )""")
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS notification_history (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        reminder_id   INTEGER,
+        message       TEXT NOT NULL,
+        action        TEXT DEFAULT 'fired',
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS nlp_assessments (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        input_text    TEXT NOT NULL,
+        parsed_symptoms TEXT,
+        top_disease   TEXT,
+        confidence    REAL,
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    for col, default_val in [
+        ('gender', "'male'"),
+        ('height', "'170'"),
+        ('weight', "'70'"),
+        ('activity_level', "'moderate'"),
+        ('medical_conditions', "''"),
+        ('dietary_preference', "'vegetarian'"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT DEFAULT {default_val}")
+        except Exception:
+            pass
 
     conn.commit()
     conn.close()
@@ -1049,7 +1089,7 @@ def nearest_hospitals():
 @app.route('/emergency')
 @login_required
 def emergency():
-    return render_template('emergency.html', patient=current_user)
+    return render_template('emergency.html', patient=current_user, first_aid=FIRST_AID_GUIDES)
 
 # ================= REAL SYMPTOM ASSESSMENT =================
 
@@ -1218,6 +1258,13 @@ def assess_predict():
     conn.commit()
     conn.close()
 
+    otc_medicines = []
+    try:
+        from ai_health_service import get_otc_suggestions
+        otc_medicines = get_otc_suggestions(present_symptoms, disease_name)
+    except Exception:
+        pass
+
     return render_template(
         'assessment_result.html',
         patient=current_user,
@@ -1225,6 +1272,7 @@ def assess_predict():
         alt_results=results[1:],
         severity=severity_str,
         medicines=medicines,
+        otc_medicines=otc_medicines,
         hospitals=hospitals_list,
         doctor_name=doctor_name,
         doctor_phone=doctor_phone,
@@ -1233,10 +1281,90 @@ def assess_predict():
         symptom_duration=symptom_duration,
         symptom_count=len(present_symptoms),
         pdf_file=pdf_filename,
+        health_disclaimer=HEALTH_DISCLAIMER,
         get_maps_url=get_google_maps_url,
         get_directions_url=get_directions_url,
     )
 
+
+@app.route('/assessment/nlp', methods=['POST'])
+@login_required
+def assess_nlp():
+    """Natural-language symptom assessment with AI analysis and OTC suggestions."""
+    text = request.form.get('symptom_text', '').strip()
+    if not text:
+        flash('Please describe your symptoms.', 'danger')
+        return redirect(url_for('symptom_assessment'))
+
+    analysis = analyze_natural_symptoms(text)
+    if not analysis.get('success'):
+        flash(analysis.get('message', 'Could not analyze symptoms.'), 'warning')
+        return redirect(url_for('symptom_assessment'))
+
+    top = analysis['top_result']
+    results = analysis['results']
+    disease_name = top['disease']
+    confidence_pct = top['confidence_pct']
+    severity_str = analysis['severity']
+    present_symptoms = analysis['parsed_symptoms']
+    medicines = analysis['medicines']
+    otc_medicines = analysis['otc_medicines']
+
+    if confidence_pct >= 70:
+        top['color'] = '#DC3545'
+    elif confidence_pct >= 45:
+        top['color'] = '#FFC107'
+    else:
+        top['color'] = '#28A745'
+
+    for r in results[1:]:
+        if r['confidence_pct'] >= 70:
+            r['color'] = '#DC3545'
+        elif r['confidence_pct'] >= 45:
+            r['color'] = '#FFC107'
+        else:
+            r['color'] = '#28A745'
+
+    hospitals_list = find_hospitals(city=current_user.city, disease=disease_name)
+    doctor_advice = (
+        "Seek immediate medical attention. Call 108."
+        if analysis.get('emergency_warnings')
+        else "Monitor symptoms and consult a doctor if they persist or worsen."
+    )
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO nlp_assessments (patient_id, input_text, parsed_symptoms, top_disease, confidence)
+        VALUES (?, ?, ?, ?, ?)
+    """, (current_user.id, text, str(present_symptoms), disease_name, confidence_pct))
+    conn.commit()
+    conn.close()
+
+    return render_template(
+        'assessment_result.html',
+        patient=current_user,
+        top_result=top,
+        alt_results=results[1:],
+        severity=severity_str,
+        medicines=medicines,
+        otc_medicines=otc_medicines,
+        hospitals=hospitals_list,
+        doctor_name="Dr. General Medicine",
+        doctor_phone=hospitals_list[0]['phone'] if hospitals_list else "+91-800-HEALTH",
+        specialty="General Medicine",
+        doctor_advice=doctor_advice,
+        symptom_duration="From description",
+        symptom_count=len(present_symptoms),
+        pdf_file=None,
+        nlp_input=text,
+        nlp_summary=analysis.get('human_summary', ''),
+        emergency_warnings=analysis.get('emergency_warnings', []),
+        parsed_labels=analysis.get('parsed_labels', []),
+        health_disclaimer=HEALTH_DISCLAIMER,
+        get_maps_url=get_google_maps_url,
+        get_directions_url=get_directions_url,
+    )
 
 
 # ================= HEALTH VITALS TRACKER =================
@@ -1311,17 +1439,57 @@ def diet_plans():
     cur = conn.cursor()
     
     if request.method == 'POST':
-        goal = request.form.get('diet_goal', 'Balanced')
-        cur.execute("UPDATE users SET diet_goal = ? WHERE id = ?", (goal, current_user.id))
-        conn.commit()
-        # Update current user object in session
-        current_user.diet_goal = goal
-        flash(f'Active diet plan successfully updated to: {goal}!', 'success')
+        action = request.form.get('action', 'set_goal')
+        if action == 'save_profile':
+            cur.execute("""
+                UPDATE users SET gender=?, height=?, weight=?, activity_level=?,
+                medical_conditions=?, dietary_preference=?, diet_goal=?
+                WHERE id=?
+            """, (
+                request.form.get('gender', 'male'),
+                request.form.get('height', '170'),
+                request.form.get('weight', '70'),
+                request.form.get('activity_level', 'moderate'),
+                request.form.get('medical_conditions', ''),
+                request.form.get('dietary_preference', 'vegetarian'),
+                request.form.get('diet_goal', 'Balanced'),
+                current_user.id,
+            ))
+            conn.commit()
+            flash('Health profile saved! Generate your personalized plan below.', 'success')
+        else:
+            goal = request.form.get('diet_goal', 'Balanced')
+            cur.execute("UPDATE users SET diet_goal = ? WHERE id = ?", (goal, current_user.id))
+            conn.commit()
+            current_user.diet_goal = goal
+            flash(f'Active diet plan successfully updated to: {goal}!', 'success')
         conn.close()
         return redirect(url_for('diet_plans'))
-        
+
+    row = cur.execute("SELECT * FROM users WHERE id=?", (current_user.id,)).fetchone()
     conn.close()
-    return render_template('diet_plan.html', patient=current_user)
+    profile = dict(row) if row else {}
+    return render_template('diet_plan.html', patient=current_user, profile=profile)
+
+
+@app.route('/api/diet/generate', methods=['POST'])
+@login_required
+def api_generate_diet():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error'}), 403
+    data = request.get_json() or request.form
+    profile = {
+        'age': current_user.age,
+        'gender': data.get('gender', getattr(current_user, 'gender', 'male') or 'male'),
+        'height': float(data.get('height', 170)),
+        'weight': float(data.get('weight', 70)),
+        'activity_level': data.get('activity_level', 'moderate'),
+        'medical_conditions': data.get('medical_conditions', ''),
+        'dietary_preference': data.get('dietary_preference', 'vegetarian'),
+        'diet_goal': data.get('diet_goal', getattr(current_user, 'diet_goal', 'Balanced')),
+    }
+    plan = generate_diet_plan(profile)
+    return jsonify({'status': 'success', 'plan': plan})
 
 
 # ================= FOOD SCANNER =================
@@ -1798,6 +1966,11 @@ def reminders_due_now():
     # Update last_fired so we don't fire the same reminder twice in one minute
     for row in rows:
         cur.execute("UPDATE medicine_reminders SET last_fired = ? WHERE id = ?", (today, row['id']))
+        cur.execute("""
+            INSERT INTO notification_history (patient_id, reminder_id, message, action)
+            VALUES (?, ?, ?, 'fired')
+        """, (current_user.id, row['id'],
+              f"Time to take {row['medicine_name']} {row['dosage'] or ''}".strip()))
     conn.commit()
     conn.close()
 
@@ -2280,6 +2453,169 @@ def log_medication():
     conn.close()
     
     return jsonify({'status': 'success', 'message': f'Medication logged as {status}!'})
+
+
+@app.route('/api/medication/snooze', methods=['POST'])
+@login_required
+def snooze_medication():
+    data = request.get_json() or {}
+    reminder_id = data.get('reminder_id')
+    minutes = int(data.get('minutes', 10))
+    if not reminder_id:
+        return jsonify({'status': 'error', 'message': 'Reminder ID required'}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    row = cur.execute(
+        "SELECT medicine_name, dosage FROM medicine_reminders WHERE id=? AND patient_id=?",
+        (reminder_id, current_user.id)
+    ).fetchone()
+    if row:
+        cur.execute("""
+            INSERT INTO notification_history (patient_id, reminder_id, message, action)
+            VALUES (?, ?, ?, ?)
+        """, (current_user.id, reminder_id,
+              f"Snoozed {row['medicine_name']} for {minutes} min", 'snooze'))
+        conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'minutes': minutes,
+                  'message': f'Reminder snoozed for {minutes} minutes'})
+
+
+@app.route('/api/notifications/history')
+@login_required
+def notification_history():
+    conn = get_db()
+    cur = conn.cursor()
+    rows = cur.execute("""
+        SELECT nh.*, mr.medicine_name, mr.dosage
+        FROM notification_history nh
+        LEFT JOIN medicine_reminders mr ON nh.reminder_id = mr.id
+        WHERE nh.patient_id = ?
+        ORDER BY nh.created_at DESC LIMIT 50
+    """, (current_user.id,)).fetchall()
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    med_logs = cur.execute("""
+        SELECT ml.*, mr.medicine_name FROM medication_logs ml
+        JOIN medicine_reminders mr ON ml.reminder_id = mr.id
+        WHERE ml.patient_id = ? AND ml.log_date = ?
+    """, (current_user.id, today)).fetchall()
+
+    active_reminders = cur.execute("""
+        SELECT * FROM medicine_reminders WHERE patient_id=? AND is_active=1
+    """, (current_user.id,)).fetchall()
+    logged_ids = {r['reminder_id'] for r in med_logs}
+    missed = [dict(r) for r in active_reminders if r['id'] not in logged_ids]
+    conn.close()
+
+    return jsonify({
+        'history': [dict(r) for r in rows],
+        'missed_today': missed,
+        'taken_today': [dict(r) for r in med_logs if r['status'] == 'taken'],
+        'skipped_today': [dict(r) for r in med_logs if r['status'] == 'skipped'],
+    })
+
+
+@app.route('/health-dashboard')
+@login_required
+def health_dashboard():
+    if current_user.role != 'patient':
+        return redirect(url_for('dashboard'))
+    conn = get_db()
+    cur = conn.cursor()
+    today = datetime.now().strftime('%Y-%m-%d')
+    week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+
+    wellness = cur.execute(
+        "SELECT * FROM wellness_log WHERE patient_id=? AND log_date=?",
+        (current_user.id, today)
+    ).fetchone()
+    vitals = cur.execute(
+        "SELECT * FROM health_vitals WHERE patient_id=? ORDER BY date DESC LIMIT 1",
+        (current_user.id,)
+    ).fetchone()
+    symptom_count = cur.execute(
+        "SELECT COUNT(*) FROM symptom_journal WHERE patient_id=?",
+        (current_user.id,)
+    ).fetchone()[0]
+    med_taken = cur.execute("""
+        SELECT COUNT(*) FROM medication_logs
+        WHERE patient_id=? AND log_date=? AND status='taken'
+    """, (current_user.id, today)).fetchone()[0]
+    med_total = cur.execute(
+        "SELECT COUNT(*) FROM medicine_reminders WHERE patient_id=? AND is_active=1",
+        (current_user.id,)
+    ).fetchone()[0]
+    food_cals = cur.execute("""
+        SELECT COALESCE(SUM(calories),0) FROM food_logs
+        WHERE patient_id=? AND log_date=?
+    """, (current_user.id, today)).fetchone()[0]
+    wellness_week = cur.execute("""
+        SELECT log_date, water_glasses, steps, sleep_hours FROM wellness_log
+        WHERE patient_id=? AND log_date >= ? ORDER BY log_date
+    """, (current_user.id, week_ago)).fetchall()
+    predictions = cur.execute(
+        "SELECT * FROM predictions WHERE patient_id=? ORDER BY timestamp DESC LIMIT 5",
+        (current_user.id,)
+    ).fetchall()
+    conn.close()
+
+    score = get_daily_health_score(current_user.id, today)
+    return render_template('health_dashboard.html',
+        patient=current_user,
+        health_score=score,
+        today_wellness=dict(wellness) if wellness else None,
+        latest_vitals=dict(vitals) if vitals else None,
+        symptom_count=symptom_count,
+        med_taken=med_taken,
+        med_total=med_total,
+        food_calories=food_cals,
+        wellness_week=[dict(w) for w in wellness_week],
+        recent_predictions=[dict(p) for p in predictions],
+        today=today,
+    )
+
+
+@app.route('/ai-assistant')
+@login_required
+def ai_assistant():
+    if current_user.role != 'patient':
+        flash('AI Assistant is for patients.', 'warning')
+        return redirect(url_for('index'))
+    today = datetime.now().strftime('%Y-%m-%d')
+    score = get_daily_health_score(current_user.id, today)
+    conn = get_db()
+    cur = conn.cursor()
+    wellness = cur.execute(
+        "SELECT water_glasses FROM wellness_log WHERE patient_id=? AND log_date=?",
+        (current_user.id, today)
+    ).fetchone()
+    conn.close()
+    return render_template('ai_assistant.html',
+        patient=current_user,
+        health_score=score,
+        water_glasses=wellness['water_glasses'] if wellness else 0,
+        disclaimer=HEALTH_DISCLAIMER,
+    )
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+@login_required
+def api_ai_chat():
+    data = request.get_json() or {}
+    message = (data.get('message') or '').strip()
+    if not message:
+        return jsonify({'status': 'error', 'message': 'Empty message'}), 400
+    today = datetime.now().strftime('%Y-%m-%d')
+    ctx = {
+        'health_score': get_daily_health_score(current_user.id, today),
+        'diet_goal': getattr(current_user, 'diet_goal', 'Balanced'),
+        'water_glasses': data.get('water_glasses', 0),
+        'age': current_user.age,
+    }
+    reply = ai_chat_response(message, ctx)
+    return jsonify({'status': 'success', 'reply': reply})
 
 
 @app.route('/symptom-journal', methods=['GET', 'POST'])

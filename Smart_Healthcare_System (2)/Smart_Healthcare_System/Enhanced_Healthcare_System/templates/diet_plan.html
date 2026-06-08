@@ -353,6 +353,49 @@
 </div>
 {% endif %}
 
+<!-- Health Profile for AI Personalization -->
+<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);border:1px solid #E5E7EB;margin-bottom:22px;">
+    <h4 style="font-weight:800;color:#059669;margin-bottom:16px;">🧬 Your Health Profile (for AI Diet Plans)</h4>
+    <form method="POST" action="{{ url_for('diet_plans') }}">
+        <input type="hidden" name="action" value="save_profile">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px;">
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Age</label><input type="number" value="{{ patient.age }}" disabled style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;"></div>
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Gender</label>
+                <select name="gender" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+                    <option value="male" {% if profile.get('gender','male')=='male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if profile.get('gender')=='female' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Height (cm)</label>
+                <input name="height" type="number" value="{{ profile.get('height','170') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;"></div>
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Weight (kg)</label>
+                <input name="weight" type="number" value="{{ profile.get('weight','70') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;"></div>
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Activity</label>
+                <select name="activity_level" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+                    {% for lvl in ['sedentary','light','moderate','active','very_active'] %}
+                    <option value="{{ lvl }}" {% if profile.get('activity_level','moderate')==lvl %}selected{% endif %}>{{ lvl|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Diet Preference</label>
+                <select name="dietary_preference" id="profile-pref" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+                    <option value="vegetarian" {% if profile.get('dietary_preference','vegetarian')=='vegetarian' %}selected{% endif %}>Vegetarian</option>
+                    <option value="non_vegetarian" {% if profile.get('dietary_preference')=='non_vegetarian' %}selected{% endif %}>Non-Vegetarian</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:.75rem;font-weight:700;color:#6B7280;">Medical Conditions</label>
+            <input name="medical_conditions" value="{{ profile.get('medical_conditions','') }}" placeholder="e.g. diabetes, hypertension" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">💾 Save Profile</button>
+            <button type="button" onclick="generateAIPlan()" style="background:linear-gradient(135deg,#6C63FF,#00D4FF);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">🤖 Generate AI Diet Plan</button>
+        </div>
+    </form>
+    <div id="ai-plan-result" style="display:none;margin-top:18px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:18px;"></div>
+</div>
+
 <!-- Veg / Non-Veg Toggle -->
 <div class="veg-toggle-bar">
     <button class="veg-toggle-btn active-veg" id="toggle-veg" onclick="setDietPref('veg')">
@@ -874,6 +917,42 @@ function addCustomMeal(planKey) {
         itemEl.style.opacity = '1';
         itemEl.style.transform = 'translateY(0)';
     }, 10);
+}
+
+async function generateAIPlan() {
+    const pref = document.getElementById('profile-pref').value;
+    const goal = "{{ patient.diet_goal or 'Balanced' }}";
+    const body = {
+        gender: document.querySelector('[name=gender]').value,
+        height: document.querySelector('[name=height]').value,
+        weight: document.querySelector('[name=weight]').value,
+        activity_level: document.querySelector('[name=activity_level]').value,
+        medical_conditions: document.querySelector('[name=medical_conditions]').value,
+        dietary_preference: pref,
+        diet_goal: goal,
+    };
+    const el = document.getElementById('ai-plan-result');
+    el.style.display = 'block';
+    el.innerHTML = '<p>⏳ Generating personalized plan...</p>';
+    try {
+        const resp = await fetch('/api/diet/generate', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+        if (data.status !== 'success') { el.innerHTML = '<p>Error generating plan.</p>'; return; }
+        const p = data.plan;
+        const meals = pref === 'vegetarian' ? p.vegetarian : p.non_vegetarian;
+        let html = `<h5 style="font-weight:800;color:#065F46;margin-bottom:10px;">🤖 Your AI Plan — BMI ${p.bmi}, ${p.daily_calories} kcal/day, ${p.water_intake_litres}L water</h5>`;
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;">';
+        for (const [k,v] of Object.entries(meals)) {
+            html += `<div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #D1FAE5;"><strong>${k.replace('_',' ').title()}:</strong><br>${v}</div>`;
+        }
+        html += '</div>';
+        html += '<p><strong>Weekly Planner:</strong> ' + p.weekly_plan.map(d=>d.day+': '+d.theme).join(' · ') + '</p>';
+        html += '<p><strong>Grocery List:</strong> ' + p.grocery_list.join(', ') + '</p>';
+        html += `<p style="font-size:.8rem;color:#6B7280;">Protein: ${p.nutrition.protein_g}g | Carbs: ${p.nutrition.carbs_g}g | Fat: ${p.nutrition.fat_g}g</p>`;
+        el.innerHTML = html;
+    } catch(e) { el.innerHTML = '<p>Failed to generate plan.</p>'; }
 }
 
 // ── Auto-show correct tab on load ──

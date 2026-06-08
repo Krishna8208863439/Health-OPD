@@ -209,9 +209,11 @@
 <!-- Alarm banner (shown when a reminder fires) -->
 <div id="alarm-banner">
     <span id="alarm-text">💊 Time to take your medicine!</span>
-    <div style="margin-top: 8px; display: flex; justify-content: center; gap: 12px; margin-bottom: 4px;">
-        <button onclick="handleAlarmAction('taken')" style="font-weight:700; padding:6px 16px; border-radius:6px; border:none; cursor:pointer; background:#28a745; color:white; font-size:0.85rem;">✅ Taken</button>
-        <button onclick="handleAlarmAction('snooze')" style="font-weight:700; padding:6px 16px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.85rem;">⏰ Snooze 10m</button>
+    <div style="margin-top: 8px; display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; flex-wrap:wrap;">
+        <button onclick="handleAlarmAction('taken')" style="font-weight:700; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; background:#28a745; color:white; font-size:0.82rem;">✅ Taken</button>
+        <button onclick="handleAlarmAction('snooze',5)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 5m</button>
+        <button onclick="handleAlarmAction('snooze',10)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 10m</button>
+        <button onclick="handleAlarmAction('snooze',15)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 15m</button>
     </div>
 </div>
 
@@ -295,6 +297,18 @@
         </div>
         <button type="submit" class="btn btn-primary mt-2">🔔 Set Alarm</button>
     </form>
+</div>
+
+<!-- Missed Doses & Notification History -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <div class="add-form-card" style="margin-bottom:0;">
+        <h4 style="font-size:1rem;font-weight:800;color:#DC3545;margin-bottom:12px;">⚠️ Missed Doses Today</h4>
+        <div id="missed-doses"><p style="color:#9CA3AF;font-size:.85rem;">Loading...</p></div>
+    </div>
+    <div class="add-form-card" style="margin-bottom:0;">
+        <h4 style="font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:12px;">📋 Notification History</h4>
+        <div id="notif-history" style="max-height:200px;overflow-y:auto;"><p style="color:#9CA3AF;font-size:.85rem;">Loading...</p></div>
+    </div>
 </div>
 
 <!-- Active Reminders -->
@@ -510,7 +524,7 @@ function showAlarmBanner(medicineName, dosage, reminderId) {
     if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
 }
 
-async function handleAlarmAction(action) {
+async function handleAlarmAction(action, snoozeMins) {
     const banner = document.getElementById('alarm-banner');
     banner.style.display = 'none';
     document.body.style.paddingTop = '0';
@@ -544,11 +558,17 @@ async function handleAlarmAction(action) {
             console.error("API error:", e);
         }
     } else if (action === 'snooze') {
-        alert(`⏰ Alarm for ${medicineName} snoozed for 10 minutes.`);
+        const mins = snoozeMins || 10;
+        await fetch('/api/medication/snooze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ reminder_id: reminderId, minutes: mins })
+        });
+        alert(`⏰ Alarm for ${medicineName} snoozed for ${mins} minutes.`);
         const cachedReminder = currentAlarmReminder;
         setTimeout(() => {
             showAlarmBanner(cachedReminder.name, cachedReminder.dosage, cachedReminder.id);
-        }, 10 * 60 * 1000);
+        }, mins * 60 * 1000);
     }
     
     currentAlarmReminder = null;
@@ -690,6 +710,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Poll every 30 seconds while page is open
     checkReminders();
     setInterval(checkReminders, 30 * 1000);
+    loadNotificationHistory();
 });
+
+async function loadNotificationHistory() {
+    try {
+        const resp = await fetch('/api/notifications/history');
+        const data = await resp.json();
+        const el = document.getElementById('notif-history');
+        const missedEl = document.getElementById('missed-doses');
+        if (!el) return;
+        if (data.history && data.history.length) {
+            el.innerHTML = data.history.slice(0, 10).map(h =>
+                `<div style="padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:.82rem;">
+                    <strong>${h.action}</strong>: ${h.message}
+                    <span style="color:#9CA3AF;float:right;">${(h.created_at||'').slice(0,16)}</span>
+                </div>`
+            ).join('');
+        } else {
+            el.innerHTML = '<p style="color:#9CA3AF;font-size:.85rem;">No notification history yet.</p>';
+        }
+        if (missedEl && data.missed_today && data.missed_today.length) {
+            missedEl.innerHTML = data.missed_today.map(m =>
+                `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;margin-bottom:8px;font-size:.85rem;">
+                    ⚠️ Missed: <strong>${m.medicine_name}</strong> (${m.reminder_time})
+                </div>`
+            ).join('');
+        } else if (missedEl) {
+            missedEl.innerHTML = '<p style="color:#10B981;font-size:.85rem;">✅ All doses logged for today!</p>';
+        }
+    } catch(e) { console.log('History load failed', e); }
+}
 </script>
 {% endblock %}

@@ -478,6 +478,31 @@
 
     </div>
 </div>
+
+<!-- First Aid Guidelines -->
+<div style="max-width:1100px;margin:0 auto 40px;padding:0 16px;">
+    <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin-bottom:20px;text-align:center;">🩹 First Aid Guidelines</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px;">
+        {% for guide in first_aid %}
+        <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #E5E7EB;">
+            <h5 style="font-weight:800;color:#C53030;margin-bottom:12px;">{{ guide.icon }} {{ guide.title }}</h5>
+            <ol style="margin:0;padding-left:18px;font-size:.85rem;line-height:1.6;color:#4B5563;">
+                {% for step in guide.steps %}
+                <li style="margin-bottom:6px;">{{ step }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center;">
+        <a href="{{ url_for('nearest_hospitals') }}" style="display:inline-block;background:#0066CC;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;margin-right:10px;">
+            🏥 Find Nearest Hospital
+        </a>
+        <a href="tel:112" style="display:inline-block;background:#C53030;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;">
+            📞 Emergency 112
+        </a>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

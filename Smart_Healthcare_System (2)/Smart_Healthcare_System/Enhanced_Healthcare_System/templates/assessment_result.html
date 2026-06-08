@@ -6,8 +6,24 @@
 
     <!-- Disclaimer -->
     <div style="background: var(--warning-bg); border-left: 4px solid var(--warning); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.88rem; color: var(--warning); line-height: 1.5;">
-        [!] <strong>Medical Disclaimer:</strong> This tool provides a preliminary symptom assessment only and is NOT a substitute for professional medical diagnosis. Always consult a licensed doctor. In emergency, call <strong>108</strong> immediately.
+        [!] <strong>Medical Disclaimer:</strong> {{ health_disclaimer or 'Consult a healthcare professional before taking any medication. Call 108 for emergencies.' }}
     </div>
+
+    {% if emergency_warnings %}
+    <div style="background:#FEE2E2;border:2px solid #EF4444;border-radius:12px;padding:16px;margin-bottom:20px;">
+        <h5 style="color:#991B1B;font-weight:800;margin-bottom:8px;">🚨 Emergency Warnings</h5>
+        {% for w in emergency_warnings %}
+        <p style="color:#7F1D1D;font-size:.88rem;margin:4px 0;">{{ w }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if nlp_input %}
+    <div style="background:#EFF6FF;border-radius:12px;padding:16px;margin-bottom:20px;font-size:.88rem;">
+        <strong>Your description:</strong> "{{ nlp_input }}"
+        {% if parsed_labels %}<br><strong>Identified:</strong> {{ parsed_labels|join(', ') }}{% endif %}
+    </div>
+    {% endif %}
 
     <!-- -- PRIMARY RESULT -- -->
     <div class="result-hero" style="background: linear-gradient(135deg, {{top_result.color}} 0%, {{top_result.color}}cc 100%); color: #fff; border-radius: 20px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-lg);">
@@ -99,6 +115,23 @@
             <p style="font-size: 0.88rem; line-height: 1.5; color: var(--dark); margin: 0;"><strong>When to see a doctor:</strong><br>{{ medicines.WHEN_TO_SEE_DOCTOR }}</p>
         </div>
     </div>
+
+    {% if otc_medicines %}
+    <div class="card" style="margin-bottom: 24px; border: 2px solid #10B981;">
+        <h4 style="font-size: 1.1rem; font-weight: 700; color: #059669; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-shopping-basket"></i> Suggested OTC Medicines
+        </h4>
+        <p style="font-size:.82rem;color:#6B7280;margin-bottom:16px;">Over-the-counter options. Always consult a pharmacist or doctor first.</p>
+        {% for med in otc_medicines %}
+        <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:16px;margin-bottom:12px;">
+            <div style="font-weight:800;font-size:1rem;color:#065F46;margin-bottom:8px;">💊 {{ med.name }}</div>
+            <p style="font-size:.85rem;margin:4px 0;"><strong>Usage:</strong> {{ med.usage }}</p>
+            <p style="font-size:.85rem;margin:4px 0;"><strong>Dosage:</strong> {{ med.dosage }}</p>
+            <p style="font-size:.85rem;margin:4px 0;color:#6B7280;"><strong>Side Effects:</strong> {{ med.side_effects }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- -- HOSPITALS -- -->
     {% if hospitals %}

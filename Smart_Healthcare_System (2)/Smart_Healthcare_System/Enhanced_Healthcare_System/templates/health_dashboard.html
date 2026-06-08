@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Health Dashboard – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+.dash-hero{background:linear-gradient(135deg,#0066CC,#3B82F6);color:#fff;border-radius:18px;padding:28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.score-ring{width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.4);}
+.score-ring .num{font-size:2rem;font-weight:900;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid #E5E7EB;text-align:center;}
+.stat-card .ico{font-size:1.8rem;margin-bottom:8px;}
+.stat-card .val{font-size:1.5rem;font-weight:800;color:#1F2937;}
+.stat-card .lbl{font-size:.75rem;color:#6B7280;font-weight:600;text-transform:uppercase;}
+.panel{background:#fff;border-radius:16px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid #E5E7EB;margin-bottom:20px;}
+.panel h4{font-size:1.05rem;font-weight:800;color:#0066CC;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.85rem;}
+.bar-track{flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0066CC,#10B981);border-radius:4px;}
+.quick-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
+.ql{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px;text-align:center;font-weight:700;font-size:.82rem;color:#1E40AF;text-decoration:none;transition:.15s;}
+.ql:hover{background:#DBEAFE;transform:translateY(-2px);color:#1E40AF;text-decoration:none;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-hero">
+    <div>
+        <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:4px;">📊 Health Dashboard</h2>
+        <p style="margin:0;opacity:.9;font-size:.9rem;">Your daily health overview — {{ today }}</p>
+    </div>
+    <div class="score-ring">
+        <div class="num">{{ health_score }}</div>
+        <div style="font-size:.65rem;opacity:.85;text-transform:uppercase;">Health Score</div>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="ico">💧</div>
+        <div class="val">{{ today_wellness.water_glasses if today_wellness else 0 }}/8</div>
+        <div class="lbl">Water Glasses</div>
+    </div>
+    <div class="stat-card">
+        <div class="ico">👟</div>
+        <div class="val">{{ "{:,}".format(today_wellness.steps) if today_wellness else 0 }}</div>
+        <div class="lbl">Steps Today</div>
+    </div>
+    <div class="stat-card">
+        <div class="ico">😴</div>
+        <div class="val">{{ today_wellness.sleep_hours if today_wellness else 0 }}h</div>
+        <div class="lbl">Sleep</div>
+    </div>
+    <div class="stat-card">
+        <div class="ico">💊</div>
+        <div class="val">{{ med_taken }}/{{ med_total }}</div>
+        <div class="lbl">Meds Taken</div>
+    </div>
+    <div class="stat-card">
+        <div class="ico">🍽️</div>
+        <div class="val">{{ food_calories }}</div>
+        <div class="lbl">Calories Today</div>
+    </div>
+    <div class="stat-card">
+        <div class="ico">📓</div>
+        <div class="val">{{ symptom_count }}</div>
+        <div class="lbl">Journal Entries</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="panel">
+        <h4><i class="fas fa-chart-line"></i> 7-Day Activity</h4>
+        {% if wellness_week %}
+        {% for w in wellness_week %}
+        <div class="bar-row">
+            <span style="width:70px;font-weight:600;">{{ w.log_date[5:] }}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:{% if w.steps // 100 > 100 %}100{% else %}{{ w.steps // 100 }}{% endif %}%;"></div></div>
+            <span style="width:60px;text-align:right;">{{ w.steps }} steps</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:#6B7280;font-size:.88rem;">No wellness data yet. <a href="{{ url_for('wellness') }}">Log today →</a></p>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h4><i class="fas fa-heartbeat"></i> Latest Vitals</h4>
+        {% if latest_vitals %}
+        <p><strong>BP:</strong> {{ latest_vitals.systolic }}/{{ latest_vitals.diastolic }} mmHg</p>
+        <p><strong>Heart Rate:</strong> {{ latest_vitals.heart_rate or '—' }} bpm</p>
+        <p><strong>Weight:</strong> {{ latest_vitals.weight or '—' }} kg</p>
+        <p><strong>Blood Sugar:</strong> {{ latest_vitals.blood_sugar or '—' }} mg/dL</p>
+        {% else %}
+        <p style="color:#6B7280;font-size:.88rem;">No vitals logged. <a href="{{ url_for('vitals') }}">Add vitals →</a></p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="panel">
+    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+    <div class="quick-links">
+        <a class="ql" href="{{ url_for('symptom_assessment') }}">🩺 Assess Symptoms</a>
+        <a class="ql" href="{{ url_for('symptom_journal') }}">📓 Symptom Journal</a>
+        <a class="ql" href="{{ url_for('diet_plans') }}">🥗 Diet Plans</a>
+        <a class="ql" href="{{ url_for('reminders') }}">💊 Medicine Alarms</a>
+        <a class="ql" href="{{ url_for('ai_assistant') }}">🤖 AI Assistant</a>
+        <a class="ql" href="{{ url_for('export_health_report') }}">📄 Export PDF</a>
+        <a class="ql" href="{{ url_for('wellness') }}">🌿 Log Wellness</a>
+        <a class="ql" href="{{ url_for('emergency') }}">🚨 Emergency SOS</a>
+    </div>
+</div>
+
+{% if recent_predictions %}
+<div class="panel">
+    <h4><i class="fas fa-history"></i> Recent Assessments</h4>
+    {% for p in recent_predictions %}
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:.88rem;">
+        <span><strong>{{ p.disease }}</strong> — {{ p.severity }}</span>
+        <span style="color:#6B7280;">{{ p.timestamp[:10] }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
