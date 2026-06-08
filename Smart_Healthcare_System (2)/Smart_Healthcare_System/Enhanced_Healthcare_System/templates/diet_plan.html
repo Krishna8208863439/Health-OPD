@@ -9,7 +9,8 @@
     --diet-orange: #F59E0B;
     --diet-red: #EF4444;
     --diet-purple: #8B5CF6;
-    --diet-card-bg: #FFFFFF;
+    --veg-color: #16a34a;
+    --nonveg-color: #dc2626;
 }
 
 .diet-hero {
@@ -23,19 +24,9 @@
     gap: 20px;
     box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
 }
-.diet-hero .ico {
-    font-size: 56px;
-}
-.diet-hero h2 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    margin-bottom: 4px;
-}
-.diet-hero p {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    margin: 0;
-}
+.diet-hero .ico { font-size: 56px; }
+.diet-hero h2  { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+.diet-hero p   { font-size: 0.9rem; opacity: 0.9; margin: 0; }
 
 .active-banner {
     background: #ECFDF5;
@@ -48,38 +39,79 @@
     justify-content: space-between;
     color: #065F46;
 }
-.active-banner strong {
-    font-size: 1.05rem;
-}
+.active-banner strong { font-size: 1.05rem; }
 
+/* ── Veg / Non-Veg Toggle ── */
+.veg-toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #F3F4F6;
+    border-radius: 12px;
+    padding: 4px;
+    width: fit-content;
+    margin-bottom: 22px;
+    border: 1px solid #E5E7EB;
+}
+.veg-toggle-btn {
+    padding: 9px 26px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: all 0.22s;
+    background: transparent;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.veg-toggle-btn.active-veg {
+    background: #16a34a;
+    color: white;
+    box-shadow: 0 3px 12px rgba(22,163,74,0.35);
+}
+.veg-toggle-btn.active-nonveg {
+    background: #dc2626;
+    color: white;
+    box-shadow: 0 3px 12px rgba(220,38,38,0.35);
+}
+.veg-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.veg-dot-green  { background: #16a34a; border: 1.5px solid #15803d; }
+.veg-dot-red    { background: #dc2626; border: 1.5px solid #b91c1c; }
+
+/* ── Diet Type Tabs ── */
 .diet-selector {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
     margin-bottom: 28px;
 }
 .diet-option-btn {
     background: #fff;
     border: 2px solid #E5E7EB;
     border-radius: 12px;
-    padding: 16px;
+    padding: 14px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 700;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
-.diet-option-btn .btn-emoji {
-    font-size: 24px;
-}
+.diet-option-btn .btn-emoji { font-size: 22px; }
 .diet-option-btn:hover {
     border-color: var(--diet-green);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 .diet-option-btn.active {
     border-color: var(--diet-green);
@@ -87,8 +119,9 @@
     color: #047857;
 }
 
+/* ── Meal Card ── */
 .meal-card {
-    background: var(--diet-card-bg);
+    background: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     border: 1px solid #E5E7EB;
@@ -97,12 +130,10 @@
     display: none;
     animation: fadeIn 0.3s ease-in-out;
 }
-.meal-card.active-meal {
-    display: block;
-}
+.meal-card.active-meal { display: block; }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .meal-card-header {
@@ -112,9 +143,11 @@
     border-bottom: 2px solid #F3F4F6;
     padding-bottom: 16px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 .meal-card-title {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #1F2937;
     display: flex;
@@ -128,11 +161,11 @@
     font-weight: 700;
     color: #fff;
 }
-.badge-weight { background: var(--diet-primary); }
-.badge-muscle { background: var(--diet-purple); }
-.badge-diabetic { background: var(--diet-orange); }
-.badge-heart { background: var(--diet-red); }
-.badge-balanced { background: var(--diet-green); }
+.badge-weight  { background: var(--diet-primary); }
+.badge-muscle  { background: var(--diet-purple); }
+.badge-diabetic{ background: var(--diet-orange); }
+.badge-heart   { background: var(--diet-red); }
+.badge-balanced{ background: var(--diet-green); }
 
 .meal-description {
     font-size: 0.9rem;
@@ -141,10 +174,25 @@
     line-height: 1.55;
 }
 
+/* Sub-type indicator badge */
+.pref-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+}
+.pref-badge.veg-badge    { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+.pref-badge.nonveg-badge { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+
+/* ── Meal Blocks Grid ── */
 .meal-timeline {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
     margin-bottom: 24px;
 }
 .meal-block {
@@ -154,7 +202,7 @@
     padding: 16px;
 }
 .meal-block-title {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: #9CA3AF;
     text-transform: uppercase;
@@ -165,12 +213,104 @@
     gap: 6px;
 }
 .meal-block-content {
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     color: #1F2937;
     font-weight: 600;
     line-height: 1.5;
 }
 
+/* ── Custom Meal Items added by user ── */
+.custom-meals-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.custom-meal-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #166534;
+}
+.custom-meal-item.nonveg-item {
+    background: #FFF1F2;
+    border-color: #FECACA;
+    color: #991B1B;
+}
+.custom-meal-item .del-btn {
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    font-size: 0.95rem;
+    padding: 0 4px;
+    transition: color 0.15s;
+}
+.custom-meal-item .del-btn:hover { color: #EF4444; }
+
+/* ── Add Meal Section ── */
+.add-meal-section {
+    background: #F9FAFB;
+    border: 2px dashed #D1D5DB;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+}
+.add-meal-section:focus-within { border-color: var(--diet-green); }
+.add-meal-section h6 {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #374151;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.add-meal-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.add-meal-row select,
+.add-meal-row input[type="text"] {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: #1F2937;
+    background: white;
+    transition: border-color 0.2s;
+}
+.add-meal-row select:focus,
+.add-meal-row input[type="text"]:focus {
+    border-color: var(--diet-green);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
+}
+.btn-add-meal {
+    background: var(--diet-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.btn-add-meal:hover { background: #059669; transform: translateY(-1px); }
+
+/* ── Select Diet button ── */
 .select-diet-btn {
     background: var(--diet-green);
     color: #fff;
@@ -182,10 +322,7 @@
     font-size: 0.94rem;
     transition: all 0.18s;
 }
-.select-diet-btn:hover {
-    background: #059669;
-    transform: translateY(-1px);
-}
+.select-diet-btn:hover { background: #059669; transform: translateY(-1px); }
 .select-diet-btn.is-active-btn {
     background: #E5E7EB;
     color: #9CA3AF;
@@ -193,8 +330,9 @@
 }
 
 @media(max-width: 600px) {
-    .diet-hero { flex-direction: column; text-align: center; }
-    .meal-card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .diet-hero         { flex-direction: column; text-align: center; }
+    .meal-card-header  { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .veg-toggle-bar    { width: 100%; justify-content: center; }
 }
 </style>
 {% endblock %}
@@ -204,73 +342,122 @@
     <div class="ico">🥗</div>
     <div>
         <h2>Personalized Diet Plans</h2>
-        <p>Choose a diet plan tailored to your medical condition and lifestyle goals. Track and optimize your daily nutrition.</p>
+        <p>Choose a diet plan tailored to your medical condition and lifestyle goals. Switch between Vegetarian and Non-Vegetarian options and add your own custom meals.</p>
     </div>
 </div>
 
 {% if patient.diet_goal %}
 <div class="active-banner">
-    <div>
-        🎯 Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong>
-    </div>
+    <div>🎯 Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong></div>
     <span style="background:rgba(16,185,129,0.15); border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:700;">Active Plan</span>
 </div>
 {% endif %}
 
-<!-- Selection Tabs -->
-<div class="diet-selector">
-    <button class="diet-option-btn active" id="btn-Weight" onclick="showDiet('Weight')">
-        <span class="btn-emoji">🏃‍♂️</span>
-        <span>Weight Loss</span>
+<!-- Veg / Non-Veg Toggle -->
+<div class="veg-toggle-bar">
+    <button class="veg-toggle-btn active-veg" id="toggle-veg" onclick="setDietPref('veg')">
+        <span class="veg-dot veg-dot-green"></span> 🌿 Vegetarian
     </button>
-    <button class="diet-option-btn" id="btn-Muscle" onclick="showDiet('Muscle')">
-        <span class="btn-emoji">💪</span>
-        <span>Muscle Gain</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Diabetic" onclick="showDiet('Diabetic')">
-        <span class="btn-emoji">🩸</span>
-        <span>Diabetic Care</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Heart" onclick="showDiet('Heart')">
-        <span class="btn-emoji">❤️</span>
-        <span>Heart Healthy</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Balanced" onclick="showDiet('Balanced')">
-        <span class="btn-emoji">🍽️</span>
-        <span>Balanced Indian</span>
+    <button class="veg-toggle-btn" id="toggle-nonveg" onclick="setDietPref('nonveg')">
+        <span class="veg-dot veg-dot-red"></span> 🍗 Non-Vegetarian
     </button>
 </div>
 
-<!-- Plan Cards -->
+<!-- Selection Tabs -->
+<div class="diet-selector">
+    <button class="diet-option-btn active" id="btn-Weight"   onclick="showDiet('Weight')">
+        <span class="btn-emoji">🏃‍♂️</span><span>Weight Loss</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Muscle"   onclick="showDiet('Muscle')">
+        <span class="btn-emoji">💪</span><span>Muscle Gain</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Diabetic" onclick="showDiet('Diabetic')">
+        <span class="btn-emoji">🩸</span><span>Diabetic Care</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Heart"    onclick="showDiet('Heart')">
+        <span class="btn-emoji">❤️</span><span>Heart Healthy</span>
+    </button>
+    <button class="diet-option-btn" id="btn-Balanced" onclick="showDiet('Balanced')">
+        <span class="btn-emoji">🍽️</span><span>Balanced Indian</span>
+    </button>
+</div>
+
 <div class="diet-details">
 
-    <!-- 1. Weight Loss -->
+    <!-- ══════════════════════════════════════
+         1. WEIGHT LOSS
+    ══════════════════════════════════════ -->
     <div class="meal-card active-meal" id="diet-Weight">
         <div class="meal-card-header">
             <div class="meal-card-title">🏃‍♂️ Weight Loss Diet Plan</div>
             <span class="meal-badge badge-weight">Low Carb</span>
         </div>
         <div class="meal-description">
-            Designed to help reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.
+            Designed to reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.
         </div>
-        <div class="meal-timeline">
-            <div class="meal-block">
-                <div class="meal-block-title">🍳 Breakfast</div>
-                <div class="meal-block-content">Veggie omelette (2 eggs) or Tofu scramble with spinach, accompanied by unsweetened green tea.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🍲 Lunch</div>
-                <div class="meal-block-content">Grilled chicken breast or boiled paneer salad with cucumbers, bell peppers, tomatoes, and olive oil dressing.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥜 Snack</div>
-                <div class="meal-block-content">A handful of almonds (8-10) or dry roasted chickpeas (makhana).</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥗 Dinner</div>
-                <div class="meal-block-content">Sautéed broccoli, beans, and carrots with grilled salmon or paneer/tofu blocks. No rice/wheat.</div>
+
+        <!-- VEG meals -->
+        <div class="veg-content">
+            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Tofu scramble with spinach & mushrooms, unsweetened green tea, and a small bowl of papaya.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Boiled paneer salad with cucumbers, bell peppers, tomatoes, chickpeas, and olive oil dressing.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">A handful of almonds (8–10) or dry roasted makhana (foxnuts).</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Sautéed broccoli, beans, and carrots with grilled paneer/tofu blocks. No rice or wheat.</div>
+                </div>
             </div>
         </div>
+
+        <!-- NON-VEG meals -->
+        <div class="nonveg-content" style="display:none;">
+            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Veggie omelette (2 eggs) with spinach, unsweetened green tea, and a boiled egg white on the side.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Grilled chicken breast (150g) over a large salad with cucumbers, bell peppers, tomatoes, and lemon dressing.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Hard boiled egg (1) or tuna strips with cucumber sticks. Avoid any fried snacks.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Grilled salmon (120g) with sautéed broccoli, beans, and carrots. No rice/wheat bread.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Custom Meal -->
+        <div class="add-meal-section">
+            <h6>➕ Add Your Own Meal</h6>
+            <div class="add-meal-row">
+                <select id="add-type-Weight">
+                    <option value="🍳 Breakfast">🍳 Breakfast</option>
+                    <option value="🍲 Lunch">🍲 Lunch</option>
+                    <option value="🥜 Snack">🥜 Snack</option>
+                    <option value="🥗 Dinner">🥗 Dinner</option>
+                </select>
+                <input type="text" id="add-text-Weight" placeholder="Describe your meal (e.g. 1 cup oats with banana)">
+                <button class="btn-add-meal" onclick="addCustomMeal('Weight')">+ Add</button>
+            </div>
+            <div class="custom-meals-list" id="custom-list-Weight"></div>
+        </div>
+
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Weight Loss">
             {% if patient.diet_goal == 'Weight Loss' %}
@@ -281,7 +468,9 @@
         </form>
     </div>
 
-    <!-- 2. Muscle Gain -->
+    <!-- ══════════════════════════════════════
+         2. MUSCLE GAIN
+    ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Muscle">
         <div class="meal-card-header">
             <div class="meal-card-title">💪 Muscle Gain Diet Plan</div>
@@ -290,24 +479,66 @@
         <div class="meal-description">
             Focuses on muscle hypertrophy and tissue repair. Provides clean caloric surplus with high proteins, moderate complex carbs, and healthy fats to support active recovery.
         </div>
-        <div class="meal-timeline">
-            <div class="meal-block">
-                <div class="meal-block-title">🍳 Breakfast</div>
-                <div class="meal-block-content">Oatmeal (1 cup cooked) with milk, peanut butter, chopped banana, and 3 boiled egg whites.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🍲 Lunch</div>
-                <div class="meal-block-content">Chicken breast curry (200g) or Soya chunks curry with brown rice (1.5 cups) and mixed green salad.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥜 Snack</div>
-                <div class="meal-block-content">Whey protein shake or 150g Greek yogurt topped with pumpkin seeds and walnuts.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥗 Dinner</div>
-                <div class="meal-block-content">Baked paneer or grilled fish with sweet potato mash, sautéed asparagus, and black dal.</div>
+
+        <div class="veg-content">
+            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Oatmeal (1 cup) with milk, peanut butter, banana, and a scoop of plant-based protein powder.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Soya chunks curry (200g) with brown rice (1.5 cups), mixed green salad, and curd.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">150g Greek yogurt topped with pumpkin seeds, walnuts, and a drizzle of honey.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Baked paneer with sweet potato mash, sautéed asparagus, and black dal.</div>
+                </div>
             </div>
         </div>
+
+        <div class="nonveg-content" style="display:none;">
+            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Oatmeal with milk, peanut butter, banana, and 3 boiled egg whites or a whey protein shake.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Chicken breast curry (200g) with brown rice (1.5 cups) and mixed green salad.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Whey protein shake or 2 boiled eggs with Greek yogurt and pumpkin seeds.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Grilled fish (150g) or chicken with sweet potato mash, sautéed asparagus, and black dal.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-meal-section">
+            <h6>➕ Add Your Own Meal</h6>
+            <div class="add-meal-row">
+                <select id="add-type-Muscle">
+                    <option value="🍳 Breakfast">🍳 Breakfast</option>
+                    <option value="🍲 Lunch">🍲 Lunch</option>
+                    <option value="🥜 Snack">🥜 Snack</option>
+                    <option value="🥗 Dinner">🥗 Dinner</option>
+                </select>
+                <input type="text" id="add-text-Muscle" placeholder="Describe your meal (e.g. 2 eggs + whey shake)">
+                <button class="btn-add-meal" onclick="addCustomMeal('Muscle')">+ Add</button>
+            </div>
+            <div class="custom-meals-list" id="custom-list-Muscle"></div>
+        </div>
+
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Muscle Gain">
             {% if patient.diet_goal == 'Muscle Gain' %}
@@ -318,33 +549,77 @@
         </form>
     </div>
 
-    <!-- 3. Diabetic Care -->
+    <!-- ══════════════════════════════════════
+         3. DIABETIC CARE
+    ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Diabetic">
         <div class="meal-card-header">
             <div class="meal-card-title">🩸 Diabetic Care Diet Plan</div>
             <span class="meal-badge badge-diabetic">Low Glycemic Index</span>
         </div>
         <div class="meal-description">
-            Formulated specifically to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.
+            Formulated to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.
         </div>
-        <div class="meal-timeline">
-            <div class="meal-block">
-                <div class="meal-block-title">🍳 Breakfast</div>
-                <div class="meal-block-content">Methi (fenugreek) paratha cooked with minimal oil or Moong dal chilla with garlic chutney.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🍲 Lunch</div>
-                <div class="meal-block-content">Chickpea (chana) curry or rajma with 1 multigrain roti, curd, and a large plate of raw salad.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥜 Snack</div>
-                <div class="meal-block-content">Sprouted moong salad with onion, tomato, lemon juice, and green coriander.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥗 Dinner</div>
-                <div class="meal-block-content">Grilled tofu or chicken breast with cauliflower rice, sautéed bell peppers, and spinach soup.</div>
+
+        <div class="veg-content">
+            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Methi (fenugreek) paratha with minimal oil or Moong dal chilla with garlic chutney.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Chickpea (chana) curry or rajma with 1 multigrain roti, curd, and a large plate of raw salad.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Sprouted moong salad with onion, tomato, lemon juice, and green coriander.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Grilled tofu with cauliflower rice, sautéed bell peppers, and a bowl of spinach soup.</div>
+                </div>
             </div>
         </div>
+
+        <div class="nonveg-content" style="display:none;">
+            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">2-egg white omelette with mushrooms and spinach, or boiled eggs with methi roti.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Grilled chicken (120g) with 1 multigrain roti, raw salad, and curd. No rice.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Boiled egg (1) with cucumber sticks, or a small bowl of sprouted moong chaat.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Grilled fish (100g) with cauliflower rice and sautéed vegetables. Light spinach soup.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-meal-section">
+            <h6>➕ Add Your Own Meal</h6>
+            <div class="add-meal-row">
+                <select id="add-type-Diabetic">
+                    <option value="🍳 Breakfast">🍳 Breakfast</option>
+                    <option value="🍲 Lunch">🍲 Lunch</option>
+                    <option value="🥜 Snack">🥜 Snack</option>
+                    <option value="🥗 Dinner">🥗 Dinner</option>
+                </select>
+                <input type="text" id="add-text-Diabetic" placeholder="e.g. Moong dal soup with sprouts">
+                <button class="btn-add-meal" onclick="addCustomMeal('Diabetic')">+ Add</button>
+            </div>
+            <div class="custom-meals-list" id="custom-list-Diabetic"></div>
+        </div>
+
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Diabetic Care">
             {% if patient.diet_goal == 'Diabetic Care' %}
@@ -355,33 +630,77 @@
         </form>
     </div>
 
-    <!-- 4. Heart Healthy -->
+    <!-- ══════════════════════════════════════
+         4. HEART HEALTHY
+    ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Heart">
         <div class="meal-card-header">
             <div class="meal-card-title">❤️ Heart Healthy Diet Plan</div>
             <span class="meal-badge badge-heart">Low Sodium</span>
         </div>
         <div class="meal-description">
-            Reduces stress on blood vessels and heart muscle by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.
+            Reduces stress on blood vessels by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.
         </div>
-        <div class="meal-timeline">
-            <div class="meal-block">
-                <div class="meal-block-title">🍳 Breakfast</div>
-                <div class="meal-block-content">Fruit bowl (apple, papaya, guava) topped with chia seeds, with a cup of unsweetened almond milk.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🍲 Lunch</div>
-                <div class="meal-block-content">Oats khichdi with plenty of vegetables (carrots, peas, beans), raw salad, and flaxseed dressing.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥜 Snack</div>
-                <div class="meal-block-content">An apple or pear slices paired with a cup of light green tea. No salt.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥗 Dinner</div>
-                <div class="meal-block-content">Baked cod/salmon or tofu clear vegetable soup with a slice of whole wheat multigrain toast.</div>
+
+        <div class="veg-content">
+            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Fruit bowl (apple, papaya, guava) topped with chia seeds, with a cup of unsweetened almond milk.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Oats khichdi with plenty of vegetables (carrots, peas, beans), raw salad, and flaxseed dressing.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">An apple or pear slices with a cup of light green tea. Strictly no salt.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Tofu clear vegetable soup with a slice of whole wheat multigrain toast and steamed broccoli.</div>
+                </div>
             </div>
         </div>
+
+        <div class="nonveg-content" style="display:none;">
+            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Egg white omelette (2) with spinach and tomatoes, with unsweetened almond milk.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Oats khichdi with vegetables plus a 100g grilled chicken breast. No added salt.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Apple/pear slices with light green tea. 1 boiled egg optional. No salt.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Baked cod or salmon (120g) with a slice of whole wheat toast and steamed vegetables.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-meal-section">
+            <h6>➕ Add Your Own Meal</h6>
+            <div class="add-meal-row">
+                <select id="add-type-Heart">
+                    <option value="🍳 Breakfast">🍳 Breakfast</option>
+                    <option value="🍲 Lunch">🍲 Lunch</option>
+                    <option value="🥜 Snack">🥜 Snack</option>
+                    <option value="🥗 Dinner">🥗 Dinner</option>
+                </select>
+                <input type="text" id="add-text-Heart" placeholder="e.g. Walnut & flaxseed salad">
+                <button class="btn-add-meal" onclick="addCustomMeal('Heart')">+ Add</button>
+            </div>
+            <div class="custom-meals-list" id="custom-list-Heart"></div>
+        </div>
+
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Heart Healthy">
             {% if patient.diet_goal == 'Heart Healthy' %}
@@ -392,7 +711,9 @@
         </form>
     </div>
 
-    <!-- 5. Balanced Indian -->
+    <!-- ══════════════════════════════════════
+         5. BALANCED INDIAN
+    ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Balanced">
         <div class="meal-card-header">
             <div class="meal-card-title">🍽️ Balanced Indian Diet Plan</div>
@@ -401,24 +722,66 @@
         <div class="meal-description">
             A balanced approach using traditional Indian cooking and ingredients. Provides a wholesome mix of macro and micro nutrients for general health maintenance.
         </div>
-        <div class="meal-timeline">
-            <div class="meal-block">
-                <div class="meal-block-title">🍳 Breakfast</div>
-                <div class="meal-block-content">Vegetable Poha or Rava Idli (2) with sambhar and mint-coriander chutney.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🍲 Lunch</div>
-                <div class="meal-block-content">Whole wheat chapati (2), dal fry, mix-veg sabji (dry), curd (1 cup), and fresh salad.</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥜 Snack</div>
-                <div class="meal-block-content">Roasted makhana (foxnuts) or roasted chana with hot tea/coffee (minimal sugar).</div>
-            </div>
-            <div class="meal-block">
-                <div class="meal-block-title">🥗 Dinner</div>
-                <div class="meal-block-content">Moong dal khichdi with 1 teaspoon ghee, aloo-palak sabji, and roasted papad.</div>
+
+        <div class="veg-content">
+            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Vegetable Poha or Rava Idli (2) with sambhar and mint-coriander chutney.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Whole wheat chapati (2), dal fry, mix-veg sabji (dry), curd (1 cup), and fresh salad.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Roasted makhana (foxnuts) or roasted chana with hot tea/coffee (minimal sugar).</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Moong dal khichdi with 1 tsp ghee, aloo-palak sabji, and roasted papad.</div>
+                </div>
             </div>
         </div>
+
+        <div class="nonveg-content" style="display:none;">
+            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
+            <div class="meal-timeline">
+                <div class="meal-block">
+                    <div class="meal-block-title">🍳 Breakfast</div>
+                    <div class="meal-block-content">Egg bhurji (2 eggs) with whole wheat toast and a glass of low-fat milk.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🍲 Lunch</div>
+                    <div class="meal-block-content">Whole wheat chapati (2), chicken curry (100g), mix-veg sabji, curd, and fresh salad.</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥜 Snack</div>
+                    <div class="meal-block-content">Boiled egg (1) or roasted chana with hot tea/coffee (minimal sugar).</div>
+                </div>
+                <div class="meal-block">
+                    <div class="meal-block-title">🥗 Dinner</div>
+                    <div class="meal-block-content">Chicken/fish curry (100g) with moong dal khichdi, 1 tsp ghee, and roasted papad.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="add-meal-section">
+            <h6>➕ Add Your Own Meal</h6>
+            <div class="add-meal-row">
+                <select id="add-type-Balanced">
+                    <option value="🍳 Breakfast">🍳 Breakfast</option>
+                    <option value="🍲 Lunch">🍲 Lunch</option>
+                    <option value="🥜 Snack">🥜 Snack</option>
+                    <option value="🥗 Dinner">🥗 Dinner</option>
+                </select>
+                <input type="text" id="add-text-Balanced" placeholder="e.g. 1 bowl curd with banana">
+                <button class="btn-add-meal" onclick="addCustomMeal('Balanced')">+ Add</button>
+            </div>
+            <div class="custom-meals-list" id="custom-list-Balanced"></div>
+        </div>
+
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Balanced">
             {% if patient.diet_goal == 'Balanced' %}
@@ -429,34 +792,101 @@
         </form>
     </div>
 
-</div>
+</div><!-- /.diet-details -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function showDiet(dietType) {
-    // Hide all meal cards
-    document.querySelectorAll('.meal-card').forEach(card => {
-        card.classList.remove('active-meal');
-    });
-    // Show target card
-    document.getElementById('diet-' + dietType).classList.add('active-meal');
+// ── Diet preference state ──
+let currentPref = 'veg';
 
-    // Update active button state
-    document.querySelectorAll('.diet-option-btn').forEach(btn => {
-        btn.classList.remove('active');
+// ── Veg / Non-Veg Toggle ──
+function setDietPref(pref) {
+    currentPref = pref;
+    const vegBtn    = document.getElementById('toggle-veg');
+    const nonvegBtn = document.getElementById('toggle-nonveg');
+
+    vegBtn.classList.remove('active-veg', 'active-nonveg');
+    nonvegBtn.classList.remove('active-veg', 'active-nonveg');
+
+    if (pref === 'veg') {
+        vegBtn.classList.add('active-veg');
+    } else {
+        nonvegBtn.classList.add('active-nonveg');
+    }
+
+    // Show/hide veg & nonveg content blocks
+    document.querySelectorAll('.veg-content').forEach(el => {
+        el.style.display = (pref === 'veg') ? 'block' : 'none';
     });
+    document.querySelectorAll('.nonveg-content').forEach(el => {
+        el.style.display = (pref === 'nonveg') ? 'block' : 'none';
+    });
+
+    // Re-colour custom meal items
+    document.querySelectorAll('.custom-meal-item').forEach(item => {
+        if (pref === 'nonveg') item.classList.add('nonveg-item');
+        else item.classList.remove('nonveg-item');
+    });
+}
+
+// ── Show/hide diet plan tab ──
+function showDiet(dietType) {
+    document.querySelectorAll('.meal-card').forEach(card => card.classList.remove('active-meal'));
+    document.getElementById('diet-' + dietType).classList.add('active-meal');
+    document.querySelectorAll('.diet-option-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('btn-' + dietType).classList.add('active');
 }
 
-// Automatically show correct tab if patient has an active diet goal
+// ── Add custom meal ──
+function addCustomMeal(planKey) {
+    const typeEl = document.getElementById('add-type-' + planKey);
+    const textEl = document.getElementById('add-text-' + planKey);
+    const listEl = document.getElementById('custom-list-' + planKey);
+
+    const mealType = typeEl.value.trim();
+    const mealText = textEl.value.trim();
+    if (!mealText) {
+        textEl.style.borderColor = '#EF4444';
+        textEl.placeholder = '⚠️ Please describe the meal first!';
+        setTimeout(() => {
+            textEl.style.borderColor = '';
+            textEl.placeholder = '';
+        }, 2000);
+        return;
+    }
+
+    const isNonVeg = (currentPref === 'nonveg');
+    const itemEl = document.createElement('div');
+    itemEl.className = 'custom-meal-item' + (isNonVeg ? ' nonveg-item' : '');
+    itemEl.innerHTML = `
+        <span><strong>${mealType}:</strong> ${mealText}</span>
+        <button class="del-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>
+    `;
+    listEl.appendChild(itemEl);
+    textEl.value = '';
+
+    // Quick animation
+    itemEl.style.opacity = '0';
+    itemEl.style.transform = 'translateY(-6px)';
+    setTimeout(() => {
+        itemEl.style.transition = 'all 0.25s';
+        itemEl.style.opacity = '1';
+        itemEl.style.transform = 'translateY(0)';
+    }, 10);
+}
+
+// ── Auto-show correct tab on load ──
 document.addEventListener('DOMContentLoaded', () => {
     const activeGoal = "{{ patient.diet_goal }}";
-    if (activeGoal === 'Weight Loss') showDiet('Weight');
-    else if (activeGoal === 'Muscle Gain') showDiet('Muscle');
+    if      (activeGoal === 'Weight Loss')   showDiet('Weight');
+    else if (activeGoal === 'Muscle Gain')   showDiet('Muscle');
     else if (activeGoal === 'Diabetic Care') showDiet('Diabetic');
     else if (activeGoal === 'Heart Healthy') showDiet('Heart');
-    else if (activeGoal === 'Balanced') showDiet('Balanced');
+    else if (activeGoal === 'Balanced')      showDiet('Balanced');
+
+    // Start in Veg mode
+    setDietPref('veg');
 });
 </script>
 {% endblock %}

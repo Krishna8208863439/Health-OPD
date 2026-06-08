@@ -192,7 +192,6 @@ a{color:inherit;text-decoration:none;}
     {% if current_user.role == 'patient' %}
       <a class="dnav-a" href="{{ url_for('symptom_assessment') }}"><i class="fas fa-stethoscope"></i> Assess</a>
       <a class="dnav-a" href="{{ url_for('symptom_journal') }}"><i class="fas fa-book-medical"></i> Journal</a>
-      <a class="dnav-a" href="{{ url_for('opd_desk') }}"><i class="fas fa-clock"></i> OPD Queue</a>
       <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> Hospitals</a>
       <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> Vitals</a>
       <a class="dnav-a" href="{{ url_for('wellness') }}"><i class="fas fa-leaf"></i> Wellness</a>
@@ -251,7 +250,6 @@ a{color:inherit;text-decoration:none;}
       <div class="drawer-sec">Health Tools</div>
       <a class="drawer-item" href="{{ url_for('symptom_assessment') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-stethoscope"></i></span>Symptom Assessment</a>
       <a class="drawer-item" href="{{ url_for('symptom_journal') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-book-medical"></i></span>Symptom Journal</a>
-      <a class="drawer-item" href="{{ url_for('opd_desk') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-clock"></i></span>OPD Queue Desk</a>
       <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span>Nearest Hospitals</a>
       <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span>Health Vitals</a>
       <a class="drawer-item" href="{{ url_for('wellness') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-leaf"></i></span>Daily Wellness</a>

@@ -1,128 +1,367 @@
 {% extends "base.html" %}
-{% block title %}Symptom Journal &amp; Export – HealthCare Plus{% endblock %}
+{% block title %}Symptom Journal & Export – HealthCare Plus{% endblock %}
 
 {% block extra_css %}
 <style>
 :root {
-    --journal-primary: #0066CC;
-    --journal-green: #10B981;
-    --journal-yellow: #F59E0B;
-    --journal-red: #EF4444;
+    --j-primary: #6C63FF;
+    --j-accent: #00D4FF;
+    --j-green: #00E5A0;
+    --j-yellow: #FFD166;
+    --j-red: #FF6B6B;
+    --j-glass: rgba(255, 255, 255, 0.06);
+    --j-glass-border: rgba(255, 255, 255, 0.12);
+    --j-text: #E2E8F0;
+    --j-muted: #94A3B8;
 }
 
+/* ── Full-page dark background ── */
+body {
+    background: linear-gradient(135deg, #0A0E27 0%, #111827 40%, #0D1B2A 70%, #1A0533 100%) !important;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated star/particle background */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(108, 99, 255, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 85% 15%, rgba(0, 212, 255, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(0, 229, 160, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(255, 107, 107, 0.06) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+    animation: auroraShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes auroraShift {
+    0%   { opacity: 0.6; filter: blur(0px); }
+    50%  { opacity: 1;   filter: blur(2px); }
+    100% { opacity: 0.7; filter: blur(1px); }
+}
+
+/* Floating particles */
+.particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(108, 99, 255, 0.4);
+    animation: floatUp linear infinite;
+}
+.particle:nth-child(odd)  { background: rgba(0, 212, 255, 0.3); }
+.particle:nth-child(3n)   { background: rgba(0, 229, 160, 0.3); }
+
+@keyframes floatUp {
+    0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 0.5; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* Force all inner content above background layers */
+.container, .journal-wrapper { position: relative; z-index: 1; }
+
+/* ── Hero banner ── */
 .journal-hero {
-    background: linear-gradient(135deg, var(--journal-primary) 0%, #0c82f2 100%);
+    background: linear-gradient(135deg, rgba(108,99,255,0.3) 0%, rgba(0,212,255,0.2) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(108,99,255,0.4);
     color: white;
-    border-radius: 16px;
-    padding: 32px;
+    border-radius: 20px;
+    padding: 36px;
     margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.15);
+    box-shadow: 0 8px 40px rgba(108,99,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
 }
-.journal-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
-.journal-hero p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+.journal-hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+.journal-hero h2 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.journal-hero p { font-size: 0.9rem; opacity: 0.8; margin: 0; color: #CBD5E1; -webkit-text-fill-color: #CBD5E1; }
 
+/* ── Export Card ── */
 .export-card {
-    background: #EFF6FF;
-    border: 1.5px solid #BFDBFE;
-    border-radius: 14px;
-    padding: 20px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(108,99,255,0.12) 100%);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 16px;
+    padding: 20px 24px;
     margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.1);
 }
-.export-card h5 { margin: 0 0 4px 0; color: #1E3A8A; font-weight: 800; font-size: 1.05rem; }
-.export-card p { margin: 0; font-size: 0.85rem; color: #3B82F6; }
+.export-card h5 { margin: 0 0 4px 0; color: #E0F2FE; font-weight: 800; font-size: 1.05rem; }
+.export-card p  { margin: 0; font-size: 0.85rem; color: #94A3B8; }
 
 .btn-export {
-    background: var(--journal-primary);
+    background: linear-gradient(135deg, #6C63FF 0%, #00D4FF 100%);
     color: white;
     font-weight: 700;
     padding: 12px 24px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 102, 204, 0.3);
-    transition: all 0.2s;
+    box-shadow: 0 4px 18px rgba(108,99,255,0.45);
+    transition: all 0.25s;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     text-decoration: none;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
-.btn-export:hover { background: #0052a3; transform: translateY(-1px); }
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(108,99,255,0.6);
+    color: white;
+    text-decoration: none;
+}
 
+/* ── Main Grid ── */
 .journal-grid {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     gap: 24px;
 }
 
+/* ── Glass Cards ── */
 .card-entry {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    border: 1px solid #E5E7EB;
+    background: var(--j-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--j-glass-border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: box-shadow 0.3s;
 }
-.card-entry h4 { font-size: 1.2rem; font-weight: 800; color: #1F2937; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.card-entry:hover {
+    box-shadow: 0 12px 40px rgba(108,99,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.card-entry h4 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #F1F5F9;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+/* Form labels */
+.form-label-dark {
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--j-muted);
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Form controls (dark) */
+.form-control {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    color: var(--j-text) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-control:focus {
+    border-color: var(--j-primary) !important;
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.25) !important;
+    outline: none !important;
+    background: rgba(108,99,255,0.08) !important;
+}
+.form-control option { background: #1E293B; color: #E2E8F0; }
+textarea.form-control { resize: vertical; min-height: 90px; }
+
+/* ── Mood Selector ── */
 .mood-selector {
     display: flex;
     gap: 10px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 .mood-option {
     flex: 1;
-    background: #F3F4F6;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 8px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
+}
+.mood-option:hover {
+    background: rgba(108,99,255,0.15);
+    border-color: rgba(108,99,255,0.5);
+    transform: translateY(-2px);
 }
 .mood-option.selected {
-    border-color: var(--journal-primary);
-    background: #EFF6FF;
+    border-color: var(--j-primary);
+    background: rgba(108,99,255,0.2);
+    box-shadow: 0 4px 16px rgba(108,99,255,0.3);
 }
-.mood-option .emoji { font-size: 24px; display: block; margin-bottom: 4px; }
-.mood-option .label { font-size: 0.75rem; font-weight: 700; color: #4B5563; }
+.mood-option .emoji { font-size: 26px; display: block; margin-bottom: 4px; }
+.mood-option .label { font-size: 0.72rem; font-weight: 700; color: var(--j-muted); }
+.mood-option.selected .label { color: #a5b4fc; }
 
+/* Pain slider */
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--j-primary) 0%, var(--j-accent) 100%);
+    outline: none;
+    cursor: pointer;
+    padding: 0 !important;
+    border: none !important;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(108,99,255,0.5);
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ── Symptom Tags ── */
+.symptom-tag {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--j-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.symptom-tag:hover {
+    background: rgba(108,99,255,0.2);
+    color: #c4b5fd;
+    border-color: rgba(108,99,255,0.4);
+}
+.symptom-tag.active {
+    background: linear-gradient(135deg, rgba(108,99,255,0.4), rgba(0,212,255,0.3));
+    color: white;
+    border-color: var(--j-primary);
+    box-shadow: 0 3px 12px rgba(108,99,255,0.4);
+}
+
+/* ── Submit button ── */
+.btn-save-journal {
+    background: linear-gradient(135deg, #6C63FF 0%, #00D4FF 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    width: 100%;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(108,99,255,0.4);
+    transition: all 0.25s;
+    letter-spacing: 0.3px;
+}
+.btn-save-journal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(108,99,255,0.6);
+}
+
+/* ── Right panel / Timeline ── */
+.card-history {
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.card-history h4 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #F1F5F9;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Timeline */
 .timeline {
     position: relative;
-    padding-left: 20px;
-    border-left: 2px solid #E5E7EB;
+    padding-left: 22px;
+    border-left: 2px solid rgba(255,255,255,0.08);
 }
-.timeline-item {
-    position: relative;
-    margin-bottom: 20px;
-}
+.timeline-item { position: relative; margin-bottom: 20px; }
 .timeline-dot {
     position: absolute;
-    left: -27px;
-    top: 2px;
-    width: 12px;
-    height: 12px;
+    left: -29px;
+    top: 4px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    background: #E5E7EB;
-    border: 2px solid white;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 8px rgba(108,99,255,0.3);
 }
-.dot-mild { background: var(--journal-green); }
-.dot-moderate { background: var(--journal-yellow); }
-.dot-severe { background: var(--journal-red); }
+.dot-mild     { background: var(--j-green);  box-shadow: 0 0 10px rgba(0,229,160,0.5); }
+.dot-moderate { background: var(--j-yellow); box-shadow: 0 0 10px rgba(255,209,102,0.5); }
+.dot-severe   { background: var(--j-red);    box-shadow: 0 0 10px rgba(255,107,107,0.5); }
 
 .timeline-card {
-    background: white;
-    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
     padding: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    border: 1px solid #E5E7EB;
+    transition: all 0.2s;
+}
+.timeline-card:hover {
+    background: rgba(108,99,255,0.1);
+    border-color: rgba(108,99,255,0.3);
+    transform: translateX(3px);
 }
 .timeline-header {
     display: flex;
@@ -130,173 +369,207 @@
     align-items: center;
     margin-bottom: 8px;
 }
-.timeline-date { font-size: 0.8rem; color: #9CA3AF; font-weight: 700; }
+.timeline-date { font-size: 0.78rem; color: var(--j-muted); font-weight: 700; }
 .badge-sev {
-    font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; text-transform: uppercase;
-}
-.badge-mild { background: #ECFDF5; color: #065F46; }
-.badge-moderate { background: #FFFBEB; color: #78350F; }
-.badge-severe { background: #FEF2F2; color: #991B1B; }
-
-.symptom-tag {
-    background: #F3F4F6;
-    border: 1px solid #E5E7EB;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 10px;
     border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #4B5563;
-    cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.symptom-tag:hover { background: #E5E7EB; }
-.symptom-tag.active {
-    background: var(--journal-primary);
-    color: white;
-    border-color: var(--journal-primary);
-    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+.badge-mild     { background: rgba(0,229,160,0.15);  color: #6ee7b7; border: 1px solid rgba(0,229,160,0.3); }
+.badge-moderate { background: rgba(255,209,102,0.15); color: #fcd34d; border: 1px solid rgba(255,209,102,0.3); }
+.badge-severe   { background: rgba(255,107,107,0.15); color: #fca5a5; border: 1px solid rgba(255,107,107,0.3); }
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 50px 10px;
+    color: var(--j-muted);
 }
+.empty-state .empty-icon { font-size: 52px; display: block; margin-bottom: 14px; }
+.empty-state h5 { color: #94A3B8; margin-bottom: 8px; }
+.empty-state p  { font-size: 0.82rem; margin: 0; opacity: 0.7; }
 
 @media(max-width: 768px) {
-    .journal-hero { flex-direction: column; text-align: center; }
-    .journal-grid { grid-template-columns: 1fr; }
-    .export-card { flex-direction: column; text-align: center; }
+    .journal-hero  { flex-direction: column; text-align: center; }
+    .journal-grid  { grid-template-columns: 1fr; }
+    .export-card   { flex-direction: column; text-align: center; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="journal-hero">
-    <div>
-        <h2>Daily Symptom Journal</h2>
-        <p>Log your daily feelings and track symptoms. Export a complete clinical report of your nutrition, alarms, and journal history.</p>
-    </div>
-    <span style="font-size: 56px;">📓</span>
-</div>
+<!-- Floating particles -->
+<div class="particles" id="particles-bg"></div>
 
-<!-- Export card -->
-<div class="export-card">
-    <div>
-        <h5>📄 Export Comprehensive Health Report</h5>
-        <p>Includes your daily health scores, food logs, medicine adherence logs, and symptoms.</p>
-    </div>
-    <a href="{{ url_for('export_health_report') }}" class="btn-export">
-        <i class="fas fa-file-pdf"></i> Export Health Report PDF
-    </a>
-</div>
-
-<div class="journal-grid">
-    <!-- Log Entry Form -->
-    <div class="card-entry">
-        <h4>✍️ Log How You Feel Today</h4>
-        <form method="POST" action="/symptom-journal" id="journal-form">
-            <!-- Hidden input to store selected mood -->
-            <input type="hidden" name="mood" id="selected-mood" value="okay">
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Current Mood</label>
-                <div class="mood-selector">
-                    <div class="mood-option" onclick="selectMood('happy', this)">
-                        <span class="emoji">😃</span>
-                        <span class="label">Happy</span>
-                    </div>
-                    <div class="mood-option selected" onclick="selectMood('okay', this)">
-                        <span class="emoji">😐</span>
-                        <span class="label">Okay</span>
-                    </div>
-                    <div class="mood-option" onclick="selectMood('tired', this)">
-                        <span class="emoji">😴</span>
-                        <span class="label">Tired</span>
-                    </div>
-                    <div class="mood-option" onclick="selectMood('sick', this)">
-                        <span class="emoji">🤒</span>
-                        <span class="label">Sick</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Symptom Severity</label>
-                <select name="severity" class="form-control" style="font-size:0.9rem; padding:10px;">
-                    <option value="mild">Mild (Normal day-to-day, negligible discomfort)</option>
-                    <option value="moderate">Moderate (Noticeable, but manageable)</option>
-                    <option value="severe">Severe (Requires immediate care/disrupts routine)</option>
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:12px;">Physical Pain Level (<span id="pain-val">0</span>/10)</label>
-                <input type="range" id="pain-slider" min="0" max="10" value="0" class="form-control" style="padding:0; height:6px; border-radius:3px; outline:none;" oninput="document.getElementById('pain-val').textContent=this.value">
-            </div>
-
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Specific Symptoms</label>
-                <div id="tags-container" style="display:flex; flex-wrap:wrap; gap:8px;">
-                    <span class="symptom-tag" onclick="toggleTag(this)">Headache</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Nausea</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Fatigue</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Fever</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Cough</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Body Ache</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Stomach Pain</span>
-                    <span class="symptom-tag" onclick="toggleTag(this)">Dizziness</span>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Additional Notes</label>
-                <textarea id="notes-area" rows="3" class="form-control" placeholder="Any specific details about your symptoms or day..." style="font-size:0.9rem; padding:12px; line-height:1.5;"></textarea>
-                <input type="hidden" name="symptoms" id="final-symptoms">
-            </div>
-
-            <button type="button" onclick="submitJournal()" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">💾 Save Journal Entry</button>
-        </form>
-    </div>
-
-    <!-- Recent History Timeline -->
-    <div class="card-entry" style="background:#F9FAFB;">
-        <h4>⏳ Recent Symptom Logs</h4>
-        
-        {% if entries %}
-        <div class="timeline">
-            {% for entry in entries %}
-            <div class="timeline-item">
-                <div class="timeline-dot dot-{{ entry.severity }}"></div>
-                <div class="timeline-card">
-                    <div class="timeline-header">
-                        <span class="timeline-date">{{ entry.log_date }}</span>
-                        <span class="badge-sev badge-{{ entry.severity }}">{{ entry.severity }}</span>
-                    </div>
-                    <div style="font-size: 0.95rem; font-weight:700; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
-                        {% if entry.mood == 'happy' %}😃{% elif entry.mood == 'okay' %}😐{% elif entry.mood == 'tired' %}😴{% else %}🤒{% endif %}
-                        Mood: {{ entry.mood.title() }}
-                    </div>
-                    <p style="font-size: 0.88rem; color:#4B5563; line-height:1.5; margin:0;">
-                        {{ entry.symptoms }}
-                    </p>
-                </div>
-            </div>
-            {% endfor %}
+<div class="journal-wrapper">
+    <!-- Hero -->
+    <div class="journal-hero">
+        <div>
+            <h2>📓 Daily Symptom Journal</h2>
+            <p>Log your daily feelings and track symptoms over time. Export a complete clinical health report including nutrition, alarms, and journal history.</p>
         </div>
-        {% else %}
-        <div style="text-align:center; padding:40px 10px; color:#9CA3AF;">
-            <span style="font-size:48px; display:block; margin-bottom:12px;">✍️</span>
-            <h5>No journal entries logged yet</h5>
-            <p style="font-size:0.82rem; margin:0;">Start by logging how you feel today using the form on the left.</p>
+        <span style="font-size: 64px; filter: drop-shadow(0 0 20px rgba(108,99,255,0.6));">📋</span>
+    </div>
+
+    <!-- Export card -->
+    <div class="export-card">
+        <div>
+            <h5>📄 Export Comprehensive Health Report</h5>
+            <p>Includes your daily health scores, food logs, medicine adherence logs, and symptoms — formatted as a clinical PDF.</p>
         </div>
-        {% endif %}
+        <a href="{{ url_for('export_health_report') }}" class="btn-export">
+            <i class="fas fa-file-pdf"></i> Export PDF Report
+        </a>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="journal-grid">
+        <!-- Log Entry Form -->
+        <div class="card-entry">
+            <h4>✍️ Log How You Feel Today</h4>
+            <form method="POST" action="/symptom-journal" id="journal-form">
+                <input type="hidden" name="mood" id="selected-mood" value="okay">
+
+                <!-- Mood -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label-dark">Current Mood</label>
+                    <div class="mood-selector">
+                        <div class="mood-option" onclick="selectMood('happy', this)">
+                            <span class="emoji">😃</span>
+                            <span class="label">Happy</span>
+                        </div>
+                        <div class="mood-option selected" onclick="selectMood('okay', this)">
+                            <span class="emoji">😐</span>
+                            <span class="label">Okay</span>
+                        </div>
+                        <div class="mood-option" onclick="selectMood('tired', this)">
+                            <span class="emoji">😴</span>
+                            <span class="label">Tired</span>
+                        </div>
+                        <div class="mood-option" onclick="selectMood('sick', this)">
+                            <span class="emoji">🤒</span>
+                            <span class="label">Sick</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Severity -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label-dark">Symptom Severity</label>
+                    <select name="severity" class="form-control" style="font-size:0.9rem; padding:10px;">
+                        <option value="mild">Mild — Normal day-to-day, negligible discomfort</option>
+                        <option value="moderate">Moderate — Noticeable, but manageable</option>
+                        <option value="severe">Severe — Requires immediate care</option>
+                    </select>
+                </div>
+
+                <!-- Pain slider -->
+                <div style="margin-bottom: 24px;">
+                    <label class="form-label-dark">Physical Pain Level (<span id="pain-val" style="color:#a5b4fc; font-size:1rem;">0</span>/10)</label>
+                    <input type="range" id="pain-slider" min="0" max="10" value="0"
+                           oninput="document.getElementById('pain-val').textContent=this.value">
+                </div>
+
+                <!-- Symptoms tags -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label-dark">Specific Symptoms</label>
+                    <div id="tags-container" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <span class="symptom-tag" onclick="toggleTag(this)">Headache</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Nausea</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Fatigue</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Fever</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Cough</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Body Ache</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Stomach Pain</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Dizziness</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Breathlessness</span>
+                        <span class="symptom-tag" onclick="toggleTag(this)">Anxiety</span>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div style="margin-bottom: 24px;">
+                    <label class="form-label-dark">Additional Notes</label>
+                    <textarea id="notes-area" rows="3" class="form-control"
+                              placeholder="Any specific details about your symptoms or day..."></textarea>
+                    <input type="hidden" name="symptoms" id="final-symptoms">
+                </div>
+
+                <button type="button" onclick="submitJournal()" class="btn-save-journal">
+                    💾 Save Journal Entry
+                </button>
+            </form>
+        </div>
+
+        <!-- Timeline History -->
+        <div class="card-history">
+            <h4>⏳ Recent Symptom Logs</h4>
+
+            {% if entries %}
+            <div class="timeline">
+                {% for entry in entries %}
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-{{ entry.severity }}"></div>
+                    <div class="timeline-card">
+                        <div class="timeline-header">
+                            <span class="timeline-date">{{ entry.log_date }}</span>
+                            <span class="badge-sev badge-{{ entry.severity }}">{{ entry.severity }}</span>
+                        </div>
+                        <div style="font-size: 0.92rem; font-weight:700; margin-bottom: 6px; display:flex; align-items:center; gap:6px; color:#E2E8F0;">
+                            {% if entry.mood == 'happy' %}😃
+                            {% elif entry.mood == 'okay' %}😐
+                            {% elif entry.mood == 'tired' %}😴
+                            {% else %}🤒{% endif %}
+                            Mood: <span style="color:#a5b4fc;">{{ entry.mood.title() }}</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color:#94A3B8; line-height:1.55; margin:0;">
+                            {{ entry.symptoms }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">✍️</span>
+                <h5>No journal entries yet</h5>
+                <p>Start by logging how you feel today using the form on the left.</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ── Generate floating particles ──
+(function() {
+    const container = document.getElementById('particles-bg');
+    if (!container) return;
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 5 + 2;
+        p.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            left: ${Math.random() * 100}%;
+            animation-duration: ${Math.random() * 15 + 12}s;
+            animation-delay: ${Math.random() * 10}s;
+            opacity: ${Math.random() * 0.6 + 0.2};
+        `;
+        container.appendChild(p);
+    }
+})();
+
 function selectMood(mood, element) {
     document.getElementById('selected-mood').value = mood;
-    document.querySelectorAll('.mood-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
+    document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('selected'));
     element.classList.add('selected');
 }
 
@@ -308,12 +581,10 @@ function submitJournal() {
     const pain = document.getElementById('pain-slider').value;
     const activeTags = Array.from(document.querySelectorAll('.symptom-tag.active')).map(t => t.textContent).join(', ');
     const notes = document.getElementById('notes-area').value;
-    
+
     let compiled = `[Pain Level: ${pain}/10]`;
     if (activeTags) compiled += ` [Symptoms: ${activeTags}]`;
     if (notes) compiled += `\nNotes: ${notes}`;
-    
-    // Ensure we send something if it's completely empty but required by the backend
     if (compiled.trim() === `[Pain Level: 0/10]`) compiled += `\nNotes: Feeling fine.`;
 
     document.getElementById('final-symptoms').value = compiled;
