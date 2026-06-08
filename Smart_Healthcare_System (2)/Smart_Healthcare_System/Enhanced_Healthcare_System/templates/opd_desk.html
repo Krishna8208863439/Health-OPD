@@ -428,6 +428,31 @@ function updateQueueStatus() {
             document.getElementById('lbl-ahead').textContent = patientsAhead;
             document.getElementById('lbl-wait').textContent = `${patientsAhead * 10} mins`;
             
+            // Notification logic for 3-5 slots away
+            if (patientsAhead >= 3 && patientsAhead <= 5) {
+                if (!window.notifiedQueueStatus) {
+                    if (Notification.permission === 'granted') {
+                        new Notification("HealthCare+ OPD Alert", {
+                            body: `Your doctor is almost ready! You are ${patientsAhead} slots away. Please head to the waiting area.`,
+                            icon: "/static/assets/hospital_logo.png"
+                        });
+                        window.notifiedQueueStatus = true;
+                    } else if (Notification.permission !== 'denied') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                new Notification("HealthCare+ OPD Alert", {
+                                    body: `Your doctor is almost ready! You are ${patientsAhead} slots away. Please head to the waiting area.`,
+                                    icon: "/static/assets/hospital_logo.png"
+                                });
+                                window.notifiedQueueStatus = true;
+                            }
+                        });
+                    }
+                }
+            } else if (patientsAhead < 3) {
+                 window.notifiedQueueStatus = false; // reset just in case
+            }
+            
             // Update Visual Steps
             const pBar = document.getElementById('step-progress-bar');
             const stepIssued = document.getElementById('step-issued');
@@ -464,6 +489,11 @@ function updateQueueStatus() {
 // Poll status every 10 seconds
 setInterval(updateQueueStatus, 10000);
 updateQueueStatus();
+
+// Request notification permission upfront if not granted
+if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+    Notification.requestPermission();
+}
 {% endif %}
 </script>
 {% endblock %}

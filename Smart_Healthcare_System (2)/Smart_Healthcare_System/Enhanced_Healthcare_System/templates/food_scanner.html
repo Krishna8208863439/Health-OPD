@@ -194,18 +194,32 @@
 .macro-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 .macro-item {
     background: #fff;
     border: 1px solid #D1FAE5;
-    border-radius: 8px;
-    padding: 8px;
+    border-radius: 10px;
+    padding: 12px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
 }
-.macro-val { font-size: 0.95rem; font-weight: 800; color: #065F46; }
-.macro-label { font-size: 0.72rem; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+.macro-val { font-size: 1.1rem; font-weight: 800; color: #065F46; margin-bottom: 2px; }
+.macro-label { font-size: 0.75rem; color: #6B7280; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+.macro-bar-bg {
+    background: #E5E7EB;
+    height: 6px;
+    border-radius: 3px;
+    width: 100%;
+    overflow: hidden;
+}
+.macro-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease-out;
+}
 
 .log-api-btn {
     background: #059669;
@@ -315,14 +329,17 @@
                     <div class="macro-item">
                         <div class="macro-val" id="res-protein">0.5g</div>
                         <div class="macro-label">Protein</div>
+                        <div class="macro-bar-bg"><div class="macro-bar-fill" id="bar-protein" style="width: 0%; background: #3B82F6;"></div></div>
                     </div>
                     <div class="macro-item">
                         <div class="macro-val" id="res-carbs">25g</div>
                         <div class="macro-label">Carbs</div>
+                        <div class="macro-bar-bg"><div class="macro-bar-fill" id="bar-carbs" style="width: 0%; background: #F59E0B;"></div></div>
                     </div>
                     <div class="macro-item">
                         <div class="macro-val" id="res-fat">0.3g</div>
                         <div class="macro-label">Fat</div>
+                        <div class="macro-bar-bg"><div class="macro-bar-fill" id="bar-fat" style="width: 0%; background: #EF4444;"></div></div>
                     </div>
                 </div>
 
@@ -748,6 +765,19 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
             document.getElementById('res-carbs').textContent = data.carbs;
             document.getElementById('res-fat').textContent = data.fat;
             document.getElementById('chatgpt-vision-text').textContent = chatgptText;
+
+            // Calculate progress bar percentages
+            let pVal = parseFloat(data.protein) || 0;
+            let cVal = parseFloat(data.carbs) || 0;
+            let fVal = parseFloat(data.fat) || 0;
+            let totalMacros = pVal + cVal + fVal || 1;
+            
+            // Allow bars to animate from 0 by doing it in next tick
+            setTimeout(() => {
+                document.getElementById('bar-protein').style.width = Math.min(100, (pVal / totalMacros) * 100 * 1.5) + '%';
+                document.getElementById('bar-carbs').style.width = Math.min(100, (cVal / totalMacros) * 100 * 1.5) + '%';
+                document.getElementById('bar-fat').style.width = Math.min(100, (fVal / totalMacros) * 100 * 1.5) + '%';
+            }, 50);
 
             // Update dietary goal fitness alignment card
             const goalFitCard = document.getElementById('goal-fit-card');

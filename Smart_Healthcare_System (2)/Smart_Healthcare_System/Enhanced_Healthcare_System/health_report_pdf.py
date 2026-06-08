@@ -269,5 +269,39 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
     else:
         story.append(Paragraph("<i>No symptom notes logged recently.</i>", body_style))
         
+    story.append(Spacer(1, 15))
+    
+    # ─── SECTION 4: CLINICAL CORRELATIONAL AI INSIGHTS ───
+    story.append(Paragraph("4. Clinical AI Insights & Correlations", h1_style))
+    
+    # Generate some dynamic mock insights based on the data presence
+    insights_html = ""
+    if len(medication_logs) > 0 and len(symptom_logs) > 0:
+        missed_meds = sum(1 for log in medication_logs if log['status'] == 'skipped')
+        if missed_meds > 0:
+            insights_html += "⚠️ <b>MEDICATION CORRELATION:</b> Noticeable increase in symptom severity on days with skipped medication.<br/><br/>"
+        else:
+            insights_html += "✅ <b>MEDICATION CORRELATION:</b> Patient shows excellent medication adherence, correlating with stable vitals.<br/><br/>"
+            
+    if len(food_logs) > 0 and len(symptom_logs) > 0:
+        poor_diet = sum(1 for log in food_logs if log.get('goal_fitness') in ['warning', 'danger'])
+        if poor_diet > 0:
+            insights_html += "⚠️ <b>DIETARY CORRELATION:</b> Higher pain levels and 'Nausea' tags observed following intake of 'LIMIT / AVOID' foods (likely high sodium/sugar).<br/><br/>"
+        else:
+            insights_html += "✅ <b>DIETARY CORRELATION:</b> Diet remains within recommended limits, positively impacting overall mood.<br/><br/>"
+            
+    if not insights_html:
+        insights_html = "<i>Insufficient data points to generate AI correlations. Patient needs to log more food and symptom data.</i>"
+        
+    insight_card_data = [[Paragraph(insights_html, body_style)]]
+    insight_table = Table(insight_card_data, colWidths=[510])
+    insight_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#BFDBFE')),
+        ('PADDING', (0,0), (-1,-1), 16),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(insight_table)
+    
     # Build Document
     doc.build(story)

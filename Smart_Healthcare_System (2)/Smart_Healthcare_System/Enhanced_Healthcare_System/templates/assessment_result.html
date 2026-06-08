@@ -66,14 +66,24 @@
         {% if medicines.PRIMARY %}
         <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;"> Primary Treatment (Prescription)</div>
         {% for m in medicines.PRIMARY %}
-        <div class="med-item {% if '[!]' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}" style="padding: 10px 14px; border-left: 4px solid var(--primary); background: var(--primary-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
+        <div class="med-item {% if '[!]' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; border-left: 4px solid var(--primary); background: var(--primary-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">
+            <span style="flex:1;">{{ m }}</span>
+            {% if 'Prescription' not in m and '[!]' not in m %}
+            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')"><i class="fas fa-cart-plus"></i> Order OTC</button>
+            {% else %}
+            <button class="btn btn-sm" style="background:#6B7280; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" disabled title="Prescription Required"><i class="fas fa-lock"></i> Rx Only</button>
+            {% endif %}
+        </div>
         {% endfor %}
         {% endif %}
 
         {% if medicines.SECONDARY %}
         <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;"> Supporting Medications</div>
         {% for m in medicines.SECONDARY %}
-        <div class="med-item" style="padding: 10px 14px; border-left: 4px solid var(--success); background: var(--success-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
+        <div class="med-item" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; border-left: 4px solid var(--success); background: var(--success-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">
+            <span style="flex:1;">{{ m }}</span>
+            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')"><i class="fas fa-cart-plus"></i> Order OTC</button>
+        </div>
         {% endfor %}
         {% endif %}
 
@@ -182,4 +192,36 @@
     </div>
 
 </div>
+
+<!-- E-Pharmacy Mock Modal -->
+<div id="epharmacy-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:16px; width:90%; max-width:400px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h4 style="margin:0; font-weight:800; color:#0066CC;"><i class="fas fa-shopping-cart"></i> E-Pharmacy Cart</h4>
+            <button onclick="document.getElementById('epharmacy-modal').style.display='none'" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#666;">&times;</button>
+        </div>
+        <p style="font-size:0.85rem; color:#666; margin-bottom:16px;">Adding to your cart for local delivery (Powered by MockPharmacy API).</p>
+        <div id="cart-items" style="background:#F3F4F6; border-radius:8px; padding:12px; margin-bottom:16px; font-size:0.9rem; font-weight:600; color:#333;">
+            <!-- items injected here -->
+        </div>
+        <button class="btn btn-primary w-100" style="padding:12px; font-weight:700;" onclick="checkoutCart()">Proceed to Checkout</button>
+    </div>
+</div>
+
+<script>
+let cart = [];
+function addToCart(medName) {
+    if(!cart.includes(medName)) {
+        cart.push(medName);
+    }
+    const cartDiv = document.getElementById('cart-items');
+    cartDiv.innerHTML = cart.map(item => `<div style="padding:4px 0; border-bottom:1px solid #E5E7EB;">💊 ${item}</div>`).join('');
+    document.getElementById('epharmacy-modal').style.display = 'flex';
+}
+function checkoutCart() {
+    alert("Mock E-Pharmacy Checkout Initiated for:\n" + cart.join(", "));
+    document.getElementById('epharmacy-modal').style.display = 'none';
+}
+</script>
+
 {% endblock %}

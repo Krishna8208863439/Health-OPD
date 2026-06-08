@@ -573,13 +573,15 @@
         </div>
     </div>
 
-    <div class="summary-card">
-        <h5>⚠️ Disclaimer</h5>
-        <p style="font-size:13px;color:#555;line-height:1.7;">
-            This assessment is for <strong>informational purposes only</strong> and does not replace professional medical diagnosis.
-            Always consult a qualified doctor for proper diagnosis and treatment.
-            In case of emergency, call <strong>108</strong> (India) or go to the nearest emergency room immediately.
+    <div class="summary-card" style="border: 2px solid #FEF2F2; background: #FFF5F5;">
+        <h5 style="color: #991B1B;">⚠️ Strict Medical Disclaimer</h5>
+        <p style="font-size:13px;color:#7F1D1D;line-height:1.7; margin-bottom: 12px;">
+            This AI-driven assessment is for <strong>informational purposes only</strong> and does not constitute a medical diagnosis. The suggested Over-The-Counter (OTC) medicines do not replace a doctor's prescription. Always consult a qualified medical professional for proper diagnosis and treatment. In an emergency, dial <strong>108 / 112</strong> or visit the nearest ER immediately.
         </p>
+        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 700; color: #991B1B; cursor: pointer;">
+            <input type="checkbox" id="disclaimer-check" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #DC3545;">
+            I acknowledge this is not a medical diagnosis and I will consult a doctor for serious issues.
+        </label>
     </div>
 
     <div class="nav-btns">
@@ -683,6 +685,11 @@ function submitAssessment() {
     if (checked.length < 1) {
         alert('Please select at least 1 symptom before analyzing.');
         goStep(0);
+        return;
+    }
+    const disclaimer = document.getElementById('disclaimer-check');
+    if (!disclaimer.checked) {
+        alert('Please acknowledge the Medical Disclaimer before proceeding.');
         return;
     }
     document.getElementById('loading-overlay').style.display = 'flex';

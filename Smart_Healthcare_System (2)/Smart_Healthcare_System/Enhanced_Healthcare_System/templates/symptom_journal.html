@@ -138,6 +138,26 @@
 .badge-moderate { background: #FFFBEB; color: #78350F; }
 .badge-severe { background: #FEF2F2; color: #991B1B; }
 
+.symptom-tag {
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4B5563;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.symptom-tag:hover { background: #E5E7EB; }
+.symptom-tag.active {
+    background: var(--journal-primary);
+    color: white;
+    border-color: var(--journal-primary);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+}
+
 @media(max-width: 768px) {
     .journal-hero { flex-direction: column; text-align: center; }
     .journal-grid { grid-template-columns: 1fr; }
@@ -170,7 +190,7 @@
     <!-- Log Entry Form -->
     <div class="card-entry">
         <h4>✍️ Log How You Feel Today</h4>
-        <form method="POST" action="/symptom-journal">
+        <form method="POST" action="/symptom-journal" id="journal-form">
             <!-- Hidden input to store selected mood -->
             <input type="hidden" name="mood" id="selected-mood" value="okay">
             
@@ -206,11 +226,31 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 20px;">
-                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Symptom Description / Text Journal</label>
-                <textarea name="symptoms" rows="5" class="form-control" placeholder="Write down how you feel (e.g. slight headache, sore throat, or just feeling great and energized!)..." required style="font-size:0.9rem; padding:12px; line-height:1.5;"></textarea>
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:12px;">Physical Pain Level (<span id="pain-val">0</span>/10)</label>
+                <input type="range" id="pain-slider" min="0" max="10" value="0" class="form-control" style="padding:0; height:6px; border-radius:3px; outline:none;" oninput="document.getElementById('pain-val').textContent=this.value">
             </div>
 
-            <button type="submit" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">💾 Save Journal Entry</button>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Specific Symptoms</label>
+                <div id="tags-container" style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <span class="symptom-tag" onclick="toggleTag(this)">Headache</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Nausea</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Fatigue</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Fever</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Cough</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Body Ache</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Stomach Pain</span>
+                    <span class="symptom-tag" onclick="toggleTag(this)">Dizziness</span>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:6px;">Additional Notes</label>
+                <textarea id="notes-area" rows="3" class="form-control" placeholder="Any specific details about your symptoms or day..." style="font-size:0.9rem; padding:12px; line-height:1.5;"></textarea>
+                <input type="hidden" name="symptoms" id="final-symptoms">
+            </div>
+
+            <button type="button" onclick="submitJournal()" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">💾 Save Journal Entry</button>
         </form>
     </div>
 
@@ -258,6 +298,26 @@ function selectMood(mood, element) {
         opt.classList.remove('selected');
     });
     element.classList.add('selected');
+}
+
+function toggleTag(el) {
+    el.classList.toggle('active');
+}
+
+function submitJournal() {
+    const pain = document.getElementById('pain-slider').value;
+    const activeTags = Array.from(document.querySelectorAll('.symptom-tag.active')).map(t => t.textContent).join(', ');
+    const notes = document.getElementById('notes-area').value;
+    
+    let compiled = `[Pain Level: ${pain}/10]`;
+    if (activeTags) compiled += ` [Symptoms: ${activeTags}]`;
+    if (notes) compiled += `\nNotes: ${notes}`;
+    
+    // Ensure we send something if it's completely empty but required by the backend
+    if (compiled.trim() === `[Pain Level: 0/10]`) compiled += `\nNotes: Feeling fine.`;
+
+    document.getElementById('final-symptoms').value = compiled;
+    document.getElementById('journal-form').submit();
 }
 </script>
 {% endblock %}
