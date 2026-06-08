@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostics Dashboard - HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+  .diag-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .diag-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--blue-dk);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.06);
+  }
+  .status-item:last-child {
+    border-bottom: none;
+  }
+  .status-label {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .status-val {
+    font-size: 0.88rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .val-pass { color: var(--green); }
+  .val-fail { color: var(--red); }
+  .val-warn { color: var(--yellow); font-weight: 800; }
+  
+  /* Log Console Widget */
+  .log-console {
+    background: #1e1e1e;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    padding: 12px;
+    border-radius: 8px;
+    height: 180px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    margin-top: 10px;
+  }
+  .log-line {
+    margin-bottom: 4px;
+    word-break: break-all;
+  }
+  .log-error { color: #ff3333; font-weight: bold; }
+  .log-warn { color: #ffcc00; }
+  
+  .test-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  @media(max-width: 500px) {
+    .test-btn-group {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .camera-preview-box {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    display: none;
+    aspect-ratio: 4/3;
+    width: 100%;
+    position: relative;
+  }
+  #debug-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> Home</a>
+      <h2 class="mb-0" style="font-weight:800; color:var(--text);">System Diagnostics</h2>
+    </div>
+    <p class="text-muted mt-2" style="font-size:0.85rem;">Use this dashboard to debug mobile compatibility issues (HTTPS, Camera, Notifications, and SQLite database connectivity).</p>
+  </div>
+</div>
+
+<!-- SSL protocol alert warning -->
+<div id="ssl-warning-alert" class="alert alert-danger" style="display:none; border-radius:12px; margin-bottom:20px;">
+  <h5>⚠️ Non-Secure Connection (HTTP) Detected!</h5>
+  <p class="mb-0" style="font-size:0.85rem;">
+    You are accessing this app over <strong>HTTP</strong> instead of <strong>HTTPS</strong>. 
+    Mobile browsers (Safari/Chrome) **block** access to Service Workers, Device Notifications, and Camera Sensors under HTTP. 
+    <br><strong>Solution:</strong> Please enable "Force HTTPS" on your PythonAnywhere Dashboard under the <strong>Web</strong> tab, or open: 
+    <a id="ssl-redirect-link" href="#" style="font-weight:700; text-decoration:underline; color:inherit;"></a>
+  </p>
+</div>
+
+<div class="row">
+  <!-- Browser-Side Diagnostics -->
+  <div class="col-md-6">
+    <div class="diag-card">
+      <div class="diag-title">
+        <span>📱</span> Mobile Browser Checks
+      </div>
+      <div class="status-item">
+        <span class="status-label">Connection Security (SSL)</span>
+        <span class="status-val" id="diag-ssl"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Service Worker Support</span>
+        <span class="status-val" id="diag-sw-support"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Active Service Worker</span>
+        <span class="status-val" id="diag-sw-active"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Notification API Support</span>
+        <span class="status-val" id="diag-notif-support"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Notification Permission</span>
+        <span class="status-val" id="diag-notif-permission"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Camera Sensor support</span>
+        <span class="status-val" id="diag-camera"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Audio Context Status</span>
+        <span class="status-val" id="diag-audio"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Mobile Screen Size</span>
+        <span class="status-val" id="diag-screen"><i class="fas fa-spinner fa-spin"></i> Checking...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server-Side Diagnostics -->
+  <div class="col-md-6">
+    <div class="diag-card">
+      <div class="diag-title">
+        <span>⚙️</span> PythonAnywhere Server Checks
+      </div>
+      <div class="status-item">
+        <span class="status-label">Database Connection & Writable</span>
+        <span class="status-val">
+          {% if "Error" in env_info.db_status %}
+            <span class="val-fail"><i class="fas fa-times-circle"></i> {{ env_info.db_status }}</span>
+          {% else %}
+            <span class="val-pass"><i class="fas fa-check-circle"></i> Connected &amp; Writable</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">PDF Generator Library (ReportLab)</span>
+        <span class="status-val">
+          {% if env_info.reportlab_installed == "Yes" %}
+            <span class="val-pass"><i class="fas fa-check-circle"></i> Installed</span>
+          {% else %}
+            <span class="val-fail"><i class="fas fa-exclamation-triangle"></i> Not Installed (Run: pip install reportlab)</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Current Working Directory</span>
+        <span class="status-val" style="font-size:0.75rem; word-break:break-all; text-align:right; max-width:60%;">{{ env_info.cwd }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Database Path</span>
+        <span class="status-val" style="font-size:0.75rem; word-break:break-all; text-align:right; max-width:60%;">{{ env_info.db_path }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Server Python Version</span>
+        <span class="status-val" style="font-size:0.72rem; text-align:right;">{{ env_info.python_version.split('\n')[0] }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Server OS Platform</span>
+        <span class="status-val" style="text-transform:uppercase;">{{ env_info.os }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Interactive Diagnostics & Action Panel -->
+  <div class="col-md-6">
+    <div class="diag-card">
+      <div class="diag-title">
+        <span>🧪</span> Interactive Sensor Tests
+      </div>
+      <p class="text-muted" style="font-size:0.78rem;">Tap these triggers on your phone to prompt permissions or test browser features manually.</p>
+      
+      <div class="test-btn-group">
+        <button class="btn btn-primary btn-sm" onclick="triggerCameraTest()">
+          <i class="fas fa-camera"></i> Test Mobile Camera
+        </button>
+        <button class="btn btn-success btn-sm" onclick="triggerNotificationTest()">
+          <i class="fas fa-bell"></i> Request Notification Permission
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="triggerAudioTest()">
+          <i class="fas fa-volume-up"></i> Play Alarm Tone
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="triggerClearCache()">
+          <i class="fas fa-sync-alt"></i> Reset App SW Cache
+        </button>
+      </div>
+
+      <!-- Live Video stream testing -->
+      <div id="camera-preview" class="camera-preview-box">
+        <video id="debug-video" autoplay playsinline muted></video>
+        <button onclick="stopCameraTest()" class="btn btn-sm btn-danger" style="position:absolute; bottom:10px; right:10px; z-index:100; font-size:0.68rem; padding:4px 8px;">
+          Stop Camera
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Realtime JavaScript Log Console -->
+  <div class="col-md-6">
+    <div class="diag-card">
+      <div class="diag-title">
+        <span>💻</span> Mobile Console Log Viewer
+      </div>
+      <p class="text-muted" style="font-size:0.78rem; margin-bottom:5px;">This terminal captures JS logs on your phone. Useful if you don't have USB debugging.</p>
+      <div id="log-terminal" class="log-console">
+        <div class="log-line text-muted">[Diagnostic Console Initialized. Logs will appear here.]</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Capture logs locally for display on phone screens
+  const logTerminal = document.getElementById('log-terminal');
+  function addLogToConsole(message, type = 'log') {
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    if (type === 'error') line.classList.add('log-error');
+    if (type === 'warn') line.classList.add('log-warn');
+    
+    const time = new Date().toLocaleTimeString();
+    line.textContent = `[${time}] ${message}`;
+    logTerminal.appendChild(line);
+    logTerminal.scrollTop = logTerminal.scrollHeight;
+  }
+
+  // Intercept window errors and logs
+  const oldLog = console.log;
+  console.log = function(...args) {
+    oldLog.apply(console, args);
+    addLogToConsole(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), 'log');
+  };
+  const oldWarn = console.warn;
+  console.warn = function(...args) {
+    oldWarn.apply(console, args);
+    addLogToConsole(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), 'warn');
+  };
+  const oldError = console.error;
+  console.error = function(...args) {
+    oldError.apply(console, args);
+    addLogToConsole(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), 'error');
+  };
+  window.onerror = function(message, source, lineno, colno, error) {
+    addLogToConsole(`ERROR: ${message} at ${source}:${lineno}:${colno}`, 'error');
+    return false;
+  };
+
+  // Perform Diagnostics
+  document.addEventListener('DOMContentLoaded', async () => {
+    console.log("Starting mobile browser checks...");
+
+    // 1. SSL Protocol Check
+    const sslVal = document.getElementById('diag-ssl');
+    if (window.location.protocol === 'https:') {
+      sslVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Secure (HTTPS)</span>';
+      console.log("Connection is secure (HTTPS).");
+    } else {
+      sslVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Non-Secure (HTTP)</span>';
+      console.warn("Connection is HTTP. Mobile browsers will disable camera, geolocation and service workers.");
+      // Show full SSL warning alert
+      document.getElementById('ssl-warning-alert').style.display = 'block';
+      const redirectLink = document.getElementById('ssl-redirect-link');
+      const secureUrl = 'https://' + window.location.host + window.location.pathname;
+      redirectLink.href = secureUrl;
+      redirectLink.textContent = secureUrl;
+    }
+
+    // 2. Service Worker Support
+    const swSupVal = document.getElementById('diag-sw-support');
+    const hasSW = 'serviceWorker' in navigator;
+    if (hasSW) {
+      swSupVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Supported</span>';
+    } else {
+      swSupVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Not Supported</span>';
+      console.error("Service workers are not supported by this browser or secure context is missing.");
+    }
+
+    // 3. Active Service Worker
+    const swActVal = document.getElementById('diag-sw-active');
+    if (hasSW) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (regs && regs.length > 0) {
+          const active = regs[0].active || regs[0].installing || regs[0].waiting;
+          swActVal.innerHTML = `<span class="val-pass"><i class="fas fa-check-circle"></i> Active (${regs[0].scope})</span>`;
+          console.log(`Active Service Worker found with scope: ${regs[0].scope}`);
+        } else {
+          swActVal.innerHTML = '<span class="val-warn"><i class="fas fa-exclamation-triangle"></i> Not Registered yet</span>';
+          console.log("No service worker registered. Registrations will trigger upon enabling notification/alarms.");
+        }
+      } catch (err) {
+        swActVal.innerHTML = `<span class="val-fail"><i class="fas fa-times-circle"></i> Fail (${err.message})</span>`;
+        console.error("Failed to query SW registrations:", err);
+      }
+    } else {
+      swActVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Blocked (No SW support)</span>';
+    }
+
+    // 4. Notification Support
+    const notifSupVal = document.getElementById('diag-notif-support');
+    const hasNotif = 'Notification' in window;
+    if (hasNotif) {
+      notifSupVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Supported</span>';
+    } else {
+      notifSupVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Not Supported</span>';
+      console.warn("Notifications API not supported by browser (iOS requires home screen installation to support Web Push).");
+    }
+
+    // 5. Notification Permission
+    const notifPermVal = document.getElementById('diag-notif-permission');
+    if (hasNotif) {
+      const perm = Notification.permission;
+      if (perm === 'granted') {
+        notifPermVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Granted</span>';
+      } else if (perm === 'denied') {
+        notifPermVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Denied (Blocked by User)</span>';
+      } else {
+        notifPermVal.innerHTML = '<span class="val-warn"><i class="fas fa-exclamation-triangle"></i> Not Granted (Default)</span>';
+      }
+      console.log(`Notification permission state: ${perm}`);
+    } else {
+      notifPermVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Blocked (No API)</span>';
+    }
+
+    // 6. Camera Support
+    const camVal = document.getElementById('diag-camera');
+    const hasCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    if (hasCam) {
+      camVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Supported</span>';
+    } else {
+      camVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Not Supported (Needs HTTPS)</span>';
+      console.error("Camera getUserMedia is not supported. Check SSL/HTTPS connection.");
+    }
+
+    // 7. Audio Context
+    checkAudioStatus();
+
+    // 8. Screen dimensions
+    const screenVal = document.getElementById('diag-screen');
+    screenVal.innerHTML = `${window.innerWidth}x${window.innerHeight} (dpr: ${window.devicePixelRatio})`;
+    console.log(`Viewport parameters: width=${window.innerWidth}, height=${window.innerHeight}, ratio=${window.devicePixelRatio}`);
+  });
+
+  // Audio Context check
+  let tempCtx = null;
+  function checkAudioStatus() {
+    const audioVal = document.getElementById('diag-audio');
+    const hasAudio = !!(window.AudioContext || window.webkitAudioContext);
+    if (!hasAudio) {
+      audioVal.innerHTML = '<span class="val-fail"><i class="fas fa-times-circle"></i> Not Supported</span>';
+    } else {
+      if (!tempCtx) {
+        tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (tempCtx.state === 'suspended') {
+        audioVal.innerHTML = '<span class="val-warn"><i class="fas fa-exclamation-triangle"></i> Suspended (Needs User Tap)</span>';
+      } else {
+        audioVal.innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Running / Active</span>';
+      }
+    }
+  }
+
+  // Interactive Test Actions
+  let activeStream = null;
+  async function triggerCameraTest() {
+    console.log("Triggering mobile camera stream test...");
+    const preview = document.getElementById('camera-preview');
+    const video = document.getElementById('debug-video');
+    try {
+      if (activeStream) {
+        stopCameraTest();
+      }
+      activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = activeStream;
+      preview.style.display = 'block';
+      console.log("✅ Camera stream successfully opened on phone.");
+      document.getElementById('diag-camera').innerHTML = '<span class="val-pass"><i class="fas fa-check-circle"></i> Camera Connected</span>';
+    } catch(err) {
+      console.error("Camera access test failed:", err);
+      alert("Camera access failed: " + err.message + "\nCheck browser permission requests or HTTPS config.");
+    }
+  }
+
+  function stopCameraTest() {
+    if (activeStream) {
+      activeStream.getTracks().forEach(track => track.stop());
+      activeStream = null;
+    }
+    document.getElementById('camera-preview').style.display = 'none';
+    console.log("Camera stream stopped.");
+  }
+
+  async function triggerNotificationTest() {
+    console.log("Requesting Notification permissions...");
+    if (!('Notification' in window)) {
+      alert("This browser does not support notifications.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      console.log(`Notification request outcome: ${perm}`);
+      if (perm === 'granted') {
+        alert("Notification Permission Granted!");
+        // Trigger a native OS notification
+        if ('serviceWorker' in navigator) {
+          const swReg = await navigator.serviceWorker.ready;
+          swReg.showNotification("🏥 HealthCare+ Diagnostic Test", {
+            body: "Notifications are working successfully on your mobile phone!",
+            icon: "/static/assets/icon-192.png",
+            vibrate: [100, 50, 100]
+          });
+        } else {
+          new Notification("🏥 HealthCare+ Diagnostic Test", {
+            body: "Notifications are working successfully on your mobile phone!",
+            icon: "/static/assets/icon-192.png"
+          });
+        }
+      } else {
+        alert(`Notification Permission: ${perm}`);
+      }
+      window.location.reload();
+    } catch(err) {
+      console.error("Notification permissions prompt failed:", err);
+      alert("Notification prompt error: " + err.message);
+    }
+  }
+
+  function triggerAudioTest() {
+    console.log("Triggering Web Audio test sound...");
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime); // Standard A4 tuning
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.8);
+      console.log("✅ Audio test tone generated at 440Hz.");
+      
+      // Update check
+      setTimeout(() => {
+        checkAudioStatus();
+      }, 100);
+      
+      alert("🔊 Playback initiated! Did you hear a short tone? (If context was suspended, it has now been resumed).");
+    } catch(err) {
+      console.error("Audio generation failed:", err);
+      alert("Audio generation error: " + err.message);
+    }
+  }
+
+  async function triggerClearCache() {
+    console.log("Attempting to unregister service workers and clear caches...");
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (let reg of regs) {
+          await reg.unregister();
+          console.log(`Unregistered SW at scope: ${reg.scope}`);
+        }
+      }
+      const keys = await caches.keys();
+      for (let key of keys) {
+        await caches.delete(key);
+        console.log(`Deleted cache storage: ${key}`);
+      }
+      console.log("✅ Cache & Service Workers cleared successfully.");
+      alert("App caches and Service Workers cleared. Reloading page...");
+      window.location.reload();
+    } catch(err) {
+      console.error("Clear cache failed:", err);
+      alert("Error clearing caches: " + err.message);
+    }
+  }
+</script>
+{% endblock %}

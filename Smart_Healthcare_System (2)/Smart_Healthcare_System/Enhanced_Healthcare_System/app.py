@@ -2669,6 +2669,46 @@ def serve_sw():
     return send_file(os.path.join(os.path.dirname(__file__), 'static', 'sw.js'), mimetype='application/javascript')
 
 
+@app.route('/debug')
+def debug_diagnostics():
+    import sys
+    db_status = "Unknown"
+    db_path = os.path.abspath('healthcare.db')
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        # Test database read/write
+        cur.execute("CREATE TEMP TABLE IF NOT EXISTS temp_debug (val TEXT)")
+        cur.execute("INSERT INTO temp_debug VALUES ('test')")
+        cur.execute("SELECT * FROM temp_debug")
+        cur.fetchone()
+        cur.execute("DROP TABLE temp_debug")
+        conn.commit()
+        db_status = "Connected & Writable"
+        conn.close()
+    except Exception as e:
+        db_status = f"Database Error: {str(e)}"
+        
+    reportlab_installed = "No"
+    try:
+        import reportlab
+        reportlab_installed = "Yes"
+    except ImportError:
+        reportlab_installed = "No"
+
+    env_info = {
+        'cwd': os.getcwd(),
+        'db_path': db_path,
+        'python_version': sys.version,
+        'os': sys.platform,
+        'db_status': db_status,
+        'reportlab_installed': reportlab_installed
+    }
+    
+    return render_template('debug.html', env_info=env_info)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5001)
+
 

@@ -275,6 +275,7 @@ a{color:inherit;text-decoration:none;}
     {% endif %}
     <div class="drawer-sec">Account</div>
     <a class="drawer-item" href="{{ url_for('profile') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-user-circle"></i></span>My Profile</a>
+    <a class="drawer-item" href="{{ url_for('debug_diagnostics') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-tools"></i></span>Diagnostics &amp; Debug</a>
     <a class="drawer-item logout" href="{{ url_for('logout') }}"><span class="di"><i class="fas fa-sign-out-alt"></i></span>Logout</a>
   </div>
   <div class="drawer-footer">HealthCare Plus © 2026 · v2.0</div>
