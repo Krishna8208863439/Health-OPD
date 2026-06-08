@@ -359,7 +359,7 @@ setTimeout(()=>{document.querySelectorAll('.flash-msg').forEach(el=>{el.style.tr
 
 /* Service Worker */
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/static/sw.js',{scope:'/'})
+  navigator.serviceWorker.register('/sw.js',{scope:'/'})
     .then(reg=>{if('periodicSync' in reg)reg.periodicSync.register('medicine-alarm-check',{minInterval:60000}).catch(()=>{});}).catch(()=>{});
   navigator.serviceWorker.addEventListener('message',e=>{if(e.data?.type==='alarm'){if(window.showAlarmBanner)window.showAlarmBanner(e.data.medicine_name,e.data.dosage||'');else alert('💊 MEDICINE ALARM: '+e.data.medicine_name);}});
 }

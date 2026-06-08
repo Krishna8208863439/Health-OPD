@@ -590,7 +590,7 @@ function checkNotificationPermission() {
 async function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
-            const reg = await navigator.serviceWorker.register('/static/sw.js', { scope: '/' });
+            const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
             console.log('SW registered:', reg.scope);
 
             // Register periodic sync if supported
