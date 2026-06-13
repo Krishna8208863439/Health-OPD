@@ -5,13 +5,14 @@
 <style>
 /* ── Page header ── */
 .nh-hero {
-  background: linear-gradient(135deg, #0D1117 0%, #0066CC 100%);
+  background: linear-gradient(135deg, #EBF5FF 0%, #E0F2FE 100%);
   border-radius: 18px;
   padding: 24px 20px 20px;
-  color: #fff;
+  color: #1E3A8A;
   margin-bottom: 16px;
   position: relative;
   overflow: hidden;
+  border: 1px solid #BFDBFE;
 }
 .nh-hero::after {
   content: '';
@@ -19,40 +20,42 @@
   top: -30px; right: -30px;
   width: 130px; height: 130px;
   border-radius: 50%;
-  background: rgba(255,255,255,.05);
+  background: rgba(30,58,138,.03);
 }
-.nh-hero h1 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
-.nh-hero p  { font-size: .82rem; opacity: .8; margin: 0; }
+.nh-hero h1 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; color: #1E3A8A; }
+.nh-hero p  { font-size: .82rem; opacity: .85; margin: 0; color: #1E40AF; }
 
 /* ── Status pill ── */
 #status-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(255,255,255,.15);
+  background: rgba(30,58,138,.06);
+  border: 1px solid rgba(30,58,138,.12);
   border-radius: 20px;
   padding: 5px 12px;
   font-size: .75rem;
   margin-top: 10px;
   max-width: 100%;
+  color: #1E40AF;
 }
 #status-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: #86efac;
+  background: #10B981;
   flex-shrink: 0;
   animation: blink 1.6s infinite;
 }
 @keyframes blink {
-  0%,100% { box-shadow: 0 0 0 0 rgba(134,239,172,.7); }
-  50%      { box-shadow: 0 0 0 4px rgba(134,239,172,0); }
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.7); }
+  50%      { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
 }
 
 /* ── Locate button ── */
 #locate-btn {
   display: flex; align-items: center; gap: 8px;
   width: 100%;
-  background: linear-gradient(135deg, #0D1117, #0066CC);
+  background: linear-gradient(135deg, #0066CC, #0052A3);
   color: #fff; border: none;
   border-radius: 12px;
   padding: 14px 20px;

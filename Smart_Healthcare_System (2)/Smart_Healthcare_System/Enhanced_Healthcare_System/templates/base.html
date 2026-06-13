@@ -1,6 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="show-en">
 <head>
+  <script>
+    (function() {
+      const savedLang = localStorage.getItem('health-lang-pref') || 'en';
+      // Force light mode as default — only apply dark if user explicitly saved it
+      const savedTheme = localStorage.getItem('health-theme-pref') || 'light';
+      let classes = 'show-' + savedLang;
+      if (savedTheme === 'dark') {
+        classes += ' dark-theme';
+      }
+      document.documentElement.className = classes;
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
@@ -15,6 +27,15 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ════ LANGUAGE CONTROLS ════ */
+.show-en .lang-mr { display: none !important; }
+.show-mr .lang-en { display: none !important; }
+.topnav-lang-select button.active-lang {
+  background: #fff !important;
+  color: #0d1117 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 /* ════ TOKENS ════ */
 :root{
   --blue:#0066CC;--blue-dk:#0052A3;--blue-lt:#EFF6FF;
@@ -30,6 +51,140 @@
   --shadow-lg:0 8px 32px rgba(0,0,0,.14);
   --nav-h:60px;--tab-h:64px;
   --safe-b:env(safe-area-inset-bottom,0px);
+}
+
+/* ════ DARK THEME VARIABLES & OVERRIDES ════ */
+html.dark-theme {
+  --bg: #0d1117;
+  --card: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --muted: #8b949e;
+  --blue-lt: #1f2937;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark Mode element overrides */
+html.dark-theme body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+html.dark-theme #drawer {
+  background: #161b22 !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .drawer-item {
+  color: #c9d1d9 !important;
+}
+html.dark-theme .drawer-item:hover, html.dark-theme .drawer-item.active {
+  background: #1f2937 !important;
+  color: #58a6ff !important;
+}
+html.dark-theme .form-control {
+  background-color: #0d1117 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .form-control:focus {
+  background-color: #161b22 !important;
+  border-color: var(--blue) !important;
+}
+html.dark-theme .form-group label {
+  color: #8b949e !important;
+}
+html.dark-theme .card,
+html.dark-theme .sym-group,
+html.dark-theme .sym-item,
+html.dark-theme .summary-card,
+html.dark-theme .chat-wrap,
+html.dark-theme .stat-card,
+html.dark-theme .panel,
+html.dark-theme .wellness-bar-card,
+html.dark-theme .vital-mini,
+html.dark-theme .reminder-mini,
+html.dark-theme .coach-card,
+html.dark-theme .bmi-result-card,
+html.dark-theme .guide-card,
+html.dark-theme .dispatch-card,
+html.dark-theme .info-card {
+  background-color: #161b22 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .guide-card-title,
+html.dark-theme .guide-main-title {
+  color: #fff !important;
+}
+html.dark-theme .guide-card:hover {
+  background-color: #1f2937 !important;
+}
+html.dark-theme .sym-item:hover {
+  background-color: #1f2937 !important;
+}
+html.dark-theme .sym-item.checked {
+  border-color: var(--green) !important;
+  background-color: #1b4721 !important;
+}
+html.dark-theme .sym-item label {
+  color: #c9d1d9 !important;
+}
+html.dark-theme textarea {
+  background-color: #0d1117 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .msg-bot {
+  background-color: #21262d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .chat-messages {
+  background-color: #0d1117 !important;
+}
+html.dark-theme .chat-input input {
+  background-color: #0d1117 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme .chip {
+  background-color: #1f2937 !important;
+  border-color: #30363d !important;
+  color: #58a6ff !important;
+}
+html.dark-theme .chip:hover {
+  background-color: #30363d !important;
+}
+html.dark-theme table, html.dark-theme th, html.dark-theme td {
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+html.dark-theme thead th {
+  background-color: #1f2937 !important;
+  color: #fff !important;
+}
+html.dark-theme tbody tr:hover {
+  background-color: #21262d !important;
+}
+html.dark-theme .sec-title {
+  color: #fff !important;
+}
+html.dark-theme .vital-mini .vm-val {
+  color: #fff !important;
+}
+html.dark-theme .cancel-btn {
+  background: #161b22 !important;
+  color: #c9d1d9 !important;
+  border-color: #30363d !important;
+}
+html.dark-theme .cancel-btn:hover {
+  background: #442323 !important;
+  color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+html.dark-theme select {
+  background-color: #0d1117 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -190,41 +345,60 @@ a{color:inherit;text-decoration:none;}
   {% if current_user.is_authenticated %}
   <div id="desktop-nav">
     {% if current_user.role == 'patient' %}
-      <a class="dnav-a" href="{{ url_for('health_dashboard') }}"><i class="fas fa-chart-pie"></i> Dashboard</a>
-      <a class="dnav-a" href="{{ url_for('symptom_assessment') }}"><i class="fas fa-stethoscope"></i> Assess</a>
-      <a class="dnav-a" href="{{ url_for('ai_assistant') }}"><i class="fas fa-robot"></i> AI</a>
-      <a class="dnav-a" href="{{ url_for('symptom_journal') }}"><i class="fas fa-book-medical"></i> Journal</a>
-      <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> Hospitals</a>
-      <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> Vitals</a>
-      <a class="dnav-a" href="{{ url_for('wellness') }}"><i class="fas fa-leaf"></i> Wellness</a>
-      <a class="dnav-a" href="{{ url_for('diet_plans') }}"><i class="fas fa-apple-alt"></i> Diets</a>
-      <a class="dnav-a" href="{{ url_for('food_scanner') }}"><i class="fas fa-camera"></i> Scanner</a>
-      <a class="dnav-a" href="{{ url_for('fitness_coaching') }}"><i class="fas fa-dumbbell"></i> Coach</a>
-      <a class="dnav-a" href="{{ url_for('reminders') }}"><i class="fas fa-pills"></i> Meds</a>
-      <a class="dnav-a sos-link" href="{{ url_for('emergency') }}"><i class="fas fa-ambulance"></i> SOS</a>
+      <a class="dnav-a" href="{{ url_for('health_dashboard') }}"><i class="fas fa-chart-pie"></i> <span class="lang-en">Dashboard</span><span class="lang-mr">डॅशबोर्ड</span></a>
+      <a class="dnav-a" href="{{ url_for('symptom_assessment') }}"><i class="fas fa-stethoscope"></i> <span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></a>
+      <a class="dnav-a" href="{{ url_for('ai_assistant') }}"><i class="fas fa-robot"></i> <span class="lang-en">AI</span><span class="lang-mr">एआय</span></a>
+      <a class="dnav-a" href="{{ url_for('symptom_journal') }}"><i class="fas fa-book-medical"></i> <span class="lang-en">Journal</span><span class="lang-mr">रोजनिशी</span></a>
+      <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> <span class="lang-en">Hospitals</span><span class="lang-mr">रुग्णालये</span></a>
+      <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> <span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></a>
+      <a class="dnav-a" href="{{ url_for('wellness') }}"><i class="fas fa-leaf"></i> <span class="lang-en">Wellness</span><span class="lang-mr">निरोगीपणा</span></a>
+      <a class="dnav-a" href="{{ url_for('diet_plans') }}"><i class="fas fa-apple-alt"></i> <span class="lang-en">Diets</span><span class="lang-mr">आहार</span></a>
+      <a class="dnav-a" href="{{ url_for('food_scanner') }}"><i class="fas fa-camera"></i> <span class="lang-en">Scanner</span><span class="lang-mr">स्कॅनर</span></a>
+      <a class="dnav-a" href="{{ url_for('fitness_coaching') }}"><i class="fas fa-dumbbell"></i> <span class="lang-en">Coach</span><span class="lang-mr">फिटनेस कोच</span></a>
+      <a class="dnav-a" href="{{ url_for('reminders') }}"><i class="fas fa-pills"></i> <span class="lang-en">Meds</span><span class="lang-mr">औषधे</span></a>
+      <a class="dnav-a sos-link" href="{{ url_for('emergency') }}"><i class="fas fa-ambulance"></i> <span class="lang-en">SOS</span><span class="lang-mr">मदत</span></a>
       <a class="user-pill" href="{{ url_for('profile') }}">
         <div class="user-avatar">{{ current_user.full_name[0].upper() }}</div>
         {{ current_user.full_name.split()[0] }}
       </a>
     {% elif current_user.role == 'doctor' %}
-      <a class="dnav-a" href="{{ url_for('dashboard') }}"><i class="fas fa-chart-bar"></i> Dashboard</a>
+      <a class="dnav-a" href="{{ url_for('dashboard') }}"><i class="fas fa-chart-bar"></i> <span class="lang-en">Dashboard</span><span class="lang-mr">डॅशबोर्ड</span></a>
       <a class="user-pill" href="{{ url_for('profile') }}">
         <div class="user-avatar">{{ current_user.full_name[0].upper() }}</div>
         {{ current_user.full_name.split()[0] }}
       </a>
     {% elif current_user.role == 'admin' %}
-      <a class="dnav-a" href="{{ url_for('admin_doctors') }}"><i class="fas fa-user-md"></i> Manage Doctors</a>
+      <a class="dnav-a" href="{{ url_for('admin_doctors') }}"><i class="fas fa-user-md"></i> <span class="lang-en">Manage Doctors</span><span class="lang-mr">डॉक्टर व्यवस्थापन</span></a>
       <a class="user-pill" href="{{ url_for('profile') }}">
         <div class="user-avatar">{{ current_user.full_name[0].upper() }}</div>
         {{ current_user.full_name.split()[0] }}
       </a>
     {% endif %}
-    <a class="logout-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <a class="logout-link" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> <span class="lang-en">Logout</span><span class="lang-mr">लॉगआउट</span></a>
   </div>
 
   <div class="topnav-right">
+    <div class="topnav-lang-select" style="display: flex; align-items: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 2px; margin-right: 8px;">
+      <button onclick="globalSwitchLanguage('en')" class="global-lang-btn-en" style="border: none; background: transparent; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 15px; cursor: pointer; transition: all 0.2s;">EN</button>
+      <button onclick="globalSwitchLanguage('mr')" class="global-lang-btn-mr" style="border: none; background: transparent; color: rgba(255,255,255,0.5); font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 15px; cursor: pointer; transition: all 0.2s;">मराठी</button>
+    </div>
+    <!-- Theme Toggle (Authenticated) -->
+    <button id="theme-toggle-btn" onclick="toggleTheme()" style="border: none; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; font-size: 0.9rem; transition: all 0.2s;" aria-label="Toggle Theme">
+      <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
     <div id="nav-clock" style="color: #fff; font-family: monospace; font-size: 0.85rem; font-weight: 700; background: rgba(255,255,255,0.08); padding: 5px 10px; border-radius: 6px; margin-right: 8px; border: 1px solid rgba(255,255,255,0.15);"></div>
     <button id="hamburger" onclick="openDrawer()" aria-label="Menu"><i class="fas fa-bars"></i></button>
+  </div>
+  {% else %}
+  <div class="topnav-right" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+    <div class="topnav-lang-select" style="display: flex; align-items: center; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 2px;">
+      <button onclick="globalSwitchLanguage('en')" class="global-lang-btn-en" style="border: none; background: transparent; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 15px; cursor: pointer; transition: all 0.2s;">EN</button>
+      <button onclick="globalSwitchLanguage('mr')" class="global-lang-btn-mr" style="border: none; background: transparent; color: rgba(255,255,255,0.5); font-size: 0.72rem; font-weight: 700; padding: 4px 8px; border-radius: 15px; cursor: pointer; transition: all 0.2s;">मराठी</button>
+    </div>
+    <!-- Theme Toggle (Anonymous) -->
+    <button id="theme-toggle-btn-anonymous" onclick="toggleTheme()" style="border: none; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" aria-label="Toggle Theme">
+      <i class="fas fa-moon" id="theme-icon-anonymous"></i>
+    </button>
   </div>
   {% endif %}
 </nav>
@@ -242,43 +416,46 @@ a{color:inherit;text-decoration:none;}
       <div class="drawer-avatar">{{ current_user.full_name[0].upper() }}</div>
       <div>
         <div class="drawer-name">{{ current_user.full_name }}</div>
-        <div class="drawer-role">{{ '👨‍⚕️ Doctor' if current_user.role == 'doctor' else '🧑 Patient' }} · {{ current_user.city }}</div>
+        <div class="drawer-role">
+          <span class="lang-en">{{ '👨‍⚕️ Doctor' if current_user.role == 'doctor' else '🧑 Patient' }}</span>
+          <span class="lang-mr">{{ '👨‍⚕️ डॉक्टर' if current_user.role == 'doctor' else '🧑 रुग्ण' }}</span>
+          · {{ current_user.city }}
+        </div>
       </div>
     </div>
   </div>
 
   <div class="drawer-nav">
     {% if current_user.role == 'patient' %}
-      <div class="drawer-sec">Health Tools</div>
-      <a class="drawer-item" href="{{ url_for('health_dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-pie"></i></span>Health Dashboard</a>
-      <a class="drawer-item" href="{{ url_for('symptom_assessment') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-stethoscope"></i></span>Symptom Assessment</a>
-      <a class="drawer-item" href="{{ url_for('ai_assistant') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-robot"></i></span>AI Health Assistant</a>
-      <a class="drawer-item" href="{{ url_for('symptom_journal') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-book-medical"></i></span>Symptom Journal</a>
-      <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span>Nearest Hospitals</a>
-      <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span>Health Vitals</a>
-      <a class="drawer-item" href="{{ url_for('wellness') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-leaf"></i></span>Daily Wellness</a>
-      <a class="drawer-item" href="{{ url_for('diet_plans') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-apple-alt"></i></span>Diet Plans</a>
-      <a class="drawer-item" href="{{ url_for('food_scanner') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-camera"></i></span>Food Scanner</a>
-      <a class="drawer-item" href="{{ url_for('fitness_coaching') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-dumbbell"></i></span>Fitness Coaching</a>
-      <a class="drawer-item" href="{{ url_for('lab_results') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-flask"></i></span>Lab Results</a>
-      <a class="drawer-item" href="{{ url_for('bmi_calculator') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-weight"></i></span>BMI &amp; Health Calculator</a>
-      <div class="drawer-sec">Appointments &amp; Meds</div>
-      <a class="drawer-item" href="{{ url_for('reminders') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-pills"></i></span>Medicine Reminders</a>
-      <div class="drawer-sec">More</div>
-      <a class="drawer-item" href="{{ url_for('history') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-history"></i></span>Prediction History</a>
-      <a class="drawer-item" href="{{ url_for('health_tips') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-lightbulb"></i></span>Health Tips</a>
-      <a class="drawer-item sos-item" href="{{ url_for('emergency') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-ambulance"></i></span>SOS Emergency</a>
+      <div class="drawer-sec"><span class="lang-en">Health Tools</span><span class="lang-mr">आरोग्य साधने</span></div>
+      <a class="drawer-item" href="{{ url_for('health_dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-pie"></i></span><span class="lang-en">Health Dashboard</span><span class="lang-mr">आरोग्य डॅशबोर्ड</span></a>
+      <a class="drawer-item" href="{{ url_for('symptom_assessment') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-stethoscope"></i></span><span class="lang-en">Symptom Assessment</span><span class="lang-mr">लक्षणे मूल्यांकन</span></a>
+      <a class="drawer-item" href="{{ url_for('ai_assistant') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-robot"></i></span><span class="lang-en">AI Health Assistant</span><span class="lang-mr">एआय आरोग्य सहाय्यक</span></a>
+      <a class="drawer-item" href="{{ url_for('symptom_journal') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-book-medical"></i></span><span class="lang-en">Symptom Journal</span><span class="lang-mr">लक्षण रोजनिशी</span></a>
+      <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span><span class="lang-en">Nearest Hospitals</span><span class="lang-mr">जवळचे रुग्णालय</span></a>
+      <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span><span class="lang-en">Health Vitals</span><span class="lang-mr">महत्त्वाचे आरोग्य संकेतक</span></a>
+      <a class="drawer-item" href="{{ url_for('wellness') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-leaf"></i></span><span class="lang-en">Daily Wellness</span><span class="lang-mr">दैनिक निरोगीपणा</span></a>
+      <a class="drawer-item" href="{{ url_for('diet_plans') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-apple-alt"></i></span><span class="lang-en">Diet Plans</span><span class="lang-mr">आहार योजना</span></a>
+      <a class="drawer-item" href="{{ url_for('food_scanner') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-camera"></i></span><span class="lang-en">Food Scanner</span><span class="lang-mr">अन्न स्कॅनर</span></a>
+      <a class="drawer-item" href="{{ url_for('fitness_coaching') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-dumbbell"></i></span><span class="lang-en">Fitness Coaching</span><span class="lang-mr">फिटनेस कोचिंग</span></a>
+      <a class="drawer-item" href="{{ url_for('lab_results') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-flask"></i></span><span class="lang-en">Lab Results</span><span class="lang-mr">लॅब रिपोर्ट</span></a>
+      <a class="drawer-item" href="{{ url_for('bmi_calculator') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-weight"></i></span><span class="lang-en">BMI &amp; Health Calculator</span><span class="lang-mr">बीएमआय आणि आरोग्य कॅल्क्युलेटर</span></a>
+      <div class="drawer-sec"><span class="lang-en">Appointments &amp; Meds</span><span class="lang-mr">अपॉइंटमेंट आणि औषधे</span></div>
+      <a class="drawer-item" href="{{ url_for('reminders') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-pills"></i></span><span class="lang-en">Medicine Reminders</span><span class="lang-mr">औषध स्मरणपत्रे</span></a>
+      <div class="drawer-sec"><span class="lang-en">More</span><span class="lang-mr">अधिक</span></div>
+      <a class="drawer-item" href="{{ url_for('history') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-history"></i></span><span class="lang-en">Prediction History</span><span class="lang-mr">तपासणी इतिहास</span></a>
+      <a class="drawer-item" href="{{ url_for('health_tips') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-lightbulb"></i></span><span class="lang-en">Health Tips</span><span class="lang-mr">आरोग्य टिप्स</span></a>
+      <a class="drawer-item sos-item" href="{{ url_for('emergency') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-ambulance"></i></span><span class="lang-en">SOS Emergency</span><span class="lang-mr">आणीबाणी मदत (SOS)</span></a>
     {% elif current_user.role == 'doctor' %}
-      <div class="drawer-sec">Doctor Panel</div>
-      <a class="drawer-item" href="{{ url_for('dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-bar"></i></span>Dashboard</a>
+      <div class="drawer-sec"><span class="lang-en">Doctor Panel</span><span class="lang-mr">डॉक्टर पॅनेल</span></div>
+      <a class="drawer-item" href="{{ url_for('dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-bar"></i></span><span class="lang-en">Dashboard</span><span class="lang-mr">डॅशबोर्ड</span></a>
     {% elif current_user.role == 'admin' %}
-      <div class="drawer-sec">Admin Panel</div>
-      <a class="drawer-item" href="{{ url_for('admin_doctors') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-user-md"></i></span>Manage Doctors</a>
+      <div class="drawer-sec"><span class="lang-en">Admin Panel</span><span class="lang-mr">अ‍ॅडमिन पॅनेल</span></div>
+      <a class="drawer-item" href="{{ url_for('admin_doctors') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-user-md"></i></span><span class="lang-en">Manage Doctors</span><span class="lang-mr">डॉक्टर व्यवस्थापन</span></a>
     {% endif %}
-    <div class="drawer-sec">Account</div>
-    <a class="drawer-item" href="{{ url_for('profile') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-user-circle"></i></span>My Profile</a>
-    <a class="drawer-item" href="{{ url_for('debug_diagnostics') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-tools"></i></span>Diagnostics &amp; Debug</a>
-    <a class="drawer-item logout" href="{{ url_for('logout') }}"><span class="di"><i class="fas fa-sign-out-alt"></i></span>Logout</a>
+    <div class="drawer-sec"><span class="lang-en">Account</span><span class="lang-mr">खाते</span></div>
+    <a class="drawer-item" href="{{ url_for('profile') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-user-circle"></i></span><span class="lang-en">My Profile</span><span class="lang-mr">माझे प्रोफाइल</span></a>
+    <a class="drawer-item logout" href="{{ url_for('logout') }}"><span class="di"><i class="fas fa-sign-out-alt"></i></span><span class="lang-en">Logout</span><span class="lang-mr">लॉगआउट</span></a>
   </div>
   <div class="drawer-footer">HealthCare Plus © 2026 · v2.0</div>
 </div>
@@ -308,19 +485,19 @@ a{color:inherit;text-decoration:none;}
 <nav id="bottomnav" aria-label="Bottom navigation">
   <div class="bnav-inner">
     {% if current_user.role == 'patient' %}
-      <a class="bnav-item" href="{{ url_for('index') }}"              data-path="/">             <i class="fas fa-home"></i><span>Home</span></a>
-      <a class="bnav-item" href="{{ url_for('symptom_assessment') }}" data-path="/assessment">   <i class="fas fa-stethoscope"></i><span>Assess</span></a>
-      <a class="bnav-item sos-tab" href="{{ url_for('nearest_hospitals') }}" data-path="/nearest-hospitals"><i class="fas fa-hospital-symbol"></i><span>Hospitals</span></a>
-      <a class="bnav-item" href="{{ url_for('vitals') }}"             data-path="/vitals">       <i class="fas fa-heartbeat"></i><span>Vitals</span></a>
-      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-th-large"></i><span>More</span></a>
+      <a class="bnav-item" href="{{ url_for('index') }}"              data-path="/">             <i class="fas fa-home"></i><span><span class="lang-en">Home</span><span class="lang-mr">होम</span></span></a>
+      <a class="bnav-item" href="{{ url_for('symptom_assessment') }}" data-path="/assessment">   <i class="fas fa-stethoscope"></i><span><span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></span></a>
+      <a class="bnav-item sos-tab" href="{{ url_for('nearest_hospitals') }}" data-path="/nearest-hospitals"><i class="fas fa-hospital-symbol"></i><span><span class="lang-en">Hospitals</span><span class="lang-mr">रुग्णालय</span></span></a>
+      <a class="bnav-item" href="{{ url_for('vitals') }}"             data-path="/vitals">       <i class="fas fa-heartbeat"></i><span><span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></span></a>
+      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-th-large"></i><span><span class="lang-en">More</span><span class="lang-mr">अधिक</span></span></a>
     {% elif current_user.role == 'doctor' %}
-      <a class="bnav-item" href="{{ url_for('dashboard') }}" data-path="/dashboard"><i class="fas fa-chart-bar"></i><span>Dashboard</span></a>
-      <a class="bnav-item" href="{{ url_for('profile') }}"   data-path="/profile">  <i class="fas fa-user-circle"></i><span>Profile</span></a>
-      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-bars"></i><span>Menu</span></a>
+      <a class="bnav-item" href="{{ url_for('dashboard') }}" data-path="/dashboard"><i class="fas fa-chart-bar"></i><span><span class="lang-en">Dashboard</span><span class="lang-mr">डॅशबोर्ड</span></span></a>
+      <a class="bnav-item" href="{{ url_for('profile') }}"   data-path="/profile">  <i class="fas fa-user-circle"></i><span><span class="lang-en">Profile</span><span class="lang-mr">प्रोफाइल</span></span></a>
+      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-bars"></i><span><span class="lang-en">Menu</span><span class="lang-mr">मेन्यू</span></span></a>
     {% elif current_user.role == 'admin' %}
-      <a class="bnav-item" href="{{ url_for('admin_doctors') }}" data-path="/admin/doctors"><i class="fas fa-user-md"></i><span>Doctors</span></a>
-      <a class="bnav-item" href="{{ url_for('profile') }}"   data-path="/profile">  <i class="fas fa-user-circle"></i><span>Profile</span></a>
-      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-bars"></i><span>Menu</span></a>
+      <a class="bnav-item" href="{{ url_for('admin_doctors') }}" data-path="/admin/doctors"><i class="fas fa-user-md"></i><span><span class="lang-en">Doctors</span><span class="lang-mr">डॉक्टर</span></span></a>
+      <a class="bnav-item" href="{{ url_for('profile') }}"   data-path="/profile">  <i class="fas fa-user-circle"></i><span><span class="lang-en">Profile</span><span class="lang-mr">प्रोफाइल</span></span></a>
+      <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-bars"></i><span><span class="lang-en">Menu</span><span class="lang-mr">मेन्यू</span></span></a>
     {% endif %}
   </div>
 </nav>
@@ -343,6 +520,66 @@ a{color:inherit;text-decoration:none;}
 <script>
 function openDrawer(){document.getElementById('drawer')?.classList.add('open');document.getElementById('drawer-overlay')?.classList.add('open');document.body.style.overflow='hidden';}
 function closeDrawer(){document.getElementById('drawer')?.classList.remove('open');document.getElementById('drawer-overlay')?.classList.remove('open');document.body.style.overflow='';}
+
+/* Global Language Switcher */
+function globalSwitchLanguage(lang) {
+  const isDark = document.documentElement.classList.contains('dark-theme');
+  document.documentElement.className = 'show-' + lang + (isDark ? ' dark-theme' : '');
+  localStorage.setItem('health-lang-pref', lang);
+  
+  // Update switcher buttons UI
+  document.querySelectorAll('.global-lang-btn-en').forEach(el => {
+    if (lang === 'en') {
+      el.classList.add('active-lang');
+      el.style.color = '#0d1117';
+    } else {
+      el.classList.remove('active-lang');
+      el.style.color = 'rgba(255,255,255,0.5)';
+    }
+  });
+  document.querySelectorAll('.global-lang-btn-mr').forEach(el => {
+    if (lang === 'mr') {
+      el.classList.add('active-lang');
+      el.style.color = '#0d1117';
+    } else {
+      el.classList.remove('active-lang');
+      el.style.color = 'rgba(255,255,255,0.5)';
+    }
+  });
+
+  // Keep local page specific switches in sync
+  const localEn = document.getElementById('lang-btn-en');
+  const localMr = document.getElementById('lang-btn-mr');
+  const localContainer = document.getElementById('feature-guide-section') || document.getElementById('dashboard-page');
+  const localToggleWrapper = document.getElementById('langToggleWrapper');
+  
+  if (localEn && localMr && localContainer && localToggleWrapper) {
+    if (lang === 'mr') {
+      localContainer.classList.remove('show-en');
+      localContainer.classList.add('show-mr');
+      localToggleWrapper.classList.add('lang-mr');
+      localMr.classList.add('active');
+      localEn.classList.remove('active');
+    } else {
+      localContainer.classList.remove('show-mr');
+      localContainer.classList.add('show-en');
+      localToggleWrapper.classList.remove('lang-mr');
+      localEn.classList.add('active');
+      localMr.classList.remove('active');
+    }
+  }
+
+  // Trigger page-specific translation updates
+  if (typeof window.onLanguageChange === 'function') {
+    window.onLanguageChange(lang);
+  }
+}
+
+/* On DOMContentLoaded, apply correct language switch classes */
+document.addEventListener('DOMContentLoaded', () => {
+  const savedLang = localStorage.getItem('health-lang-pref') || 'en';
+  globalSwitchLanguage(savedLang);
+});
 
 /* Active highlight */
 (function(){
@@ -389,6 +626,41 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+function toggleTheme() {
+  const isDark = document.documentElement.classList.contains('dark-theme');
+  if (isDark) {
+    document.documentElement.classList.remove('dark-theme');
+    localStorage.setItem('health-theme-pref', 'light');
+    updateThemeIcon('light');
+  } else {
+    document.documentElement.classList.add('dark-theme');
+    localStorage.setItem('health-theme-pref', 'dark');
+    updateThemeIcon('dark');
+  }
+}
+
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('theme-icon');
+  const iconAnon = document.getElementById('theme-icon-anonymous');
+  [icon, iconAnon].forEach(el => {
+    if (el) {
+      if (theme === 'dark') {
+        el.className = 'fas fa-sun';
+        el.style.color = '#FFC107';
+      } else {
+        el.className = 'fas fa-moon';
+        el.style.color = '#fff';
+      }
+    }
+  });
+}
+
+// Initial theme icon sync
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('health-theme-pref') || 'light';
+  updateThemeIcon(savedTheme);
+});
 </script>
 {% block extra_js %}{% endblock %}
 </body>

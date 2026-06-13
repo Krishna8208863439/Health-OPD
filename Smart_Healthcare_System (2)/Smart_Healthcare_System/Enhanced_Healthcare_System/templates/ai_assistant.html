@@ -22,28 +22,51 @@
 
 {% block content %}
 <div class="ai-hero">
-    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:4px;">🤖 AI Health Assistant</h2>
-    <p style="margin:0;opacity:.9;font-size:.85rem;">Ask about symptoms, diet, medicines, or emergencies. Health score today: <strong>{{ health_score }}/100</strong></p>
+    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:4px;">🤖 <span class="lang-en">AI Health Assistant</span><span class="lang-mr">एआय आरोग्य सहाय्यक</span></h2>
+    <p style="margin:0;opacity:.9;font-size:.85rem;">
+        <span class="lang-en">Ask about symptoms, diet, medicines, or emergencies. Health score today:</span>
+        <span class="lang-mr">लक्षणे, आहार, औषधे किंवा आपत्कालीन परिस्थितीबद्दल विचारा. आजचा आरोग्य स्कोअर:</span>
+        <strong>{{ health_score }}/100</strong>
+    </p>
 </div>
 
 <div class="chat-wrap">
     <div class="chat-messages" id="chat-messages">
         <div class="msg msg-bot">
-            Hello {{ patient.full_name.split()[0] }}! I'm your HealthCare+ AI assistant. I can explain symptoms, suggest diet tips, help with medicine reminders, and guide you in emergencies. How can I help?
+            <span class="lang-en">Hello {{ patient.full_name.split()[0] }}! I'm your HealthCare+ AI assistant. I can explain symptoms, suggest diet tips, help with medicine reminders, and guide you in emergencies. How can I help?</span>
+            <span class="lang-mr">नमस्कार {{ patient.full_name.split()[0] }}! मी तुमचा HealthCare+ एआय सहाय्यक आहे. मी लक्षणे स्पष्ट करू शकतो, आहाराच्या टिप्स सुचवू शकतो, औषधांच्या स्मरणपत्रांमध्ये मदत करू शकतो आणि आपत्कालीन परिस्थितीत मार्गदर्शन करू शकतो. मी कशी मदत करू?</span>
         </div>
     </div>
     <div class="suggest-chips">
-        <span class="chip" onclick="askChip(this)">I have a headache</span>
-        <span class="chip" onclick="askChip(this)">Diet plan for weight loss</span>
-        <span class="chip" onclick="askChip(this)">Set medicine reminder</span>
-        <span class="chip" onclick="askChip(this)">Emergency help</span>
-        <span class="chip" onclick="askChip(this)">How much water should I drink?</span>
+        <span class="chip" onclick="askChip(this)">
+            <span class="lang-en">I have a headache</span>
+            <span class="lang-mr">माझे डोके दुखत आहे</span>
+        </span>
+        <span class="chip" onclick="askChip(this)">
+            <span class="lang-en">Diet plan for weight loss</span>
+            <span class="lang-mr">वजन कमी करण्यासाठी आहार योजना</span>
+        </span>
+        <span class="chip" onclick="askChip(this)">
+            <span class="lang-en">Set medicine reminder</span>
+            <span class="lang-mr">औषध स्मरणपत्र सेट करा</span>
+        </span>
+        <span class="chip" onclick="askChip(this)">
+            <span class="lang-en">Emergency help</span>
+            <span class="lang-mr">आपत्कालीन मदत</span>
+        </span>
+        <span class="chip" onclick="askChip(this)">
+            <span class="lang-en">How much water should I drink?</span>
+            <span class="lang-mr">मी किती पाणी प्यावे?</span>
+        </span>
     </div>
     <div class="chat-input">
         <input type="text" id="chat-input" placeholder="Type your health question..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button onclick="sendChat()"><i class="fas fa-paper-plane"></i> Send</button>
+        <button onclick="sendChat()"><i class="fas fa-paper-plane"></i> <span class="lang-en">Send</span><span class="lang-mr">पाठवा</span></button>
     </div>
-    <div class="disclaimer">{{ disclaimer }}</div>
+    <div class="disclaimer">
+        <span class="lang-en">{{ disclaimer_en }}</span>
+        <span class="lang-mr">{{ disclaimer_mr }}</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -58,7 +81,9 @@ function addMsg(text, isUser) {
 }
 
 function askChip(el) {
-    document.getElementById('chat-input').value = el.textContent;
+    const activeLang = document.documentElement.classList.contains('show-mr') ? 'mr' : 'en';
+    const span = el.querySelector(`.lang-${activeLang}`);
+    document.getElementById('chat-input').value = span ? span.textContent.trim() : el.textContent.trim();
     sendChat();
 }
 
@@ -69,17 +94,45 @@ async function sendChat() {
     input.value = '';
     addMsg(msg, true);
 
+    const activeLang = document.documentElement.classList.contains('show-mr') ? 'mr' : 'en';
+
     try {
         const resp = await fetch('/api/ai/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg, water_glasses: {{ water_glasses }} })
+            body: JSON.stringify({ 
+                message: msg, 
+                water_glasses: {{ water_glasses }},
+                lang: activeLang
+            })
         });
         const data = await resp.json();
         addMsg(data.reply || 'Sorry, I could not process that.', false);
     } catch (e) {
-        addMsg('Connection error. Please try again.', false);
+        addMsg(activeLang === 'mr' ? 'कनेक्शन त्रुटी. कृपया पुन्हा प्रयत्न करा.' : 'Connection error. Please try again.', false);
     }
 }
+
+function updatePlaceholder(lang) {
+    const input = document.getElementById('chat-input');
+    if (input) {
+        if (lang === 'mr') {
+            input.placeholder = "तुमचा आरोग्याविषयीचा प्रश्न टाईप करा...";
+        } else {
+            input.placeholder = "Type your health question...";
+        }
+    }
+}
+
+// Hook into the global language switcher callback
+window.onLanguageChange = function(lang) {
+    updatePlaceholder(lang);
+};
+
+// Update input placeholder on initial page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('health-lang-pref') || 'en';
+    updatePlaceholder(savedLang);
+});
 </script>
 {% endblock %}

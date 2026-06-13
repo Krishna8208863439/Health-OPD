@@ -68,7 +68,7 @@ def test_complete_system():
             if predicted_disease == test_case['expected_disease']:
                 print("  [PASS] CORRECT prediction")
             else:
-                print("  ⚠ Different prediction (may still be valid)")
+                print("  [WARN] Different prediction (may still be valid)")
                 
         except Exception as e:
             print(f"  [FAIL] Prediction failed: {e}")

@@ -57,50 +57,67 @@
 <div class="well-hero">
     <div class="ico">🌿</div>
     <div>
-        <h2>Daily Wellness Log</h2>
-        <p>Track water intake, sleep, steps, mood, exercise and calories every day.</p>
-        <span style="background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:.82rem;display:inline-block;margin-top:8px;">{{ logs|length }} days logged</span>
+        <h2><span class="lang-en">Daily Wellness Log</span><span class="lang-mr">दैनिक निरोगीपणा रोजनिशी</span></h2>
+        <p>
+            <span class="lang-en">Track water intake, sleep, steps, mood, exercise and calories every day.</span>
+            <span class="lang-mr">पाण्याचे प्रमाण, झोप, पावले, मूड, व्यायाम आणि बर्न झालेल्या कॅलरीज दररोज ट्रॅक करा.</span>
+        </p>
+        <span style="background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:.82rem;display:inline-block;margin-top:8px;">
+            {{ logs|length }} <span class="lang-en">days logged</span><span class="lang-mr">दिवस नोंदवले</span>
+        </span>
     </div>
 </div>
 
 <!-- Today's summary tiles -->
 {% if today_log %}
 <div class="metric-tiles">
-    <div class="tile water"><div class="tile-val">{{ today_log.water_glasses }}</div><div class="tile-label">💧 Glasses</div></div>
-    <div class="tile sleep"><div class="tile-val">{{ today_log.sleep_hours }}h</div><div class="tile-label">😴 Sleep</div></div>
-    <div class="tile steps"><div class="tile-val">{{ '{:,}'.format(today_log.steps) }}</div><div class="tile-label">👣 Steps</div></div>
+    <div class="tile water"><div class="tile-val">{{ today_log.water_glasses }}</div><div class="tile-label"><span class="lang-en">💧 Glasses</span><span class="lang-mr">💧 ग्लास</span></div></div>
+    <div class="tile sleep"><div class="tile-val">{{ today_log.sleep_hours }}h</div><div class="tile-label"><span class="lang-en">😴 Sleep</span><span class="lang-mr">😴 झोप</span></div></div>
+    <div class="tile steps"><div class="tile-val">{{ '{:,}'.format(today_log.steps) }}</div><div class="tile-label"><span class="lang-en">👣 Steps</span><span class="lang-mr">👣 पावले</span></div></div>
     <div class="tile mood"><div class="tile-val">
         {% if today_log.mood == 'great' %}😄
         {% elif today_log.mood == 'good' %}🙂
         {% elif today_log.mood == 'okay' %}😐
         {% elif today_log.mood == 'bad' %}😞
         {% else %}😖{% endif %}
-    </div><div class="tile-label">Mood</div></div>
-    <div class="tile exer"><div class="tile-val">{{ today_log.exercise_min }}m</div><div class="tile-label">🏃 Exercise</div></div>
-    <div class="tile cal"><div class="tile-val">{{ today_log.calories }}</div><div class="tile-label">🔥 Calories</div></div>
+    </div><div class="tile-label"><span class="lang-en">Mood</span><span class="lang-mr">मूड</span></div></div>
+    <div class="tile exer"><div class="tile-val">{{ today_log.exercise_min }}m</div><div class="tile-label"><span class="lang-en">🏃 Exercise</span><span class="lang-mr">🏃 व्यायाम</span></div></div>
+    <div class="tile cal"><div class="tile-val">{{ today_log.calories }}</div><div class="tile-label"><span class="lang-en">🔥 Calories</span><span class="lang-mr">🔥 कॅलरीज</span></div></div>
 </div>
 
 <!-- Daily goals progress -->
 <div class="wcard">
-    <h4>📊 Today's Goals – {{ today }}</h4>
+    <h4>📊 <span class="lang-en">Today's Goals</span><span class="lang-mr">आजचे उद्दिष्ट</span> – {{ today }}</h4>
     {% set water_pct   = [(today_log.water_glasses * 100 // 8), 100] | min %}
     {% set sleep_pct   = [(today_log.sleep_hours * 100 / 8) | round | int, 100] | min %}
     {% set steps_pct   = [(today_log.steps * 100 // 10000), 100] | min %}
     {% set exer_pct    = [(today_log.exercise_min * 100 // 30), 100] | min %}
     <div class="progress-wrap">
-        <div class="progress-label"><span>💧 Water ({{ today_log.water_glasses }}/8 glasses)</span><span>{{ water_pct }}%</span></div>
+        <div class="progress-label">
+            <span>💧 <span class="lang-en">Water</span><span class="lang-mr">पाणी</span> ({{ today_log.water_glasses }}/8 <span class="lang-en">glasses</span><span class="lang-mr">ग्लास</span>)</span>
+            <span>{{ water_pct }}%</span>
+        </div>
         <div class="progress-bar"><div class="progress-fill" style="width:{{ water_pct }}%;background:#3B82F6;"></div></div>
     </div>
     <div class="progress-wrap">
-        <div class="progress-label"><span>😴 Sleep ({{ today_log.sleep_hours }}/8 hrs)</span><span>{{ sleep_pct }}%</span></div>
+        <div class="progress-label">
+            <span>😴 <span class="lang-en">Sleep</span><span class="lang-mr">झोप</span> ({{ today_log.sleep_hours }}/8 <span class="lang-en">hrs</span><span class="lang-mr">तास</span>)</span>
+            <span>{{ sleep_pct }}%</span>
+        </div>
         <div class="progress-bar"><div class="progress-fill" style="width:{{ sleep_pct }}%;background:#6f42c1;"></div></div>
     </div>
     <div class="progress-wrap">
-        <div class="progress-label"><span>👣 Steps ({{ '{:,}'.format(today_log.steps) }}/10,000)</span><span>{{ steps_pct }}%</span></div>
+        <div class="progress-label">
+            <span>👣 <span class="lang-en">Steps</span><span class="lang-mr">पावले</span> ({{ '{:,}'.format(today_log.steps) }}/10,000)</span>
+            <span>{{ steps_pct }}%</span>
+        </div>
         <div class="progress-bar"><div class="progress-fill" style="width:{{ steps_pct }}%;background:#28A745;"></div></div>
     </div>
     <div class="progress-wrap">
-        <div class="progress-label"><span>🏃 Exercise ({{ today_log.exercise_min }}/30 min)</span><span>{{ exer_pct }}%</span></div>
+        <div class="progress-label">
+            <span>🏃 <span class="lang-en">Exercise</span><span class="lang-mr">व्यायाम</span> ({{ today_log.exercise_min }}/30 <span class="lang-en">min</span><span class="lang-mr">मिनिटे</span>)</span>
+            <span>{{ exer_pct }}%</span>
+        </div>
         <div class="progress-bar"><div class="progress-fill" style="width:{{ exer_pct }}%;background:#EF4444;"></div></div>
     </div>
 </div>
@@ -108,7 +125,7 @@
 
 <!-- Trends Chart Card -->
 <div class="wcard">
-    <h4>📈 Fitness &amp; Wellness Trends (Last 30 Days)</h4>
+    <h4>📈 <span class="lang-en">Fitness &amp; Wellness Trends (Last 30 Days)</span><span class="lang-mr">फिटनेस आणि वेलनेस ट्रेंड (शेवटचे ३0 दिवस)</span></h4>
     <div style="position: relative; height: 260px; width: 100%;">
         <canvas id="wellnessChart"></canvas>
     </div>
@@ -116,46 +133,49 @@
 
 <!-- Workout Calorie Calculator Card -->
 <div class="wcard">
-    <h4>🏃‍♂️ Workout Calorie Calculator</h4>
-    <p style="font-size:0.85rem; color:#6B7280; margin-bottom:16px;">Estimate calories burned and add them directly to your daily wellness log.</p>
+    <h4>🏃‍♂️ <span class="lang-en">Workout Calorie Calculator</span><span class="lang-mr">व्यायाम कॅलरी कॅल्क्युलेटर</span></h4>
+    <p style="font-size:0.85rem; color:#6B7280; margin-bottom:16px;">
+        <span class="lang-en">Estimate calories burned and add them directly to your daily wellness log.</span>
+        <span class="lang-mr">व्यायामाने जळालेल्या कॅलरीजचा अंदाज लावा आणि थेट दैनिक निरोगीपणा रोजनिशीमध्ये जोडा.</span>
+    </p>
     <div class="well-grid">
         <div class="wg">
-            <label>Workout Type</label>
+            <label><span class="lang-en">Workout Type</span><span class="lang-mr">व्यायामाचा प्रकार</span></label>
             <select id="workout_type">
-                <option value="running">🏃 Running (10 kcal/min)</option>
-                <option value="walking">🚶 Walking (4.5 kcal/min)</option>
-                <option value="cycling">🚴 Cycling (7.5 kcal/min)</option>
-                <option value="swimming">🏊 Swimming (8.5 kcal/min)</option>
-                <option value="gym">🏋️ Weightlifting / Gym (6 kcal/min)</option>
-                <option value="yoga">🧘 Yoga / Stretching (3 kcal/min)</option>
+                <option value="running">🏃 Running / धावणे (10 kcal/min)</option>
+                <option value="walking">🚶 Walking / चालणे (4.5 kcal/min)</option>
+                <option value="cycling">🚴 Cycling / सायकल चालवणे (7.5 kcal/min)</option>
+                <option value="swimming">🏊 Swimming / पोहणे (8.5 kcal/min)</option>
+                <option value="gym">🏋️ Weightlifting / Gym / व्यायामशाळा (6 kcal/min)</option>
+                <option value="yoga">🧘 Yoga / योगासने (3 kcal/min)</option>
             </select>
         </div>
         <div class="wg">
-            <label>Duration (minutes)</label>
+            <label><span class="lang-en">Duration (minutes)</span><span class="lang-mr">कालावधी (मिनिटे)</span></label>
             <input type="number" id="workout_duration" min="1" max="180" value="30">
         </div>
         <div class="wg">
-            <label>Intensity</label>
+            <label><span class="lang-en">Intensity</span><span class="lang-mr">तीव्रता</span></label>
             <select id="workout_intensity">
-                <option value="medium">Medium (Standard)</option>
-                <option value="low">Low (x0.8 Calorie Burn)</option>
-                <option value="high">High (x1.2 Calorie Burn)</option>
+                <option value="medium">Medium / मध्यम (Standard)</option>
+                <option value="low">Low / कमी (x0.8 Calorie Burn)</option>
+                <option value="high">High / उच्च (x1.2 Calorie Burn)</option>
             </select>
         </div>
         <div class="wg" style="display:flex; align-items:flex-end;">
             <button type="button" class="btn btn-primary btn-block" style="background:linear-gradient(135deg, #28A745, #00A896); color:#fff; border-radius:8px; padding:10px; height:42px; font-weight:700; width:100%; border:none; cursor:pointer;" onclick="calculateWorkout()">
-                🔥 Calculate
+                🔥 <span class="lang-en">Calculate</span><span class="lang-mr">गणना करा</span>
             </button>
         </div>
     </div>
     
     <div id="workout_result" style="display:none; margin-top:20px; padding:16px; background:#ECFDF5; border:1px solid #A7F3D0; border-radius:10px; text-align:center;">
-        <span style="font-size:1.1rem; font-weight:800; color:#065f46;">
+        <span style="font-size:1.1rem; font-weight:800; color:#065f46;" id="burned_calories_text">
             Estimated Burn: <span id="burned_calories_val">0</span> kcal for <span id="workout_duration_val">30</span> min
         </span>
         <div style="margin-top:10px;">
             <button type="button" class="btn btn-success btn-sm" onclick="addWorkoutToLog()" style="background:#059669; color:#fff; border:none; padding:6px 16px; border-radius:6px; font-weight:700; cursor:pointer;">
-                ➕ Add to Today's Log Form
+                ➕ <span class="lang-en">Add to Today's Log Form</span><span class="lang-mr">आजच्या लॉग फॉर्ममध्ये जोडा</span>
             </button>
         </div>
     </div>
@@ -163,66 +183,73 @@
 
 <!-- Log form -->
 <div class="wcard">
-    <h4>{% if today_log %}✏️ Update Today's Log{% else %}➕ Log Today – {{ today }}{% endif %}</h4>
+    <h4>
+        {% if today_log %}
+          <span class="lang-en">✏️ Update Today's Log</span><span class="lang-mr">✏️ आजची नोंद अपडेट करा</span>
+        {% else %}
+          <span class="lang-en">➕ Log Today</span><span class="lang-mr">➕ आजची नोंद करा</span>
+        {% endif %}
+        – {{ today }}
+    </h4>
     <form method="POST" action="{{ url_for('save_wellness') }}">
         <input type="hidden" name="log_date" value="{{ today }}">
         <div class="well-grid">
             <div class="wg">
-                <label>💧 Water (glasses)</label>
+                <label><span class="lang-en">💧 Water (glasses)</span><span class="lang-mr">💧 पाणी (ग्लास)</span></label>
                 <input type="number" name="water_glasses" min="0" max="20" value="{{ today_log.water_glasses if today_log else 0 }}" placeholder="8">
             </div>
             <div class="wg">
-                <label>😴 Sleep (hours)</label>
+                <label><span class="lang-en">😴 Sleep (hours)</span><span class="lang-mr">😴 झोप (तास)</span></label>
                 <input type="number" name="sleep_hours" min="0" max="24" step="0.5" value="{{ today_log.sleep_hours if today_log else 0 }}" placeholder="7.5">
             </div>
             <div class="wg">
-                <label>👣 Steps</label>
+                <label><span class="lang-en">👣 Steps</span><span class="lang-mr">👣 पावले</span></label>
                 <input type="number" name="steps" min="0" max="100000" value="{{ today_log.steps if today_log else 0 }}" placeholder="8000">
             </div>
             <div class="wg">
-                <label>😊 Mood</label>
+                <label><span class="lang-en">😊 Mood</span><span class="lang-mr">😊 मन:स्थिती</span></label>
                 <select name="mood">
-                    <option value="great" {% if today_log and today_log.mood == 'great' %}selected{% endif %}>😄 Great</option>
-                    <option value="good"  {% if today_log and today_log.mood == 'good'  %}selected{% elif not today_log %}selected{% endif %}>🙂 Good</option>
-                    <option value="okay"  {% if today_log and today_log.mood == 'okay'  %}selected{% endif %}>😐 Okay</option>
-                    <option value="bad"   {% if today_log and today_log.mood == 'bad'   %}selected{% endif %}>😞 Bad</option>
-                    <option value="awful" {% if today_log and today_log.mood == 'awful' %}selected{% endif %}>😖 Awful</option>
+                    <option value="great" {% if today_log and today_log.mood == 'great' %}selected{% endif %}>😄 Great / खूप छान</option>
+                    <option value="good"  {% if today_log and today_log.mood == 'good'  %}selected{% elif not today_log %}selected{% endif %}>🙂 Good / छान</option>
+                    <option value="okay"  {% if today_log and today_log.mood == 'okay'  %}selected{% endif %}>😐 Okay / ठीक</option>
+                    <option value="bad"   {% if today_log and today_log.mood == 'bad'   %}selected{% endif %}>😞 Bad / वाईट</option>
+                    <option value="awful" {% if today_log and today_log.mood == 'awful' %}selected{% endif %}>😖 Awful / खूप वाईट</option>
                 </select>
             </div>
             <div class="wg">
-                <label>🏃 Exercise (min)</label>
+                <label><span class="lang-en">🏃 Exercise (min)</span><span class="lang-mr">🏃 व्यायाम (मिनिटे)</span></label>
                 <input type="number" name="exercise_min" min="0" max="480" value="{{ today_log.exercise_min if today_log else 0 }}" placeholder="30">
             </div>
             <div class="wg">
-                <label>🔥 Calories</label>
+                <label><span class="lang-en">🔥 Calories</span><span class="lang-mr">🔥 कॅलरीज</span></label>
                 <input type="number" name="calories" min="0" max="10000" value="{{ today_log.calories if today_log else 0 }}" placeholder="2000">
             </div>
             <div class="wg span-full">
-                <label>📝 Notes</label>
-                <input type="text" name="notes" value="{{ today_log.notes if today_log else '' }}" placeholder="e.g. Felt energetic, skipped lunch…">
+                <label><span class="lang-en">📝 Notes</span><span class="lang-mr">📝 टीप</span></label>
+                <input type="text" name="notes" value="{{ today_log.notes if today_log else '' }}" placeholder="e.g. Felt energetic, skipped lunch…" placeholder-mr="उदा. ताजेतवाने वाटले, दुपारचे जेवण चुकले…">
             </div>
         </div>
-        <button type="submit" class="save-btn">💾 Save Log</button>
+        <button type="submit" class="save-btn"><span class="lang-en">💾 Save Log</span><span class="lang-mr">💾 जतन करा</span></button>
         <div style="clear:both;"></div>
     </form>
 </div>
 
 <!-- History table -->
 <div class="wcard">
-    <h4>📅 Wellness History (Last 30 Days)</h4>
+    <h4>📅 <span class="lang-en">Wellness History (Last 30 Days)</span><span class="lang-mr">निरोगीपणा इतिहास (शेवटचे ३0 दिवस)</span></h4>
     {% if logs %}
     <div style="overflow-x:auto;">
     <table class="log-table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>💧 Water</th>
-                <th>😴 Sleep</th>
-                <th>👣 Steps</th>
-                <th>😊 Mood</th>
-                <th>🏃 Exercise</th>
-                <th>🔥 Cal</th>
-                <th>Notes</th>
+                <th><span class="lang-en">Date</span><span class="lang-mr">तारीख</span></th>
+                <th><span class="lang-en">💧 Water</span><span class="lang-mr">💧 पाणी</span></th>
+                <th><span class="lang-en">😴 Sleep</span><span class="lang-mr">😴 झोप</span></th>
+                <th><span class="lang-en">👣 Steps</span><span class="lang-mr">👣 पावले</span></th>
+                <th><span class="lang-en">😊 Mood</span><span class="lang-mr">😊 मन:स्थिती</span></th>
+                <th><span class="lang-en">🏃 Exercise</span><span class="lang-mr">🏃 व्यायाम</span></th>
+                <th><span class="lang-en">🔥 Cal</span><span class="lang-mr">🔥 कॅलरीज</span></th>
+                <th><span class="lang-en">Notes</span><span class="lang-mr">टीप</span></th>
                 <th></th>
             </tr>
         </thead>
@@ -252,14 +279,17 @@
     {% else %}
     <div class="empty-state">
         <i class="fas fa-leaf"></i>
-        No wellness logs yet. Start tracking today!
+        <span class="lang-en">No wellness logs yet. Start tracking today!</span>
+        <span class="lang-mr">अद्याप कोणतीही वेलनेस नोंद नाही. आजपासून ट्रॅकिंग सुरू करा!</span>
     </div>
     {% endif %}
 </div>
 
 <!-- Tips -->
 <div style="background:#ECFDF5;border:2px solid #A7F3D0;border-radius:12px;padding:16px 20px;font-size:.88rem;color:#065F46;">
-    💡 <strong>Daily Targets:</strong> 8 glasses water · 7–9 hrs sleep · 10,000 steps · 30 min exercise · 2000 kcal
+    💡 <strong><span class="lang-en">Daily Targets:</span><span class="lang-mr">दैनंदिन उद्दिष्टे:</span></strong> 
+    <span class="lang-en">8 glasses water · 7–9 hrs sleep · 10,000 steps · 30 min exercise · 2000 kcal</span>
+    <span class="lang-mr">८ ग्लास पाणी · ७–९ तास झोप · १०,००० पावले · ३० मिनिटे व्यायाम · २००० कॅलरीज</span>
 </div>
 {% endblock %}
 
@@ -292,8 +322,16 @@ function calculateWorkout() {
     lastCalculatedMinutes = duration;
     lastCalculatedCalories = calBurned;
 
-    document.getElementById('burned_calories_val').textContent = calBurned;
-    document.getElementById('workout_duration_val').textContent = duration;
+    const isMr = document.documentElement.classList.contains('show-mr');
+    const resultTextEl = document.getElementById('burned_calories_text');
+    if (resultTextEl) {
+        resultTextEl.innerHTML = isMr 
+          ? `अंदाजे बर्न: <span id="burned_calories_val">${calBurned}</span> kcal, <span id="workout_duration_val">${duration}</span> मिनिटांसाठी`
+          : `Estimated Burn: <span id="burned_calories_val">${calBurned}</span> kcal for <span id="workout_duration_val">${duration}</span> min`;
+    } else {
+        document.getElementById('burned_calories_val').textContent = calBurned;
+        document.getElementById('workout_duration_val').textContent = duration;
+    }
     document.getElementById('workout_result').style.display = 'block';
 }
 
@@ -310,7 +348,11 @@ function addWorkoutToLog() {
         calInput.value = currentCal + lastCalculatedCalories;
     }
 
-    alert(`Added ${lastCalculatedMinutes} minutes of exercise and ${lastCalculatedCalories} kcal to the log form below. Click "Save Log" to submit!`);
+    const isMr = document.documentElement.classList.contains('show-mr');
+    const alertMsg = isMr
+      ? `लॉग फॉर्ममध्ये ${lastCalculatedMinutes} मिनिटे व्यायाम आणि ${lastCalculatedCalories} kcal जोडले गेले. जतन करण्यासाठी खाली "जतन करा" वर क्लिक करा!`
+      : `Added ${lastCalculatedMinutes} minutes of exercise and ${lastCalculatedCalories} kcal to the log form below. Click "Save Log" to submit!`;
+    alert(alertMsg);
 }
 
 // ========== Chart.js Trend Visualizer ==========

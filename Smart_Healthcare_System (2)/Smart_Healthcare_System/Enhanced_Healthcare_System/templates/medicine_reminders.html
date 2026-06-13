@@ -210,7 +210,9 @@
 <div id="alarm-banner">
     <span id="alarm-text">💊 Time to take your medicine!</span>
     <div style="margin-top: 8px; display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; flex-wrap:wrap;">
-        <button onclick="handleAlarmAction('taken')" style="font-weight:700; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; background:#28a745; color:white; font-size:0.82rem;">✅ Taken</button>
+        <button onclick="handleAlarmAction('taken')" style="font-weight:700; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; background:#28a745; color:white; font-size:0.82rem;">
+            <span class="lang-en">✅ Taken</span><span class="lang-mr">✅ घेतले</span>
+        </button>
         <button onclick="handleAlarmAction('snooze',5)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 5m</button>
         <button onclick="handleAlarmAction('snooze',10)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 10m</button>
         <button onclick="handleAlarmAction('snooze',15)" style="font-weight:700; padding:6px 12px; border-radius:6px; border:none; cursor:pointer; background:#ffc107; color:#212529; font-size:0.82rem;">⏰ 15m</button>
@@ -220,11 +222,14 @@
 <!-- Permission request banner -->
 <div id="permission-banner" style="display:none;">
     <div>
-        <strong>🔔 Enable Alarm Notifications</strong><br>
-        <small>Allow notifications so you receive alarms <b>even when the browser is minimized</b>.</small>
+        <strong>🔔 <span class="lang-en">Enable Alarm Notifications</span><span class="lang-mr">गजर सूचना सक्षम करा</span></strong><br>
+        <small>
+            <span class="lang-en">Allow notifications so you receive alarms <b>even when the browser is minimized</b>.</span>
+            <span class="lang-mr">परवानगी द्या जेणेकरून ब्राउझर मिनिमाईज असतानाही <b>तुम्हाला गजर ऐकू येईल</b>.</span>
+        </small>
     </div>
     <button onclick="requestNotificationPermission()" class="btn-add" style="white-space:nowrap; padding:8px 16px; font-size: 0.85rem;">
-        Enable Alarms
+        <span class="lang-en">Enable Alarms</span><span class="lang-mr">गजर सुरू करा</span>
     </button>
 </div>
 
@@ -232,90 +237,101 @@
 <div class="reminder-hero">
     <div class="icon-box">💊</div>
     <div>
-        <h2>Medicine Reminders & Alarms</h2>
-        <p>Set scheduled alarms for your medicines. The alarm plays even when this tab is closed.</p>
+        <h2><span class="lang-en">Medicine Reminders &amp; Alarms</span><span class="lang-mr">औषध स्मरणपत्रे आणि गजर</span></h2>
+        <p>
+            <span class="lang-en">Set scheduled alarms for your medicines. The alarm plays even when this tab is closed.</span>
+            <span class="lang-mr">तुमच्या औषधांसाठी गजर सेट करा. हा टॅब बंद असला तरीही गजर वेळेवर वाजेल.</span>
+        </p>
     </div>
 </div>
 
 <!-- Audio activation reminder -->
 <div id="audio-lock-banner" class="alert alert-warning d-flex justify-content-between align-items-center" style="border-radius: 12px; margin-bottom: 20px; padding: 12px 16px; border: 1.5px solid #ffeeba;">
     <div>
-        <strong>🔊 Alarm Sound Status:</strong> <span id="audio-status-text" style="color:#856404; font-weight:700;">Tap anywhere on the screen to enable alarm sound</span>
+        <strong>🔊 <span class="lang-en">Alarm Sound Status:</span><span class="lang-mr">गजर आवाज स्थिती:</span></strong> 
+        <span id="audio-status-text" style="color:#856404; font-weight:700;">
+            <span class="lang-en">Tap anywhere on the screen to enable alarm sound</span>
+            <span class="lang-mr">गजर आवाज सुरू करण्यासाठी स्क्रीनवर कुठेही टॅप करा</span>
+        </span>
     </div>
-    <button class="btn btn-warning btn-sm" onclick="unlockAudio(event)" style="font-weight:700;">🔊 Enable Sound</button>
+    <button class="btn btn-warning btn-sm" onclick="unlockAudio(event)" style="font-weight:700;">
+        🔊 <span class="lang-en">Enable Sound</span><span class="lang-mr">आवाज सुरू करा</span>
+    </button>
 </div>
 
 <!-- Background Alarms OS Alert Notice -->
 <div class="alert alert-info d-flex align-items-center" style="border-radius: 12px; margin-bottom: 20px; padding: 14px 18px; border: 1.5px solid #bee5eb; background-color: #d1ecf1; color: #0c5460; font-size: 0.86rem; line-height: 1.5;">
     <div style="font-size: 24px; margin-right: 14px;">⚠️</div>
     <div>
-        <strong>Background Alarms Notice:</strong> Playing sounds when an app is fully closed requires native OS-level push notifications and background execution permissions (both on iOS and Android). Your app builder or wrapper will need to configure native local notifications for this functionality to work seamlessly.
+        <strong><span class="lang-en">Background Alarms Notice:</span><span class="lang-mr">पार्श्वभूमी गजर नोटीस:</span></strong> 
+        <span class="lang-en">Playing sounds when an app is fully closed requires native OS-level push notifications and background execution permissions (both on iOS and Android). Your app builder or wrapper will need to configure native local notifications for this functionality to work seamlessly.</span>
+        <span class="lang-mr">अ‍ॅप पूर्णपणे बंद असताना गजर वाजवण्यासाठी ओएस-स्तरीय पुश नोटिफिकेशन्स आणि पार्श्वभूमी रनिंग परवानगी आवश्यक असते. हे सुरळीत चालण्यासाठी तुमच्या अ‍ॅप बिल्डरला स्थानिक नोटिफिकेशन्स कॉन्फिगर करावे लागतील.</span>
     </div>
 </div>
 
 <!-- Add Reminder Form -->
 <div class="add-form-card">
-    <h4>➕ Add New Reminder</h4>
+    <h4>➕ <span class="lang-en">Add New Reminder</span><span class="lang-mr">नवीन गजर जोडा</span></h4>
     <form method="POST" action="/reminders/add">
         <div class="form-row">
             <div class="form-group">
-                <label>Medicine Name *</label>
+                <label><span class="lang-en">Medicine Name *</span><span class="lang-mr">औषधाचे नाव *</span></label>
                 <input type="text" name="medicine_name" class="form-control" placeholder="e.g. Paracetamol 500mg" required>
             </div>
             <div class="form-group">
-                <label>Dosage</label>
+                <label><span class="lang-en">Dosage</span><span class="lang-mr">डोस</span></label>
                 <input type="text" name="dosage" class="form-control" placeholder="e.g. 1 tablet">
             </div>
             <div class="form-group">
-                <label>Alarm Time *</label>
+                <label><span class="lang-en">Alarm Time *</span><span class="lang-mr">गजराची वेळ *</span></label>
                 <input type="time" name="reminder_time" class="form-control" required>
             </div>
             <div class="form-group">
-                <label>Frequency</label>
+                <label><span class="lang-en">Frequency</span><span class="lang-mr">वारंवारता</span></label>
                 <select name="frequency" class="form-control">
-                    <option value="daily">Daily</option>
-                    <option value="twice_daily">Twice Daily</option>
-                    <option value="thrice_daily">Three Times Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="once">Once Only</option>
+                    <option value="daily">Daily / दररोज</option>
+                    <option value="twice_daily">Twice Daily / दिवसातून दोनदा</option>
+                    <option value="thrice_daily">Three Times Daily / दिवसातून तीनदा</option>
+                    <option value="weekly">Weekly / आठवड्यातून एकदा</option>
+                    <option value="once">Once Only / फक्त एकदाच</option>
                 </select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Start Date</label>
+                <label><span class="lang-en">Start Date</span><span class="lang-mr">सुरू होण्याची तारीख</span></label>
                 <input type="date" name="start_date" id="start_date" class="form-control">
             </div>
             <div class="form-group">
-                <label>End Date</label>
+                <label><span class="lang-en">End Date</span><span class="lang-mr">संपण्याची तारीख</span></label>
                 <input type="date" name="end_date" id="end_date" class="form-control">
             </div>
             <div class="form-group">
-                <label>Instructions (optional)</label>
-                <input type="text" name="instructions" class="form-control" placeholder="e.g. After meals, With water">
+                <label><span class="lang-en">Instructions (optional)</span><span class="lang-mr">सूचना (पर्यायी)</span></label>
+                <input type="text" name="instructions" class="form-control" placeholder="e.g. After meals, With water" placeholder-mr="उदा. जेवणानंतर, पाण्यासोबत">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">🔔 Set Alarm</button>
+        <button type="submit" class="btn btn-primary mt-2">🔔 <span class="lang-en">Set Alarm</span><span class="lang-mr">गजर सेट करा</span></button>
     </form>
 </div>
 
 <!-- Missed Doses & Notification History -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
     <div class="add-form-card" style="margin-bottom:0;">
-        <h4 style="font-size:1rem;font-weight:800;color:#DC3545;margin-bottom:12px;">⚠️ Missed Doses Today</h4>
+        <h4 style="font-size:1rem;font-weight:800;color:#DC3545;margin-bottom:12px;">⚠️ <span class="lang-en">Missed Doses Today</span><span class="lang-mr">आजचे चुकलेले डोस</span></h4>
         <div id="missed-doses"><p style="color:#9CA3AF;font-size:.85rem;">Loading...</p></div>
     </div>
     <div class="add-form-card" style="margin-bottom:0;">
-        <h4 style="font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:12px;">📋 Notification History</h4>
+        <h4 style="font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:12px;">📋 <span class="lang-en">Notification History</span><span class="lang-mr">सूचना इतिहास</span></h4>
         <div id="notif-history" style="max-height:200px;overflow-y:auto;"><p style="color:#9CA3AF;font-size:.85rem;">Loading...</p></div>
     </div>
 </div>
 
 <!-- Active Reminders -->
 <h4 style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-bottom:16px; display: flex; align-items: center; gap: 8px;">
-    🔔 Your Medicine Alarms
+    🔔 <span class="lang-en">Your Medicine Alarms</span><span class="lang-mr">तुमचे औषध गजर</span>
     <span style="background: var(--primary-bg); color: var(--primary); border-radius: 20px; padding: 3px 12px; font-size: 0.82rem;">
-        {{ reminders|length }} set
+        {{ reminders|length }} <span class="lang-en">set</span><span class="lang-mr">सक्रिय</span>
     </span>
 </h4>
 
@@ -325,35 +341,50 @@
     <div class="reminder-card {% if not r.is_active %}inactive{% endif %}" id="card-{{ r.id }}">
         <div class="med-name">💊 {{ r.medicine_name }}</div>
         <div class="med-time">⏰ {{ r.reminder_time }}</div>
-        <div class="badge-freq">{{ r.frequency.replace('_', ' ').title() }}</div>
+        <div class="badge-freq">
+            <span class="lang-en">{{ r.frequency.replace('_', ' ').title() }}</span>
+            <span class="lang-mr">
+                {% if r.frequency == 'daily' %}दररोज
+                {% elif r.frequency == 'twice_daily' %}दिवसातून दोनदा
+                {% elif r.frequency == 'thrice_daily' %}दिवसातून तीनदा
+                {% elif r.frequency == 'weekly' %}आठवड्यातून एकदा
+                {% else %}फक्त एकदाच{% endif %}
+            </span>
+        </div>
         {% if r.dosage %}
-        <div class="med-meta"><strong>Dose:</strong> {{ r.dosage }}</div>
+        <div class="med-meta"><strong><span class="lang-en">Dose:</span><span class="lang-mr">डोस:</span></strong> {{ r.dosage }}</div>
         {% endif %}
         {% if r.instructions %}
-        <div class="med-meta"><strong>Instructions:</strong> {{ r.instructions }}</div>
+        <div class="med-meta"><strong><span class="lang-en">Instructions:</span><span class="lang-mr">सूचना:</span></strong> {{ r.instructions }}</div>
         {% endif %}
         {% if r.start_date %}
-        <div class="med-meta"><strong>From:</strong> {{ r.start_date }}
-            {% if r.end_date %} &nbsp;→&nbsp; <strong>To:</strong> {{ r.end_date }}{% endif %}
+        <div class="med-meta"><strong><span class="lang-en">From:</span><span class="lang-mr">पासून:</span></strong> {{ r.start_date }}
+            {% if r.end_date %} &nbsp;→&nbsp; <strong><span class="lang-en">To:</span><span class="lang-mr">पर्यंत:</span></strong> {{ r.end_date }}{% endif %}
         </div>
         {% endif %}
         <div class="med-meta" style="margin-top:8px;">
-            Status: 
+            <span class="lang-en">Status:</span><span class="lang-mr">स्थिती:</span> 
             {% if r.is_active %}
-            <span style="color:var(--success); font-weight:700;">Active</span>
+            <span style="color:var(--success); font-weight:700;" class="lang-en">Active</span>
+            <span style="color:var(--success); font-weight:700;" class="lang-mr">सक्रिय</span>
             {% else %}
-            <span style="color:var(--muted); font-weight:700;">Paused</span>
+            <span style="color:var(--muted); font-weight:700;" class="lang-en">Paused</span>
+            <span style="color:var(--muted); font-weight:700;" class="lang-mr">स्थगित</span>
             {% endif %}
         </div>
         <div class="reminder-actions">
             <form method="POST" action="/reminders/toggle/{{ r.id }}" style="flex:1; display:flex;">
                 <button type="submit" class="btn-toggle {% if r.is_active %}on{% else %}off{% endif %}">
-                    {% if r.is_active %}⏸ Pause{% else %}▶ Resume{% endif %}
+                    {% if r.is_active %}
+                      <span class="lang-en">⏸ Pause</span><span class="lang-mr">⏸ थांबवा</span>
+                    {% else %}
+                      <span class="lang-en">▶ Resume</span><span class="lang-mr">▶ सुरू करा</span>
+                    {% endif %}
                 </button>
             </form>
             <form method="POST" action="/reminders/delete/{{ r.id }}"
                   onsubmit="return confirm('Delete this reminder?')">
-                <button type="submit" class="btn-del">🗑 Delete</button>
+                <button type="submit" class="btn-del"><span class="lang-en">🗑 Delete</span><span class="lang-mr">🗑 काढा</span></button>
             </form>
         </div>
     </div>
@@ -362,8 +393,8 @@
 {% else %}
 <div class="empty-state">
     <span class="icon">⏰</span>
-    <h4>No reminders set yet</h4>
-    <p>Add a medicine reminder above and we'll ring the alarm for you on time.</p>
+    <h4><span class="lang-en">No reminders set yet</span><span class="lang-mr">अद्याप कोणताही गजर सेट नाही</span></h4>
+    <p><span class="lang-en">Add a medicine reminder above and we'll ring the alarm for you on time.</span><span class="lang-mr">वर नवीन गजर जोडा आणि आम्ही तुम्हाला वेळेवर औषधाची आठवण करून देऊ.</span></p>
 </div>
 {% endif %}
 
@@ -398,9 +429,10 @@ function initAudioContext() {
 function updateAudioStatusUI() {
     const text = document.getElementById('audio-status-text');
     const banner = document.getElementById('audio-lock-banner');
+    const isMr = document.documentElement.classList.contains('show-mr');
     if (audioCtx && audioCtx.state !== 'suspended') {
         if (text) {
-            text.textContent = 'Active & Ready';
+            text.innerHTML = isMr ? 'सक्रिय आणि तयार' : 'Active & Ready';
             text.style.color = '#155724';
         }
         if (banner) {
@@ -410,7 +442,7 @@ function updateAudioStatusUI() {
             const btn = banner.querySelector('button');
             if (btn) {
                 btn.className = "btn btn-success btn-sm";
-                btn.innerHTML = "🔊 Sound Armed";
+                btn.innerHTML = isMr ? "🔊 आवाज सक्रिय" : "🔊 Sound Armed";
             }
         }
     }
@@ -514,8 +546,11 @@ let currentAlarmReminder = null;
 function showAlarmBanner(medicineName, dosage, reminderId) {
     currentAlarmReminder = { id: reminderId, name: medicineName, dosage: dosage };
     const banner = document.getElementById('alarm-banner');
-    document.getElementById('alarm-text').textContent =
-        `💊 ALARM: Time to take ${medicineName}${dosage ? ' — ' + dosage : ''}!`;
+    const isMr = document.documentElement.classList.contains('show-mr');
+    const text = isMr 
+      ? `💊 गजर: ${medicineName} घेण्याची वेळ झाली आहे ${dosage ? ' — ' + dosage : ''}!`
+      : `💊 ALARM: Time to take ${medicineName}${dosage ? ' — ' + dosage : ''}!`;
+    document.getElementById('alarm-text').textContent = text;
     banner.style.display = 'block';
     document.body.style.paddingTop = '95px';
     createAlarmSound();
@@ -731,13 +766,18 @@ async function loadNotificationHistory() {
             el.innerHTML = '<p style="color:#9CA3AF;font-size:.85rem;">No notification history yet.</p>';
         }
         if (missedEl && data.missed_today && data.missed_today.length) {
-            missedEl.innerHTML = data.missed_today.map(m =>
-                `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;margin-bottom:8px;font-size:.85rem;">
-                    ⚠️ Missed: <strong>${m.medicine_name}</strong> (${m.reminder_time})
-                </div>`
-            ).join('');
+            const isMr = document.documentElement.classList.contains('show-mr');
+            missedEl.innerHTML = data.missed_today.map(m => {
+                const label = isMr ? 'चुकले:' : 'Missed:';
+                return `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px;margin-bottom:8px;font-size:.85rem;">
+                    ⚠️ ${label} <strong>${m.medicine_name}</strong> (${m.reminder_time})
+                </div>`;
+            }).join('');
         } else if (missedEl) {
-            missedEl.innerHTML = '<p style="color:#10B981;font-size:.85rem;">✅ All doses logged for today!</p>';
+            missedEl.innerHTML = `
+              <p style="color:#10B981;font-size:.85rem;" class="lang-en">✅ All doses logged for today!</p>
+              <p style="color:#10B981;font-size:.85rem;" class="lang-mr">✅ आजचे सर्व डोस घेतले आहेत!</p>
+            `;
         }
     } catch(e) { console.log('History load failed', e); }
 }

@@ -36,11 +36,12 @@
 }
 
 .ccard {
-    background: var(--coach-bg);
+    background: var(--card);
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border);
+    color: var(--text);
     margin-bottom: 24px;
 }
 .ccard h4 {
@@ -49,7 +50,7 @@
     font-weight: 800;
     margin-bottom: 18px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #F3F4F6;
+    border-bottom: 2px solid var(--border);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -65,7 +66,7 @@
 .calc-group label {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #6B7280;
+    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     display: block;
@@ -74,15 +75,16 @@
 .calc-group input, .calc-group select {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border);
     border-radius: 8px;
     font-size: 0.9rem;
-    background: #FAFAFA;
+    background: var(--card);
+    color: var(--text);
 }
 .calc-group input:focus, .calc-group select:focus {
     outline: none;
     border-color: var(--coach-primary);
-    background: #fff;
+    background: var(--card);
 }
 .calc-btn {
     background: var(--coach-primary);
@@ -102,9 +104,10 @@
     margin-top: 16px;
     padding: 14px;
     border-radius: 10px;
-    background: #F5F3FF;
-    border: 1px solid #DDD6FE;
+    background: var(--blue-lt);
+    border: 1px solid var(--border);
     text-align: center;
+    color: var(--text);
 }
 .result-val { font-size: 1.3rem; font-weight: 900; color: #6D28D9; }
 
@@ -112,10 +115,10 @@
 .chat-container {
     height: 350px;
     overflow-y: auto;
-    border: 1px solid #E5E7EB;
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
-    background: #F9FAFB;
+    background: var(--bg);
     margin-bottom: 14px;
     display: flex;
     flex-direction: column;
@@ -129,10 +132,11 @@
     line-height: 1.45;
 }
 .chat-bubble.coach {
-    background: #fff;
-    border: 1px solid #E5E7EB;
+    background: var(--card);
+    border: 1px solid var(--border);
     align-self: flex-start;
     border-bottom-left-radius: 2px;
+    color: var(--text);
 }
 .chat-bubble.user {
     background: var(--coach-primary);
@@ -147,9 +151,11 @@
 .chat-input {
     flex: 1;
     padding: 12px;
-    border: 2px solid #E5E7EB;
+    border: 2px solid var(--border);
     border-radius: 10px;
     font-size: 0.9rem;
+    background: var(--card);
+    color: var(--text);
 }
 .chat-input:focus { outline: none; border-color: var(--coach-primary); }
 .chat-send-btn {
@@ -164,26 +170,27 @@
 
 /* Program list */
 .prog-card {
-    border: 1.5px solid #EEF2F6;
+    border: 1.5px solid var(--border);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 14px;
+    background: var(--card);
 }
 .prog-icon {
     width: 44px; height: 44px;
     border-radius: 50%;
-    background: #F5F3FF;
+    background: var(--blue-lt);
     color: var(--coach-primary);
     font-size: 1.25rem;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
 .prog-details { flex: 1; }
-.prog-title { font-weight: 700; font-size: 0.92rem; color: #1F2937; margin-bottom: 2px; }
-.prog-desc { font-size: 0.78rem; color: #6B7280; }
+.prog-title { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 2px; }
+.prog-desc { font-size: 0.78rem; color: var(--muted); }
 </style>
 {% endblock %}
 
@@ -191,8 +198,11 @@
 <div class="coach-hero">
     <div class="ico">🏋️‍♀️</div>
     <div>
-        <h2>Fitness Coaching Center</h2>
-        <p>Calculate your calorie requirements, explore workouts, and chat instantly with your AI Personal Trainer.</p>
+        <h2><span class="lang-en">Fitness Coaching Center</span><span class="lang-mr">फिटनेस कोचिंग केंद्र</span></h2>
+        <p>
+            <span class="lang-en">Calculate your calorie requirements, explore workouts, and chat instantly with your AI Personal Trainer.</span>
+            <span class="lang-mr">तुमच्या कॅलरीची गरज मोजा, व्यायामाचे प्रकार एक्सप्लोर करा आणि एआय पर्सनल ट्रेनरशी बोला.</span>
+        </p>
     </div>
 </div>
 
@@ -201,15 +211,16 @@
     <!-- Column 1: AI Coach Chat -->
     <div class="ccard" style="display:flex; flex-direction:column; justify-content:space-between; height: 100%; margin-bottom:0;">
         <div>
-            <h4>💬 Talk to Your AI Fitness Coach</h4>
+            <h4>💬 <span class="lang-en">Talk to Your AI Fitness Coach</span><span class="lang-mr">तुमच्या एआय फिटनेस कोचशी बोला</span></h4>
             <div class="chat-container" id="chat-box">
                 <div class="chat-bubble coach">
-                    👋 Hello! I am Coach Max, your virtual health and fitness guide. Ask me anything about workouts, diet plans, fat loss, or muscle building! 
+                    <span class="lang-en">👋 Hello! I am Coach Max, your virtual health and fitness guide. Ask me anything about workouts, diet plans, fat loss, or muscle building!</span>
+                    <span class="lang-mr">👋 नमस्कार! मी कोच मॅक्स आहे, तुमचा डिजिटल फिटनेस मार्गदर्शक. मला व्यायाम, आहार योजना, वजन कमी करणे किंवा स्नायू वाढवणे याबद्दल काहीही विचारा!</span>
                 </div>
             </div>
         </div>
         <div class="chat-input-row">
-            <input type="text" id="user-msg-input" class="chat-input" placeholder="Type a message, e.g. How to lose weight?" onkeydown="if(event.key==='Enter') sendMessage()">
+            <input type="text" id="user-msg-input" class="chat-input" placeholder="Type a message, e.g. How to lose weight?" placeholder-mr="मेसेज लिहा, उदा. वजन कसे कमी करावे?" onkeydown="if(event.key==='Enter') sendMessage()">
             <button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
@@ -218,74 +229,86 @@
     <div>
         <!-- Calculator -->
         <div class="ccard">
-            <h4>📊 BMR &amp; Calorie Goal Calculator</h4>
+            <h4>📊 <span class="lang-en">BMR &amp; Calorie Goal Calculator</span><span class="lang-mr">बीएमआय आणि कॅलरी गोल कॅल्क्युलेटर</span></h4>
             <div class="calc-row">
                 <div class="calc-group">
-                    <label>Weight (kg)</label>
+                    <label><span class="lang-en">Weight (kg)</span><span class="lang-mr">वजन (किलो)</span></label>
                     <input type="number" id="w_val" min="20" max="250" value="70">
                 </div>
                 <div class="calc-group">
-                    <label>Height (cm)</label>
+                    <label><span class="lang-en">Height (cm)</span><span class="lang-mr">उंची (सेमी)</span></label>
                     <input type="number" id="h_val" min="80" max="250" value="170">
                 </div>
             </div>
             <div class="calc-row">
                 <div class="calc-group">
-                    <label>Age (years)</label>
+                    <label><span class="lang-en">Age (years)</span><span class="lang-mr">वय (वर्षे)</span></label>
                     <input type="number" id="a_val" min="10" max="100" value="25">
                 </div>
                 <div class="calc-group">
-                    <label>Gender</label>
+                    <label><span class="lang-en">Gender</span><span class="lang-mr">लिंग</span></label>
                     <select id="g_val">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
+                        <option value="male">Male / पुरुष</option>
+                        <option value="female">Female / स्त्री</option>
                     </select>
                 </div>
             </div>
             <div class="calc-group">
-                <label>Activity Level</label>
+                <label><span class="lang-en">Activity Level</span><span class="lang-mr">हालचालींची पातळी</span></label>
                 <select id="act_val">
-                    <option value="1.2">Sedentary (Little/no exercise)</option>
-                    <option value="1.375">Lightly Active (1-3 days/wk)</option>
-                    <option value="1.55">Moderately Active (3-5 days/wk)</option>
-                    <option value="1.725">Very Active (6-7 days/wk)</option>
+                    <option value="1.2">Sedentary (Little/no exercise) / बैठे काम</option>
+                    <option value="1.375">Lightly Active (1-3 days/wk) / थोडे सक्रिय</option>
+                    <option value="1.55">Moderately Active (3-5 days/wk) / मध्यम सक्रिय</option>
+                    <option value="1.725">Very Active (6-7 days/wk) / खूप सक्रिय</option>
                 </select>
             </div>
-            <button class="calc-btn" onclick="runCalculations()">🔥 Calculate Calories</button>
+            <button class="calc-btn" onclick="runCalculations()">🔥 <span class="lang-en">Calculate Calories</span><span class="lang-mr">कॅलरीजची गणना करा</span></button>
 
             <!-- Results -->
             <div class="calc-result" id="calc-result">
-                <div>Basal Metabolic Rate (BMR): <strong class="result-val"><span id="res-bmr">0</span> kcal</strong></div>
-                <div style="margin-top:8px;">Daily Maintenance Calories (TDEE): <strong class="result-val" style="color:var(--coach-success);"><span id="res-tdee">0</span> kcal</strong></div>
-                <div style="font-size:0.75rem; color:#6B7280; margin-top:8px;">Subtract 500 kcal for Weight Loss. Add 300 kcal for Muscle Gain.</div>
+                <div><span class="lang-en">Basal Metabolic Rate (BMR):</span><span class="lang-mr">बेसल मेटाबॉलिक रेट (BMR):</span> <strong class="result-val"><span id="res-bmr">0</span> kcal</strong></div>
+                <div style="margin-top:8px;"><span class="lang-en">Daily Maintenance Calories (TDEE):</span><span class="lang-mr">दैनिक मेंटेनन्स कॅलरीज (TDEE):</span> <strong class="result-val" style="color:var(--coach-success);"><span id="res-tdee">0</span> kcal</strong></div>
+                <div style="font-size:0.75rem; color:#6B7280; margin-top:8px;">
+                    <span class="lang-en">Subtract 500 kcal for Weight Loss. Add 300 kcal for Muscle Gain.</span>
+                    <span class="lang-mr">वजन कमी करण्यासाठी ५०० kcal कमी करा. स्नायू वाढवण्यासाठी ३०० kcal वाढवा.</span>
+                </div>
             </div>
         </div>
 
         <!-- Workout Programs -->
         <div class="ccard" style="margin-bottom:0;">
-            <h4>🏃‍♂️ Recommended Workout Programs</h4>
+            <h4>🏃‍♂️ <span class="lang-en">Recommended Workout Programs</span><span class="lang-mr">शिफारस केलेले वर्कआउट प्रोग्राम</span></h4>
             
             <div class="prog-card">
                 <div class="prog-icon">💪</div>
                 <div class="prog-details">
-                    <div class="prog-title">Full-Body Strength (Beginner)</div>
-                    <div class="prog-desc">3 days/week · Squats, pushups, rows, planks. Built to develop functional strength.</div>
+                    <div class="prog-title"><span class="lang-en">Full-Body Strength (Beginner)</span><span class="lang-mr">पूर्ण-शरीर ताकद व्यायाम (नवशिक्या)</span></div>
+                    <div class="prog-desc">
+                        <span class="lang-en">3 days/week · Squats, pushups, rows, planks. Built to develop functional strength.</span>
+                        <span class="lang-mr">आठवड्यातून ३ दिवस · उठबैशा, पुशअप्स, रोज, प्लँक्स. शरीराची ताकद वाढवण्यासाठी.</span>
+                    </div>
                 </div>
             </div>
 
             <div class="prog-card">
                 <div class="prog-icon">🔥</div>
                 <div class="prog-details">
-                    <div class="prog-title">HIIT Fat Burn Cardio</div>
-                    <div class="prog-desc">4 days/week · Jumping jacks, mountain climbers, burpees. High-intensity fat burner.</div>
+                    <div class="prog-title"><span class="lang-en">HIIT Fat Burn Cardio</span><span class="lang-mr">एचआयआयटी (HIIT) फॅट बर्न कार्डिओ</span></div>
+                    <div class="prog-desc">
+                        <span class="lang-en">4 days/week · Jumping jacks, mountain climbers, burpees. High-intensity fat burner.</span>
+                        <span class="lang-mr">आठवड्यातून ४ दिवस · जंपिंग जॅक, माउंटेन क्लाइंबर्स, बर्पीज. जलद वजन कमी करण्यासाठी.</span>
+                    </div>
                 </div>
             </div>
 
             <div class="prog-card" style="margin-bottom:0;">
                 <div class="prog-icon">🧘</div>
                 <div class="prog-details">
-                    <div class="prog-title">Yoga &amp; Flexibility Routine</div>
-                    <div class="prog-desc">Daily · Stretching, breathing, vinyasa flows. Promotes muscle recovery and joint mobility.</div>
+                    <div class="prog-title"><span class="lang-en">Yoga &amp; Flexibility Routine</span><span class="lang-mr">योग आणि लवचिकता दिनचर्या</span></div>
+                    <div class="prog-desc">
+                        <span class="lang-en">Daily · Stretching, breathing, vinyasa flows. Promotes muscle recovery and joint mobility.</span>
+                        <span class="lang-mr">दररोज · स्ट्रेचिंग, श्वसनक्रिया, विन्यास फ्लो. स्नायूंची रिकव्हरी आणि सांध्यांच्या लवचिकतेसाठी.</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -332,32 +355,57 @@ function appendMessage(text, sender) {
 
 function getCoachReply(msg) {
     const query = msg.toLowerCase();
+    const isMr = document.documentElement.classList.contains('show-mr');
     
-    // Rule matching replies
-    if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
-        return "Hi there! Ready to crush some fitness goals today? Ask me about diets, workouts, or how to calculate your calorie target!";
+    if (isMr) {
+        // Marathi replies
+        if (query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('नमस्कार') || query.includes('हॅलो')) {
+            return "नमस्कार! आज तुमचे फिटनेस ध्येय गाठण्यासाठी तयार आहात का? मला आहार, व्यायाम किंवा तुमच्या कॅलरी उद्दिष्टाची गणना कशी करावी याबद्दल विचारा!";
+        }
+        if (query.includes('lose weight') || query.includes('fat loss') || query.includes('slimming') || query.includes('वजन कमी') || query.includes('चरबी')) {
+            return "वजन कमी करण्यासाठी, तुम्हाला कॅलरी डेफिसिट (कमतरता) राखणे आवश्यक आहे. उजवीकडील कॅल्क्युलेटर वापरून तुमचे मेंटेनन्स कॅलरीज (TDEE) शोधा, नंतर दररोज ५०० kcal कमी खा! प्रथिनेयुक्त आहारावर लक्ष केंद्रित करा आणि आठवड्यातून ३ वेळा वजन उचलण्याचा व्यायाम करा.";
+        }
+        if (query.includes('gain muscle') || query.includes('bulk') || query.includes('muscle building') || query.includes('स्नायू') || query.includes('बॉडी')) {
+            return "स्नायू वाढवण्यासाठी, तुमच्या मेंटेनन्स कॅलरीजपेक्षा थोड्या जास्त कॅलरीज घ्या (+३०० ते +५०० kcal), दररोज तुमच्या वजनाच्या प्रति किलो १.६ ते २.२ ग्रॅम प्रोटीन घ्या आणि हळूहळू व्यायामाचे वजन किंवा रेप्स वाढवा.";
+        }
+        if (query.includes('diet') || query.includes('nutrition') || query.includes('eat') || query.includes('आहार') || query.includes('जेवण')) {
+            return "चांगला आहार हा नैसर्गिक अन्नाभोवती केंद्रित असावा. भाज्या, फळे, निरोगी चरबी (ऑलिव्ह ऑइल, बदाम) आणि दर्जेदार प्रथिने खा. आमचे 'आहार योजना' टॅब पहा!";
+        }
+        if (query.includes('workout') || query.includes('routine') || query.includes('exercise') || query.includes('व्यायाम') || query.includes('कसरत')) {
+            return "नवशिक्यांसाठी, मी आठवड्यातून ३ दिवस फुल-बॉडी स्ट्रेंथ व्यायामाची शिफारस करतो. उठबैशा, पुशअप्स, डंबेल रोज आणि प्लँक्स करा.";
+        }
+        if (query.includes('water') || query.includes('hydration') || query.includes('पाणी')) {
+            return "हायड्रेटेड राहा! दररोज किमान ८ ते १० ग्लास पाणी प्या. शरीरात ऊर्जा टिकवण्यासाठी आणि सांधे निरोगी ठेवण्यासाठी पाणी अत्यंत आवश्यक आहे.";
+        }
+        if (query.includes('thank') || query.includes('thanks') || query.includes('धन्यवाद') || query.includes('आभारी')) {
+            return "तुमचे स्वागत आहे! तुमचे सातत्य आणि मेहनत अशीच सुरू ठेवा. काही अडचण असल्यास नक्की विचारा.";
+        }
+        return "खूप छान प्रश्न! फिटनेसमध्ये सातत्य सर्वात महत्त्वाचे आहे. दररोज हालचाल करा, पावले ट्रॅक करा, पुरेशी प्रथिने घ्या आणि आज रात्री ७-८ तास झोप घ्या. या आठवड्यात तुम्ही कोणत्या व्यायामाची योजना आखली आहे?";
+    } else {
+        // English replies (original)
+        if (query.includes('hello') || query.includes('hi') || query.includes('hey')) {
+            return "Hi there! Ready to crush some fitness goals today? Ask me about diets, workouts, or how to calculate your calorie target!";
+        }
+        if (query.includes('lose weight') || query.includes('fat loss') || query.includes('slimming')) {
+            return "For weight loss, you need a calorie deficit. Use the calorie calculator on the right to find your maintenance calories (TDEE), then eat 500 kcal less daily! Focus on high protein foods (to keep muscle) and lift weights 3 times a week.";
+        }
+        if (query.includes('gain muscle') || query.includes('bulk') || query.includes('muscle building')) {
+            return "To build muscle, eat in a slight caloric surplus (+300 to +500 kcal over TDEE), hit 1.6 to 2.2 grams of protein per kg of body weight daily, and follow progressive overload (increasing weights or reps over time). Full-Body Strength or Lean Muscle Splits work best!";
+        }
+        if (query.includes('diet') || query.includes('nutrition') || query.includes('eat')) {
+            return "A good nutrition program centers around whole foods. Try vegetables, fruits, healthy fats (olive oil, almonds), complex grains (brown rice, oats), and quality proteins. Go to our 'Diets' tab to view specific structured meal schedules!";
+        }
+        if (query.includes('workout') || query.includes('routine') || query.includes('exercise')) {
+            return "For beginners, I recommend a Full-Body Strength split 3 times a week. Perform Squats, Pushups, Dumbbell Rows, and Planks. Make sure to rest at least 48 hours between resistance training sessions for muscle repair.";
+        }
+        if (query.includes('water') || query.includes('hydration')) {
+            return "Stay hydrated! Drink at least 8 to 10 glasses (roughly 2.5 to 3 liters) of water daily. Hydration is crucial for energy production, kidney function, and joint lubrication.";
+        }
+        if (query.includes('thank') || query.includes('thanks')) {
+            return "You're very welcome! Keep up the dedication. Let me know if you need any other workout tips.";
+        }
+        return "Great question! Consistency is key in fitness. Try to move daily, track your steps, hit your target protein, and make sure you sleep 7-8 hours tonight. What specific exercises are you planning this week?";
     }
-    if (query.includes('lose weight') || query.includes('fat loss') || query.includes('slimming')) {
-        return "For weight loss, you need a calorie deficit. Use the calorie calculator on the right to find your maintenance calories (TDEE), then eat 500 kcal less daily! Focus on high protein foods (to keep muscle) and lift weights 3 times a week.";
-    }
-    if (query.includes('gain muscle') || query.includes('bulk') || query.includes('muscle building')) {
-        return "To build muscle, eat in a slight caloric surplus (+300 to +500 kcal over TDEE), hit 1.6 to 2.2 grams of protein per kg of body weight daily, and follow progressive overload (increasing weights or reps over time). Full-Body Strength or Lean Muscle Splits work best!";
-    }
-    if (query.includes('diet') || query.includes('nutrition') || query.includes('eat')) {
-        return "A good nutrition program centers around whole foods. Try vegetables, fruits, healthy fats (olive oil, almonds), complex grains (brown rice, oats), and quality proteins. Go to our 'Diets' tab to view specific structured meal schedules!";
-    }
-    if (query.includes('workout') || query.includes('routine') || query.includes('exercise')) {
-        return "For beginners, I recommend a Full-Body Strength split 3 times a week. Perform Squats, Pushups, Dumbbell Rows, and Planks. Make sure to rest at least 48 hours between resistance training sessions for muscle repair.";
-    }
-    if (query.includes('water') || query.includes('hydration')) {
-        return "Stay hydrated! Drink at least 8 to 10 glasses (roughly 2.5 to 3 liters) of water daily. Hydration is crucial for energy production, kidney function, and joint lubrication.";
-    }
-    if (query.includes('thank') || query.includes('thanks')) {
-        return "You're very welcome! Keep up the dedication. Let me know if you need any other workout tips.";
-    }
-
-    // Default reply
-    return "Great question! Consistency is key in fitness. Try to move daily, track your steps, hit your target protein, and make sure you sleep 7-8 hours tonight. What specific exercises are you planning this week?";
 }
 
 function sendMessage() {
@@ -374,5 +422,23 @@ function sendMessage() {
         appendMessage(reply, 'coach');
     }, 800);
 }
+
+// Live placeholder updates on language toggle
+window.onLanguageChange = function(lang) {
+    const input = document.getElementById('user-msg-input');
+    if (input) {
+        if (lang === 'mr') {
+            input.placeholder = "मेसेज लिहा, उदा. वजन कसे कमी करावे?";
+        } else {
+            input.placeholder = "Type a message, e.g. How to lose weight?";
+        }
+    }
+};
+
+// Apply on initial load
+document.addEventListener('DOMContentLoaded', () => {
+    const currentLang = localStorage.getItem('health-lang-pref') || 'en';
+    window.onLanguageChange(currentLang);
+});
 </script>
 {% endblock %}

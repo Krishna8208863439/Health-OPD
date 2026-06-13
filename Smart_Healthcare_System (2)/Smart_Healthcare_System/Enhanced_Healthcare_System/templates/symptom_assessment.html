@@ -186,59 +186,73 @@
 <!-- Loading Overlay -->
 <div id="loading-overlay">
     <div class="spinner"></div>
-    <div>🔍 Analyzing your symptoms...</div>
-    <div style="font-size:14px;opacity:.8;">Running clinical assessment engine</div>
+    <div class="lang-en">🔍 Analyzing your symptoms...</div>
+    <div class="lang-mr">🔍 तुमच्या लक्षणांचे विश्लेषण करत आहे...</div>
+    <div style="font-size:14px;opacity:.8;" class="lang-en">Running clinical assessment engine</div>
+    <div style="font-size:14px;opacity:.8;" class="lang-mr">वैद्यकीय मूल्यांकन इंजिन चालत आहे</div>
 </div>
 
 <!-- Hero -->
 <div class="hero">
     <div class="icon">🩺</div>
     <div>
-        <h2>Advanced Symptom Assessment</h2>
-        <p>Type symptoms in natural language <strong>or</strong> select from the checklist below. AI analyzes and suggests OTC medicines.</p>
-        <p style="margin-top:4px;">Patient: <strong>{{ patient.full_name }}</strong> &nbsp;|&nbsp; Age: <strong>{{ patient.age }} yrs</strong></p>
+        <h2><span class="lang-en">Advanced Symptom Assessment</span><span class="lang-mr">प्रगत लक्षण मूल्यांकन</span></h2>
+        <p class="lang-en">Type symptoms in natural language <strong>or</strong> select from the checklist below. AI analyzes and suggests OTC medicines.</p>
+        <p class="lang-mr">तुमची लक्षणे नैसर्गिक भाषेत टाईप करा <strong>किंवा</strong> खालील यादीतून निवडा. एआय विश्लेषण करेल आणि औषधे सुचवेल.</p>
+        <p style="margin-top:4px;">
+            <span class="lang-en">Patient:</span><span class="lang-mr">रुग्ण:</span> <strong>{{ patient.full_name }}</strong> &nbsp;|&nbsp; 
+            <span class="lang-en">Age:</span><span class="lang-mr">वय:</span> <strong>{{ patient.age }} <span class="lang-en">yrs</span><span class="lang-mr">वर्षे</span></strong>
+        </p>
     </div>
 </div>
 
 <!-- Natural Language Input -->
 <div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:24px;border:2px solid #0066CC;">
     <h4 style="font-size:1.1rem;font-weight:800;color:#0066CC;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-keyboard"></i> Describe Symptoms in Your Own Words
+        <i class="fas fa-keyboard"></i> <span class="lang-en">Describe Symptoms in Your Own Words</span><span class="lang-mr">तुमच्या स्वतःच्या शब्दांत लक्षणांचे वर्णन करा</span>
     </h4>
-    <p style="font-size:.85rem;color:#6B7280;margin-bottom:14px;">Enter multiple symptoms naturally, e.g. <em>"I have headache, fever and body ache for 2 days"</em></p>
+    <p style="font-size:.85rem;color:#6B7280;margin-bottom:14px;" class="lang-en">Enter multiple symptoms naturally, e.g. <em>"I have headache, fever and body ache for 2 days"</em></p>
+    <p style="font-size:.85rem;color:#6B7280;margin-bottom:14px;" class="lang-mr">एकाच वेळी अनेक लक्षणे प्रविष्ट करा, उदा. <em>"मला २ दिवसांपासून डोकेदुखी, ताप आणि अंगदुखी आहे"</em></p>
     <form method="POST" action="{{ url_for('assess_nlp') }}" id="nlp-form">
-        <textarea name="symptom_text" rows="3" required
+        <textarea name="symptom_text" rows="3" required id="symptom_text"
             placeholder="Describe all your symptoms here..."
             style="width:100%;padding:14px;border:2px solid #E5E7EB;border-radius:10px;font-size:.95rem;resize:vertical;margin-bottom:12px;"></textarea>
         <button type="submit" style="background:linear-gradient(135deg,#6C63FF,#00D4FF);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-weight:800;cursor:pointer;font-size:.95rem;">
-            🤖 Analyze with AI &amp; Get Medicine Suggestions
+            <span class="lang-en">🤖 Analyze with AI &amp; Get Medicine Suggestions</span><span class="lang-mr">🤖 एआय द्वारे विश्लेषण करा आणि औषध शिफारसी मिळवा</span>
         </button>
     </form>
     <p style="font-size:.75rem;color:#9CA3AF;margin-top:10px;margin-bottom:0;">
-        ⚠️ Consult a healthcare professional before taking any medication. Call 108 for emergencies.
+        <span class="lang-en">⚠️ Consult a healthcare professional before taking any medication. Call 108 for emergencies.</span>
+        <span class="lang-mr">⚠️ कोणतेही औषध घेण्यापूर्वी वैद्यकीय तज्ज्ञांचा सल्ला घ्या. आणीबाणीसाठी १०८ वर कॉल करा.</span>
     </p>
 </div>
 
-<div style="text-align:center;color:#6B7280;font-size:.85rem;font-weight:700;margin-bottom:16px;">— OR select symptoms manually —</div>
+<div style="text-align:center;color:#6B7280;font-size:.85rem;font-weight:700;margin-bottom:16px;">
+    <span class="lang-en">— OR select symptoms manually —</span>
+    <span class="lang-mr">— किंवा खालील यादीतून लक्षणे निवडा —</span>
+</div>
 
 <!-- Step progress bar -->
 <div class="step-bar" id="step-bar">
-    <button class="step-btn active" onclick="goStep(0)" id="sbtn-0">1. General</button>
-    <button class="step-btn" onclick="goStep(1)" id="sbtn-1">2. Head/Neuro</button>
-    <button class="step-btn" onclick="goStep(2)" id="sbtn-2">3. Respiratory</button>
-    <button class="step-btn" onclick="goStep(3)" id="sbtn-3">4. Digestive</button>
-    <button class="step-btn" onclick="goStep(4)" id="sbtn-4">5. Muscles/Joints</button>
-    <button class="step-btn" onclick="goStep(5)" id="sbtn-5">6. Skin/Allergy</button>
-    <button class="step-btn" onclick="goStep(6)" id="sbtn-6">7. Urinary</button>
-    <button class="step-btn" onclick="goStep(7)" id="sbtn-7">8. Other</button>
-    <button class="step-btn" onclick="goStep(8)" id="sbtn-8">9. Review</button>
+    <button class="step-btn active" onclick="goStep(0)" id="sbtn-0"><span class="lang-en">1. General</span><span class="lang-mr">१. सामान्य</span></button>
+    <button class="step-btn" onclick="goStep(1)" id="sbtn-1"><span class="lang-en">2. Head/Neuro</span><span class="lang-mr">२. डोके/चेतातंतू</span></button>
+    <button class="step-btn" onclick="goStep(2)" id="sbtn-2"><span class="lang-en">3. Respiratory</span><span class="lang-mr">३. श्वसन</span></button>
+    <button class="step-btn" onclick="goStep(3)" id="sbtn-3"><span class="lang-en">4. Digestive</span><span class="lang-mr">४. पचन संस्था</span></button>
+    <button class="step-btn" onclick="goStep(4)" id="sbtn-4"><span class="lang-en">5. Muscles/Joints</span><span class="lang-mr">५. स्नायू/सांधे</span></button>
+    <button class="step-btn" onclick="goStep(5)" id="sbtn-5"><span class="lang-en">6. Skin/Allergy</span><span class="lang-mr">६. त्वचा/ॲलर्जी</span></button>
+    <button class="step-btn" onclick="goStep(6)" id="sbtn-6"><span class="lang-en">7. Urinary</span><span class="lang-mr">७. मूत्र मार्ग</span></button>
+    <button class="step-btn" onclick="goStep(7)" id="sbtn-7"><span class="lang-en">8. Other</span><span class="lang-mr">८. इतर माहिती</span></button>
+    <button class="step-btn" onclick="goStep(8)" id="sbtn-8"><span class="lang-en">9. Review</span><span class="lang-mr">९. पुनरावलोकन</span></button>
 </div>
 
 <!-- Selected count badge -->
 <div class="sel-count">
-    <span>✅ Symptoms selected:</span>
+    <span><span class="lang-en">✅ Symptoms selected:</span><span class="lang-mr">✅ निवडलेली लक्षणे:</span></span>
     <span class="count-num" id="sym-count">0</span>
-    <span style="font-size:12px;opacity:.85;">Select at least 2 for accurate results</span>
+    <span style="font-size:12px;opacity:.85;">
+        <span class="lang-en">Select at least 2 for accurate results</span>
+        <span class="lang-mr">अचूक निकालासाठी किमान २ लक्षणे निवडा</span>
+    </span>
 </div>
 
 <form id="assess-form" method="POST" action="{{ url_for('assess_predict') }}">
@@ -250,365 +264,368 @@
 <!-- ───── STEP 0: General ───── -->
 <div class="step-panel active" id="step-0">
     <div class="sym-group">
-        <div class="sym-group-title">🌡️ General Symptoms</div>
+        <div class="sym-group-title"><span class="lang-en">🌡️ General Symptoms</span><span class="lang-mr">🌡️ सामान्य लक्षणे</span></div>
         <div class="sym-grid">
             {% set general_syms = [
-                ("fever","Fever (above 100°F / 38°C)"),
-                ("high_fever","High Fever (above 103°F / 39.4°C)"),
-                ("chills","Chills / Shivering"),
-                ("fatigue","Fatigue / Weakness / Tiredness"),
-                ("night_sweats","Night Sweats"),
-                ("weight_loss","Unexplained Weight Loss"),
-                ("loss_of_appetite","Loss of Appetite")
+                ("fever","Fever (above 100°F / 38°C)","ताप (१००°F / ३८°C पेक्षा जास्त)"),
+                ("high_fever","High Fever (above 103°F / 39.4°C)","तीव्र ताप (१०३°F / ३९.४°C पेक्षा जास्त)"),
+                ("chills","Chills / Shivering","थंडी वाजणे / हुडहुडी भरणे"),
+                ("fatigue","Fatigue / Weakness / Tiredness","थकवा / अशक्तपणा / ग्लानी"),
+                ("night_sweats","Night Sweats","रात्री घाम येणे"),
+                ("weight_loss","Unexplained Weight Loss","अकारण वजन कमी होणे"),
+                ("loss_of_appetite","Loss of Appetite","भूक मंदावणे")
             ] %}
-            {% for sid, slabel in general_syms %}
+            {% for sid, slabel_en, slabel_mr in general_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
 
     <div class="sym-group">
-        <div class="sym-group-title">⏱️ How long have you had these symptoms?</div>
+        <div class="sym-group-title"><span class="lang-en">⏱️ How long have you had these symptoms?</span><span class="lang-mr">⏱️ तुम्हाला ही लक्षणे किती दिवसांपासून आहेत?</span></div>
         <div class="severity-row">
-            <button type="button" class="sev-btn" onclick="setDuration('Less than 1 day',this)">Less than 1 day</button>
-            <button type="button" class="sev-btn selected selected-mild" onclick="setDuration('1-3 days',this)">1–3 days</button>
-            <button type="button" class="sev-btn" onclick="setDuration('4-7 days',this)">4–7 days</button>
-            <button type="button" class="sev-btn" onclick="setDuration('More than 1 week',this)">More than 1 week</button>
-            <button type="button" class="sev-btn" onclick="setDuration('More than 1 month',this)">More than 1 month</button>
+            <button type="button" class="sev-btn" onclick="setDuration('Less than 1 day',this)"><span class="lang-en">Less than 1 day</span><span class="lang-mr">१ दिवसापेक्षा कमी</span></button>
+            <button type="button" class="sev-btn selected selected-mild" onclick="setDuration('1-3 days',this)"><span class="lang-en">1–3 days</span><span class="lang-mr">१–३ दिवस</span></button>
+            <button type="button" class="sev-btn" onclick="setDuration('4-7 days',this)"><span class="lang-en">4-7 days</span><span class="lang-mr">४–७ दिवस</span></button>
+            <button type="button" class="sev-btn" onclick="setDuration('More than 1 week',this)"><span class="lang-en">More than 1 week</span><span class="lang-mr">१ आठवड्यापेक्षा जास्त</span></button>
+            <button type="button" class="sev-btn" onclick="setDuration('More than 1 month',this)"><span class="lang-en">More than 1 month</span><span class="lang-mr">१ महिन्यापेक्षा जास्त</span></button>
         </div>
     </div>
 
     <div class="sym-group">
-        <div class="sym-group-title">📊 How severe are your symptoms overall?</div>
+        <div class="sym-group-title"><span class="lang-en">📊 How severe are your symptoms overall?</span><span class="lang-mr">📊 तुमची लक्षणे एकूण किती तीव्र आहेत?</span></div>
         <div class="severity-row">
-            <button type="button" class="sev-btn selected-mild selected" onclick="setSeverity('mild',this)">🟢 Mild</button>
-            <button type="button" class="sev-btn" onclick="setSeverity('moderate',this)">🟡 Moderate</button>
-            <button type="button" class="sev-btn" onclick="setSeverity('severe',this)">🔴 Severe</button>
+            <button type="button" class="sev-btn selected-mild selected" onclick="setSeverity('mild',this)"><span class="lang-en">🟢 Mild</span><span class="lang-mr">🟢 सौम्य</span></button>
+            <button type="button" class="sev-btn" onclick="setSeverity('moderate',this)"><span class="lang-en">🟡 Moderate</span><span class="lang-mr">🟡 मध्यम</span></button>
+            <button type="button" class="sev-btn" onclick="setSeverity('severe',this)"><span class="lang-en">🔴 Severe</span><span class="lang-mr">🔴 तीव्र</span></button>
         </div>
     </div>
 
     <div class="nav-btns">
         <span></span>
-        <button type="button" class="btn-next" onclick="nextStep(0)">Next: Head / Neuro →</button>
+        <button type="button" class="btn-next" onclick="nextStep(0)"><span class="lang-en">Next: Head / Neuro →</span><span class="lang-mr">पुढे: डोके / चेतातंतू →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 1: Head / Neuro ───── -->
 <div class="step-panel" id="step-1">
     <div class="sym-group">
-        <div class="sym-group-title">🧠 Head / Neurological Symptoms</div>
+        <div class="sym-group-title"><span class="lang-en">🧠 Head / Neurological Symptoms</span><span class="lang-mr">🧠 डोके / चेतासंस्थेची लक्षणे</span></div>
         <div class="sym-grid">
             {% set head_syms = [
-                ("headache","Headache"),
-                ("severe_headache","Severe / Throbbing Headache"),
-                ("dizziness","Dizziness / Lightheadedness"),
-                ("confusion","Confusion / Disorientation"),
-                ("neck_stiffness","Neck Stiffness"),
-                ("light_sensitivity","Sensitivity to Light / Sound"),
-                ("nausea","Nausea (feeling of wanting to vomit)"),
-                ("vomiting","Vomiting")
+                ("headache","Headache","डोकेदुखी"),
+                ("severe_headache","Severe / Throbbing Headache","तीव्र डोकेदुखी"),
+                ("dizziness","Dizziness / Lightheadedness","चक्कर येणे / अंधारी येणे"),
+                ("confusion","Confusion / Disorientation","गोंधळ उडणे / असंबद्धता"),
+                ("neck_stiffness","Neck Stiffness","मान आखडणे"),
+                ("light_sensitivity","Sensitivity to Light / Sound","प्रकाश/आवाज सहन न होणे"),
+                ("nausea","Nausea (feeling of wanting to vomit)","मळमळ (उलटीसारखे वाटणे)"),
+                ("vomiting","Vomiting","उलटी")
             ] %}
-            {% for sid, slabel in head_syms %}
+            {% for sid, slabel_en, slabel_mr in head_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(0)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(1)">Next: Respiratory →</button>
+        <button type="button" class="btn-prev" onclick="goStep(0)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(1)"><span class="lang-en">Next: Respiratory →</span><span class="lang-mr">पुढे: श्वसन →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 2: Respiratory / Chest ───── -->
 <div class="step-panel" id="step-2">
     <div class="sym-group">
-        <div class="sym-group-title">🫁 Respiratory / Chest Symptoms</div>
+        <div class="sym-group-title"><span class="lang-en">🫁 Respiratory / Chest Symptoms</span><span class="lang-mr">🫁 श्वसन / छातीची लक्षणे</span></div>
         <div class="sym-grid">
             {% set resp_syms = [
-                ("runny_nose","Runny / Stuffy Nose"),
-                ("sneezing","Sneezing"),
-                ("sore_throat","Sore Throat"),
-                ("dry_cough","Dry Cough"),
-                ("productive_cough","Productive Cough (with mucus / phlegm)"),
-                ("coughing_blood","Coughing up Blood"),
-                ("breathing_difficulty","Difficulty Breathing / Shortness of Breath"),
-                ("wheezing","Wheezing (whistling sound while breathing)"),
-                ("chest_pain","Chest Pain"),
-                ("chest_tightness","Chest Tightness / Pressure"),
-                ("loss_of_smell","Loss of Smell (Anosmia)"),
-                ("loss_of_taste","Loss of Taste"),
-                ("oxygen_low","Feeling of suffocation / Low oxygen")
+                ("runny_nose","Runny / Stuffy Nose","नाक वाहणे / चोंदणे"),
+                ("sneezing","Sneezing","शिंका येणे"),
+                ("sore_throat","Sore Throat","घसा दुखणे / खवखवणे"),
+                ("dry_cough","Dry Cough","कोरडा खोकला"),
+                ("productive_cough","Productive Cough (with mucus / phlegm)","कफ असलेला खोकला"),
+                ("coughing_blood","Coughing up Blood","खोकल्यातून रक्त पडणे"),
+                ("breathing_difficulty","Difficulty Breathing / Shortness of Breath","श्वास घेण्यास त्रास होणे"),
+                ("wheezing","Wheezing (whistling sound while breathing)","घरघर आवाज होणे"),
+                ("chest_pain","Chest Pain","छातीत दुखणे"),
+                ("chest_tightness","Chest Tightness / Pressure","छातीत जडपणा / दाब जाणवणे"),
+                ("loss_of_smell","Loss of Smell (Anosmia)","वास न येणे"),
+                ("loss_of_taste","Loss of Taste","चव न समजणे"),
+                ("oxygen_low","Feeling of suffocation / Low oxygen","दम लागणे / ऑक्सिजन कमी होणे")
             ] %}
-            {% for sid, slabel in resp_syms %}
+            {% for sid, slabel_en, slabel_mr in resp_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(1)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(2)">Next: Digestive →</button>
+        <button type="button" class="btn-prev" onclick="goStep(1)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(2)"><span class="lang-en">Next: Digestive →</span><span class="lang-mr">पुढे: पचन संस्था →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 3: Digestive ───── -->
 <div class="step-panel" id="step-3">
     <div class="sym-group">
-        <div class="sym-group-title">🍽️ Digestive / Stomach Symptoms</div>
+        <div class="sym-group-title"><span class="lang-en">🍽️ Digestive / Stomach Symptoms</span><span class="lang-mr">🍽️ पचन / पोटाची लक्षणे</span></div>
         <div class="sym-grid">
             {% set dig_syms = [
-                ("stomach_pain","Stomach / Abdominal Pain"),
-                ("stomach_cramps","Stomach Cramps"),
-                ("diarrhea","Diarrhea (loose stools)"),
-                ("bloody_diarrhea","Bloody Diarrhea"),
-                ("constipation","Constipation"),
-                ("bloating","Bloating / Excessive Gas"),
-                ("heartburn","Heartburn / Acid Reflux / Burning sensation"),
-                ("indigestion","Indigestion / Difficulty digesting food"),
-                ("belching","Frequent Belching / Burping"),
-                ("jaundice","Jaundice (yellowing of skin or eyes)")
+                ("stomach_pain","Stomach / Abdominal Pain","पोटदुखी"),
+                ("stomach_cramps","Stomach Cramps","पोटात पीळ पडणे / मुरडा"),
+                ("diarrhea","Diarrhea (loose stools)","जुलाब / अतिसार"),
+                ("bloody_diarrhea","Bloody Diarrhea","शौचावाटे रक्त पडणे"),
+                ("constipation","Constipation","बद्धकोष्ठता / साफ न होणे"),
+                ("bloating","Bloating / Excessive Gas","पोट फुगणे / गॅस होणे"),
+                ("heartburn","Heartburn / Acid Reflux / Burning sensation","छातीत जळजळ / ॲसिडिटी"),
+                ("indigestion","Indigestion / Difficulty digesting food","अपचन"),
+                ("belching","Frequent Belching / Burping","ढेकर येणे"),
+                ("jaundice","Jaundice (yellowing of skin or eyes)","कावीळ (त्वचा किंवा डोळे पिवळे होणे)")
             ] %}
-            {% for sid, slabel in dig_syms %}
+            {% for sid, slabel_en, slabel_mr in dig_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(2)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(3)">Next: Muscles / Joints →</button>
+        <button type="button" class="btn-prev" onclick="goStep(2)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(3)"><span class="lang-en">Next: Muscles / Joints →</span><span class="lang-mr">पुढे: स्नायू / सांधे →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 4: Muscles / Joints ───── -->
 <div class="step-panel" id="step-4">
     <div class="sym-group">
-        <div class="sym-group-title">🦴 Muscles / Joints / Back</div>
+        <div class="sym-group-title"><span class="lang-en">🦴 Muscles / Joints / Back</span><span class="lang-mr">🦴 स्नायू / सांधे / पाठ</span></div>
         <div class="sym-grid">
             {% set mj_syms = [
-                ("body_ache","Body Ache / Muscle Pain"),
-                ("joint_pain","Joint Pain or Swelling"),
-                ("back_pain","Back Pain (lower or upper)"),
-                ("flank_pain","Flank / Side Pain (kidney area)"),
-                ("neck_pain","Neck / Shoulder Pain / Stiffness"),
-                ("leg_pain","Leg / Calf Pain"),
-                ("swollen_joints","Swollen Joints")
+                ("body_ache","Body Ache / Muscle Pain","अंगदुखी / स्नायू दुखणे"),
+                ("joint_pain","Joint Pain or Swelling","सांधेदुखी किंवा सूज"),
+                ("back_pain","Back Pain (lower or upper)","पाठदुखी"),
+                ("flank_pain","Flank / Side Pain (kidney area)","कूस दुखणे (किडनीजवळ)"),
+                ("neck_pain","Neck / Shoulder Pain / Stiffness","मान/खांदे दुखी"),
+                ("leg_pain","Leg / Calf Pain","पाय / पोटऱ्या दुखणे"),
+                ("swollen_joints","Swollen Joints","सांध्यांना सूज येणे")
             ] %}
-            {% for sid, slabel in mj_syms %}
+            {% for sid, slabel_en, slabel_mr in mj_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="sym-group">
-        <div class="sym-group-title">❤️ Heart / Circulation</div>
+        <div class="sym-group-title"><span class="lang-en">❤️ Heart / Circulation</span><span class="lang-mr">❤️ हृदय / रक्ताभिसरण</span></div>
         <div class="sym-grid">
             {% set cv_syms = [
-                ("palpitations","Heart Palpitations / Racing Heart"),
-                ("swollen_feet","Swollen Feet / Ankles"),
-                ("high_bp","High Blood Pressure (known)")
+                ("palpitations","Heart Palpitations / Racing Heart","छाती धडधडणे"),
+                ("swollen_feet","Swollen Feet / Ankles","पायाला/घोट्याला सूज"),
+                ("high_bp","High Blood Pressure (known)","उच्च रक्तदाब")
             ] %}
-            {% for sid, slabel in cv_syms %}
+            {% for sid, slabel_en, slabel_mr in cv_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(3)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(4)">Next: Skin / Allergy →</button>
+        <button type="button" class="btn-prev" onclick="goStep(3)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(4)"><span class="lang-en">Next: Skin / Allergy →</span><span class="lang-mr">पुढे: त्वचा / ॲलर्जी →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 5: Skin / Allergy ───── -->
 <div class="step-panel" id="step-5">
     <div class="sym-group">
-        <div class="sym-group-title">🩺 Skin / Allergy</div>
+        <div class="sym-group-title"><span class="lang-en">🩺 Skin / Allergy</span><span class="lang-mr">🩺 त्वचा / ॲलर्जी</span></div>
         <div class="sym-grid">
             {% set skin_syms = [
-                ("rash","Skin Rash / Hives"),
-                ("itching","Itching (skin, eyes, nose)"),
-                ("skin_redness","Skin Redness / Swelling"),
-                ("rash_after_meds","Rash after taking a medication"),
-                ("bruising","Easy Bruising"),
-                ("petechiae","Tiny Red/Purple Spots on Skin"),
-                ("swollen_face","Swollen Face / Eyes / Lips")
+                ("rash","Skin Rash / Hives","त्वचेवर पुरळ / गांधी उठणे"),
+                ("itching","Itching (skin, eyes, nose)","खाज सुटणे"),
+                ("skin_redness","Skin Redness / Swelling","त्वचा लाल होणे / सूज"),
+                ("rash_after_meds","Rash after taking a medication","औषध घेतल्यानंतर पुरळ उठणे"),
+                ("bruising","Easy Bruising","सहजपणे जखम/काळसर डाग पडणे"),
+                ("petechiae","Tiny Red/Purple Spots on Skin","त्वचेवर बारीक लाल ठिपके पडणे"),
+                ("swollen_face","Swollen Face / Eyes / Lips","चेहरा / डोळे / ओठ सुजणे")
             ] %}
-            {% for sid, slabel in skin_syms %}
+            {% for sid, slabel_en, slabel_mr in skin_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="sym-group">
-        <div class="sym-group-title">👁️ Eyes / ENT</div>
+        <div class="sym-group-title"><span class="lang-en">👁️ Eyes / ENT</span><span class="lang-mr">👁️ डोळे / कान, नाक, घसा</span></div>
         <div class="sym-grid">
             {% set eye_syms = [
-                ("red_eyes","Red / Watery Eyes"),
-                ("eye_pain","Eye Pain"),
-                ("ear_pain","Ear Pain"),
-                ("tinnitus","Ringing in Ears (Tinnitus)"),
-                ("bleeding_gums","Bleeding Gums / Nose")
+                ("red_eyes","Red / Watery Eyes","डोळे लाल होणे / पाणी येणे"),
+                ("eye_pain","Eye Pain","डोळे दुखणे"),
+                ("ear_pain","Ear Pain","कान दुखणे"),
+                ("tinnitus","Ringing in Ears (Tinnitus)","कानात वाजणे"),
+                ("bleeding_gums","Bleeding Gums / Nose","हिरड्या/नाकातून रक्त येणे")
             ] %}
-            {% for sid, slabel in eye_syms %}
+            {% for sid, slabel_en, slabel_mr in eye_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(4)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(5)">Next: Urinary →</button>
+        <button type="button" class="btn-prev" onclick="goStep(4)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(5)"><span class="lang-en">Next: Urinary →</span><span class="lang-mr">पुढे: मूत्र मार्ग →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 6: Urinary / Metabolic ───── -->
 <div class="step-panel" id="step-6">
     <div class="sym-group">
-        <div class="sym-group-title">💧 Urinary Symptoms</div>
+        <div class="sym-group-title"><span class="lang-en">💧 Urinary Symptoms</span><span class="lang-mr">💧 लघवीची लक्षणे</span></div>
         <div class="sym-grid">
             {% set uri_syms = [
-                ("frequent_urination","Frequent Urination"),
-                ("painful_urination","Painful / Burning Urination"),
-                ("blood_in_urine","Blood in Urine"),
-                ("cloudy_urine","Cloudy / Dark Urine"),
-                ("reduced_urination","Reduced Urine Output")
+                ("frequent_urination","Frequent Urination","वारंवार लघवीला होणे"),
+                ("painful_urination","Painful / Burning Urination","लघवी करताना जळजळ / वेदना"),
+                ("blood_in_urine","Blood in Urine","लघवीतून रक्त पडणे"),
+                ("cloudy_urine","Cloudy / Dark Urine","लघवी गढूळ / गडद असणे"),
+                ("reduced_urination","Reduced Urine Output","लघवीचे प्रमाण कमी होणे")
             ] %}
-            {% for sid, slabel in uri_syms %}
+            {% for sid, slabel_en, slabel_mr in uri_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="sym-group">
-        <div class="sym-group-title">🔬 Metabolic / Diabetes / Other</div>
+        <div class="sym-group-title"><span class="lang-en">🔬 Metabolic / Diabetes / Other</span><span class="lang-mr">🔬 चयापचय / मधुमेह / इतर</span></div>
         <div class="sym-grid">
             {% set meta_syms = [
-                ("excessive_thirst","Excessive Thirst / Dry Mouth"),
-                ("excessive_hunger","Excessive Hunger"),
-                ("blurred_vision","Blurred Vision"),
-                ("slow_healing","Slow Healing Wounds"),
-                ("numbness","Numbness / Tingling in hands/feet"),
-                ("anxiety","Anxiety / Restlessness"),
-                ("insomnia","Insomnia / Sleep Problems")
+                ("excessive_thirst","Excessive Thirst / Dry Mouth","अतिशय तहान लागणे / तोंड सुकणे"),
+                ("excessive_hunger","Excessive Hunger","अतिशय भूक लागणे"),
+                ("blurred_vision","Blurred Vision","अंधुक दिसणे"),
+                ("slow_healing","Slow Healing Wounds","जखम लवकर बरी न होणे"),
+                ("numbness","Numbness / Tingling in hands/feet","हात/पाय बधीर होणे"),
+                ("anxiety","Anxiety / Restlessness","चिंता / अस्वस्थता"),
+                ("insomnia","Insomnia / Sleep Problems","निद्रानाश / झोपेची समस्या")
             ] %}
-            {% for sid, slabel in meta_syms %}
+            {% for sid, slabel_en, slabel_mr in meta_syms %}
             <div class="sym-item" id="wrap-{{sid}}" onclick="toggleSym('{{sid}}')">
                 <input type="checkbox" name="symptoms" value="{{sid}}" id="sym-{{sid}}" onclick="event.stopPropagation();" onchange="updateCount()">
-                <label for="sym-{{sid}}">{{slabel}}</label>
+                <label for="sym-{{sid}}"><span class="lang-en">{{slabel_en}}</span><span class="lang-mr">{{slabel_mr}}</span></label>
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(5)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(6)">Next: More Info →</button>
+        <button type="button" class="btn-prev" onclick="goStep(5)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(6)"><span class="lang-en">Next: More Info →</span><span class="lang-mr">पुढे: इतर माहिती →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 7: Additional Info ───── -->
 <div class="step-panel" id="step-7">
     <div class="sym-group">
-        <div class="sym-group-title">📋 Additional Health Information <span style="font-size:13px;color:#999;">(helps improve accuracy)</span></div>
+        <div class="sym-group-title"><span class="lang-en">📋 Additional Health Information</span><span class="lang-mr">📋 अतिरिक्त आरोग्य माहिती</span> <span style="font-size:13px;color:#999;" class="lang-en">(helps improve accuracy)</span><span style="font-size:13px;color:#999;" class="lang-mr">(अचूकता सुधारण्यास मदत करते)</span></div>
         <div class="info-grid">
             <div class="info-group">
-                <label>Do you smoke?</label>
+                <label><span class="lang-en">Do you smoke?</span><span class="lang-mr">तुम्ही धूम्रपान करता का?</span></label>
                 <select name="smoking">
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                    <option value="ex">Ex-smoker</option>
+                    <option value="no"><span class="lang-en">No</span><span class="lang-mr">नाही</span></option>
+                    <option value="yes"><span class="lang-en">Yes</span><span class="lang-mr">होय</span></option>
+                    <option value="ex"><span class="lang-en">Ex-smoker</span><span class="lang-mr">माजी धूम्रपान करणारे</span></option>
                 </select>
             </div>
             <div class="info-group">
-                <label>Blood Pressure (known)</label>
+                <label><span class="lang-en">Blood Pressure (known)</span><span class="lang-mr">रक्तदाब (माहित असल्यास)</span></label>
                 <select name="blood_pressure">
-                    <option value="normal">Normal</option>
-                    <option value="high">High (Hypertension)</option>
-                    <option value="low">Low (Hypotension)</option>
-                    <option value="unknown">Don't Know</option>
+                    <option value="normal"><span class="lang-en">Normal</span><span class="lang-mr">सामान्य</span></option>
+                    <option value="high"><span class="lang-en">High (Hypertension)</span><span class="lang-mr">उच्च (हायपरटेंशन)</span></option>
+                    <option value="low"><span class="lang-en">Low (Hypotension)</span><span class="lang-mr">कमी (हायपोटेंशन)</span></option>
+                    <option value="unknown"><span class="lang-en">Don't Know</span><span class="lang-mr">माहित नाही</span></option>
                 </select>
             </div>
             <div class="info-group">
-                <label>Blood Sugar (known)</label>
+                <label><span class="lang-en">Blood Sugar (known)</span><span class="lang-mr">रक्त शर्करा (माहित असल्यास)</span></label>
                 <select name="blood_sugar">
-                    <option value="normal">Normal</option>
-                    <option value="high">High (Diabetic)</option>
-                    <option value="prediabetic">Pre-Diabetic</option>
-                    <option value="unknown">Don't Know</option>
+                    <option value="normal"><span class="lang-en">Normal</span><span class="lang-mr">सामान्य</span></option>
+                    <option value="high"><span class="lang-en">High (Diabetic)</span><span class="lang-mr">उच्च (मधुमेह)</span></option>
+                    <option value="prediabetic"><span class="lang-en">Pre-Diabetic</span><span class="lang-mr">पूर्व-मधुमेह</span></option>
+                    <option value="unknown"><span class="lang-en">Don't Know</span><span class="lang-mr">माहित नाही</span></option>
                 </select>
             </div>
             <div class="info-group">
-                <label>Any recent travel?</label>
+                <label><span class="lang-en">Any recent travel?</span><span class="lang-mr">नुकताच प्रवास केला आहे का?</span></label>
                 <select name="recent_travel">
-                    <option value="no">No</option>
-                    <option value="domestic">Yes – Domestic</option>
-                    <option value="international">Yes – International</option>
+                    <option value="no"><span class="lang-en">No</span><span class="lang-mr">नाही</span></option>
+                    <option value="domestic"><span class="lang-en">Yes – Domestic</span><span class="lang-mr">होय - देशांतर्गत</span></option>
+                    <option value="international"><span class="lang-en">Yes – International</span><span class="lang-mr">होय - आंतरराष्ट्रीय</span></option>
                 </select>
             </div>
             <div class="info-group">
-                <label>Hospital Preference</label>
+                <label><span class="lang-en">Hospital Preference</span><span class="lang-mr">रुग्णालयाची पसंती</span></label>
                 <select name="hospital_type">
-                    <option value="">Any</option>
-                    <option value="Government">Government</option>
-                    <option value="Private">Private</option>
+                    <option value=""><span class="lang-en">Any</span><span class="lang-mr">कोणतेही</span></option>
+                    <option value="Government"><span class="lang-en">Government</span><span class="lang-mr">सरकारी</span></option>
+                    <option value="Private"><span class="lang-en">Private</span><span class="lang-mr">खाजगी</span></option>
                 </select>
             </div>
             <div class="info-group">
-                <label>Max distance to hospital (km)</label>
+                <label><span class="lang-en">Max distance to hospital (km)</span><span class="lang-mr">रुग्णालयाचे कमाल अंतर (किमी)</span></label>
                 <input type="number" name="max_distance" placeholder="e.g. 10" min="1" max="100">
             </div>
         </div>
     </div>
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(6)">← Back</button>
-        <button type="button" class="btn-next" onclick="nextStep(7)">Review →</button>
+        <button type="button" class="btn-prev" onclick="goStep(6)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
+        <button type="button" class="btn-next" onclick="nextStep(7)"><span class="lang-en">Review →</span><span class="lang-mr">पुनरावलोकन →</span></button>
     </div>
 </div>
 
 <!-- ───── STEP 8: Review & Submit ───── -->
 <div class="step-panel" id="step-8">
     <div class="summary-card">
-        <h5>📋 Your Selected Symptoms</h5>
+        <h5><span class="lang-en">📋 Your Selected Symptoms</span><span class="lang-mr">📋 तुमची निवडलेली लक्षणे</span></h5>
         <div id="sym-summary">
-            <p style="color:#999;font-size:13px;">No symptoms selected yet.</p>
+            <p style="color:#999;font-size:13px;" class="lang-en">No symptoms selected yet.</p>
+            <p style="color:#999;font-size:13px;" class="lang-mr">अद्याप कोणतेही लक्षण निवडलेले नाही.</p>
         </div>
     </div>
 
     <div class="summary-card" style="border: 2px solid #FEF2F2; background: #FFF5F5;">
-        <h5 style="color: #991B1B;">⚠️ Strict Medical Disclaimer</h5>
+        <h5 style="color: #991B1B;"><span class="lang-en">⚠️ Strict Medical Disclaimer</span><span class="lang-mr">⚠️ कठोर वैद्यकीय अस्वीकरण</span></h5>
         <p style="font-size:13px;color:#7F1D1D;line-height:1.7; margin-bottom: 12px;">
-            This AI-driven assessment is for <strong>informational purposes only</strong> and does not constitute a medical diagnosis. The suggested Over-The-Counter (OTC) medicines do not replace a doctor's prescription. Always consult a qualified medical professional for proper diagnosis and treatment. In an emergency, dial <strong>108 / 112</strong> or visit the nearest ER immediately.
+            <span class="lang-en">This AI-driven assessment is for <strong>informational purposes only</strong> and does not constitute a medical diagnosis. The suggested Over-The-Counter (OTC) medicines do not replace a doctor's prescription. Always consult a qualified medical professional for proper diagnosis and treatment. In an emergency, dial <strong>108 / 112</strong> or visit the nearest ER immediately.</span>
+            <span class="lang-mr">हे एआय-आधारित मूल्यांकन <strong>केवळ माहितीच्या हेतूने</strong> आहे आणि हे वैद्यकीय निदान नाही. सुचवलेली ओटीसी (OTC) औषधे डॉक्टरांच्या प्रिस्क्रिप्शनची जागा घेऊ शकत नाहीत. योग्य निदान आणि उपचारांसाठी नेहमी पात्र वैद्यकीय व्यावसायिकाचा सल्ला घ्या. आणीबाणीच्या परिस्थितीत, त्वरित <strong>१०८ / ११२</strong> वर कॉल करा किंवा जवळच्या आपत्कालीन कक्षाला भेट द्या.</span>
         </p>
         <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 700; color: #991B1B; cursor: pointer;">
             <input type="checkbox" id="disclaimer-check" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #DC3545;">
-            I acknowledge this is not a medical diagnosis and I will consult a doctor for serious issues.
+            <span class="lang-en">I acknowledge this is not a medical diagnosis and I will consult a doctor for serious issues.</span>
+            <span class="lang-mr">मी मान्य करतो की हे वैद्यकीय निदान नाही आणि मी गंभीर समस्यांसाठी डॉक्टरांचा सल्ला घेईन.</span>
         </label>
     </div>
 
     <div class="nav-btns">
-        <button type="button" class="btn-prev" onclick="goStep(7)">← Back</button>
+        <button type="button" class="btn-prev" onclick="goStep(7)"><span class="lang-en">← Back</span><span class="lang-mr">← मागे</span></button>
         <button type="button" class="btn-analyze" onclick="submitAssessment()">
-            🔍 Analyze Symptoms & Get Diagnosis
+            <span class="lang-en">🔍 Analyze Symptoms &amp; Get Diagnosis</span><span class="lang-mr">🔍 लक्षणांचे विश्लेषण करा आणि निदान मिळवा</span>
         </button>
     </div>
 </div>
@@ -683,34 +700,76 @@ function setDuration(val, btn) {
 function buildSummary() {
     const checked = document.querySelectorAll('input[name="symptoms"]:checked');
     const div = document.getElementById('sym-summary');
+    const activeLang = document.documentElement.classList.contains('show-mr') ? 'mr' : 'en';
     if (checked.length === 0) {
-        div.innerHTML = '<p style="color:#DC3545;font-weight:600;">⚠️ You haven\'t selected any symptoms! Please go back and select symptoms.</p>';
+        if (activeLang === 'mr') {
+            div.innerHTML = '<p style="color:#DC3545;font-weight:600;">⚠️ तुम्ही कोणतेही लक्षण निवडलेले नाही! कृपया मागे जा आणि लक्षणे निवडा.</p>';
+        } else {
+            div.innerHTML = '<p style="color:#DC3545;font-weight:600;">⚠️ You haven\'t selected any symptoms! Please go back and select symptoms.</p>';
+        }
         return;
     }
     let html = '';
     checked.forEach(cb => {
-        const label = cb.closest('.sym-item')?.querySelector('label')?.textContent || cb.value;
+        const labelEl = cb.closest('.sym-item')?.querySelector('label');
+        let label = cb.value;
+        if (labelEl) {
+            const span = labelEl.querySelector(`.lang-${activeLang}`);
+            label = span ? span.textContent.trim() : labelEl.textContent.trim();
+        }
         html += `<span class="sym-tag">✓ ${label}</span>`;
     });
-    html += `<div style="margin-top:12px;font-size:13px;color:#555;">
-        <strong>${checked.length} symptom(s)</strong> selected &nbsp;|&nbsp;
-        Severity: <strong>${document.getElementById('hidden_severity').value}</strong> &nbsp;|&nbsp;
-        Duration: <strong>${document.getElementById('hidden_duration').value}</strong>
-    </div>`;
+    
+    if (activeLang === 'mr') {
+        const severity_map = { 'mild': 'सौम्य', 'moderate': 'मध्यम', 'severe': 'तीव्र' };
+        const sev_val = document.getElementById('hidden_severity').value;
+        const sev_mr = severity_map[sev_val] || sev_val;
+        
+        const duration_map = {
+            'Less than 1 day': '१ दिवसापेक्षा कमी',
+            '1-3 days': '१–३ दिवस',
+            '4-7 days': '४–७ दिवस',
+            'More than 1 week': '१ आठवड्यापेक्षा जास्त',
+            'More than 1 month': '१ महिन्यापेक्षा जास्त'
+        };
+        const dur_val = document.getElementById('hidden_duration').value;
+        const dur_mr = duration_map[dur_val] || dur_val;
+        
+        html += `<div style="margin-top:12px;font-size:13px;color:#555;">
+            <strong>${checked.length} लक्षणे</strong> निवडली &nbsp;|&nbsp;
+            तीव्रता: <strong>${sev_mr}</strong> &nbsp;|&nbsp;
+            कालावधी: <strong>${dur_mr}</strong>
+        </div>`;
+    } else {
+        html += `<div style="margin-top:12px;font-size:13px;color:#555;">
+            <strong>${checked.length} symptom(s)</strong> selected &nbsp;|&nbsp;
+            Severity: <strong>${document.getElementById('hidden_severity').value}</strong> &nbsp;|&nbsp;
+            Duration: <strong>${document.getElementById('hidden_duration').value}</strong>
+        </div>`;
+    }
     div.innerHTML = html;
 }
 
 // ── Submit ──
 function submitAssessment() {
     const checked = document.querySelectorAll('input[name="symptoms"]:checked');
+    const activeLang = document.documentElement.classList.contains('show-mr') ? 'mr' : 'en';
     if (checked.length < 1) {
-        alert('Please select at least 1 symptom before analyzing.');
+        if (activeLang === 'mr') {
+            alert('कृपया विश्लेषण करण्यापूर्वी किमान १ लक्षण निवडा.');
+        } else {
+            alert('Please select at least 1 symptom before analyzing.');
+        }
         goStep(0);
         return;
     }
     const disclaimer = document.getElementById('disclaimer-check');
     if (!disclaimer.checked) {
-        alert('Please acknowledge the Medical Disclaimer before proceeding.');
+        if (activeLang === 'mr') {
+            alert('कृपया पुढे जाण्यापूर्वी वैद्यकीय अस्वीकरण मान्य करा.');
+        } else {
+            alert('Please acknowledge the Medical Disclaimer before proceeding.');
+        }
         return;
     }
     document.getElementById('loading-overlay').style.display = 'flex';
@@ -725,6 +784,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('user_lng').value = pos.coords.longitude;
         });
     }
+});
+
+function updateNLPPlaceholder(lang) {
+    const ta = document.getElementById('symptom_text');
+    if (ta) {
+        if (lang === 'mr') {
+            ta.placeholder = "तुमच्या सर्व लक्षणांचे येथे वर्णन करा...";
+        } else {
+            ta.placeholder = "Describe all your symptoms here...";
+        }
+    }
+}
+
+// Hook into global callback
+window.onLanguageChange = function(lang) {
+    updateNLPPlaceholder(lang);
+};
+
+// Sync on load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('health-lang-pref') || 'en';
+    updateNLPPlaceholder(savedLang);
 });
 </script>
 {% endblock %}

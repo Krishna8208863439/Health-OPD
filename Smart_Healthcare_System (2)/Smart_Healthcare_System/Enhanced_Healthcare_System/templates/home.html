@@ -5,13 +5,14 @@
 <style>
 /* ── Hero ── */
 .home-hero {
-  background: linear-gradient(135deg, #0D1117 0%, #1a2332 60%, #0066CC 100%);
+  background: linear-gradient(135deg, #EBF5FF 0%, #E0F2FE 100%);
   border-radius: 18px;
   padding: 28px 24px 24px;
-  color: #fff;
+  color: #1E3A8A;
   margin-bottom: 20px;
   position: relative;
   overflow: hidden;
+  border: 1px solid #BFDBFE;
 }
 .home-hero::before {
   content: '';
@@ -19,7 +20,7 @@
   top: -40px; right: -40px;
   width: 180px; height: 180px;
   border-radius: 50%;
-  background: rgba(255,255,255,.05);
+  background: rgba(30,58,138,.03);
 }
 .home-hero::after {
   content: '';
@@ -27,22 +28,23 @@
   bottom: -30px; left: 20px;
   width: 120px; height: 120px;
   border-radius: 50%;
-  background: rgba(0,102,204,.3);
+  background: rgba(0,102,204,.08);
 }
-.hero-greeting { font-size: .82rem; opacity: .7; font-weight: 500; margin-bottom: 4px; }
-.hero-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
-.hero-sub { font-size: .82rem; opacity: .75; margin-bottom: 18px; }
+.hero-greeting { font-size: .82rem; opacity: .8; font-weight: 600; margin-bottom: 4px; color: #1E40AF; }
+.hero-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; line-height: 1.2; color: #1E3A8A; }
+.hero-sub { font-size: .82rem; opacity: .85; margin-bottom: 18px; color: #1E40AF; }
 .hero-stats { display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 1; }
 .hero-stat {
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(30,58,138,.06);
+  border: 1px solid rgba(30,58,138,.12);
   border-radius: 12px;
   padding: 10px 14px;
   text-align: center;
   min-width: 70px;
+  color: #1E3A8A;
 }
-.hero-stat .sv { font-size: 1.3rem; font-weight: 800; line-height: 1; }
-.hero-stat .sl { font-size: .62rem; opacity: .7; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+.hero-stat .sv { font-size: 1.3rem; font-weight: 800; line-height: 1; color: #1E3A8A; }
+.hero-stat .sl { font-size: .62rem; opacity: .8; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; color: #1E40AF; }
 
 /* ── Quick Action Grid ── */
 .qa-grid {
@@ -282,6 +284,159 @@
     padding: 20px;
   }
 }
+
+/* ── Interactive Feature Guide ── */
+.guide-container {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-top: 28px;
+  margin-bottom: 24px;
+  border: 1px solid #E5E7EB;
+}
+.guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 16px;
+}
+.guide-title-area {
+  flex: 1;
+}
+.guide-main-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin: 0 0 4px 0;
+}
+.guide-subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Lang Switch Slider Toggle */
+.lang-toggle-wrapper {
+  display: inline-flex;
+  background: rgba(0, 102, 204, 0.08);
+  border: 1px solid rgba(0, 102, 204, 0.15);
+  border-radius: 30px;
+  padding: 4px;
+  position: relative;
+  user-select: none;
+  min-width: 180px;
+  height: 42px;
+  align-items: center;
+}
+.lang-toggle-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  border-radius: 26px;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.3s ease;
+  color: var(--muted);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lang-toggle-btn.active {
+  color: #fff;
+}
+.lang-toggle-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: linear-gradient(135deg, var(--blue), var(--blue-dk));
+  border-radius: 26px;
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+}
+.lang-toggle-wrapper.lang-mr .lang-toggle-slider {
+  transform: translateX(100%);
+}
+
+/* Feature grid */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.guide-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #FAFBFC;
+  border: 1px solid #F3F4F6;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.guide-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+  border-color: rgba(0, 102, 204, 0.2);
+  background: #fff;
+}
+.guide-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.guide-card-body {
+  flex: 1;
+}
+.guide-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.guide-card-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Language display toggle rules */
+#feature-guide-section.show-en .lang-mr {
+  display: none !important;
+}
+#feature-guide-section.show-mr .lang-en {
+  display: none !important;
+}
+
+@media(max-width: 768px) {
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+  .guide-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .lang-toggle-wrapper {
+    width: 100%;
+  }
+}
 </style>
 {% endblock %}
 
@@ -289,26 +444,42 @@
 
 <!-- ── HERO ── -->
 <div class="home-hero">
-  <div class="hero-greeting">Good {{ greeting }}, 👋</div>
+  <div class="hero-greeting">
+    <span class="lang-en">Good {{ greeting }}, 👋</span>
+    <span class="lang-mr">
+      {% if greeting == 'morning' or 'morning' in greeting|lower %}
+        शुभ सकाळ, 👋
+      {% elif greeting == 'afternoon' or 'afternoon' in greeting|lower %}
+        शुभ दुपार, 👋
+      {% else %}
+        शुभ संध्याकाळ, 👋
+      {% endif %}
+    </span>
+  </div>
   <div class="hero-name">{{ patient.full_name }}</div>
-  <div class="hero-sub">{{ patient.city }} · {{ 'Patient' if patient.role == 'patient' else 'Doctor' }}</div>
+  <div class="hero-sub">
+    {{ patient.city }} · 
+    <span class="lang-en">{{ 'Patient' if patient.role == 'patient' else 'Doctor' }}</span>
+    <span class="lang-mr">{{ 'रुग्ण' if patient.role == 'patient' else 'डॉक्टर' }}</span>
+  </div>
   <div class="hero-stats" style="position:relative;z-index:1;">
     <div class="hero-stat">
       <div class="sv">{{ stats.total_predictions }}</div>
-      <div class="sl">Reports</div>
+      <div class="sl"><span class="lang-en">Reports</span><span class="lang-mr">अहवाल</span></div>
     </div>
     <div class="hero-stat">
       <div class="sv">{{ stats.reminders_count }}</div>
-      <div class="sl">Meds</div>
+      <div class="sl"><span class="lang-en">Meds</span><span class="lang-mr">औषधे</span></div>
     </div>
     <div class="hero-stat">
       <div class="sv">{{ stats.vitals_count }}</div>
-      <div class="sl">Vitals</div>
+      <div class="sl"><span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></div>
     </div>
     <div class="hero-stat">
       <div class="sv">{{ stats.appointments_count }}</div>
-      <div class="sl">Appts</div>
+      <div class="sl"><span class="lang-en">Appts</span><span class="lang-mr">भेटी</span></div>
     </div>
+  </div>
 </div>
 
 <!-- ── DAILY HEALTH SCORE ── -->
@@ -316,54 +487,60 @@
 {% set score_color = '#EF4444' %}
 {% if score >= 80 %}
   {% set score_color = '#10B981' %}
-  {% set score_desc = "Excellent! Your medication adherence and dietary choices are outstanding today. Keep up the perfect work!" %}
+  {% set score_desc_en = "Excellent! Your medication adherence and dietary choices are outstanding today. Keep up the perfect work!" %}
+  {% set score_desc_mr = "उत्कृष्ट! तुमचे औषधोपचार आणि आहाराचे पर्याय आज खूप छान आहेत. असेच उत्तम काम करत राहा!" %}
 {% elif score >= 60 %}
   {% set score_color = '#F59E0B' %}
-  {% set score_desc = "Good progress! You are on the right track, but there is room to improve. Make sure to take all scheduled medications and log your meals." %}
+  {% set score_desc_en = "Good progress! You are on the right track, but there is room to improve. Make sure to take all scheduled medications and log your meals." %}
+  {% set score_desc_mr = "चांगली प्रगती! आपण योग्य मार्गावर आहात, परंतु सुधारणेला वाव आहे. सर्व नियोजित औषधे वेळेवर घ्या आणि तुमच्या जेवणाची नोंद ठेवा." %}
 {% else %}
   {% set score_color = '#EF4444' %}
-  {% set score_desc = "Attention needed. Your daily health score is lower than recommended. Ensure you complete your medication schedules and log healthy food choices to boost your score." %}
+  {% set score_desc_en = "Attention needed. Your daily health score is lower than recommended. Ensure you complete your medication schedules and log healthy food choices to boost your score." %}
+  {% set score_desc_mr = "लक्ष देणे आवश्यक आहे. तुमचा दैनिक आरोग्य स्कोअर शिफारस केलेल्यापेक्षा कमी आहे. स्कोअर वाढवण्यासाठी औषधे वेळेवर घ्या आणि सकस आहाराची नोंद ठेवा." %}
 {% endif %}
 
 <div class="health-score-container">
   <div class="health-score-gauge" style="--score-color: {{ score_color }}; --score-percent: {{ score }};">
     <div class="health-score-value">
       {{ score }}
-      <span>Score</span>
+      <span><span class="lang-en">Score</span><span class="lang-mr">स्कोअर</span></span>
     </div>
   </div>
   <div class="health-score-info">
-    <div class="health-score-title">Your Daily Health Score</div>
-    <p class="health-score-desc">{{ score_desc }}</p>
+    <div class="health-score-title"><span class="lang-en">Your Daily Health Score</span><span class="lang-mr">तुमचा दैनिक आरोग्य स्कोअर</span></div>
+    <p class="health-score-desc">
+      <span class="lang-en">{{ score_desc_en }}</span>
+      <span class="lang-mr">{{ score_desc_mr }}</span>
+    </p>
   </div>
 </div>
 
 <!-- ── QUICK ACTIONS ── -->
-<div class="sec-hdr"><span class="sec-title">Quick Actions</span></div>
+<div class="sec-hdr"><span class="sec-title"><span class="lang-en">Quick Actions</span><span class="lang-mr">जलद कृती</span></span></div>
 <div class="qa-grid">
   <a class="qa-btn" href="{{ url_for('symptom_assessment') }}">
     <div class="qa-icon ic-blue"><i class="fas fa-stethoscope"></i></div>
-    <span class="qa-label">Assess</span>
+    <span class="qa-label"><span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></span>
   </a>
   <a class="qa-btn" href="{{ url_for('nearest_hospitals') }}">
     <div class="qa-icon ic-green"><i class="fas fa-hospital-symbol"></i></div>
-    <span class="qa-label">Hospitals</span>
+    <span class="qa-label"><span class="lang-en">Hospitals</span><span class="lang-mr">रुग्णालये</span></span>
   </a>
   <a class="qa-btn" href="{{ url_for('vitals') }}">
     <div class="qa-icon ic-purple"><i class="fas fa-heartbeat"></i></div>
-    <span class="qa-label">Vitals</span>
+    <span class="qa-label"><span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></span>
   </a>
   <a class="qa-btn" href="{{ url_for('wellness') }}">
     <div class="qa-icon ic-teal"><i class="fas fa-leaf"></i></div>
-    <span class="qa-label">Wellness</span>
+    <span class="qa-label"><span class="lang-en">Wellness</span><span class="lang-mr">निरोगीपणा</span></span>
   </a>
   <a class="qa-btn" href="{{ url_for('reminders') }}">
     <div class="qa-icon ic-yellow"><i class="fas fa-pills"></i></div>
-    <span class="qa-label">Meds</span>
+    <span class="qa-label"><span class="lang-en">Meds</span><span class="lang-mr">औषधे</span></span>
   </a>
   <a class="qa-btn sos-qa" href="{{ url_for('emergency') }}">
     <div class="qa-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-ambulance"></i></div>
-    <span class="qa-label">SOS</span>
+    <span class="qa-label"><span class="lang-en">SOS</span><span class="lang-mr">मदत</span></span>
   </a>
 </div>
 
@@ -371,8 +548,8 @@
 <a class="sos-strip" href="{{ url_for('nearest_hospitals') }}">
   <div class="sos-icon">🚨</div>
   <div>
-    <div class="sos-title">Find Nearest Hospital</div>
-    <div class="sos-sub">Live GPS · Phone · Route · 24h Emergency</div>
+    <div class="sos-title"><span class="lang-en">Find Nearest Hospital</span><span class="lang-mr">जवळचे रुग्णालय शोधा</span></div>
+    <div class="sos-sub"><span class="lang-en">Live GPS · Phone · Route · 24h Emergency</span><span class="lang-mr">थेट जीपीएस · फोन · मार्ग · २४ तास आपत्कालीन</span></div>
   </div>
   <div class="sos-arr"><i class="fas fa-chevron-right"></i></div>
 </a>
@@ -380,87 +557,87 @@
 <!-- ── TODAY'S WELLNESS ── -->
 {% if today_wellness %}
 <div class="sec-hdr">
-  <span class="sec-title">Today's Wellness</span>
-  <a class="sec-link" href="{{ url_for('wellness') }}">Update →</a>
+  <span class="sec-title"><span class="lang-en">Today's Wellness</span><span class="lang-mr">आजचा निरोगीपणा</span></span>
+  <a class="sec-link" href="{{ url_for('wellness') }}"><span class="lang-en">Update →</span><span class="lang-mr">अपडेट करा →</span></a>
 </div>
 <div class="wellness-bar-card">
   <div class="wb-row">
     <span class="wb-icon">💧</span>
-    <span class="wb-label">Water</span>
+    <span class="wb-label"><span class="lang-en">Water</span><span class="lang-mr">पाणी</span></span>
     <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.water_glasses*100//8,100]|min }}%;background:#3B82F6;"></div></div>
     <span class="wb-val">{{ today_wellness.water_glasses }}/8</span>
   </div>
   <div class="wb-row">
     <span class="wb-icon">😴</span>
-    <span class="wb-label">Sleep</span>
+    <span class="wb-label"><span class="lang-en">Sleep</span><span class="lang-mr">झोप</span></span>
     {% set sp = [(today_wellness.sleep_hours * 100 / 8)|round|int, 100]|min %}
     <div class="wb-bar"><div class="wb-fill" style="width:{{ sp }}%;background:#6f42c1;"></div></div>
     <span class="wb-val">{{ today_wellness.sleep_hours }}h</span>
   </div>
   <div class="wb-row">
     <span class="wb-icon">👣</span>
-    <span class="wb-label">Steps</span>
+    <span class="wb-label"><span class="lang-en">Steps</span><span class="lang-mr">पावले</span></span>
     <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.steps*100//10000,100]|min }}%;background:#28A745;"></div></div>
     <span class="wb-val">{{ '{:,}'.format(today_wellness.steps) }}</span>
   </div>
   <div class="wb-row" style="margin-bottom:0;">
     <span class="wb-icon">🏃</span>
-    <span class="wb-label">Exercise</span>
+    <span class="wb-label"><span class="lang-en">Exercise</span><span class="lang-mr">व्यायाम</span></span>
     <div class="wb-bar"><div class="wb-fill" style="width:{{ [today_wellness.exercise_min*100//30,100]|min }}%;background:#EF4444;"></div></div>
     <span class="wb-val">{{ today_wellness.exercise_min }}m</span>
   </div>
 </div>
 {% else %}
 <div class="sec-hdr">
-  <span class="sec-title">Today's Wellness</span>
-  <a class="sec-link" href="{{ url_for('wellness') }}">Log Now →</a>
+  <span class="sec-title"><span class="lang-en">Today's Wellness</span><span class="lang-mr">आजचा निरोगीपणा</span></span>
+  <a class="sec-link" href="{{ url_for('wellness') }}"><span class="lang-en">Log Now →</span><span class="lang-mr">नोंद करा →</span></a>
 </div>
 <a href="{{ url_for('wellness') }}" style="display:block;background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:20px;text-align:center;color:var(--muted);text-decoration:none;">
   <i class="fas fa-leaf" style="font-size:2rem;color:var(--green);display:block;margin-bottom:8px;"></i>
-  <span style="font-size:.88rem;font-weight:600;">Log today's wellness — water, sleep, steps & mood</span>
+  <span style="font-size:.88rem;font-weight:600;"><span class="lang-en">Log today's wellness — water, sleep, steps & mood</span><span class="lang-mr">आजच्या निरोगीपणाची नोंद करा — पाणी, झोप, पावले आणि मूड</span></span>
 </a>
 {% endif %}
 
 <!-- ── LATEST VITALS ── -->
 {% if latest_vitals %}
 <div class="sec-hdr">
-  <span class="sec-title">Latest Vitals</span>
-  <a class="sec-link" href="{{ url_for('vitals') }}">View All →</a>
+  <span class="sec-title"><span class="lang-en">Latest Vitals</span><span class="lang-mr">नवीनतम वाइटल्स</span></span>
+  <a class="sec-link" href="{{ url_for('vitals') }}"><span class="lang-en">View All →</span><span class="lang-mr">सर्व पहा →</span></a>
 </div>
 <div class="vital-mini-grid">
   {% if latest_vitals.systolic_bp and latest_vitals.diastolic_bp %}
   <div class="vital-mini vm-bp">
     <div class="vm-val">{{ latest_vitals.systolic_bp|int }}/{{ latest_vitals.diastolic_bp|int }}</div>
     <div class="vm-unit">mmHg</div>
-    <div class="vm-label">BP</div>
+    <div class="vm-label"><span class="lang-en">BP</span><span class="lang-mr">रक्तदाब</span></div>
   </div>
   {% endif %}
   {% if latest_vitals.blood_sugar %}
   <div class="vital-mini vm-sug">
     <div class="vm-val">{{ latest_vitals.blood_sugar|int }}</div>
     <div class="vm-unit">mg/dL</div>
-    <div class="vm-label">Sugar</div>
+    <div class="vm-label"><span class="lang-en">Sugar</span><span class="lang-mr">साखर</span></div>
   </div>
   {% endif %}
   {% if latest_vitals.heart_rate %}
   <div class="vital-mini vm-hr">
     <div class="vm-val">{{ latest_vitals.heart_rate|int }}</div>
     <div class="vm-unit">bpm</div>
-    <div class="vm-label">Heart Rate</div>
+    <div class="vm-label"><span class="lang-en">Heart Rate</span><span class="lang-mr">हृदय गती</span></div>
   </div>
   {% endif %}
   {% if latest_vitals.weight_kg %}
   <div class="vital-mini vm-wt">
     <div class="vm-val">{{ latest_vitals.weight_kg }}</div>
     <div class="vm-unit">kg</div>
-    <div class="vm-label">Weight</div>
+    <div class="vm-label"><span class="lang-en">Weight</span><span class="lang-mr">वजन</span></div>
   </div>
   {% endif %}
   {% if latest_vitals.temperature_c %}
   <div class="vital-mini vm-tmp">
     <div class="vm-val">{{ latest_vitals.temperature_c }}</div>
     <div class="vm-unit">°C</div>
-    <div class="vm-label">Temp</div>
+    <div class="vm-label"><span class="lang-en">Temp</span><span class="lang-mr">तापमान</span></div>
   </div>
   {% endif %}
 </div>
@@ -469,25 +646,25 @@
 <!-- ── RECENT PREDICTION ── -->
 {% if last_prediction %}
 <div class="sec-hdr">
-  <span class="sec-title">Last Prediction</span>
-  <a class="sec-link" href="{{ url_for('history') }}">History →</a>
+  <span class="sec-title"><span class="lang-en">Last Prediction</span><span class="lang-mr">शेवटचे निदान</span></span>
+  <a class="sec-link" href="{{ url_for('history') }}"><span class="lang-en">History →</span><span class="lang-mr">इतिहास →</span></a>
 </div>
 <div class="pred-card">
   <div class="pred-disease">{{ last_prediction.disease }}</div>
   <div class="pred-meta">
     {% if 'LOW' in last_prediction.severity %}
-      <span class="severity-badge severity-low">{{ last_prediction.severity }}</span>
+      <span class="severity-badge severity-low"><span class="lang-en">Low Severity</span><span class="lang-mr">कमी तीव्रता</span></span>
     {% elif 'MEDIUM' in last_prediction.severity %}
-      <span class="severity-badge severity-medium">{{ last_prediction.severity }}</span>
+      <span class="severity-badge severity-medium"><span class="lang-en">Medium Severity</span><span class="lang-mr">मध्यम तीव्रता</span></span>
     {% else %}
-      <span class="severity-badge severity-high">{{ last_prediction.severity }}</span>
+      <span class="severity-badge severity-high"><span class="lang-en">High Severity</span><span class="lang-mr">उच्च तीव्रता</span></span>
     {% endif %}
-    &nbsp; Risk: {{ last_prediction.risk_percentage }}% · {{ last_prediction.timestamp[:10] }}
+    &nbsp; <span class="lang-en">Risk:</span><span class="lang-mr">जोखीम:</span> {{ last_prediction.risk_percentage }}% · {{ last_prediction.timestamp[:10] }}
   </div>
   <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-    <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary btn-sm"><i class="fas fa-redo"></i> Re-assess</a>
+    <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary btn-sm"><span class="lang-en"><i class="fas fa-redo"></i> Re-assess</span><span class="lang-mr"><i class="fas fa-redo"></i> पुन्हा तपासा</span></a>
     {% if last_prediction.pdf_path %}
-    <a href="{{ url_for('download_pdf', filename=last_prediction.pdf_path) }}" class="btn btn-outline btn-sm"><i class="fas fa-download"></i> Report</a>
+    <a href="{{ url_for('download_pdf', filename=last_prediction.pdf_path) }}" class="btn btn-outline btn-sm"><span class="lang-en"><i class="fas fa-download"></i> Report</span><span class="lang-mr"><i class="fas fa-download"></i> अहवाल</span></a>
     {% endif %}
   </div>
 </div>
@@ -496,8 +673,8 @@
 <!-- ── UPCOMING REMINDERS ── -->
 {% if upcoming_reminders %}
 <div class="sec-hdr">
-  <span class="sec-title">Today's Medicines</span>
-  <a class="sec-link" href="{{ url_for('reminders') }}">Manage →</a>
+  <span class="sec-title"><span class="lang-en">Today's Medicines</span><span class="lang-mr">आजची औषधे</span></span>
+  <a class="sec-link" href="{{ url_for('reminders') }}"><span class="lang-en">Manage →</span><span class="lang-mr">व्यवस्थापन करा →</span></a>
 </div>
 {% for r in upcoming_reminders[:3] %}
 <div class="reminder-mini">
@@ -515,32 +692,184 @@
 {% endif %}
 
 <!-- ── MORE FEATURES ── -->
-<div class="sec-hdr" style="margin-top:8px;"><span class="sec-title">More Tools</span></div>
+<div class="sec-hdr" style="margin-top:8px;"><span class="sec-title"><span class="lang-en">More Tools</span><span class="lang-mr">अधिक साधने</span></span></div>
 <div class="feat-row">
   <a class="feat-card" href="{{ url_for('lab_results') }}">
     <div class="feat-icon">🧪</div>
-    <div class="feat-title">Lab Results</div>
-    <div class="feat-desc">Track blood tests, reports & abnormal alerts</div>
-    <div class="feat-arrow">View →</div>
+    <div class="feat-title"><span class="lang-en">Lab Results</span><span class="lang-mr">लॅब अहवाल</span></div>
+    <div class="feat-desc"><span class="lang-en">Track blood tests, reports & abnormal alerts</span><span class="lang-mr">रक्त चाचण्या, अहवाल आणि असामान्य अलर्टचा मागोवा घ्या</span></div>
+    <div class="feat-arrow"><span class="lang-en">View →</span><span class="lang-mr">पहा →</span></div>
   </a>
   <a class="feat-card" href="{{ url_for('bmi_calculator') }}">
     <div class="feat-icon">⚖️</div>
-    <div class="feat-title">BMI Calculator</div>
-    <div class="feat-desc">Check your body mass index instantly</div>
-    <div class="feat-arrow">Calculate →</div>
+    <div class="feat-title"><span class="lang-en">BMI Calculator</span><span class="lang-mr">बीएमआय कॅल्क्युलेटर</span></div>
+    <div class="feat-desc"><span class="lang-en">Check your body mass index instantly</span><span class="lang-mr">तुमचा बॉडी मास इंडेक्स त्वरित तपासा</span></div>
+    <div class="feat-arrow"><span class="lang-en">Calculate →</span><span class="lang-mr">गणना करा →</span></div>
   </a>
   <a class="feat-card" href="{{ url_for('health_tips') }}">
     <div class="feat-icon">💡</div>
-    <div class="feat-title">Health Tips</div>
-    <div class="feat-desc">Daily tips on nutrition, sleep & wellness</div>
-    <div class="feat-arrow">Read →</div>
+    <div class="feat-title"><span class="lang-en">Health Tips</span><span class="lang-mr">आरोग्य टिप्स</span></div>
+    <div class="feat-desc"><span class="lang-en">Daily tips on nutrition, sleep & wellness</span><span class="lang-mr">पोषण, झोप आणि आरोग्याविषयी रोजच्या टिप्स</span></div>
+    <div class="feat-arrow"><span class="lang-en">Read →</span><span class="lang-mr">वाचा →</span></div>
   </a>
   <a class="feat-card" href="{{ url_for('profile') }}">
     <div class="feat-icon">👤</div>
-    <div class="feat-title">My Profile</div>
-    <div class="feat-desc">Update health info, city & password</div>
-    <div class="feat-arrow">Edit →</div>
+    <div class="feat-title"><span class="lang-en">My Profile</span><span class="lang-mr">माझे प्रोफाइल</span></div>
+    <div class="feat-desc"><span class="lang-en">Update health info, city & password</span><span class="lang-mr">आरोग्य माहिती, शहर आणि पासवर्ड अपडेट करा</span></div>
+    <div class="feat-arrow"><span class="lang-en">Edit →</span><span class="lang-mr">संपादन करा →</span></div>
   </a>
 </div>
 
+<!-- ── INTERACTIVE FEATURE GUIDE ── -->
+<div id="feature-guide-section" class="guide-container show-en">
+  <div class="guide-header">
+    <div class="guide-title-area">
+      <h3 class="guide-main-title lang-en">🏥 Interactive Feature Guide</h3>
+      <h3 class="guide-main-title lang-mr">🏥 परस्पर संवादात्मक वैशिष्ट्य मार्गदर्शिका</h3>
+      <p class="guide-subtitle lang-en">Learn how to use all the capabilities of HealthCare Plus.</p>
+      <p class="guide-subtitle lang-mr">HealthCare Plus च्या सर्व वैशिष्ट्यांची माहिती मिळवा.</p>
+    </div>
+    <div class="lang-toggle-wrapper" id="langToggleWrapper">
+      <div class="lang-toggle-slider"></div>
+      <button id="lang-btn-en" class="lang-toggle-btn active" onclick="globalSwitchLanguage('en')">English</button>
+      <button id="lang-btn-mr" class="lang-toggle-btn" onclick="globalSwitchLanguage('mr')">मराठी</button>
+    </div>
+  </div>
+  
+  <div class="guide-grid">
+    <!-- Card 1: Symptom Assessment -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-blue">
+        <i class="fas fa-stethoscope"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Symptom Assessment</h4>
+        <h4 class="guide-card-title lang-mr">लक्षण मूल्यांकन</h4>
+        <p class="guide-card-desc lang-en">Input your symptoms to get a real-time risk assessment, disease likelihood, severity level, and specific clinical advice.</p>
+        <p class="guide-card-desc lang-mr">रिअल-टाइम जोखीम मूल्यांकन, रोगाची शक्यता, तीव्रतेची पातळी आणि वैद्यकीय सल्ला मिळवण्यासाठी तुमची लक्षणे प्रविष्ट करा.</p>
+      </div>
+    </div>
+
+    <!-- Card 2: Hospital GPS Finder -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-green">
+        <i class="fas fa-hospital-symbol"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Nearest Hospital Finder</h4>
+        <h4 class="guide-card-title lang-mr">जवळचे रुग्णालय शोधक</h4>
+        <p class="guide-card-desc lang-en">Locate nearby medical centers instantly. Filter by critical services like ICU, pediatric care, oxygen beds, and get route maps.</p>
+        <p class="guide-card-desc lang-mr">जवळची रुग्णालये त्वरित शोधा. आयसीयू, बालरोग विभाग, ऑक्सिजन बेड यांसारख्या गंभीर सेवांनुसार फिल्टर करा आणि मार्ग नकाशे मिळवा.</p>
+      </div>
+    </div>
+
+    <!-- Card 3: Daily Wellness Tracker -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-teal">
+        <i class="fas fa-leaf"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Daily Wellness Tracker</h4>
+        <h4 class="guide-card-title lang-mr">दैनिक निरोगीपणा ट्रॅकर</h4>
+        <p class="guide-card-desc lang-en">Monitor your daily water intake, sleep patterns, steps, and exercise minutes. Build a perfect streak to boost your daily health score.</p>
+        <p class="guide-card-desc lang-mr">रोजच्या पाण्याचे प्रमाण, झोप, पावले (स्टेप्स) आणि व्यायामाची मिनिटे ट्रॅक करा. तुमचा आरोग्य स्कोअर वाढवण्यासाठी दररोजच्या चांगल्या सवयी नोंदवा.</p>
+      </div>
+    </div>
+
+    <!-- Card 4: Health Vitals Monitoring -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-purple">
+        <i class="fas fa-heartbeat"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Health Vitals Log</h4>
+        <h4 class="guide-card-title lang-mr">महत्त्वाचे आरोग्य संकेतक</h4>
+        <p class="guide-card-desc lang-en">Track and log blood pressure, sugar levels, temperature, heart rate, and weight. Get immediate alerts if readings cross normal limits.</p>
+        <p class="guide-card-desc lang-mr">रक्तदाब, साखरेची पातळी, शरीराचे तापमान, हृदय गती आणि वजन नोंदवा. रीडिंग सामान्य मर्यादेच्या बाहेर गेल्यास त्वरित सतर्कतेचे इशारे मिळवा.</p>
+      </div>
+    </div>
+
+    <!-- Card 5: AI Health Assistant -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-pink">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">AI Health Assistant</h4>
+        <h4 class="guide-card-title lang-mr">एआय आरोग्य सहाय्यक</h4>
+        <p class="guide-card-desc lang-en">Chat 24/7 with our NLP-powered AI chatbot to resolve health queries, get immediate symptom analysis, and access quick first-aid guides.</p>
+        <p class="guide-card-desc lang-mr">आरोग्यविषयक प्रश्न, लक्षणांचे विश्लेषण आणि प्रथमोपचार मार्गदर्शनासाठी २४/७ आमच्या बुद्धिमान एआय (AI) चॅटबॉटशी संवाद साधा.</p>
+      </div>
+    </div>
+
+    <!-- Card 6: Medicine Reminders -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-yellow">
+        <i class="fas fa-pills"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Medicine Reminders</h4>
+        <h4 class="guide-card-title lang-mr">औषध स्मरणपत्रे</h4>
+        <p class="guide-card-desc lang-en">Schedule precise medicine reminders with dosage instructions. Get timely notifications on your device to ensure medication adherence.</p>
+        <p class="guide-card-desc lang-mr">डोसच्या माहितीसह औषधांच्या वेळा निश्चित करा. वेळेवर औषध घेण्याची आठवण करून देणारे पुश नोटिफिकेशन्स प्राप्त करा.</p>
+      </div>
+    </div>
+
+    <!-- Card 7: Food Ingredient Scanner -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-orange">
+        <i class="fas fa-camera"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Food & Ingredient Scanner</h4>
+        <h4 class="guide-card-title lang-mr">अन्न आणि उत्पादन स्कॅनर</h4>
+        <p class="guide-card-desc lang-en">Upload or scan food ingredient label lists. Detect allergens, harmful chemical additives, and check the food safety rating instantly.</p>
+        <p class="guide-card-desc lang-mr">अन्न घटकांच्या यादीचे लेबले स्कॅन करा. ॲलर्जी निर्माण करणारे घटक, घातक रसायने ओळखा आणि अन्नाचे एकूण सुरक्षा रेटिंग त्वरित तपासा.</p>
+      </div>
+    </div>
+
+    <!-- Card 8: Diet & Fitness Coach -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-blue">
+        <i class="fas fa-dumbbell"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Diet & Fitness Coach</h4>
+        <h4 class="guide-card-title lang-mr">आहार आणि फिटनेस कोच</h4>
+        <p class="guide-card-desc lang-en">Access customized calorie intake targets, fitness coaching guidelines, and customized diet plans based on your specific body metrics.</p>
+        <p class="guide-card-desc lang-mr">तुमच्या शरीराच्या लक्षणांवर आधारित वैयक्तिकृत कॅलरी उद्दिष्टे, फिटनेस कोचिंग मार्गदर्शिका आणि सानुकूलित आहार प्लॅन्स मिळवा.</p>
+      </div>
+    </div>
+
+    <!-- Card 9: Lab Results Tracker -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-purple">
+        <i class="fas fa-flask"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Lab Results Tracker</h4>
+        <h4 class="guide-card-title lang-mr">प्रयोगशाळा अहवाल ट्रॅकर</h4>
+        <p class="guide-card-desc lang-en">Log and manage your diagnostic lab reports. Compare results with standard ranges and track biomarkers history charts.</p>
+        <p class="guide-card-desc lang-mr">तुमचे वैद्यकीय प्रयोगशाळा अहवाल जतन करा. सामान्य मर्यादेशी तुलना करा आणि अहवालातील बदलांचा आलेख ट्रॅक करा.</p>
+      </div>
+    </div>
+
+    <!-- Card 10: Symptom Journal -->
+    <div class="guide-card">
+      <div class="guide-card-icon ic-teal">
+        <i class="fas fa-book-medical"></i>
+      </div>
+      <div class="guide-card-body">
+        <h4 class="guide-card-title lang-en">Symptom Journal & Reports</h4>
+        <h4 class="guide-card-title lang-mr">लक्षण रोजनिशी आणि अहवाल</h4>
+        <p class="guide-card-desc lang-en">Maintain a daily journal of how you feel, record symptoms chronology, and export professional PDF medical reports for doctor visits.</p>
+        <p class="guide-card-desc lang-mr">तुम्हाला कसे वाटते याची दैनिक नोंद ठेवा, लक्षणांचा इतिहास जतन करा आणि डॉक्टरांच्या भेटीसाठी पीडीएफ (PDF) रिपोर्ट डाउनलोड करा.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
 {% endblock %}

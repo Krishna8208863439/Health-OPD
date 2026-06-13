@@ -13,6 +13,71 @@
     --nonveg-color: #dc2626;
 }
 
+/* ── DARK MODE ── */
+html.dark-theme body { background:#0d1117 !important; }
+html.dark-theme .diet-hero { box-shadow:0 8px 30px rgba(16,185,129,0.15); }
+html.dark-theme .active-banner {
+    background:#1b3a24 !important; border-color:#2d6a3f !important;
+    color:#4ade80 !important;
+}
+html.dark-theme .veg-toggle-bar { background:#21262d !important; border-color:#30363d !important; }
+html.dark-theme .veg-toggle-btn { color:#8b949e !important; }
+html.dark-theme .diet-option-btn {
+    background:#161b22 !important; border-color:#30363d !important; color:#c9d1d9 !important;
+}
+html.dark-theme .diet-option-btn:hover { border-color:var(--diet-green) !important; }
+html.dark-theme .diet-option-btn.active {
+    border-color:var(--diet-green) !important; background:#1b3a24 !important; color:#4ade80 !important;
+}
+html.dark-theme .meal-card {
+    background:#161b22 !important; border-color:#30363d !important;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4) !important;
+}
+html.dark-theme .meal-card-header { border-bottom-color:#30363d !important; }
+html.dark-theme .meal-card-title { color:#c9d1d9 !important; }
+html.dark-theme .meal-description { color:#8b949e !important; }
+html.dark-theme .meal-block {
+    background:#21262d !important; border-color:#30363d !important;
+}
+html.dark-theme .meal-block-title { color:#8b949e !important; }
+html.dark-theme .meal-block-content { color:#c9d1d9 !important; }
+html.dark-theme .add-meal-section {
+    background:#21262d !important; border-color:#30363d !important;
+}
+html.dark-theme .add-meal-section h6 { color:#c9d1d9 !important; }
+html.dark-theme .add-meal-row select,
+html.dark-theme .add-meal-row input[type="text"] {
+    background:#161b22 !important; border-color:#30363d !important; color:#c9d1d9 !important;
+}
+html.dark-theme .profile-card {
+    background:#161b22 !important; border-color:#30363d !important;
+}
+html.dark-theme .profile-card label { color:#8b949e !important; }
+html.dark-theme .profile-card input,
+html.dark-theme .profile-card select {
+    background:#21262d !important; border-color:#30363d !important; color:#c9d1d9 !important;
+}
+html.dark-theme #ai-plan-result {
+    background:#1b3a24 !important; border-color:#2d6a3f !important; color:#c9d1d9 !important;
+}
+
+/* ── FLOATING PAGE CONTROLS ── */
+.page-controls {
+    position:fixed; bottom:24px; right:20px; z-index:9999;
+    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
+}
+.ctrl-btn {
+    display:flex; align-items:center; gap:8px;
+    padding:10px 16px; border-radius:30px; border:none; cursor:pointer;
+    font-weight:700; font-size:0.82rem; box-shadow:0 4px 18px rgba(0,0,0,0.2);
+    transition:all 0.22s; white-space:nowrap;
+}
+.ctrl-btn.theme-ctrl { background:#1a202c; color:#fff; }
+html.dark-theme .ctrl-btn.theme-ctrl { background:#f7fafc; color:#1a202c; }
+.ctrl-btn.lang-ctrl { background:#10B981; color:#fff; }
+.ctrl-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+@media(max-width:600px) { .page-controls { bottom:14px; right:10px; } }
+
 .diet-hero {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%);
     color: white;
@@ -338,59 +403,126 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- ══ FLOATING PAGE CONTROLS (Dark Mode + Language) ══ -->
+<div class="page-controls">
+    <button class="ctrl-btn lang-ctrl" onclick="togglePageLang()" title="Switch Language">
+        <span id="page-lang-icon">🇮🇳</span>
+        <span class="lang-en">मराठीत पहा</span>
+        <span class="lang-mr">View in English</span>
+    </button>
+    <button class="ctrl-btn theme-ctrl" onclick="togglePageTheme()" title="Toggle Theme">
+        <span id="page-theme-icon">🌙</span>
+        <span class="lang-en">Dark Mode</span>
+        <span class="lang-mr">डार्क मोड</span>
+    </button>
+</div>
+
 <div class="diet-hero">
     <div class="ico">🥗</div>
     <div>
-        <h2>Personalized Diet Plans</h2>
-        <p>Choose a diet plan tailored to your medical condition and lifestyle goals. Switch between Vegetarian and Non-Vegetarian options and add your own custom meals.</p>
+        <h2>
+            <span class="lang-en">Personalized Diet Plans</span>
+            <span class="lang-mr">वैयक्तिक आहार योजना</span>
+        </h2>
+        <p>
+            <span class="lang-en">Choose a diet plan tailored to your medical condition and lifestyle goals. Switch between Vegetarian and Non-Vegetarian options and add your own custom meals.</span>
+            <span class="lang-mr">तुमच्या वैद्यकीय स्थिती आणि जीवनशैलीच्या ध्येयानुसार आहार योजना निवडा. शाकाहारी आणि मांसाहारी पर्याय बदला आणि स्वतःचे जेवण जोडा.</span>
+        </p>
     </div>
 </div>
 
 {% if patient.diet_goal %}
 <div class="active-banner">
-    <div>🎯 Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong></div>
-    <span style="background:rgba(16,185,129,0.15); border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:700;">Active Plan</span>
+    <div>
+        🎯
+        <span class="lang-en">Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong></span>
+        <span class="lang-mr">तुमचे सध्याचे सक्रिय आहाराचे ध्येय: <strong>{{ patient.diet_goal }}</strong></span>
+    </div>
+    <span style="background:rgba(16,185,129,0.15);border-radius:20px;padding:4px 12px;font-size:0.8rem;font-weight:700;">
+        <span class="lang-en">✓ Active Plan</span>
+        <span class="lang-mr">✓ सक्रिय योजना</span>
+    </span>
 </div>
 {% endif %}
 
 <!-- Health Profile for AI Personalization -->
-<div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);border:1px solid #E5E7EB;margin-bottom:22px;">
-    <h4 style="font-weight:800;color:#059669;margin-bottom:16px;">🧬 Your Health Profile (for AI Diet Plans)</h4>
+<div class="profile-card" style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);border:1px solid #E5E7EB;margin-bottom:22px;">
+    <h4 style="font-weight:800;color:#059669;margin-bottom:16px;">
+        🧬
+        <span class="lang-en">Your Health Profile (for AI Diet Plans)</span>
+        <span class="lang-mr">तुमची आरोग्य माहिती (AI आहार योजनेसाठी)</span>
+    </h4>
     <form method="POST" action="{{ url_for('diet_plans') }}">
         <input type="hidden" name="action" value="save_profile">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px;">
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Age</label><input type="number" value="{{ patient.age }}" disabled style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;"></div>
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Gender</label>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Age</span><span class="lang-mr">वय</span>
+                </label>
+                <input type="number" value="{{ patient.age }}" disabled style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
+            </div>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Gender</span><span class="lang-mr">लिंग</span>
+                </label>
                 <select name="gender" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-                    <option value="male" {% if profile.get('gender','male')=='male' %}selected{% endif %}>Male</option>
-                    <option value="female" {% if profile.get('gender')=='female' %}selected{% endif %}>Female</option>
+                    <option value="male" {% if profile.get('gender','male')=='male' %}selected{% endif %}>
+                        <span class="lang-en">Male</span> / पुरुष
+                    </option>
+                    <option value="female" {% if profile.get('gender')=='female' %}selected{% endif %}>
+                        <span class="lang-en">Female</span> / महिला
+                    </option>
                 </select>
             </div>
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Height (cm)</label>
-                <input name="height" type="number" value="{{ profile.get('height','170') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;"></div>
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Weight (kg)</label>
-                <input name="weight" type="number" value="{{ profile.get('weight','70') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;"></div>
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Activity</label>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Height (cm)</span><span class="lang-mr">उंची (सें.मी.)</span>
+                </label>
+                <input name="height" type="number" value="{{ profile.get('height','170') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+            </div>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Weight (kg)</span><span class="lang-mr">वजन (किग्रॅ)</span>
+                </label>
+                <input name="weight" type="number" value="{{ profile.get('weight','70') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+            </div>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Activity</span><span class="lang-mr">क्रियाशीलता</span>
+                </label>
                 <select name="activity_level" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
                     {% for lvl in ['sedentary','light','moderate','active','very_active'] %}
                     <option value="{{ lvl }}" {% if profile.get('activity_level','moderate')==lvl %}selected{% endif %}>{{ lvl|title }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div><label style="font-size:.75rem;font-weight:700;color:#6B7280;">Diet Preference</label>
+            <div>
+                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                    <span class="lang-en">Diet Preference</span><span class="lang-mr">आहार पसंती</span>
+                </label>
                 <select name="dietary_preference" id="profile-pref" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-                    <option value="vegetarian" {% if profile.get('dietary_preference','vegetarian')=='vegetarian' %}selected{% endif %}>Vegetarian</option>
-                    <option value="non_vegetarian" {% if profile.get('dietary_preference')=='non_vegetarian' %}selected{% endif %}>Non-Vegetarian</option>
+                    <option value="vegetarian" {% if profile.get('dietary_preference','vegetarian')=='vegetarian' %}selected{% endif %}>🌿 Vegetarian / शाकाहारी</option>
+                    <option value="non_vegetarian" {% if profile.get('dietary_preference')=='non_vegetarian' %}selected{% endif %}>🍗 Non-Vegetarian / मांसाहारी</option>
                 </select>
             </div>
         </div>
         <div style="margin-bottom:14px;">
-            <label style="font-size:.75rem;font-weight:700;color:#6B7280;">Medical Conditions</label>
-            <input name="medical_conditions" value="{{ profile.get('medical_conditions','') }}" placeholder="e.g. diabetes, hypertension" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
+            <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
+                <span class="lang-en">Medical Conditions</span>
+                <span class="lang-mr">वैद्यकीय स्थिती</span>
+            </label>
+            <input name="medical_conditions" value="{{ profile.get('medical_conditions','') }}"
+                placeholder="e.g. diabetes, hypertension / मधुमेह, उच्च रक्तदाब"
+                style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="submit" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">💾 Save Profile</button>
-            <button type="button" onclick="generateAIPlan()" style="background:linear-gradient(135deg,#6C63FF,#00D4FF);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">🤖 Generate AI Diet Plan</button>
+            <button type="submit" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">
+                💾 <span class="lang-en">Save Profile</span><span class="lang-mr">प्रोफाइल जतन करा</span>
+            </button>
+            <button type="button" onclick="generateAIPlan()" style="background:linear-gradient(135deg,#6C63FF,#00D4FF);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">
+                🤖 <span class="lang-en">Generate AI Diet Plan</span><span class="lang-mr">AI आहार योजना तयार करा</span>
+            </button>
         </div>
     </form>
     <div id="ai-plan-result" style="display:none;margin-top:18px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:18px;"></div>
@@ -399,29 +531,41 @@
 <!-- Veg / Non-Veg Toggle -->
 <div class="veg-toggle-bar">
     <button class="veg-toggle-btn active-veg" id="toggle-veg" onclick="setDietPref('veg')">
-        <span class="veg-dot veg-dot-green"></span> 🌿 Vegetarian
+        <span class="veg-dot veg-dot-green"></span>
+        🌿 <span class="lang-en">Vegetarian</span><span class="lang-mr">शाकाहारी</span>
     </button>
     <button class="veg-toggle-btn" id="toggle-nonveg" onclick="setDietPref('nonveg')">
-        <span class="veg-dot veg-dot-red"></span> 🍗 Non-Vegetarian
+        <span class="veg-dot veg-dot-red"></span>
+        🍗 <span class="lang-en">Non-Vegetarian</span><span class="lang-mr">मांसाहारी</span>
     </button>
 </div>
 
 <!-- Selection Tabs -->
 <div class="diet-selector">
-    <button class="diet-option-btn active" id="btn-Weight"   onclick="showDiet('Weight')">
-        <span class="btn-emoji">🏃‍♂️</span><span>Weight Loss</span>
+    <button class="diet-option-btn active" id="btn-Weight" onclick="showDiet('Weight')">
+        <span class="btn-emoji">🏃‍♂️</span>
+        <span class="lang-en">Weight Loss</span>
+        <span class="lang-mr">वजन कमी करणे</span>
     </button>
-    <button class="diet-option-btn" id="btn-Muscle"   onclick="showDiet('Muscle')">
-        <span class="btn-emoji">💪</span><span>Muscle Gain</span>
+    <button class="diet-option-btn" id="btn-Muscle" onclick="showDiet('Muscle')">
+        <span class="btn-emoji">💪</span>
+        <span class="lang-en">Muscle Gain</span>
+        <span class="lang-mr">स्नायू वाढवणे</span>
     </button>
     <button class="diet-option-btn" id="btn-Diabetic" onclick="showDiet('Diabetic')">
-        <span class="btn-emoji">🩸</span><span>Diabetic Care</span>
+        <span class="btn-emoji">🩸</span>
+        <span class="lang-en">Diabetic Care</span>
+        <span class="lang-mr">मधुमेह काळजी</span>
     </button>
-    <button class="diet-option-btn" id="btn-Heart"    onclick="showDiet('Heart')">
-        <span class="btn-emoji">❤️</span><span>Heart Healthy</span>
+    <button class="diet-option-btn" id="btn-Heart" onclick="showDiet('Heart')">
+        <span class="btn-emoji">❤️</span>
+        <span class="lang-en">Heart Healthy</span>
+        <span class="lang-mr">हृदय निरोगी</span>
     </button>
     <button class="diet-option-btn" id="btn-Balanced" onclick="showDiet('Balanced')">
-        <span class="btn-emoji">🍽️</span><span>Balanced Indian</span>
+        <span class="btn-emoji">🍽️</span>
+        <span class="lang-en">Balanced Indian</span>
+        <span class="lang-mr">संतुलित भारतीय</span>
     </button>
 </div>
 
@@ -432,11 +576,19 @@
     ══════════════════════════════════════ -->
     <div class="meal-card active-meal" id="diet-Weight">
         <div class="meal-card-header">
-            <div class="meal-card-title">🏃‍♂️ Weight Loss Diet Plan</div>
-            <span class="meal-badge badge-weight">Low Carb</span>
+            <div class="meal-card-title">
+                🏃‍♂️
+                <span class="lang-en">Weight Loss Diet Plan</span>
+                <span class="lang-mr">वजन कमी करण्याची आहार योजना</span>
+            </div>
+            <span class="meal-badge badge-weight">
+                <span class="lang-en">Low Carb</span>
+                <span class="lang-mr">कमी कर्ब</span>
+            </span>
         </div>
         <div class="meal-description">
-            Designed to reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.
+            <span class="lang-en">Designed to reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.</span>
+            <span class="lang-mr">कार्बोहायड्रेट नियंत्रण, प्रथिने वाढवणे आणि उष्णजनन (thermogenesis) द्वारे शरीराचे वजन कमी करण्यासाठी डिझाइन केलेले. लिपिड प्रोफाइल आणि व्हिसेरल फॅट व्यवस्थापनासाठी उत्तम.</span>
         </div>
 
         <!-- VEG meals -->
@@ -487,16 +639,17 @@
 
         <!-- Add Custom Meal -->
         <div class="add-meal-section">
-            <h6>➕ Add Your Own Meal</h6>
+            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
             <div class="add-meal-row">
                 <select id="add-type-Weight">
-                    <option value="🍳 Breakfast">🍳 Breakfast</option>
-                    <option value="🍲 Lunch">🍲 Lunch</option>
-                    <option value="🥜 Snack">🥜 Snack</option>
-                    <option value="🥗 Dinner">🥗 Dinner</option>
+                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
+                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
+                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
+                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
                 </select>
-                <input type="text" id="add-text-Weight" placeholder="Describe your meal (e.g. 1 cup oats with banana)">
-                <button class="btn-add-meal" onclick="addCustomMeal('Weight')">+ Add</button>
+                <input type="text" id="add-text-Weight"
+                    placeholder="e.g. 1 cup oats with banana / उदा. ओट्स + केळी">
+                <button class="btn-add-meal" onclick="addCustomMeal('Weight')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
             </div>
             <div class="custom-meals-list" id="custom-list-Weight"></div>
         </div>
@@ -504,9 +657,13 @@
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Weight Loss">
             {% if patient.diet_goal == 'Weight Loss' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            <button type="button" class="select-diet-btn is-active-btn" disabled>
+                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
+            </button>
             {% else %}
-            <button type="submit" class="select-diet-btn">🎯 Select Weight Loss Plan</button>
+            <button type="submit" class="select-diet-btn">
+                🎯 <span class="lang-en">Select Weight Loss Plan</span><span class="lang-mr">वजन कमी योजना निवडा</span>
+            </button>
             {% endif %}
         </form>
     </div>
@@ -516,11 +673,19 @@
     ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Muscle">
         <div class="meal-card-header">
-            <div class="meal-card-title">💪 Muscle Gain Diet Plan</div>
-            <span class="meal-badge badge-muscle">High Protein</span>
+            <div class="meal-card-title">
+                💪
+                <span class="lang-en">Muscle Gain Diet Plan</span>
+                <span class="lang-mr">स्नायू वाढवण्याची आहार योजना</span>
+            </div>
+            <span class="meal-badge badge-muscle">
+                <span class="lang-en">High Protein</span>
+                <span class="lang-mr">उच्च प्रथिने</span>
+            </span>
         </div>
         <div class="meal-description">
-            Focuses on muscle hypertrophy and tissue repair. Provides clean caloric surplus with high proteins, moderate complex carbs, and healthy fats to support active recovery.
+            <span class="lang-en">Focuses on muscle hypertrophy and tissue repair. Provides clean caloric surplus with high proteins, moderate complex carbs, and healthy fats to support active recovery.</span>
+            <span class="lang-mr">स्नायू वाढवणे आणि ऊती दुरुस्तीवर लक्ष केंद्रित. उच्च प्रथिने, मध्यम कॉम्प्लेक्स कार्ब्स आणि निरोगी चरबीसह स्वच्छ कॅलरी अतिरिक्तता प्रदान करते.</span>
         </div>
 
         <div class="veg-content">
@@ -568,16 +733,17 @@
         </div>
 
         <div class="add-meal-section">
-            <h6>➕ Add Your Own Meal</h6>
+            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
             <div class="add-meal-row">
                 <select id="add-type-Muscle">
-                    <option value="🍳 Breakfast">🍳 Breakfast</option>
-                    <option value="🍲 Lunch">🍲 Lunch</option>
-                    <option value="🥜 Snack">🥜 Snack</option>
-                    <option value="🥗 Dinner">🥗 Dinner</option>
+                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
+                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
+                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
+                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
                 </select>
-                <input type="text" id="add-text-Muscle" placeholder="Describe your meal (e.g. 2 eggs + whey shake)">
-                <button class="btn-add-meal" onclick="addCustomMeal('Muscle')">+ Add</button>
+                <input type="text" id="add-text-Muscle"
+                    placeholder="e.g. 2 eggs + whey shake / उदा. २ अंडी + व्हे शेक">
+                <button class="btn-add-meal" onclick="addCustomMeal('Muscle')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
             </div>
             <div class="custom-meals-list" id="custom-list-Muscle"></div>
         </div>
@@ -585,9 +751,13 @@
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Muscle Gain">
             {% if patient.diet_goal == 'Muscle Gain' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            <button type="button" class="select-diet-btn is-active-btn" disabled>
+                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
+            </button>
             {% else %}
-            <button type="submit" class="select-diet-btn">🎯 Select Muscle Gain Plan</button>
+            <button type="submit" class="select-diet-btn">
+                🎯 <span class="lang-en">Select Muscle Gain Plan</span><span class="lang-mr">स्नायू वाढ योजना निवडा</span>
+            </button>
             {% endif %}
         </form>
     </div>
@@ -597,11 +767,19 @@
     ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Diabetic">
         <div class="meal-card-header">
-            <div class="meal-card-title">🩸 Diabetic Care Diet Plan</div>
-            <span class="meal-badge badge-diabetic">Low Glycemic Index</span>
+            <div class="meal-card-title">
+                🩸
+                <span class="lang-en">Diabetic Care Diet Plan</span>
+                <span class="lang-mr">मधुमेह काळजी आहार योजना</span>
+            </div>
+            <span class="meal-badge badge-diabetic">
+                <span class="lang-en">Low Glycemic Index</span>
+                <span class="lang-mr">कमी ग्लायसेमिक इंडेक्स</span>
+            </span>
         </div>
         <div class="meal-description">
-            Formulated to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.
+            <span class="lang-en">Formulated to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.</span>
+            <span class="lang-mr">इन्सुलिन प्रतिसाद नियंत्रित करण्यासाठी आणि रक्त ग्लुकोज वाढ रोखण्यासाठी तयार केलेले. कमी ग्लायसेमिक इंडेक्स, उच्च फायबर आणि कॉम्प्लेक्स धान्यांचा वापर.</span>
         </div>
 
         <div class="veg-content">
@@ -649,16 +827,17 @@
         </div>
 
         <div class="add-meal-section">
-            <h6>➕ Add Your Own Meal</h6>
+            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
             <div class="add-meal-row">
                 <select id="add-type-Diabetic">
-                    <option value="🍳 Breakfast">🍳 Breakfast</option>
-                    <option value="🍲 Lunch">🍲 Lunch</option>
-                    <option value="🥜 Snack">🥜 Snack</option>
-                    <option value="🥗 Dinner">🥗 Dinner</option>
+                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
+                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
+                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
+                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
                 </select>
-                <input type="text" id="add-text-Diabetic" placeholder="e.g. Moong dal soup with sprouts">
-                <button class="btn-add-meal" onclick="addCustomMeal('Diabetic')">+ Add</button>
+                <input type="text" id="add-text-Diabetic"
+                    placeholder="e.g. Moong dal soup with sprouts / मूग डाळ सूप">
+                <button class="btn-add-meal" onclick="addCustomMeal('Diabetic')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
             </div>
             <div class="custom-meals-list" id="custom-list-Diabetic"></div>
         </div>
@@ -666,9 +845,13 @@
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Diabetic Care">
             {% if patient.diet_goal == 'Diabetic Care' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            <button type="button" class="select-diet-btn is-active-btn" disabled>
+                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
+            </button>
             {% else %}
-            <button type="submit" class="select-diet-btn">🎯 Select Diabetic Care Plan</button>
+            <button type="submit" class="select-diet-btn">
+                🎯 <span class="lang-en">Select Diabetic Care Plan</span><span class="lang-mr">मधुमेह काळजी योजना निवडा</span>
+            </button>
             {% endif %}
         </form>
     </div>
@@ -678,11 +861,19 @@
     ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Heart">
         <div class="meal-card-header">
-            <div class="meal-card-title">❤️ Heart Healthy Diet Plan</div>
-            <span class="meal-badge badge-heart">Low Sodium</span>
+            <div class="meal-card-title">
+                ❤️
+                <span class="lang-en">Heart Healthy Diet Plan</span>
+                <span class="lang-mr">हृदय निरोगी आहार योजना</span>
+            </div>
+            <span class="meal-badge badge-heart">
+                <span class="lang-en">Low Sodium</span>
+                <span class="lang-mr">कमी सोडियम</span>
+            </span>
         </div>
         <div class="meal-description">
-            Reduces stress on blood vessels by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.
+            <span class="lang-en">Reduces stress on blood vessels by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.</span>
+            <span class="lang-mr">सोडियम, कोलेस्टेरॉल आणि संतृप्त ट्रान्स-फॅट मर्यादित करून रक्तवाहिन्यांवरील ताण कमी करते. पोटॅशियम, मॅग्नेशियम आणि ओमेगा-३ फॅटी ऍसिडवर भर.</span>
         </div>
 
         <div class="veg-content">
@@ -759,11 +950,19 @@
     ══════════════════════════════════════ -->
     <div class="meal-card" id="diet-Balanced">
         <div class="meal-card-header">
-            <div class="meal-card-title">🍽️ Balanced Indian Diet Plan</div>
-            <span class="meal-badge badge-balanced">General Wellness</span>
+            <div class="meal-card-title">
+                🍽️
+                <span class="lang-en">Balanced Indian Diet Plan</span>
+                <span class="lang-mr">संतुलित भारतीय आहार योजना</span>
+            </div>
+            <span class="meal-badge badge-balanced">
+                <span class="lang-en">General Wellness</span>
+                <span class="lang-mr">सामान्य आरोग्य</span>
+            </span>
         </div>
         <div class="meal-description">
-            A balanced approach using traditional Indian cooking and ingredients. Provides a wholesome mix of macro and micro nutrients for general health maintenance.
+            <span class="lang-en">A balanced approach using traditional Indian cooking and ingredients. Provides a wholesome mix of macro and micro nutrients for general health maintenance.</span>
+            <span class="lang-mr">पारंपारिक भारतीय स्वयंपाक आणि घटकांचा वापर करून संतुलित दृष्टिकोन. सामान्य आरोग्य राखण्यासाठी मॅक्रो आणि मायक्रो पोषणद्रव्यांचे सर्वसमावेशक मिश्रण.</span>
         </div>
 
         <div class="veg-content">
@@ -811,16 +1010,17 @@
         </div>
 
         <div class="add-meal-section">
-            <h6>➕ Add Your Own Meal</h6>
+            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
             <div class="add-meal-row">
                 <select id="add-type-Balanced">
-                    <option value="🍳 Breakfast">🍳 Breakfast</option>
-                    <option value="🍲 Lunch">🍲 Lunch</option>
-                    <option value="🥜 Snack">🥜 Snack</option>
-                    <option value="🥗 Dinner">🥗 Dinner</option>
+                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
+                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
+                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
+                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
                 </select>
-                <input type="text" id="add-text-Balanced" placeholder="e.g. 1 bowl curd with banana">
-                <button class="btn-add-meal" onclick="addCustomMeal('Balanced')">+ Add</button>
+                <input type="text" id="add-text-Balanced"
+                    placeholder="e.g. 1 bowl curd with banana / दही आणि केळी">
+                <button class="btn-add-meal" onclick="addCustomMeal('Balanced')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
             </div>
             <div class="custom-meals-list" id="custom-list-Balanced"></div>
         </div>
@@ -828,9 +1028,13 @@
         <form method="POST" action="{{ url_for('diet_plans') }}">
             <input type="hidden" name="diet_goal" value="Balanced">
             {% if patient.diet_goal == 'Balanced' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
+            <button type="button" class="select-diet-btn is-active-btn" disabled>
+                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
+            </button>
             {% else %}
-            <button type="submit" class="select-diet-btn">🎯 Select Balanced Plan</button>
+            <button type="submit" class="select-diet-btn">
+                🎯 <span class="lang-en">Select Balanced Plan</span><span class="lang-mr">संतुलित योजना निवडा</span>
+            </button>
             {% endif %}
         </form>
     </div>
@@ -955,6 +1159,20 @@ async function generateAIPlan() {
     } catch(e) { el.innerHTML = '<p>Failed to generate plan.</p>'; }
 }
 
+// ── Page-level Theme + Lang controls ──
+function togglePageTheme() {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark-theme');
+    localStorage.setItem('health-theme-pref', isDark ? 'dark' : 'light');
+    const icon = document.getElementById('page-theme-icon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+function togglePageLang() {
+    const html = document.documentElement;
+    const isEN = html.classList.contains('show-en');
+    if (typeof globalSwitchLanguage === 'function') globalSwitchLanguage(isEN ? 'mr' : 'en');
+}
+
 // ── Auto-show correct tab on load ──
 document.addEventListener('DOMContentLoaded', () => {
     const activeGoal = "{{ patient.diet_goal }}";
@@ -966,6 +1184,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start in Veg mode
     setDietPref('veg');
+
+    // Sync theme button icon
+    const isDark = document.documentElement.classList.contains('dark-theme');
+    const icon = document.getElementById('page-theme-icon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
 });
 </script>
 {% endblock %}

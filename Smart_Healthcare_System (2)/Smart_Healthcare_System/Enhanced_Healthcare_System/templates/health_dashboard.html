@@ -19,18 +19,86 @@
 .quick-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;}
 .ql{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px;text-align:center;font-weight:700;font-size:.82rem;color:#1E40AF;text-decoration:none;transition:.15s;}
 .ql:hover{background:#DBEAFE;transform:translateY(-2px);color:#1E40AF;text-decoration:none;}
+
+/* Lang Switch Slider Toggle */
+.lang-toggle-wrapper {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 30px;
+  padding: 4px;
+  position: relative;
+  user-select: none;
+  min-width: 170px;
+  height: 40px;
+  align-items: center;
+}
+.lang-toggle-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  border-radius: 26px;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.3s ease;
+  color: rgba(255, 255, 255, 0.8);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lang-toggle-btn.active {
+  color: #0066CC;
+}
+.lang-toggle-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: #fff;
+  border-radius: 26px;
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.lang-toggle-wrapper.lang-mr .lang-toggle-slider {
+  transform: translateX(100%);
+}
+
+#dashboard-page.show-en .lang-mr {
+  display: none !important;
+}
+#dashboard-page.show-mr .lang-en {
+  display: none !important;
+}
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="dashboard-page" class="show-en">
+
 <div class="dash-hero">
     <div>
-        <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:4px;">📊 Health Dashboard</h2>
-        <p style="margin:0;opacity:.9;font-size:.9rem;">Your daily health overview — {{ today }}</p>
+        <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:4px;" class="lang-en">📊 Health Dashboard</h2>
+        <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:4px;" class="lang-mr">📊 आरोग्य डॅशबोर्ड</h2>
+        <p style="margin:0;opacity:.9;font-size:.9rem;" class="lang-en">Your daily health overview — {{ today }}</p>
+        <p style="margin:0;opacity:.9;font-size:.9rem;" class="lang-mr">तुमचे दैनिक आरोग्य विहंगावलोकन — {{ today }}</p>
     </div>
-    <div class="score-ring">
-        <div class="num">{{ health_score }}</div>
-        <div style="font-size:.65rem;opacity:.85;text-transform:uppercase;">Health Score</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div class="lang-toggle-wrapper" id="langToggleWrapper">
+            <div class="lang-toggle-slider"></div>
+            <button id="lang-btn-en" class="lang-toggle-btn active" onclick="switchLanguage('en')">English</button>
+            <button id="lang-btn-mr" class="lang-toggle-btn" onclick="switchLanguage('mr')">मराठी</button>
+        </div>
+        <div class="score-ring">
+            <div class="num">{{ health_score }}</div>
+            <div style="font-size:.65rem;opacity:.85;text-transform:uppercase;" class="lang-en">Health Score</div>
+            <div style="font-size:.65rem;opacity:.85;text-transform:uppercase;" class="lang-mr">आरोग्य स्कोअर</div>
+        </div>
     </div>
 </div>
 
@@ -38,87 +106,167 @@
     <div class="stat-card">
         <div class="ico">💧</div>
         <div class="val">{{ today_wellness.water_glasses if today_wellness else 0 }}/8</div>
-        <div class="lbl">Water Glasses</div>
+        <div class="lbl lang-en">Water Glasses</div>
+        <div class="lbl lang-mr">पाण्याचे ग्लास</div>
     </div>
     <div class="stat-card">
         <div class="ico">👟</div>
         <div class="val">{{ "{:,}".format(today_wellness.steps) if today_wellness else 0 }}</div>
-        <div class="lbl">Steps Today</div>
+        <div class="lbl lang-en">Steps Today</div>
+        <div class="lbl lang-mr">आजची पावले</div>
     </div>
     <div class="stat-card">
         <div class="ico">😴</div>
         <div class="val">{{ today_wellness.sleep_hours if today_wellness else 0 }}h</div>
-        <div class="lbl">Sleep</div>
+        <div class="lbl lang-en">Sleep</div>
+        <div class="lbl lang-mr">झोप</div>
     </div>
     <div class="stat-card">
         <div class="ico">💊</div>
         <div class="val">{{ med_taken }}/{{ med_total }}</div>
-        <div class="lbl">Meds Taken</div>
+        <div class="lbl lang-en">Meds Taken</div>
+        <div class="lbl lang-mr">घेतलेली औषधे</div>
     </div>
     <div class="stat-card">
         <div class="ico">🍽️</div>
         <div class="val">{{ food_calories }}</div>
-        <div class="lbl">Calories Today</div>
+        <div class="lbl lang-en">Calories Today</div>
+        <div class="lbl lang-mr">आजच्या कॅलरीज</div>
     </div>
     <div class="stat-card">
         <div class="ico">📓</div>
         <div class="val">{{ symptom_count }}</div>
-        <div class="lbl">Journal Entries</div>
+        <div class="lbl lang-en">Journal Entries</div>
+        <div class="lbl lang-mr">लक्षण नोंदवही</div>
     </div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
     <div class="panel">
-        <h4><i class="fas fa-chart-line"></i> 7-Day Activity</h4>
+        <h4 class="lang-en"><i class="fas fa-chart-line"></i> 7-Day Activity</h4>
+        <h4 class="lang-mr"><i class="fas fa-chart-line"></i> ७-दिवसांची हालचाल</h4>
         {% if wellness_week %}
         {% for w in wellness_week %}
         <div class="bar-row">
             <span style="width:70px;font-weight:600;">{{ w.log_date[5:] }}</span>
             <div class="bar-track"><div class="bar-fill" style="width:{% if w.steps // 100 > 100 %}100{% else %}{{ w.steps // 100 }}{% endif %}%;"></div></div>
-            <span style="width:60px;text-align:right;">{{ w.steps }} steps</span>
+            <span style="width:60px;text-align:right;" class="lang-en">{{ w.steps }} steps</span>
+            <span style="width:60px;text-align:right;" class="lang-mr">{{ w.steps }} पावले</span>
         </div>
         {% endfor %}
         {% else %}
-        <p style="color:#6B7280;font-size:.88rem;">No wellness data yet. <a href="{{ url_for('wellness') }}">Log today →</a></p>
+        <p style="color:#6B7280;font-size:.88rem;" class="lang-en">No wellness data yet. <a href="{{ url_for('wellness') }}">Log today →</a></p>
+        <p style="color:#6B7280;font-size:.88rem;" class="lang-mr">अद्याप डेटा नाही. <a href="{{ url_for('wellness') }}">आजची नोंद करा →</a></p>
         {% endif %}
     </div>
 
     <div class="panel">
-        <h4><i class="fas fa-heartbeat"></i> Latest Vitals</h4>
+        <h4 class="lang-en"><i class="fas fa-heartbeat"></i> Latest Vitals</h4>
+        <h4 class="lang-mr"><i class="fas fa-heartbeat"></i> नवीनतम वाइटल्स</h4>
         {% if latest_vitals %}
-        <p><strong>BP:</strong> {{ latest_vitals.systolic }}/{{ latest_vitals.diastolic }} mmHg</p>
-        <p><strong>Heart Rate:</strong> {{ latest_vitals.heart_rate or '—' }} bpm</p>
-        <p><strong>Weight:</strong> {{ latest_vitals.weight or '—' }} kg</p>
-        <p><strong>Blood Sugar:</strong> {{ latest_vitals.blood_sugar or '—' }} mg/dL</p>
+        <p><strong class="lang-en">BP:</strong><strong class="lang-mr">रक्तदाब:</strong> {{ latest_vitals.systolic }}/{{ latest_vitals.diastolic }} mmHg</p>
+        <p><strong class="lang-en">Heart Rate:</strong><strong class="lang-mr">हृदय गती:</strong> {{ latest_vitals.heart_rate or '—' }} bpm</p>
+        <p><strong class="lang-en">Weight:</strong><strong class="lang-mr">वजन:</strong> {{ latest_vitals.weight or '—' }} kg</p>
+        <p><strong class="lang-en">Blood Sugar:</strong><strong class="lang-mr">रक्तातील साखर:</strong> {{ latest_vitals.blood_sugar or '—' }} mg/dL</p>
         {% else %}
-        <p style="color:#6B7280;font-size:.88rem;">No vitals logged. <a href="{{ url_for('vitals') }}">Add vitals →</a></p>
+        <p style="color:#6B7280;font-size:.88rem;" class="lang-en">No vitals logged. <a href="{{ url_for('vitals') }}">Add vitals →</a></p>
+        <p style="color:#6B7280;font-size:.88rem;" class="lang-mr">अद्याप वाइटल्स नोंदवले नाहीत. <a href="{{ url_for('vitals') }}">वाइटल्स जोडा →</a></p>
         {% endif %}
     </div>
 </div>
 
 <div class="panel">
-    <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+    <h4 class="lang-en"><i class="fas fa-bolt"></i> Quick Actions</h4>
+    <h4 class="lang-mr"><i class="fas fa-bolt"></i> जलद कृती</h4>
     <div class="quick-links">
-        <a class="ql" href="{{ url_for('symptom_assessment') }}">🩺 Assess Symptoms</a>
-        <a class="ql" href="{{ url_for('symptom_journal') }}">📓 Symptom Journal</a>
-        <a class="ql" href="{{ url_for('diet_plans') }}">🥗 Diet Plans</a>
-        <a class="ql" href="{{ url_for('reminders') }}">💊 Medicine Alarms</a>
-        <a class="ql" href="{{ url_for('ai_assistant') }}">🤖 AI Assistant</a>
-        <a class="ql" href="{{ url_for('export_health_report') }}">📄 Export PDF</a>
-        <a class="ql" href="{{ url_for('wellness') }}">🌿 Log Wellness</a>
-        <a class="ql" href="{{ url_for('emergency') }}">🚨 Emergency SOS</a>
+        <a class="ql" href="{{ url_for('symptom_assessment') }}">
+            <span class="lang-en">🩺 Assess Symptoms</span>
+            <span class="lang-mr">🩺 लक्षणे तपासा</span>
+        </a>
+        <a class="ql" href="{{ url_for('symptom_journal') }}">
+            <span class="lang-en">📓 Symptom Journal</span>
+            <span class="lang-mr">📓 लक्षण नोंदवही</span>
+        </a>
+        <a class="ql" href="{{ url_for('diet_plans') }}">
+            <span class="lang-en">🥗 Diet Plans</span>
+            <span class="lang-mr">🥗 आहार योजना</span>
+        </a>
+        <a class="ql" href="{{ url_for('reminders') }}">
+            <span class="lang-en">💊 Medicine Alarms</span>
+            <span class="lang-mr">💊 औषध स्मरणपत्रे</span>
+        </a>
+        <a class="ql" href="{{ url_for('ai_assistant') }}">
+            <span class="lang-en">🤖 AI Assistant</span>
+            <span class="lang-mr">🤖 एआय सहाय्यक</span>
+        </a>
+        <a class="ql" href="{{ url_for('export_health_report') }}">
+            <span class="lang-en">📄 Export PDF</span>
+            <span class="lang-mr">📄 पीडीएफ अहवाल</span>
+        </a>
+        <a class="ql" href="{{ url_for('wellness') }}">
+            <span class="lang-en">🌿 Log Wellness</span>
+            <span class="lang-mr">🌿 निरोगीपणा नोंदवा</span>
+        </a>
+        <a class="ql" href="{{ url_for('emergency') }}">
+            <span class="lang-en">🚨 Emergency SOS</span>
+            <span class="lang-mr">🚨 आणीबाणी मदत (SOS)</span>
+        </a>
     </div>
 </div>
 
 {% if recent_predictions %}
 <div class="panel">
-    <h4><i class="fas fa-history"></i> Recent Assessments</h4>
+    <h4 class="lang-en"><i class="fas fa-history"></i> Recent Assessments</h4>
+    <h4 class="lang-mr"><i class="fas fa-history"></i> अलीकडील आरोग्य तपासणी</h4>
     {% for p in recent_predictions %}
     <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:.88rem;">
-        <span><strong>{{ p.disease }}</strong> — {{ p.severity }}</span>
+        <span>
+            <strong>{{ p.disease }}</strong> — 
+            <span class="lang-en">{{ p.severity }}</span>
+            <span class="lang-mr">
+                {% if 'LOW' in p.severity %}कमी 🟢{% elif 'MEDIUM' in p.severity %}मध्यम 🟡{% else %}उच्च 🔴{% endif %}
+            </span>
+        </span>
         <span style="color:#6B7280;">{{ p.timestamp[:10] }}</span>
     </div>
     {% endfor %}
 </div>
 {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchLanguage(lang) {
+  const container = document.getElementById('dashboard-page');
+  const toggleWrapper = document.getElementById('langToggleWrapper');
+  const btnEn = document.getElementById('lang-btn-en');
+  const btnMr = document.getElementById('lang-btn-mr');
+  
+  if (!container || !toggleWrapper || !btnEn || !btnMr) return;
+
+  if (lang === 'mr') {
+    container.classList.remove('show-en');
+    container.classList.add('show-mr');
+    toggleWrapper.classList.add('lang-mr');
+    btnMr.classList.add('active');
+    btnEn.classList.remove('active');
+    localStorage.setItem('health-lang-pref', 'mr');
+  } else {
+    container.classList.remove('show-mr');
+    container.classList.add('show-en');
+    toggleWrapper.classList.remove('lang-mr');
+    btnEn.classList.add('active');
+    btnMr.classList.remove('active');
+    localStorage.setItem('health-lang-pref', 'en');
+  }
+}
+
+// Initialize saved preference on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const savedLang = localStorage.getItem('health-lang-pref') || 'en';
+  switchLanguage(savedLang);
+});
+</script>
 {% endblock %}

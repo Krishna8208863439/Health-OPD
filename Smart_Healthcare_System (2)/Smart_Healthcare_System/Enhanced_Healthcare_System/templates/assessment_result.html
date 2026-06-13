@@ -1,17 +1,79 @@
 {% extends "base.html" %}
 {% block title %}Assessment Result - HealthCare Plus{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── CSS Variable Aliases for this page ── */
+:root {
+  --primary: #0066CC;
+  --primary-bg: #EFF6FF;
+  --success: #28A745;
+  --success-bg: #D4EDDA;
+  --warning: #856404;
+  --warning-bg: #FFF3CD;
+  --danger: #DC3545;
+  --danger-bg: #F8D7DA;
+  --dark: #1F2937;
+  --bg-light: #F9FAFB;
+}
+html.dark-theme {
+  --primary-bg: #1a2f4a !important;
+  --success-bg: #1b3a24 !important;
+  --warning-bg: #3a2f0a !important;
+  --danger-bg: #3a1a1a !important;
+  --bg-light: #161b22 !important;
+  --dark: #c9d1d9 !important;
+}
+html.dark-theme .card {
+  background-color: #161b22 !important;
+  color: #c9d1d9 !important;
+  border-color: #30363d !important;
+}
+html.dark-theme [style*="background: white"],
+html.dark-theme [style*="background:white"],
+html.dark-theme [style*="background:#fff"],
+html.dark-theme [style*="background: #fff"] {
+  background-color: #161b22 !important;
+  color: #c9d1d9 !important;
+  border-color: #30363d !important;
+}
+html.dark-theme [style*="background:#ECFDF5"],
+html.dark-theme [style*="background: #ECFDF5"] {
+  background-color: #1b3a24 !important;
+  border-color: #2d6a3f !important;
+}
+html.dark-theme [style*="color:#065F46"] { color: #4ade80 !important; }
+html.dark-theme [style*="color: #333"] { color: #c9d1d9 !important; }
+html.dark-theme .alt-card { background-color: #1f2937 !important; }
+html.dark-theme #epharmacy-modal > div {
+  background: #1f2937 !important;
+  color: #c9d1d9 !important;
+}
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .75rem; font-weight: 600; margin: 2px; }
+.tag-gov { background: #DBEAFE; color: #1E40AF; }
+.tag-priv { background: #D4EDDA; color: #155724; }
+.tag-spec { background: #EDE9FE; color: #5B21B6; }
+.map-btn { display: inline-flex; align-items: center; gap: 6px; background: #1a73e8; color: #fff; border-radius: 8px; font-size: .8rem; font-weight: 600; text-decoration: none; padding: 8px 14px; }
+.action-bar { display: flex; flex-wrap: wrap; gap: 10px; }
+html.dark-theme .tag-gov { background: #1e3a5f; color: #93c5fd; }
+html.dark-theme .tag-priv { background: #1b3a24; color: #86efac; }
+html.dark-theme .tag-spec { background: #3b2f6e; color: #c4b5fd; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="max-width: 800px; margin: 0 auto;">
 
     <!-- Disclaimer -->
     <div style="background: var(--warning-bg); border-left: 4px solid var(--warning); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.88rem; color: var(--warning); line-height: 1.5;">
-        [!] <strong>Medical Disclaimer:</strong> {{ health_disclaimer or 'Consult a healthcare professional before taking any medication. Call 108 for emergencies.' }}
+        [!] <strong><span class="lang-en">Medical Disclaimer:</span><span class="lang-mr">वैद्यकीय अस्वीकरण:</span></strong> 
+        <span class="lang-en">{{ health_disclaimer or 'Consult a healthcare professional before taking any medication. Call 108 for emergencies.' }}</span>
+        <span class="lang-mr">कोणतेही औषध घेण्यापूर्वी वैद्यकीय तज्ज्ञांचा सल्ला घ्या. आणीबाणीसाठी १०८ वर कॉल करा.</span>
     </div>
 
     {% if emergency_warnings %}
     <div style="background:#FEE2E2;border:2px solid #EF4444;border-radius:12px;padding:16px;margin-bottom:20px;">
-        <h5 style="color:#991B1B;font-weight:800;margin-bottom:8px;">🚨 Emergency Warnings</h5>
+        <h5 style="color:#991B1B;font-weight:800;margin-bottom:8px;">🚨 <span class="lang-en">Emergency Warnings</span><span class="lang-mr">आणीबाणी चेतावणी</span></h5>
         {% for w in emergency_warnings %}
         <p style="color:#7F1D1D;font-size:.88rem;margin:4px 0;">{{ w }}</p>
         {% endfor %}
@@ -20,8 +82,8 @@
 
     {% if nlp_input %}
     <div style="background:#EFF6FF;border-radius:12px;padding:16px;margin-bottom:20px;font-size:.88rem;">
-        <strong>Your description:</strong> "{{ nlp_input }}"
-        {% if parsed_labels %}<br><strong>Identified:</strong> {{ parsed_labels|join(', ') }}{% endif %}
+        <strong><span class="lang-en">Your description:</span><span class="lang-mr">तुमचे वर्णन:</span></strong> "{{ nlp_input }}"
+        {% if parsed_labels %}<br><strong><span class="lang-en">Identified:</span><span class="lang-mr">ओळखलेले लक्षण:</span></strong> {{ parsed_labels|join(', ') }}{% endif %}
     </div>
     {% endif %}
 
@@ -29,10 +91,18 @@
     <div class="result-hero" style="background: linear-gradient(135deg, {{top_result.color}} 0%, {{top_result.color}}cc 100%); color: #fff; border-radius: 20px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-lg);">
         <div class="hero-top" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 240px;">
-                <div style="font-size: 0.85rem; opacity: 0.85; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Most Likely Diagnosis:</div>
+                <div style="font-size: 0.85rem; opacity: 0.85; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <span class="lang-en">Most Likely Diagnosis:</span>
+                    <span class="lang-mr">सर्वात संभाव्य निदान:</span>
+                </div>
                 <h2 class="disease-name" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; line-height: 1.2;">{{ top_result.disease }}</h2>
                 <p class="disease-desc" style="font-size: 0.95rem; opacity: 0.95; line-height: 1.5; margin-bottom: 12px;">{{ top_result.description }}</p>
-                <span style="display: inline-block; padding: 4px 14px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 0.85rem; font-weight: 700;">{{ severity }}</span>
+                <span style="display: inline-block; padding: 4px 14px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
+                    <span class="lang-en">{{ severity }}</span>
+                    <span class="lang-mr">
+                        {% if 'LOW' in severity %}कमी 🟢{% elif 'MEDIUM' in severity %}मध्यम 🟡{% else %}उच्च 🔴{% endif %}
+                    </span>
+                </span>
                 <div style="margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px;">
                     {% for s in top_result.matched_strong %}
                     <span class="sym-tag-matched" style="background: rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600;">[x] {{s.replace('_',' ').title()}}</span>
@@ -44,7 +114,10 @@
             </div>
             <div class="confidence-ring" style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid rgba(255, 255, 255, 0.4); margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                 <div class="pct" style="font-size: 2.2rem; font-weight: 800;">{{ top_result.confidence_pct }}%</div>
-                <div class="lbl" style="font-size: 0.75rem; opacity: 0.85; text-transform: uppercase;">Match</div>
+                <div class="lbl" style="font-size: 0.75rem; opacity: 0.85; text-transform: uppercase;">
+                    <span class="lang-en">Match</span>
+                    <span class="lang-mr">जुळणी</span>
+                </div>
             </div>
         </div>
     </div>
@@ -53,9 +126,12 @@
     {% if alt_results %}
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-stethoscope"></i> Differential Diagnosis
+            <i class="fas fa-stethoscope"></i> <span class="lang-en">Differential Diagnosis</span><span class="lang-mr">इतर संभाव्य निदान</span>
         </h4>
-        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 16px;">Other possible conditions ranked by symptom match:</p>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 16px;">
+            <span class="lang-en">Other possible conditions ranked by symptom match:</span>
+            <span class="lang-mr">लक्षण जुळणीनुसार क्रमवारी लावलेले इतर संभाव्य आजार:</span>
+        </p>
         {% for r in alt_results %}
         <div class="alt-card" style="border-left: 4px solid {{ r.color }} !important; background: var(--bg-light); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 10px; box-shadow: var(--shadow);">
             <div style="flex: 1; min-width: 120px;">
@@ -76,58 +152,78 @@
     <!-- -- MEDICINES -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-pills"></i> Recommended Medicines
+            <i class="fas fa-pills"></i> <span class="lang-en">Recommended Medicines</span><span class="lang-mr">शिफारस केलेली औषधे</span>
         </h4>
 
         {% if medicines.PRIMARY %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;"> Primary Treatment (Prescription)</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;">
+            <span class="lang-en">Primary Treatment (Prescription)</span>
+            <span class="lang-mr">मुख्य उपचार (प्रिस्क्रिप्शन आवश्यक)</span>
+        </div>
         {% for m in medicines.PRIMARY %}
         <div class="med-item {% if '[!]' in m or 'AVOID' in m or 'EMERGENCY' in m or 'SURGERY' in m %}warning{% endif %}" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; border-left: 4px solid var(--primary); background: var(--primary-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">
             <span style="flex:1;">{{ m }}</span>
             {% if 'Prescription' not in m and '[!]' not in m %}
-            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')"><i class="fas fa-cart-plus"></i> Order OTC</button>
+            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')">
+                <i class="fas fa-cart-plus"></i> <span class="lang-en">Order OTC</span><span class="lang-mr">ऑर्डर करा</span>
+            </button>
             {% else %}
-            <button class="btn btn-sm" style="background:#6B7280; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" disabled title="Prescription Required"><i class="fas fa-lock"></i> Rx Only</button>
+            <button class="btn btn-sm" style="background:#6B7280; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" disabled title="Prescription Required">
+                <i class="fas fa-lock"></i> <span class="lang-en">Rx Only</span><span class="lang-mr">प्रिस्क्रिप्शन हवी</span>
+            </button>
             {% endif %}
         </div>
         {% endfor %}
         {% endif %}
 
         {% if medicines.SECONDARY %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;"> Supporting Medications</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;">
+            <span class="lang-en">Supporting Medications</span>
+            <span class="lang-mr">सहाय्यक औषधे</span>
+        </div>
         {% for m in medicines.SECONDARY %}
         <div class="med-item" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 14px; border-left: 4px solid var(--success); background: var(--success-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">
             <span style="flex:1;">{{ m }}</span>
-            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')"><i class="fas fa-cart-plus"></i> Order OTC</button>
+            <button class="btn btn-sm" style="background:#10B981; color:white; font-size:0.75rem; padding:4px 8px; margin-left:10px;" onclick="addToCart('{{ m|escape }}')">
+                <i class="fas fa-cart-plus"></i> <span class="lang-en">Order OTC</span><span class="lang-mr">ऑर्डर करा</span>
+            </button>
         </div>
         {% endfor %}
         {% endif %}
 
         {% if medicines.HOME_REMEDIES %}
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;"> Home Care & Remedies</div>
+        <div style="font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px;">
+            <span class="lang-en">Home Care &amp; Remedies</span>
+            <span class="lang-mr">घरगुती काळजी आणि उपचार</span>
+        </div>
         {% for m in medicines.HOME_REMEDIES %}
         <div class="med-item" style="padding: 10px 14px; border-left: 4px solid var(--warning); background: var(--warning-bg); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; line-height: 1.4;">{{ m }}</div>
         {% endfor %}
         {% endif %}
 
         <div style="background: var(--danger-bg); border-radius: 12px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--border);">
-            <div style="font-size: 1.5rem; line-height: 1;">[Hospital]</div>
-            <p style="font-size: 0.88rem; line-height: 1.5; color: var(--dark); margin: 0;"><strong>When to see a doctor:</strong><br>{{ medicines.WHEN_TO_SEE_DOCTOR }}</p>
+            <div style="font-size: 1.5rem; line-height: 1;">🏥</div>
+            <p style="font-size: 0.88rem; line-height: 1.5; color: var(--dark); margin: 0;">
+                <strong><span class="lang-en">When to see a doctor:</span><span class="lang-mr">डॉक्टरांचा सल्ला केव्हा घ्यावा:</span></strong><br>{{ medicines.WHEN_TO_SEE_DOCTOR }}
+            </p>
         </div>
     </div>
 
     {% if otc_medicines %}
     <div class="card" style="margin-bottom: 24px; border: 2px solid #10B981;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: #059669; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-shopping-basket"></i> Suggested OTC Medicines
+            <i class="fas fa-shopping-basket"></i> <span class="lang-en">Suggested OTC Medicines</span><span class="lang-mr">सुचवलेली ओटीसी औषधे</span>
         </h4>
-        <p style="font-size:.82rem;color:#6B7280;margin-bottom:16px;">Over-the-counter options. Always consult a pharmacist or doctor first.</p>
+        <p style="font-size:.82rem;color:#6B7280;margin-bottom:16px;">
+            <span class="lang-en">Over-the-counter options. Always consult a pharmacist or doctor first.</span>
+            <span class="lang-mr">काउंटरवर मिळणारी औषधे. औषधे घेण्यापूर्वी नेहमी डॉक्टर किंवा औषध विक्रेत्याचा सल्ला घ्या.</span>
+        </p>
         {% for med in otc_medicines %}
         <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:16px;margin-bottom:12px;">
             <div style="font-weight:800;font-size:1rem;color:#065F46;margin-bottom:8px;">💊 {{ med.name }}</div>
-            <p style="font-size:.85rem;margin:4px 0;"><strong>Usage:</strong> {{ med.usage }}</p>
-            <p style="font-size:.85rem;margin:4px 0;"><strong>Dosage:</strong> {{ med.dosage }}</p>
-            <p style="font-size:.85rem;margin:4px 0;color:#6B7280;"><strong>Side Effects:</strong> {{ med.side_effects }}</p>
+            <p style="font-size:.85rem;margin:4px 0;"><strong><span class="lang-en">Usage:</span><span class="lang-mr">वापर:</span></strong> {{ med.usage }}</p>
+            <p style="font-size:.85rem;margin:4px 0;"><strong><span class="lang-en">Dosage:</span><span class="lang-mr">डोस:</span></strong> {{ med.dosage }}</p>
+            <p style="font-size:.85rem;margin:4px 0;color:#6B7280;"><strong><span class="lang-en">Side Effects:</span><span class="lang-mr">दुष्परिणाम:</span></strong> {{ med.side_effects }}</p>
         </div>
         {% endfor %}
     </div>
@@ -137,7 +233,7 @@
     {% if hospitals %}
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-hospital"></i> Recommended Hospitals Near You
+            <i class="fas fa-hospital"></i> <span class="lang-en">Recommended Hospitals Near You</span><span class="lang-mr">शिफारस केलेली जवळची रुग्णालये</span>
         </h4>
         {% for h in hospitals %}
         <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: all 0.3s;">
@@ -145,7 +241,10 @@
                 <div style="flex: 1; min-width: 260px;">
                     <h5 style="margin-bottom: 8px; font-weight: 700; color: var(--primary);">{{ h.name }}</h5>
                     <div style="margin-bottom: 10px;">
-                        <span class="tag {% if h.type == 'Government' %}tag-gov{% else %}tag-priv{% endif %}">{{ h.type }}</span>
+                        <span class="tag {% if h.type == 'Government' %}tag-gov{% else %}tag-priv{% endif %}">
+                            <span class="lang-en">{{ h.type }}</span>
+                            <span class="lang-mr">{% if h.type == 'Government' %}सरकारी{% else %}खाजगी{% endif %}</span>
+                        </span>
                         {% for sp in h.specialty[:2] %}
                         <span class="tag tag-spec">{{ sp }}</span>
                         {% endfor %}
@@ -153,17 +252,17 @@
                     <p style="margin: 8px 0 4px 0; font-size: 0.88rem; color: var(--dark);"><i class="fas fa-map-marker-alt" style="color: var(--muted); margin-right: 6px;"></i> {{ h.address }}</p>
                     <p style="margin: 4px 0; font-size: 0.88rem; color: var(--dark);"><i class="fas fa-phone" style="color: var(--muted); margin-right: 6px;"></i> {{ h.phone }}</p>
                     <p style="margin: 4px 0; font-size: 0.88rem; color: var(--dark);">
-                        <i class="fas fa-route" style="color: var(--muted); margin-right: 6px;"></i> {{ h.distance }} km away
+                        <i class="fas fa-route" style="color: var(--muted); margin-right: 6px;"></i> {{ h.distance }} <span class="lang-en">km away</span><span class="lang-mr">किमी लांब</span>
                         <i class="fas fa-star" style="color: #F59E0B; margin-left: 14px; margin-right: 4px;"></i> {{ h.rating }}/5.0
                     </p>
                 </div>
             </div>
             <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
                 <a href="{{ get_maps_url(h) }}" target="_blank" class="map-btn" style="margin: 0; padding: 6px 12px;">
-                    <i class="fas fa-map-marked-alt"></i> View on Maps
+                    <i class="fas fa-map-marked-alt"></i> <span class="lang-en">View on Maps</span><span class="lang-mr">नकाशा पहा</span>
                 </a>
                 <a href="{{ get_directions_url(h) }}" target="_blank" class="map-btn" style="margin: 0; padding: 6px 12px; background: #34A853;">
-                    <i class="fas fa-directions"></i> Directions
+                    <i class="fas fa-directions"></i> <span class="lang-en">Directions</span><span class="lang-mr">दिशा मिळवा</span>
                 </a>
             </div>
         </div>
@@ -174,24 +273,24 @@
     <!-- -- DOCTOR INFO -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-user-md"></i> Assigned Doctor Advice
+            <i class="fas fa-user-md"></i> <span class="lang-en">Assigned Doctor Advice</span><span class="lang-mr">नेमलेल्या डॉक्टरांचा सल्ला</span>
         </h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px;">
             <div style="font-size: 0.9rem;">
-                <strong>Doctor Name:</strong><br>
+                <strong><span class="lang-en">Doctor Name:</span><span class="lang-mr">डॉक्टरांचे नाव:</span></strong><br>
                 <span style="color: var(--primary); font-weight: 600;">{{ doctor_name }}</span>
             </div>
             <div style="font-size: 0.9rem;">
-                <strong>Contact:</strong><br>
+                <strong><span class="lang-en">Contact:</span><span class="lang-mr">संपर्क:</span></strong><br>
                 {{ doctor_phone }}
             </div>
             <div style="font-size: 0.9rem;">
-                <strong>Specialty Needed:</strong><br>
+                <strong><span class="lang-en">Specialty Needed:</span><span class="lang-mr">विशेषज्ञता:</span></strong><br>
                 {{ specialty }}
             </div>
         </div>
         <div style="margin-top: 12px; background: var(--primary-bg); border-radius: 8px; padding: 12px 16px; font-size: 0.95rem; line-height: 1.5; color: var(--dark); border-left: 4px solid var(--primary);">
-            <strong>Advice Guidelines:</strong><br>
+            <strong><span class="lang-en">Advice Guidelines:</span><span class="lang-mr">मार्गदर्शन आणि सल्ला:</span></strong><br>
             <span style="font-size: 0.9rem; color: #333;">{{ doctor_advice }}</span>
         </div>
     </div>
@@ -199,13 +298,13 @@
     <!-- -- PATIENT INFO -- -->
     <div class="card" style="margin-bottom: 24px;">
         <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-user"></i> Patient Information
+            <i class="fas fa-user"></i> <span class="lang-en">Patient Information</span><span class="lang-mr">रुग्णाची माहिती</span>
         </h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
-            <div style="font-size: 0.92rem;"><strong>Name:</strong><br>{{ patient.full_name }}</div>
-            <div style="font-size: 0.92rem;"><strong>Age:</strong><br>{{ patient.age }} years</div>
-            <div style="font-size: 0.92rem;"><strong>City:</strong><br>{{ patient.city }}</div>
-            <div style="font-size: 0.92rem;"><strong>ID:</strong><br>PT-{{ '%06d'|format(patient.id) }}</div>
+            <div style="font-size: 0.92rem;"><strong><span class="lang-en">Name:</span><span class="lang-mr">नाव:</span></strong><br>{{ patient.full_name }}</div>
+            <div style="font-size: 0.92rem;"><strong><span class="lang-en">Age:</span><span class="lang-mr">वय:</span></strong><br>{{ patient.age }} <span class="lang-en">years</span><span class="lang-mr">वर्षे</span></div>
+            <div style="font-size: 0.92rem;"><strong><span class="lang-en">City:</span><span class="lang-mr">शहर:</span></strong><br>{{ patient.city }}</div>
+            <div style="font-size: 0.92rem;"><strong><span class="lang-en">ID:</span><span class="lang-mr">आयडी:</span></strong><br>PT-{{ '%06d'|format(patient.id) }}</div>
         </div>
     </div>
 
@@ -213,14 +312,14 @@
     <div class="action-bar" style="margin-top: 24px; gap: 10px; justify-content: center;">
         {% if pdf_file %}
         <a href="{{ url_for('download_pdf', filename=pdf_file) }}" class="btn btn-success btn-lg btn-pdf">
-            <i class="fas fa-download"></i> Download Report (PDF)
+            <i class="fas fa-download"></i> <span class="lang-en">Download Report (PDF)</span><span class="lang-mr">रिपोर्ट डाउनलोड करा (PDF)</span>
         </a>
         {% endif %}
         <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary btn-lg btn-new">
-            <i class="fas fa-redo"></i> New Assessment
+            <i class="fas fa-redo"></i> <span class="lang-en">New Assessment</span><span class="lang-mr">नवीन तपासणी</span>
         </a>
         <a href="{{ url_for('reminders') }}" class="btn btn-warning btn-lg btn-reminder">
-            <i class="fas fa-bell"></i> Set Alarm Reminder
+            <i class="fas fa-bell"></i> <span class="lang-en">Set Alarm Reminder</span><span class="lang-mr">औषध गजर लावा</span>
         </a>
     </div>
 

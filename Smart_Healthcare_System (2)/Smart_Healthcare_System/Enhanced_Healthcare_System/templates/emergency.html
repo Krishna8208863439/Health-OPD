@@ -5,316 +5,328 @@
 {% block extra_css %}
 <style>
     body { background: #f0f4f8 !important; }
+    html.dark-theme body { background: #0d1117 !important; }
 
+    /* ── FLOATING THEME + LANG TOGGLE ── */
+    .page-controls {
+        position: fixed; bottom: 24px; right: 20px; z-index: 9999;
+        display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    }
+    .ctrl-btn {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 16px; border-radius: 30px; border: none; cursor: pointer;
+        font-weight: 700; font-size: 0.82rem; box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+        transition: all 0.22s; white-space: nowrap;
+    }
+    .ctrl-btn.theme-ctrl { background: #1a202c; color: #fff; }
+    html.dark-theme .ctrl-btn.theme-ctrl { background: #f7fafc; color: #1a202c; }
+    .ctrl-btn.lang-ctrl { background: #E53E3E; color: #fff; }
+    .ctrl-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+    /* ── HERO ── */
     .emergency-hero {
         background: linear-gradient(135deg, #C53030 0%, #E53E3E 50%, #FC8181 100%);
-        color: white;
-        padding: 22px 30px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 8px 30px rgba(197,48,48,0.35);
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-        gap: 12px;
+        color: white; padding: 22px 30px;
+        display: flex; align-items: center; justify-content: space-between;
+        border-radius: 0 0 20px 20px; box-shadow: 0 8px 30px rgba(197,48,48,0.35);
+        margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
     }
-
-    .emergency-hero h2 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        margin: 0;
-    }
-
-    .emergency-hero p { margin: 4px 0 0; opacity: 0.92; font-size: 0.95rem; }
+    .emergency-hero h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
+    .emergency-hero p  { margin: 4px 0 0; opacity: 0.92; font-size: 0.95rem; }
 
     .pulse-badge {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255,255,255,0.2);
-        padding: 8px 18px;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: 0.9rem;
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.2); padding: 8px 18px;
+        border-radius: 30px; font-weight: 600; font-size: 0.9rem;
         backdrop-filter: blur(6px);
     }
-
     .pulse-dot {
-        width: 12px; height: 12px;
-        background: #fff; border-radius: 50%;
+        width: 12px; height: 12px; background: #fff; border-radius: 50%;
         animation: pulseDot 1.4s infinite;
     }
-
     @keyframes pulseDot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50%       { opacity: 0.4; transform: scale(0.7); }
+        0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.4; transform:scale(0.7); }
     }
 
     /* ── STATUS TRACKER ── */
     .status-tracker {
-        background: white;
-        border-radius: 20px;
-        padding: 28px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
+        background: white; border-radius: 20px; padding: 28px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px;
     }
+    html.dark-theme .status-tracker { background: #161b22 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    html.dark-theme .status-tracker h5 { color: #c9d1d9 !important; }
+    html.dark-theme .status-tracker p  { color: #8b949e !important; }
 
     .status-steps {
-        display: flex;
-        justify-content: space-between;
-        position: relative;
-        margin: 32px 0 14px;
+        display: flex; justify-content: space-between;
+        position: relative; margin: 32px 0 14px;
     }
-
     .status-steps::before {
-        content: '';
-        position: absolute;
-        top: 22px; left: 10%;
-        width: 80%; height: 3px;
-        background: #e2e8f0;
-        z-index: 0;
+        content: ''; position: absolute; top: 22px; left: 10%;
+        width: 80%; height: 3px; background: #e2e8f0; z-index: 0;
     }
-
+    html.dark-theme .status-steps::before { background: #30363d; }
     .status-bar-fill {
-        position: absolute;
-        top: 22px; left: 10%;
-        height: 3px;
+        position: absolute; top: 22px; left: 10%; height: 3px;
         background: linear-gradient(90deg, #E53E3E, #FC8181);
-        z-index: 1;
-        transition: width 1.5s ease;
-        width: 0%;
+        z-index: 1; transition: width 1.5s ease; width: 0%;
     }
-
-    .step {
-        display: flex; flex-direction: column; align-items: center;
-        position: relative; z-index: 2; flex: 1;
-    }
-
+    .step { display:flex; flex-direction:column; align-items:center; position:relative; z-index:2; flex:1; }
     .step-icon {
-        width: 46px; height: 46px;
-        border-radius: 50%;
-        background: #e2e8f0; color: #a0aec0;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; margin-bottom: 8px;
-        transition: all 0.5s ease;
-        border: 3px solid #e2e8f0;
+        width:46px; height:46px; border-radius:50%; background:#e2e8f0; color:#a0aec0;
+        display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+        margin-bottom:8px; transition:all 0.5s ease; border:3px solid #e2e8f0;
     }
-
-    .step.active .step-icon {
-        background: #E53E3E; color: white; border-color: #E53E3E;
-        animation: stepPulse 1.2s infinite;
-    }
-
-    .step.done .step-icon {
-        background: #38a169; color: white; border-color: #38a169;
-    }
-
+    html.dark-theme .step-icon { background:#21262d; color:#8b949e; border-color:#30363d; }
+    .step.active .step-icon { background:#E53E3E; color:white; border-color:#E53E3E; animation:stepPulse 1.2s infinite; }
+    .step.done   .step-icon { background:#38a169; color:white; border-color:#38a169; }
     @keyframes stepPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(229,62,62,0.4); }
-        50%       { box-shadow: 0 0 0 10px rgba(229,62,62,0); }
+        0%,100%{ box-shadow:0 0 0 0 rgba(229,62,62,0.4); } 50%{ box-shadow:0 0 0 10px rgba(229,62,62,0); }
     }
-
-    .step-label {
-        font-size: 0.78rem; font-weight: 600; color: #718096;
-        text-align: center; max-width: 80px;
-    }
-
-    .step.active .step-label { color: #E53E3E; }
-    .step.done  .step-label  { color: #38a169; }
+    .step-label { font-size:0.78rem; font-weight:600; color:#718096; text-align:center; max-width:80px; }
+    html.dark-theme .step-label { color:#8b949e; }
+    .step.active .step-label { color:#E53E3E; }
+    .step.done   .step-label { color:#38a169; }
 
     /* ── ETA CARD ── */
     .eta-card {
-        background: linear-gradient(135deg, #1a202c, #2d3748);
-        color: white; border-radius: 20px; padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-        display: none;
+        background: linear-gradient(135deg,#1a202c,#2d3748); color:white;
+        border-radius:20px; padding:24px; margin-bottom:20px;
+        box-shadow:0 8px 30px rgba(0,0,0,0.2); display:none;
     }
-
-    .eta-card.show { display: block; }
-
-    .eta-timer {
-        font-size: 3.5rem; font-weight: 800;
-        color: #FC8181; line-height: 1;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .eta-label { font-size: 0.85rem; color: #a0aec0; margin-top: 4px; }
+    .eta-card.show { display:block; }
+    .eta-timer { font-size:3.5rem; font-weight:800; color:#FC8181; line-height:1; font-variant-numeric:tabular-nums; }
+    .eta-label { font-size:0.85rem; color:#a0aec0; margin-top:4px; }
 
     /* ── SOS BUTTON ── */
     .sos-btn {
-        width: 100%; padding: 22px;
-        background: linear-gradient(135deg, #C53030, #E53E3E);
-        color: white; border: none; border-radius: 16px;
-        font-size: 1.3rem; font-weight: 800; cursor: pointer;
-        transition: all 0.3s; letter-spacing: 0.5px;
-        box-shadow: 0 8px 24px rgba(197,48,48,0.4);
-        display: flex; align-items: center; justify-content: center;
-        gap: 12px; margin-bottom: 16px;
+        width:100%; padding:22px;
+        background: linear-gradient(135deg,#C53030,#E53E3E);
+        color:white; border:none; border-radius:16px; font-size:1.3rem;
+        font-weight:800; cursor:pointer; transition:all 0.3s; letter-spacing:0.5px;
+        box-shadow:0 8px 24px rgba(197,48,48,0.4);
+        display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px;
     }
-
-    .sos-btn:hover:not(:disabled) {
-        transform: translateY(-3px);
-        box-shadow: 0 14px 36px rgba(197,48,48,0.55);
-    }
-
-    .sos-btn:disabled {
-        background: linear-gradient(135deg, #718096, #4a5568);
-        cursor: not-allowed; box-shadow: none; transform: none;
-    }
-
-    .sos-btn .btn-icon { font-size: 1.6rem; animation: sosPulse 1s infinite; }
-
-    @keyframes sosPulse {
-        0%, 100% { transform: scale(1); }
-        50%       { transform: scale(1.3); }
-    }
-
-    .sos-btn:disabled .btn-icon { animation: none; }
+    .sos-btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 14px 36px rgba(197,48,48,0.55); }
+    .sos-btn:disabled { background:linear-gradient(135deg,#718096,#4a5568); cursor:not-allowed; box-shadow:none; transform:none; }
+    .sos-btn .btn-icon { font-size:1.6rem; animation:sosPulse 1s infinite; }
+    @keyframes sosPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
+    .sos-btn:disabled .btn-icon { animation:none; }
 
     .cancel-btn {
-        width: 100%; padding: 14px;
-        background: #f7fafc; color: #4a5568;
-        border: 2px solid #e2e8f0; border-radius: 12px;
-        font-size: 1rem; font-weight: 600; cursor: pointer;
-        transition: all 0.3s; display: none; margin-bottom: 16px;
+        width:100%; padding:14px; background:#f7fafc; color:#4a5568;
+        border:2px solid #e2e8f0; border-radius:12px; font-size:1rem;
+        font-weight:600; cursor:pointer; transition:all 0.3s; display:none; margin-bottom:16px;
     }
-
-    .cancel-btn:hover { background: #fed7d7; color: #c53030; border-color: #fc8181; }
-    .cancel-btn.show  { display: block; }
+    html.dark-theme .cancel-btn { background:#21262d; color:#c9d1d9; border-color:#30363d; }
+    .cancel-btn:hover { background:#fed7d7; color:#c53030; border-color:#fc8181; }
+    .cancel-btn.show { display:block; }
 
     /* ── INFO CARDS ── */
     .info-card {
-        background: white; border-radius: 16px;
-        padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-        margin-bottom: 16px; border-left: 4px solid #E53E3E;
+        background:white; border-radius:16px; padding:20px;
+        box-shadow:0 4px 16px rgba(0,0,0,0.07); margin-bottom:16px;
+        border-left:4px solid #E53E3E;
     }
+    html.dark-theme .info-card { background:#161b22 !important; box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+    html.dark-theme .info-card h6 { color:#c9d1d9 !important; }
+    html.dark-theme .info-card p,
+    html.dark-theme .info-card li { color:#8b949e !important; }
 
-    .info-card h6 { font-weight: 700; color: #2d3748; margin-bottom: 12px; font-size: 0.97rem; }
-
-    .info-card p, .info-card li { color: #718096; font-size: 0.88rem; margin: 5px 0; }
-    .info-card ul { padding-left: 18px; margin: 0; }
+    .info-card h6 { font-weight:700; color:#2d3748; margin-bottom:12px; font-size:0.97rem; }
+    .info-card p, .info-card li { color:#718096; font-size:0.88rem; margin:5px 0; }
+    .info-card ul { padding-left:18px; margin:0; }
 
     .hotline-item {
-        display: flex; align-items: center; gap: 12px;
-        padding: 10px 0; border-bottom: 1px solid #f0f4f8;
+        display:flex; align-items:center; gap:12px;
+        padding:10px 0; border-bottom:1px solid #f0f4f8;
     }
-    .hotline-item:last-child { border-bottom: none; }
-
-    .hotline-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; flex-shrink: 0;
-    }
-
-    .hotline-number { font-size: 1.15rem; font-weight: 700; color: #2d3748; }
-    .hotline-name   { font-size: 0.8rem; color: #718096; }
+    html.dark-theme .hotline-item { border-bottom-color:#21262d; }
+    .hotline-item:last-child { border-bottom:none; }
+    .hotline-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .hotline-number { font-size:1.15rem; font-weight:700; color:#2d3748; }
+    html.dark-theme .hotline-number { color:#c9d1d9; }
+    .hotline-name { font-size:0.8rem; color:#718096; }
+    html.dark-theme .hotline-name { color:#8b949e; }
 
     /* ── DISPATCH CARD ── */
     .dispatch-card {
-        background: white; border-radius: 20px;
-        padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
+        background:white; border-radius:20px; padding:24px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.08); margin-bottom:20px;
     }
+    html.dark-theme .dispatch-card { background:#161b22 !important; box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+    html.dark-theme .dispatch-card h5 { color:#c9d1d9 !important; }
 
-    .dispatch-card h5 {
-        font-weight: 700; color: #2d3748;
-        margin-bottom: 18px; font-size: 1.05rem;
+    .dispatch-card h5 { font-weight:700; color:#2d3748; margin-bottom:18px; font-size:1.05rem; }
+
+    /* ── FIRST AID CARDS ── */
+    html.dark-theme .firstaid-card {
+        background:#161b22 !important; border-color:#30363d !important; color:#c9d1d9 !important;
     }
+    html.dark-theme .firstaid-card h5 { color:#FC8181 !important; }
+    html.dark-theme .firstaid-card li { color:#8b949e !important; }
 
-    @media (max-width: 768px) {
-        .eta-timer       { font-size: 2.5rem; }
-        .emergency-hero h2 { font-size: 1.4rem; }
-        .sos-btn         { font-size: 1.1rem; padding: 18px; }
+    /* ── TIP ITEMS ── */
+    html.dark-theme .tip-text { color:#8b949e !important; }
+
+    /* ── STATUS MESSAGE ── */
+    html.dark-theme #status-message { background:#1e2533 !important; }
+
+    /* ── PATIENT CARD ── */
+    html.dark-theme .patient-card { background:#161b22 !important; border-color:#30363d !important; }
+    html.dark-theme .patient-card p { color:#8b949e !important; }
+    html.dark-theme .patient-card strong { color:#c9d1d9 !important; }
+
+    @media(max-width:768px) {
+        .eta-timer         { font-size:2.5rem; }
+        .emergency-hero h2 { font-size:1.4rem; }
+        .sos-btn           { font-size:1.1rem; padding:18px; }
+        .page-controls     { bottom:16px; right:12px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
+<!-- ══ FLOATING PAGE CONTROLS (Dark Mode + Language) ══ -->
+<div class="page-controls">
+    <button class="ctrl-btn lang-ctrl" id="page-lang-btn" onclick="togglePageLang()" title="Switch Language">
+        <span id="page-lang-icon">🇮🇳</span>
+        <span id="page-lang-label" class="lang-en">मराठीत पहा</span>
+        <span id="page-lang-label-mr" class="lang-mr" style="display:none;">View in English</span>
+    </button>
+    <button class="ctrl-btn theme-ctrl" id="page-theme-btn" onclick="togglePageTheme()" title="Toggle Theme">
+        <span id="page-theme-icon">🌙</span>
+        <span class="lang-en" id="page-theme-label">Dark Mode</span>
+        <span class="lang-mr" id="page-theme-label-mr" style="display:none;">डार्क मोड</span>
+    </button>
+</div>
+
 <!-- Emergency Hero Bar -->
 <div class="emergency-hero">
     <div>
-        <h2>🚨 Emergency Ambulance Dispatch</h2>
-        <p>India coverage — Average response: 8–12 min</p>
+        <h2>🚨
+            <span class="lang-en">Emergency Ambulance Dispatch</span>
+            <span class="lang-mr">आपत्कालीन रुग्णवाहिका सेवा</span>
+        </h2>
+        <p>
+            <span class="lang-en">India coverage — Average response: 8–12 min</span>
+            <span class="lang-mr">भारत कव्हरेज — सरासरी प्रतिसाद: ८–१२ मिनिटे</span>
+        </p>
     </div>
     <div class="pulse-badge">
         <div class="pulse-dot"></div>
-        <span>System Active</span>
+        <span class="lang-en">System Active</span>
+        <span class="lang-mr">सिस्टम सक्रिय</span>
     </div>
 </div>
 
 <div class="row g-4">
 
-    <!-- LEFT COLUMN: Status Tracker + Hotlines + Tips -->
+    <!-- LEFT COLUMN -->
     <div class="col-lg-8">
 
         <!-- Status Tracker (shown after dispatch) -->
         <div class="status-tracker" id="status-tracker" style="display:none;">
-            <h5 style="font-weight:700; color:#2d3748; margin-bottom:4px;">
-                <i class="fas fa-ambulance text-danger"></i> Ambulance Status
+            <h5 style="font-weight:700;color:#2d3748;margin-bottom:4px;">
+                <i class="fas fa-ambulance text-danger"></i>
+                <span class="lang-en">Ambulance Status</span>
+                <span class="lang-mr">रुग्णवाहिका स्थिती</span>
             </h5>
-            <p style="color:#718096; font-size:0.88rem; margin-bottom:0;">Real-time dispatch tracking</p>
-
+            <p style="color:#718096;font-size:0.88rem;margin-bottom:0;">
+                <span class="lang-en">Real-time dispatch tracking</span>
+                <span class="lang-mr">रिअल-टाइम ट्रॅकिंग</span>
+            </p>
             <div class="status-steps">
                 <div class="status-bar-fill" id="status-bar"></div>
-
                 <div class="step" id="step-1">
                     <div class="step-icon"><i class="fas fa-phone"></i></div>
-                    <div class="step-label">Request Sent</div>
+                    <div class="step-label">
+                        <span class="lang-en">Request Sent</span>
+                        <span class="lang-mr">विनंती केली</span>
+                    </div>
                 </div>
                 <div class="step" id="step-2">
                     <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="step-label">Confirmed</div>
+                    <div class="step-label">
+                        <span class="lang-en">Confirmed</span>
+                        <span class="lang-mr">पुष्टी झाली</span>
+                    </div>
                 </div>
                 <div class="step" id="step-3">
                     <div class="step-icon"><i class="fas fa-ambulance"></i></div>
-                    <div class="step-label">Dispatched</div>
+                    <div class="step-label">
+                        <span class="lang-en">Dispatched</span>
+                        <span class="lang-mr">रवाना</span>
+                    </div>
                 </div>
                 <div class="step" id="step-4">
                     <div class="step-icon"><i class="fas fa-route"></i></div>
-                    <div class="step-label">En Route</div>
+                    <div class="step-label">
+                        <span class="lang-en">En Route</span>
+                        <span class="lang-mr">मार्गावर</span>
+                    </div>
                 </div>
                 <div class="step" id="step-5">
                     <div class="step-icon"><i class="fas fa-hospital"></i></div>
-                    <div class="step-label">Arriving</div>
+                    <div class="step-label">
+                        <span class="lang-en">Arriving</span>
+                        <span class="lang-mr">पोहोचत आहे</span>
+                    </div>
                 </div>
             </div>
-
             <div id="status-message"
-                 style="text-align:center; padding:14px; background:#fff5f5; border-radius:10px;
-                        color:#c53030; font-weight:600; font-size:0.95rem; margin-top:10px;">
-                🚨 Ambulance dispatched!
+                 style="text-align:center;padding:14px;background:#fff5f5;border-radius:10px;color:#c53030;font-weight:600;font-size:0.95rem;margin-top:10px;">
+                🚨 <span class="lang-en">Ambulance dispatched!</span>
+                    <span class="lang-mr">रुग्णवाहिका रवाना झाली!</span>
             </div>
         </div>
 
-        <!-- Empty state before dispatch -->
+        <!-- How It Works (pre-dispatch) -->
         <div id="pre-dispatch-info" class="status-tracker">
-            <h5 style="font-weight:700; color:#2d3748; margin-bottom:6px;">
-                <i class="fas fa-info-circle text-danger"></i> How It Works
+            <h5 style="font-weight:700;color:#2d3748;margin-bottom:6px;">
+                <i class="fas fa-info-circle text-danger"></i>
+                <span class="lang-en">How It Works</span>
+                <span class="lang-mr">हे कसे कार्य करते</span>
             </h5>
             <div class="row g-3 mt-2">
                 <div class="col-md-4">
-                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
-                        <div style="font-size:2rem; margin-bottom:8px;">📱</div>
-                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">1. Press SOS</div>
-                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Tap the dispatch button</div>
+                    <div style="text-align:center;padding:20px 12px;background:#fff5f5;border-radius:14px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">📱</div>
+                        <div style="font-weight:700;color:#2d3748;font-size:0.9rem;">
+                            <span class="lang-en">1. Press SOS</span>
+                            <span class="lang-mr">१. SOS दाबा</span>
+                        </div>
+                        <div style="color:#718096;font-size:0.8rem;margin-top:4px;">
+                            <span class="lang-en">Tap the dispatch button</span>
+                            <span class="lang-mr">डिस्पॅच बटण दाबा</span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
-                        <div style="font-size:2rem; margin-bottom:8px;">🚑</div>
-                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">2. Ambulance Assigned</div>
-                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Nearest unit dispatched</div>
+                    <div style="text-align:center;padding:20px 12px;background:#fff5f5;border-radius:14px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">🚑</div>
+                        <div style="font-weight:700;color:#2d3748;font-size:0.9rem;">
+                            <span class="lang-en">2. Ambulance Assigned</span>
+                            <span class="lang-mr">२. रुग्णवाहिका नियुक्त</span>
+                        </div>
+                        <div style="color:#718096;font-size:0.8rem;margin-top:4px;">
+                            <span class="lang-en">Nearest unit dispatched</span>
+                            <span class="lang-mr">जवळचे वाहन रवाना</span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div style="text-align:center; padding:20px 12px; background:#fff5f5; border-radius:14px;">
-                        <div style="font-size:2rem; margin-bottom:8px;">⏱️</div>
-                        <div style="font-weight:700; color:#2d3748; font-size:0.9rem;">3. Track ETA</div>
-                        <div style="color:#718096; font-size:0.8rem; margin-top:4px;">Live countdown timer</div>
+                    <div style="text-align:center;padding:20px 12px;background:#fff5f5;border-radius:14px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⏱️</div>
+                        <div style="font-weight:700;color:#2d3748;font-size:0.9rem;">
+                            <span class="lang-en">3. Track ETA</span>
+                            <span class="lang-mr">३. ETA ट्रॅक करा</span>
+                        </div>
+                        <div style="color:#718096;font-size:0.8rem;margin-top:4px;">
+                            <span class="lang-en">Live countdown timer</span>
+                            <span class="lang-mr">लाइव्ह काउंटडाउन टाइमर</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -322,157 +334,173 @@
 
         <!-- Emergency Hotlines -->
         <div class="info-card">
-            <h6><i class="fas fa-phone-volume text-danger"></i> India Emergency Hotlines</h6>
+            <h6>
+                <i class="fas fa-phone-volume text-danger"></i>
+                <span class="lang-en">India Emergency Hotlines</span>
+                <span class="lang-mr">भारत आपत्कालीन हेल्पलाइन</span>
+            </h6>
+            {% set hotlines = [
+                ('🚑','108','#fff5f5','#e53e3e','Ambulance (Free — 24/7)','रुग्णवाहिका (मोफत — २४/७)'),
+                ('🚔','100','#ebf8ff','#2b6cb0','Police Emergency','पोलीस आपत्काल'),
+                ('🔥','101','#fff5f5','#c05621','Fire Brigade','अग्निशमन दल'),
+                ('☎️','112','#f0fff4','#276749','National Emergency','राष्ट्रीय आपत्काल'),
+                ('🏥','104','#faf5ff','#6b46c1','Medical Helpline','वैद्यकीय हेल्पलाइन'),
+                ('🧠','1800-599-0019','#fef9f0','#b45309','Mental Health (KIRAN)','मानसिक आरोग्य (KIRAN)')
+            ] %}
+            {% for icon,num,bg,col,en_name,mr_name in hotlines %}
             <div class="hotline-item">
-                <div class="hotline-icon" style="background:#fff5f5; color:#e53e3e;">🚑</div>
+                <div class="hotline-icon" style="background:{{ bg }};color:{{ col }};">{{ icon }}</div>
                 <div>
-                    <div class="hotline-number">108</div>
-                    <div class="hotline-name">Ambulance (Free — 24/7)</div>
+                    <div class="hotline-number">{{ num }}</div>
+                    <div class="hotline-name">
+                        <span class="lang-en">{{ en_name }}</span>
+                        <span class="lang-mr">{{ mr_name }}</span>
+                    </div>
                 </div>
-                <a href="tel:108" style="margin-left:auto; background:#E53E3E; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
-                    <i class="fas fa-phone"></i> Call
+                <a href="tel:{{ num }}" style="margin-left:auto;background:{{ col }};color:white;border:none;padding:7px 18px;border-radius:8px;font-weight:600;font-size:0.85rem;text-decoration:none;">
+                    <i class="fas fa-phone"></i>
+                    <span class="lang-en">Call</span>
+                    <span class="lang-mr">कॉल</span>
                 </a>
             </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#ebf8ff; color:#2b6cb0;">🚔</div>
-                <div>
-                    <div class="hotline-number">100</div>
-                    <div class="hotline-name">Police Emergency</div>
-                </div>
-                <a href="tel:100" style="margin-left:auto; background:#2b6cb0; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
-                    <i class="fas fa-phone"></i> Call
-                </a>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#fff5f5; color:#c05621;">🔥</div>
-                <div>
-                    <div class="hotline-number">101</div>
-                    <div class="hotline-name">Fire Brigade</div>
-                </div>
-                <a href="tel:101" style="margin-left:auto; background:#c05621; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
-                    <i class="fas fa-phone"></i> Call
-                </a>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#f0fff4; color:#276749;">☎️</div>
-                <div>
-                    <div class="hotline-number">112</div>
-                    <div class="hotline-name">National Emergency</div>
-                </div>
-                <a href="tel:112" style="margin-left:auto; background:#276749; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
-                    <i class="fas fa-phone"></i> Call
-                </a>
-            </div>
-            <div class="hotline-item">
-                <div class="hotline-icon" style="background:#faf5ff; color:#6b46c1;">🏥</div>
-                <div>
-                    <div class="hotline-number">104</div>
-                    <div class="hotline-name">Medical Helpline</div>
-                </div>
-                <a href="tel:104" style="margin-left:auto; background:#6b46c1; color:white; border:none; padding:7px 18px; border-radius:8px; font-weight:600; font-size:0.85rem; text-decoration:none;">
-                    <i class="fas fa-phone"></i> Call
-                </a>
-            </div>
+            {% endfor %}
         </div>
 
         <!-- While Waiting Tips -->
         <div class="info-card">
-            <h6><i class="fas fa-first-aid text-danger"></i> While You Wait — First Aid Tips</h6>
+            <h6>
+                <i class="fas fa-first-aid text-danger"></i>
+                <span class="lang-en">While You Wait — First Aid Tips</span>
+                <span class="lang-mr">वाट पाहत असताना — प्रथमोपचार टिप्स</span>
+            </h6>
             <div class="row g-2 mt-1">
+                {% set tips = [
+                    ('🧘','Keep the patient calm and still','रुग्णाला शांत आणि स्थिर ठेवा'),
+                    ('🚫','Do not give food or water if unconscious','बेशुद्ध असल्यास अन्न वा पाणी देऊ नका'),
+                    ('💨','Keep the airway clear and open','श्वासनलिका मोकळी ठेवा'),
+                    ('🩸','Apply pressure on bleeding wounds','रक्तस्त्राव होणाऱ्या जखमेवर दाब द्या'),
+                    ('📞','Stay on the phone with the dispatcher','डिस्पॅचरशी फोनवर राहा'),
+                    ('🚪','Send someone outside to guide the ambulance','कोणाला बाहेर पाठवा – रुग्णवाहिकेला मार्गदर्शन करण्यासाठी')
+                ] %}
+                {% for icon,en_tip,mr_tip in tips %}
                 <div class="col-md-6">
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">🧘</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Keep the patient calm and still</span>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">🚫</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Do not give food or water if unconscious</span>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">💨</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Keep the airway clear and open</span>
+                    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;">
+                        <span style="font-size:1.2rem;">{{ icon }}</span>
+                        <span class="tip-text" style="font-size:0.87rem;color:#4a5568;">
+                            <span class="lang-en">{{ en_tip }}</span>
+                            <span class="lang-mr">{{ mr_tip }}</span>
+                        </span>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">🩸</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Apply pressure on bleeding wounds</span>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">📞</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Stay on the phone with the dispatcher</span>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px;">
-                        <span style="font-size:1.2rem;">🚪</span>
-                        <span style="font-size:0.87rem; color:#4a5568;">Send someone outside to guide the ambulance</span>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
     </div>
 
-    <!-- RIGHT COLUMN: Dispatch + ETA -->
+    <!-- RIGHT COLUMN -->
     <div class="col-lg-4">
 
-        <!-- ETA Card (shown after dispatch) -->
+        <!-- ETA Card -->
         <div class="eta-card" id="eta-card">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div>
-                    <div style="font-size:0.78rem; color:#a0aec0; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Estimated Arrival</div>
+                    <div style="font-size:0.78rem;color:#a0aec0;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                        <span class="lang-en">Estimated Arrival</span>
+                        <span class="lang-mr">अनुमानित आगमन</span>
+                    </div>
                     <div class="eta-timer" id="eta-display">08:00</div>
-                    <div class="eta-label">minutes remaining</div>
+                    <div class="eta-label">
+                        <span class="lang-en">minutes remaining</span>
+                        <span class="lang-mr">मिनिटे शिल्लक</span>
+                    </div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:0.78rem; color:#a0aec0;">Ambulance ID</div>
-                    <div style="font-weight:700; font-size:1.1rem;" id="ambulance-id">MH-AMB-042</div>
-                    <div style="font-size:0.78rem; color:#68d391; margin-top:4px;">
-                        <i class="fas fa-circle" style="font-size:0.45rem;"></i> Heading to you
+                    <div style="font-size:0.78rem;color:#a0aec0;">
+                        <span class="lang-en">Ambulance ID</span>
+                        <span class="lang-mr">रुग्णवाहिका ID</span>
+                    </div>
+                    <div style="font-weight:700;font-size:1.1rem;" id="ambulance-id">MH-AMB-042</div>
+                    <div style="font-size:0.78rem;color:#68d391;margin-top:4px;">
+                        <i class="fas fa-circle" style="font-size:0.45rem;"></i>
+                        <span class="lang-en">Heading to you</span>
+                        <span class="lang-mr">तुमच्याकडे येत आहे</span>
                     </div>
                 </div>
             </div>
-            <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.82rem; color:#a0aec0;">
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1);font-size:0.82rem;color:#a0aec0;">
                 <i class="fas fa-phone-alt" style="color:#FC8181;"></i>
-                Driver: <strong style="color:white;" id="driver-phone">+91-98765-43210</strong>
+                <span class="lang-en">Driver:</span>
+                <span class="lang-mr">चालक:</span>
+                <strong style="color:white;" id="driver-phone">+91-98765-43210</strong>
             </div>
         </div>
 
         <!-- SOS Dispatch Card -->
         <div class="dispatch-card">
             <h5>
-                <i class="fas fa-bell text-danger"></i> Request Ambulance
+                <i class="fas fa-bell text-danger"></i>
+                <span class="lang-en">Request Ambulance</span>
+                <span class="lang-mr">रुग्णवाहिका मागवा</span>
             </h5>
 
             <button class="sos-btn" id="sos-btn" onclick="requestAmbulance()">
                 <span class="btn-icon">🚨</span>
-                DISPATCH AMBULANCE NOW
+                <span class="lang-en">DISPATCH AMBULANCE NOW</span>
+                <span class="lang-mr">आता रुग्णवाहिका पाठवा</span>
             </button>
 
             <button class="cancel-btn" id="cancel-btn" onclick="cancelRequest()">
-                <i class="fas fa-times-circle"></i> Cancel Request
+                <i class="fas fa-times-circle"></i>
+                <span class="lang-en">Cancel Request</span>
+                <span class="lang-mr">विनंती रद्द करा</span>
             </button>
 
-            <p style="font-size:0.78rem; color:#a0aec0; text-align:center; margin:0;">
-                By requesting, you confirm this is a genuine emergency
+            <p style="font-size:0.78rem;color:#a0aec0;text-align:center;margin:0;">
+                <span class="lang-en">By requesting, you confirm this is a genuine emergency</span>
+                <span class="lang-mr">विनंती करताना आपण खरी आपत्कालीन परिस्थिती असल्याची पुष्टी करता</span>
             </p>
         </div>
 
         <!-- Patient Info Card -->
-        <div class="info-card" style="border-left-color:#3182ce;">
-            <h6 style="color:#2b6cb0;"><i class="fas fa-user-circle" style="color:#3182ce;"></i> Patient On Record</h6>
-            <p style="margin:6px 0;"><strong>Name:</strong> {{ patient.full_name }}</p>
-            <p style="margin:6px 0;"><strong>Age:</strong> {{ patient.age }} years</p>
-            <p style="margin:6px 0;"><strong>City:</strong> {{ patient.city }}</p>
-            <p style="margin:6px 0;"><strong>Contact:</strong> {{ patient.contact or 'N/A' }}</p>
+        <div class="info-card patient-card" style="border-left-color:#3182ce;">
+            <h6 style="color:#2b6cb0;">
+                <i class="fas fa-user-circle" style="color:#3182ce;"></i>
+                <span class="lang-en">Patient On Record</span>
+                <span class="lang-mr">नोंदणीकृत रुग्ण</span>
+            </h6>
+            <p style="margin:6px 0;">
+                <strong><span class="lang-en">Name:</span><span class="lang-mr">नाव:</span></strong>
+                {{ patient.full_name }}
+            </p>
+            <p style="margin:6px 0;">
+                <strong><span class="lang-en">Age:</span><span class="lang-mr">वय:</span></strong>
+                {{ patient.age }}
+                <span class="lang-en">years</span><span class="lang-mr">वर्षे</span>
+            </p>
+            <p style="margin:6px 0;">
+                <strong><span class="lang-en">City:</span><span class="lang-mr">शहर:</span></strong>
+                {{ patient.city }}
+            </p>
+            <p style="margin:6px 0;">
+                <strong><span class="lang-en">Contact:</span><span class="lang-mr">संपर्क:</span></strong>
+                {{ patient.contact or 'N/A' }}
+            </p>
         </div>
 
-        <!-- Quick tip -->
-        <div style="background:linear-gradient(135deg,#C53030,#E53E3E); color:white; border-radius:16px; padding:18px; text-align:center;">
-            <div style="font-size:2rem; margin-bottom:8px;">☎️</div>
-            <div style="font-weight:700; font-size:1.1rem;">Call 108 directly</div>
-            <div style="font-size:0.85rem; opacity:0.9; margin-top:4px;">Fastest free ambulance in India</div>
-            <a href="tel:108" style="display:inline-block; margin-top:12px; background:white; color:#C53030; padding:9px 28px; border-radius:10px; font-weight:800; font-size:1rem; text-decoration:none;">
-                📞 Call 108 Now
+        <!-- Call 108 Card -->
+        <div style="background:linear-gradient(135deg,#C53030,#E53E3E);color:white;border-radius:16px;padding:18px;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">☎️</div>
+            <div style="font-weight:700;font-size:1.1rem;">
+                <span class="lang-en">Call 108 directly</span>
+                <span class="lang-mr">थेट १०८ वर कॉल करा</span>
+            </div>
+            <div style="font-size:0.85rem;opacity:0.9;margin-top:4px;">
+                <span class="lang-en">Fastest free ambulance in India</span>
+                <span class="lang-mr">भारतातील सर्वात जलद मोफत रुग्णवाहिका</span>
+            </div>
+            <a href="tel:108" style="display:inline-block;margin-top:12px;background:white;color:#C53030;padding:9px 28px;border-radius:10px;font-weight:800;font-size:1rem;text-decoration:none;">
+                📞 <span class="lang-en">Call 108 Now</span><span class="lang-mr">आत्ता १०८ वर कॉल करा</span>
             </a>
         </div>
 
@@ -480,70 +508,142 @@
 </div>
 
 <!-- First Aid Guidelines -->
-<div style="max-width:1100px;margin:0 auto 40px;padding:0 16px;">
-    <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin-bottom:20px;text-align:center;">🩹 First Aid Guidelines</h3>
+<div style="max-width:1100px;margin:30px auto 40px;padding:0 16px;">
+    <h3 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin-bottom:20px;text-align:center;">
+        🩹
+        <span class="lang-en">First Aid Guidelines</span>
+        <span class="lang-mr">प्रथमोपचार मार्गदर्शन</span>
+    </h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px;">
-        {% for guide in first_aid %}
-        <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #E5E7EB;">
-            <h5 style="font-weight:800;color:#C53030;margin-bottom:12px;">{{ guide.icon }} {{ guide.title }}</h5>
-            <ol style="margin:0;padding-left:18px;font-size:.85rem;line-height:1.6;color:#4B5563;">
-                {% for step in guide.steps %}
-                <li style="margin-bottom:6px;">{{ step }}</li>
+
+        {% set first_aid_bilingual = [
+            ('❤️','CPR Basics','CPR मूलभूत',
+             ['Check responsiveness – tap shoulder, shout.','Call 108 immediately.','30 chest compressions (5–6 cm deep, 100–120/min).','2 rescue breaths. Repeat 30:2 cycle.'],
+             ['प्रतिसाद तपासा – खांदा थोपटा, हाक मारा.','ताबडतोब १०८ वर कॉल करा.','३० छाती दाब (५–६ सें.मी. खोल, १००–१२०/मिनिट).','२ सुटका श्वास द्या. ३०:२ चक्र पुन्हा करा.']),
+            ('🫁','Choking','घशात अडकणे',
+             ['Encourage coughing if partially blocked.','5 back blows between shoulder blades.','5 abdominal thrusts (Heimlich manoeuvre).','Call 108 if not resolved.'],
+             ['अंशतः अडकल्यास खोकण्यास सांगा.','खांद्याच्या ब्लेडमध्ये ५ पाठीचे फटके द्या.','५ उदर आवेग (हेमलिच युक्ती).','निराकरण न झाल्यास १०८ वर कॉल करा.']),
+            ('🔥','Burns','भाजणे',
+             ['Cool under running water for 20 minutes.','Remove jewellery near burn (before swelling).','Cover with clean non-fluffy cloth.','Do NOT apply ice, butter, or toothpaste.'],
+             ['२० मिनिटे वाहत्या पाण्याखाली थंड करा.','सुजण्यापूर्वी भाजलेल्या भागाजवळील दागिने काढा.','स्वच्छ, मऊ कापडाने झाकून ठेवा.','बर्फ, लोणी किंवा टूथपेस्ट लावू नका.']),
+            ('🩸','Bleeding','रक्तस्त्राव',
+             ['Apply direct pressure with clean cloth.','Elevate injured limb above heart level.','Do not remove embedded objects.','Call 108 for severe or uncontrolled bleeding.'],
+             ['स्वच्छ कापडाने थेट दाब लावा.','जखमी अंग हृदयाच्या वर उचला.','आत अडकलेल्या वस्तू काढू नका.','तीव्र रक्तस्त्रावासाठी १०८ वर कॉल करा.']),
+            ('⚡','Seizure','झटका / अपस्मार',
+             ['Clear area of dangerous objects.','Place on side after seizure stops.','Do NOT put anything in mouth.','Time the seizure. Call 108 if >5 minutes.'],
+             ['धोकादायक वस्तू बाजूला हटवा.','झटका थांबल्यावर कुशीवर झोपवा.','तोंडात काहीही घालू नका.','झटक्याचा वेळ मोजा. ५ मिनिटांहून अधिक असल्यास १०८ वर कॉल करा.'])
+        ] %}
+
+        {% for icon,en_title,mr_title,en_steps,mr_steps in first_aid_bilingual %}
+        <div class="firstaid-card" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #E5E7EB;">
+            <h5 style="font-weight:800;color:#C53030;margin-bottom:12px;">
+                {{ icon }}
+                <span class="lang-en">{{ en_title }}</span>
+                <span class="lang-mr">{{ mr_title }}</span>
+            </h5>
+            <ol style="margin:0;padding-left:18px;font-size:.85rem;line-height:1.7;color:#4B5563;">
+                {% for i in range(en_steps|length) %}
+                <li style="margin-bottom:6px;">
+                    <span class="lang-en">{{ en_steps[i] }}</span>
+                    <span class="lang-mr">{{ mr_steps[i] }}</span>
+                </li>
                 {% endfor %}
             </ol>
         </div>
         {% endfor %}
+
     </div>
     <div style="text-align:center;">
         <a href="{{ url_for('nearest_hospitals') }}" style="display:inline-block;background:#0066CC;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;margin-right:10px;">
-            🏥 Find Nearest Hospital
+            🏥 <span class="lang-en">Find Nearest Hospital</span><span class="lang-mr">जवळचे रुग्णालय शोधा</span>
         </a>
         <a href="tel:112" style="display:inline-block;background:#C53030;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;text-decoration:none;">
-            📞 Emergency 112
+            📞 <span class="lang-en">Emergency 112</span><span class="lang-mr">आपत्काल 112</span>
         </a>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// ── AMBULANCE DISPATCH ────────────────────────────────────────────
-const ambulanceIds  = ['MH-AMB-042', 'DL-AMB-117', 'KA-AMB-083', 'TN-AMB-061'];
-const driverPhones  = ['+91-98765-43210', '+91-87654-32109', '+91-76543-21098', '+91-65432-10987'];
+// ── PAGE-LEVEL THEME + LANG CONTROLS ─────────────────────────────
+function togglePageTheme() {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark-theme');
+    localStorage.setItem('health-theme-pref', isDark ? 'dark' : 'light');
+    updatePageThemeBtn(isDark);
+    // Sync the global navbar button label if present
+    const nb = document.getElementById('theme-toggle-btn');
+    if (nb) nb.innerHTML = isDark ? '☀️ <span class="lang-en">Light</span><span class="lang-mr">लाइट</span>'
+                                   : '🌙 <span class="lang-en">Dark</span><span class="lang-mr">डार्क</span>';
+}
+function updatePageThemeBtn(isDark) {
+    const icon = document.getElementById('page-theme-icon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+}
+function togglePageLang() {
+    const html = document.documentElement;
+    const isEN = html.classList.contains('show-en');
+    const lang = isEN ? 'mr' : 'en';
+    if (typeof globalSwitchLanguage === 'function') globalSwitchLanguage(lang);
+}
+// Sync button icons on load
+document.addEventListener('DOMContentLoaded', () => {
+    const isDark = document.documentElement.classList.contains('dark-theme');
+    updatePageThemeBtn(isDark);
+});
 
-let etaInterval   = null;
-let dispatched    = false;
+// ── AMBULANCE DISPATCH ───────────────────────────────────────────
+const ambulanceIds = ['MH-AMB-042','DL-AMB-117','KA-AMB-083','TN-AMB-061'];
+const driverPhones = ['+91-98765-43210','+91-87654-32109','+91-76543-21098','+91-65432-10987'];
+let etaInterval = null;
+let dispatched = false;
+
+const stepMessages_en = [
+    '🚨 Request received by dispatch center!',
+    '✅ Request confirmed — ambulance assigned!',
+    '🚑 Ambulance dispatched from nearest station!',
+    '🛣️ Ambulance is en route to your location!',
+    '🏁 Ambulance is almost there — stay visible!'
+];
+const stepMessages_mr = [
+    '🚨 विनंती डिस्पॅच केंद्राने प्राप्त केली!',
+    '✅ विनंती पुष्टी झाली — रुग्णवाहिका नियुक्त!',
+    '🚑 रुग्णवाहिका जवळच्या स्टेशनातून रवाना!',
+    '🛣️ रुग्णवाहिका तुमच्या ठिकाणी येत आहे!',
+    '🏁 रुग्णवाहिका जवळ आली — दृश्यमान राहा!'
+];
+
+function getLang() {
+    return document.documentElement.classList.contains('show-mr') ? 'mr' : 'en';
+}
 
 function requestAmbulance() {
     dispatched = true;
-
-    // Random ambulance
     const idx = Math.floor(Math.random() * ambulanceIds.length);
-    document.getElementById('ambulance-id').textContent  = ambulanceIds[idx];
-    document.getElementById('driver-phone').textContent  = driverPhones[idx];
+    document.getElementById('ambulance-id').textContent = ambulanceIds[idx];
+    document.getElementById('driver-phone').textContent = driverPhones[idx];
 
-    // UI changes
     const btn = document.getElementById('sos-btn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ambulance Dispatched…';
+    btn.innerHTML = getLang() === 'mr'
+        ? '<i class="fas fa-spinner fa-spin"></i> रुग्णवाहिका रवाना झाली…'
+        : '<i class="fas fa-spinner fa-spin"></i> Ambulance Dispatched…';
+
     document.getElementById('cancel-btn').classList.add('show');
     document.getElementById('status-tracker').style.display = 'block';
     document.getElementById('pre-dispatch-info').style.display = 'none';
     document.getElementById('eta-card').classList.add('show');
 
-    // Steps
     runStatusSteps();
 
-    // ETA countdown — 8 min
     let etaSeconds = 8 * 60;
     updateETA(etaSeconds);
     etaInterval = setInterval(() => {
         etaSeconds--;
         updateETA(etaSeconds);
-        if (etaSeconds <= 0) {
-            clearInterval(etaInterval);
-            arrivedAnimation();
-        }
+        if (etaSeconds <= 0) { clearInterval(etaInterval); arrivedAnimation(); }
     }, 1000);
 }
 
@@ -553,18 +653,10 @@ function updateETA(seconds) {
     document.getElementById('eta-display').textContent = `${m}:${s}`;
 }
 
-const stepMessages = [
-    '🚨 Request received by dispatch center!',
-    '✅ Request confirmed — ambulance assigned!',
-    '🚑 Ambulance dispatched from nearest station!',
-    '🛣️ Ambulance is en route to your location!',
-    '🏁 Ambulance is almost there — stay visible!'
-];
-
 function runStatusSteps() {
-    const delays    = [0, 3000, 7000, 14000, 25000];
+    const delays = [0, 3000, 7000, 14000, 25000];
     const barWidths = ['0%', '25%', '50%', '75%', '100%'];
-
+    const msgs = getLang() === 'mr' ? stepMessages_mr : stepMessages_en;
     delays.forEach((delay, i) => {
         setTimeout(() => {
             for (let j = 0; j < i; j++) {
@@ -574,28 +666,40 @@ function runStatusSteps() {
             const curr = document.getElementById(`step-${i+1}`);
             if (curr) curr.classList.add('active');
             document.getElementById('status-bar').style.width = barWidths[i];
-            document.getElementById('status-message').textContent = stepMessages[i];
+            document.getElementById('status-message').innerHTML =
+                msgs[i] + (getLang() === 'mr' ? '' : '');
         }, delay);
     });
 }
 
 function arrivedAnimation() {
     document.getElementById('eta-display').textContent = '00:00';
-    document.getElementById('status-message').textContent = '🏥 Ambulance has arrived at your location!';
-    document.getElementById('eta-card').style.background = 'linear-gradient(135deg, #1c4532, #276749)';
+    document.getElementById('status-message').innerHTML =
+        getLang() === 'mr'
+        ? '🏥 रुग्णवाहिका तुमच्या ठिकाणी पोहोचली!'
+        : '🏥 Ambulance has arrived at your location!';
+    document.getElementById('eta-card').style.background = 'linear-gradient(135deg,#1c4532,#276749)';
     document.getElementById('eta-display').style.color = '#68d391';
-    document.getElementById('sos-btn').innerHTML = '<i class="fas fa-check-circle"></i> Ambulance Arrived';
+    document.getElementById('sos-btn').innerHTML =
+        getLang() === 'mr'
+        ? '<i class="fas fa-check-circle"></i> रुग्णवाहिका आली'
+        : '<i class="fas fa-check-circle"></i> Ambulance Arrived';
 }
 
 function cancelRequest() {
-    if (!confirm('Are you sure you want to cancel the ambulance request?')) return;
+    const msg = getLang() === 'mr'
+        ? 'रुग्णवाहिका विनंती रद्द करायची आहे का?'
+        : 'Are you sure you want to cancel the ambulance request?';
+    if (!confirm(msg)) return;
 
     dispatched = false;
     clearInterval(etaInterval);
 
     const btn = document.getElementById('sos-btn');
     btn.disabled = false;
-    btn.innerHTML = '<span class="btn-icon">🚨</span> DISPATCH AMBULANCE NOW';
+    btn.innerHTML = getLang() === 'mr'
+        ? '<span class="btn-icon">🚨</span><span class="lang-mr">आता रुग्णवाहिका पाठवा</span>'
+        : '<span class="btn-icon">🚨</span><span class="lang-en">DISPATCH AMBULANCE NOW</span>';
 
     document.getElementById('cancel-btn').classList.remove('show');
     document.getElementById('eta-card').classList.remove('show');
@@ -604,7 +708,7 @@ function cancelRequest() {
 
     ['step-1','step-2','step-3','step-4','step-5'].forEach(id => {
         const el = document.getElementById(id);
-        el.classList.remove('active', 'done');
+        el.classList.remove('active','done');
     });
     document.getElementById('status-bar').style.width = '0%';
 }
