@@ -1476,20 +1476,32 @@ def diet_plans():
 @login_required
 def api_generate_diet():
     if current_user.role != 'patient':
-        return jsonify({'status': 'error'}), 403
-    data = request.get_json() or request.form
+        return jsonify({'status': 'error', 'message': 'Only patients can generate diet plans.'}), 403
+    data = request.get_json() or request.form or {}
+    
+    def get_float(val, default):
+        if val is None:
+            return default
+        try:
+            return float(val) if str(val).strip() else default
+        except (ValueError, TypeError):
+            return default
+
     profile = {
         'age': current_user.age,
         'gender': data.get('gender', getattr(current_user, 'gender', 'male') or 'male'),
-        'height': float(data.get('height', 170)),
-        'weight': float(data.get('weight', 70)),
+        'height': get_float(data.get('height'), 170.0),
+        'weight': get_float(data.get('weight'), 70.0),
         'activity_level': data.get('activity_level', 'moderate'),
         'medical_conditions': data.get('medical_conditions', ''),
         'dietary_preference': data.get('dietary_preference', 'vegetarian'),
         'diet_goal': data.get('diet_goal', getattr(current_user, 'diet_goal', 'Balanced')),
     }
-    plan = generate_diet_plan(profile)
-    return jsonify({'status': 'success', 'plan': plan})
+    try:
+        plan = generate_diet_plan(profile)
+        return jsonify({'status': 'success', 'plan': plan})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 # ================= FOOD SCANNER =================

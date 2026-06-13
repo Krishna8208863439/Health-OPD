@@ -349,14 +349,33 @@ def _build_human_summary(text, symptom_ids, top, alts, otc, emergencies):
 
 def generate_diet_plan(profile: dict) -> dict:
     """Generate personalized diet plan from user profile."""
-    age = int(profile.get("age", 30))
-    gender = profile.get("gender", "male")
-    height = float(profile.get("height", 170))
-    weight = float(profile.get("weight", 70))
+    try:
+        age = int(profile.get("age")) if profile.get("age") is not None else 30
+    except (ValueError, TypeError):
+        age = 30
+        
+    gender = profile.get("gender", "male") or "male"
+    
+    try:
+        height = float(profile.get("height")) if profile.get("height") else 170.0
+    except (ValueError, TypeError):
+        height = 170.0
+        
+    try:
+        weight = float(profile.get("weight")) if profile.get("weight") else 70.0
+    except (ValueError, TypeError):
+        weight = 70.0
+        
     activity = profile.get("activity_level", "moderate")
-    conditions = profile.get("medical_conditions", "")
-    preference = profile.get("dietary_preference", "vegetarian")
-    goal = profile.get("diet_goal", "Balanced")
+    conditions = profile.get("medical_conditions", "") or ""
+    preference = profile.get("dietary_preference", "vegetarian") or "vegetarian"
+    goal = profile.get("diet_goal", "Balanced") or "Balanced"
+
+    # Avoid division by zero
+    if height <= 0:
+        height = 170.0
+    if weight <= 0:
+        weight = 70.0
 
     bmi = round(weight / ((height / 100) ** 2), 1)
     bmr = 10 * weight + 6.25 * height - 5 * age + (5 if gender == "male" else -161)

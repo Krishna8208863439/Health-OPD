@@ -1124,6 +1124,150 @@ function addCustomMeal(planKey) {
 }
 
 async function generateAIPlan() {
+    const labelTranslations = {
+        "breakfast": { en: "Breakfast", mr: "न्याहारी" },
+        "mid_morning": { en: "Mid-Morning", mr: "सकाळचा नाश्ता" },
+        "lunch": { en: "Lunch", mr: "दुपारचे जेवण" },
+        "evening_snack": { en: "Evening Snack", mr: "संध्याकाळचा नाश्ता" },
+        "dinner": { en: "Dinner", mr: "रात्रीचे जेवण" },
+        "water": { en: "Water", mr: "पाणी" },
+        "weekly_planner": { en: "Weekly Planner", mr: "साप्ताहिक नियोजन" },
+        "grocery_list": { en: "Grocery List", mr: "खरेदी सूची" },
+        "protein": { en: "Protein", mr: "प्रथिने" },
+        "carbs": { en: "Carbs", mr: "कर्बोदके" },
+        "fat": { en: "Fat", mr: "चरबी" },
+        "water_intake": { en: "Water Intake", mr: "पाणी पिण्याचे प्रमाण" },
+        "daily_calories": { en: "Daily Calories", mr: "दैनिक कॅलरीज" },
+        "ai_plan": { en: "Your AI Plan", mr: "तुमची AI आहार योजना" },
+        "generating": { en: "Generating personalized plan...", mr: "वैयक्तिक आहार योजना तयार करत आहे..." },
+        "failed": { en: "Failed to generate plan.", mr: "आहार योजना तयार करण्यात अपयश आले." },
+        "error_gen": { en: "Error generating plan.", mr: "योजना तयार करताना त्रुटी आली." }
+    };
+
+    const foodTranslations = {
+        // Veg items
+        "oats with milk, banana, and almonds": "दूध, केळी आणि बदामासोबत ओट्स",
+        "green tea + handful of walnuts": "ग्रीन टी + मूठभर अक्रोड",
+        "2 chapati, dal fry, mix veg sabji, curd, salad": "२ चपाती, डाळ फ्राय, मिक्स व्हेज भाजी, दही, सॅलड",
+        "roasted makhana or fruit bowl": "भाजलेले मखाणे किंवा फळांची वाटी",
+        "moong dal khichdi, palak sabji, 1 tsp ghee": "मूग डाळ खिचडी, पालक भाजी, १ चमचा तूप",
+        "8–10 glasses (2–2.5 litres)": "८-१० ग्लास (२-२.५ लिटर)",
+        "moong dal chilla with mint chutney": "पुदिना चटणीसोबत मूग डाळ चिला",
+        "1 multigrain roti, chana curry, large salad, curd": "१ मल्टिग्रेन रोटी, चणा करी, भरपूर सॅलड, दही",
+        "grilled paneer, cauliflower rice, spinach soup": "ग्रील्ड पनीर, फ्लॉवर राईस, पालक सूप",
+        "vegetable poha + green tea": "व्हेजिटेबल पोहे + ग्रीन टी",
+        "brown rice (1 cup), dal, steamed vegetables": "ब्राउन राईस (१ कप), डाळ, उकडलेल्या भाज्या",
+        "sautéed vegetables with tofu, no rice": "टॉफूसोबत परतून घेतलेल्या भाज्या (भात नाही)",
+        "oats + milk + peanut butter + banana + protein shake": "ओट्स + दूध + पीनट बटर + केळी + प्रोटीन शेक",
+        "brown rice (2 cups), soya chunks curry, salad, curd": "ब्राउन राईस (२ कप), सोया चंक्स करी, सॅलड, दही",
+        "paneer tikka, sweet potato, black dal": "पनीर टिक्का, रताळे, काळी डाळ",
+        "fruit bowl with chia seeds + almond milk": "चिया सीड्ससह फळांची वाटी + बदाम दूध",
+        "oats khichdi with vegetables, flaxseed salad": "भाज्यांसह ओट्स खिचडी, अळशीचे सॅलड",
+        "tofu soup, multigrain toast, steamed broccoli": "टोफू सूप, मल्टिग्रेन टोस्ट, उकडलेली ब्रोकोली",
+
+        // Non-veg items
+        "2 boiled eggs, whole wheat toast, low-fat milk": "२ उकडलेली अंडी, संपूर्ण गव्हाचा टोस्ट, कमी चरबीचे दूध",
+        "apple + green tea": "सफरचंद + ग्रीन टी",
+        "chicken breast (120g), brown rice, vegetables, salad": "चिकन ब्रेस्ट (१२० ग्रॅम), ब्राउन राईस, भाज्या, सॅलड",
+        "boiled egg or roasted chana": "उकडलेले अंडे किंवा भाजलेले चणे",
+        "fish curry (100g), chapati, green salad": "फिश करी (१०० ग्रॅम), चपाती, हिरवे सॅलड",
+        "egg white omelette with spinach": "पालक घातलेले अंड्याच्या पांढऱ्या भागाचे ऑम्लेट",
+        "grilled chicken (100g), 1 roti, salad, curd": "ग्रील्ड चिकन (१०० ग्रॅम), १ रोटी, सॅलड, दही",
+        "grilled fish, sautéed vegetables, light soup": "ग्रील्ड फिश, परतून घेतलेल्या भाज्या, हलके सूप",
+        "veggie omelette (2 eggs) + green tea": "व्हेजी ऑम्लेट (२ अंडी) + ग्रीन टी",
+        "grilled chicken salad (150g), lemon dressing": "ग्रील्ड चिकन सॅलड (१५० ग्रॅम), लिंबू ड्रेसिंग",
+        "grilled salmon (120g) with steamed vegetables": "स्टीम केलेल्या भाज्यांसह ग्रील्ड सॅल्मन (१२० ग्रॅम)",
+        "4 egg whites + oats + whey protein shake": "४ अंड्याचा पांढरा भाग + ओट्स + व्हे प्रोटीन शेक",
+        "chicken curry (200g), brown rice (2 cups), salad": "चिकन करी (२०० ग्रॅम), ब्राउन राईस (२ कप), सॅलड",
+        "grilled fish (150g), sweet potato, asparagus": "ग्रील्ड फिश (१५० ग्रॅम), रताळे, शतावरी (asparagus)",
+
+        // Grocery items
+        "oats (500g)": "ओट्स (५०० ग्रॅम)",
+        "milk (1l)": "दूध (१ लिटर)",
+        "bananas (6)": "केळी (६)",
+        "mixed dal (500g)": "मिश्र डाळ (५०० ग्रॅम)",
+        "whole wheat flour (1kg)": "संपूर्ण गव्हाचे पीठ (१ किलो)",
+        "brown rice (1kg)": "ब्राउन राईस (१ किलो)",
+        "paneer (200g)": "पनीर (२०० ग्रॅम)",
+        "eggs (12)": "अंडी (१२)",
+        "chicken breast (500g)": "चिकन ब्रेस्ट (५०० ग्रॅम)",
+        "fish fillets (300g)": "माशांचे तुकडे (३०० ग्रॅम)",
+        "mixed vegetables (1kg)": "मिश्र भाज्या (१ किलो)",
+        "salad greens": "हिरवे सॅलड",
+        "almonds (200g)": "बदाम (२०० ग्रॅम)",
+        "makhana (200g)": "मखाणा (२०० ग्रॅम)",
+        "curd/yogurt (500g)": "दही/योगर्ट (५०० ग्रॅम)",
+        "spinach (250g)": "पालक (२५० ग्रॅम)",
+        "tofu (200g)": "टोफू (२०० ग्रॅम)",
+        
+        // Weekly themes
+        "high protein": "उच्च प्रथिने",
+        "low carb": "कमी कर्बोदके",
+        "salad day": "सॅलड दिवस",
+        "lean protein": "लीन प्रोटीन",
+        "soup day": "सूप दिवस",
+        "light meals": "हलके जेवण",
+        "meal prep": "जेवण पूर्वतयारी",
+        "heavy protein": "भरपूर प्रथिने",
+        "carb load": "कार्ब लोड",
+        "recovery": "रिकव्हरी",
+        "strength": "ताकद वाढवणे",
+        "active": "सक्रिय",
+        "cheat meal": "चीट मील",
+        "rest & recover": "विश्रांती आणि रिकव्हरी",
+        "low gi": "कमी ग्लायसेमिक इंडेक्स (Low GI)",
+        "fiber rich": "फायबर समृद्ध",
+        "no sugar": "विना साखर",
+        "whole grains": "तृणधान्ये",
+        "lean meals": "कमी चरबीचे जेवण",
+        "veggie focus": "भाज्यांवर लक्ष",
+        "balance": "संतुलन",
+        "low sodium": "कमी सोडियम",
+        "omega-3": "ओमेगा-३",
+        "plant based": "वनस्पतीजन्य",
+        "light dinner": "हलके रात्रीचे जेवण",
+        "fresh produce": "ताजी उत्पादने",
+        "indian classic": "पारंपरिक भारतीय",
+        "south indian": "दाक्षिणात्य भारतीय",
+        "north indian": "उत्तर भारतीय",
+        "protein focus": "प्रथिनांवर भर",
+        "veggie day": "व्हेज दिवस",
+        "family meal": "कौटुंबिक जेवण",
+        "light": "हलके",
+
+        // General fallback mapping
+        "oats": "ओट्स",
+        "dal": "डाळ",
+        "vegetables": "भाज्या",
+        "fruits": "फळे",
+        "eggs/chicken (as per preference)": "अंडी/चिकन (पसंतीनुसार)"
+    };
+
+    const dayTranslations = {
+        "monday": "सोमवार",
+        "tuesday": "मंगळवार",
+        "wednesday": "बुधवार",
+        "thursday": "गुरुवार",
+        "friday": "शुक्रवार",
+        "saturday": "शनिवार",
+        "sunday": "रविवार"
+    };
+
+    function t(str) {
+        if (!str) return "";
+        const key = str.toLowerCase().trim();
+        if (foodTranslations[key]) {
+            return foodTranslations[key];
+        }
+        let result = str;
+        for (const [eng, mar] of Object.entries(foodTranslations)) {
+            if (eng.length > 3 && key.includes(eng)) {
+                result = result.replace(new RegExp(eng, 'gi'), mar);
+            }
+        }
+        return result;
+    }
+
     const pref = document.getElementById('profile-pref').value;
     const goal = "{{ patient.diet_goal or 'Balanced' }}";
     const body = {
@@ -1137,26 +1281,88 @@ async function generateAIPlan() {
     };
     const el = document.getElementById('ai-plan-result');
     el.style.display = 'block';
-    el.innerHTML = '<p>⏳ Generating personalized plan...</p>';
+    el.innerHTML = `
+        <p class="lang-en">⏳ ${labelTranslations.generating.en}</p>
+        <p class="lang-mr">⏳ ${labelTranslations.generating.mr}</p>
+    `;
+
     try {
         const resp = await fetch('/api/diet/generate', {
             method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
         });
         const data = await resp.json();
-        if (data.status !== 'success') { el.innerHTML = '<p>Error generating plan.</p>'; return; }
+        if (data.status !== 'success') {
+            const errMsg = data.message || labelTranslations.error_gen.en;
+            el.innerHTML = `
+                <p class="lang-en">❌ ${errMsg}</p>
+                <p class="lang-mr">❌ ${labelTranslations.error_gen.mr}</p>
+            `;
+            return;
+        }
         const p = data.plan;
         const meals = pref === 'vegetarian' ? p.vegetarian : p.non_vegetarian;
-        let html = `<h5 style="font-weight:800;color:#065F46;margin-bottom:10px;">🤖 Your AI Plan — BMI ${p.bmi}, ${p.daily_calories} kcal/day, ${p.water_intake_litres}L water</h5>`;
+        let html = `
+            <h5 style="font-weight:800;color:#065F46;margin-bottom:10px;">
+                <span class="lang-en">🤖 ${labelTranslations.ai_plan.en} — BMI ${p.bmi}, ${p.daily_calories} kcal/day, ${p.water_intake_litres}L water</span>
+                <span class="lang-mr">🤖 ${labelTranslations.ai_plan.mr} — बीएमआय ${p.bmi}, ${p.daily_calories} कॅलरी/दिवस, ${p.water_intake_litres} लिटर पाणी</span>
+            </h5>
+        `;
         html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;">';
         for (const [k,v] of Object.entries(meals)) {
-            html += `<div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #D1FAE5;"><strong>${k.replace('_',' ').title()}:</strong><br>${v}</div>`;
+            const engKey = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            const marKey = labelTranslations[k] ? labelTranslations[k].mr : engKey;
+            html += `
+                <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #D1FAE5;">
+                    <strong>
+                        <span class="lang-en">${engKey}:</span>
+                        <span class="lang-mr">${marKey}:</span>
+                    </strong><br>
+                    <span class="lang-en">${v}</span>
+                    <span class="lang-mr">${t(v)}</span>
+                </div>
+            `;
         }
         html += '</div>';
-        html += '<p><strong>Weekly Planner:</strong> ' + p.weekly_plan.map(d=>d.day+': '+d.theme).join(' · ') + '</p>';
-        html += '<p><strong>Grocery List:</strong> ' + p.grocery_list.join(', ') + '</p>';
-        html += `<p style="font-size:.8rem;color:#6B7280;">Protein: ${p.nutrition.protein_g}g | Carbs: ${p.nutrition.carbs_g}g | Fat: ${p.nutrition.fat_g}g</p>`;
+        
+        const weeklyEn = p.weekly_plan.map(d=>d.day+': '+d.theme).join(' · ');
+        const weeklyMr = p.weekly_plan.map(d=> (dayTranslations[d.day.toLowerCase()] || d.day) + ': ' + t(d.theme)).join(' · ');
+        
+        const groceryEn = p.grocery_list.join(', ');
+        const groceryMr = p.grocery_list.map(item => t(item)).join(', ');
+
+        html += `
+            <p>
+                <strong>
+                    <span class="lang-en">${labelTranslations.weekly_planner.en}:</span>
+                    <span class="lang-mr">${labelTranslations.weekly_planner.mr}:</span>
+                </strong> 
+                <span class="lang-en">${weeklyEn}</span>
+                <span class="lang-mr">${weeklyMr}</span>
+            </p>
+        `;
+        html += `
+            <p>
+                <strong>
+                    <span class="lang-en">${labelTranslations.grocery_list.en}:</span>
+                    <span class="lang-mr">${labelTranslations.grocery_list.mr}:</span>
+                </strong> 
+                <span class="lang-en">${groceryEn}</span>
+                <span class="lang-mr">${groceryMr}</span>
+            </p>
+        `;
+        html += `
+            <p style="font-size:.8rem;color:#6B7280;">
+                <span class="lang-en">Protein: ${p.nutrition.protein_g}g | Carbs: ${p.nutrition.carbs_g}g | Fat: ${p.nutrition.fat_g}g</span>
+                <span class="lang-mr">प्रथिने: ${p.nutrition.protein_g}ग्रॅम | कर्बोदके: ${p.nutrition.carbs_g}ग्रॅम | चरबी: ${p.nutrition.fat_g}ग्रॅम</span>
+            </p>
+        `;
         el.innerHTML = html;
-    } catch(e) { el.innerHTML = '<p>Failed to generate plan.</p>'; }
+    } catch(e) {
+        el.innerHTML = `
+            <p class="lang-en">❌ ${labelTranslations.failed.en}</p>
+            <p class="lang-mr">❌ ${labelTranslations.failed.mr}</p>
+        `;
+    }
 }
 
 // ── Page-level Theme + Lang controls ──
