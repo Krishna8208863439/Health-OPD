@@ -143,11 +143,95 @@ body {
   color: var(--primary) !important;
 }
 
+html.dark-theme .topnav-logo {
+  color: #fff !important;
+}
+
 .topnav-logo .logo-icon {
   background: var(--primary-bg) !important;
   color: var(--primary);
   border-radius: 12px !important;
   font-size: 1.3rem !important;
+}
+
+html.dark-theme .topnav-logo .logo-icon {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+/* Style Top Navigation Controls for Dark Theme */
+html.dark-theme #topnav {
+  background: rgba(22, 27, 34, 0.8) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* Topnav Language Switcher Buttons & Controls */
+.topnav-lang-select {
+  background: rgba(0, 102, 204, 0.06) !important;
+  border: 1px solid rgba(0, 102, 204, 0.15) !important;
+}
+
+html.dark-theme .topnav-lang-select {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.global-lang-btn-en, .global-lang-btn-mr {
+  color: var(--muted) !important;
+}
+
+.global-lang-btn-en.active-lang, .global-lang-btn-mr.active-lang {
+  background: var(--card) !important;
+  color: var(--primary) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.dark-theme .global-lang-btn-en.active-lang,
+html.dark-theme .global-lang-btn-mr.active-lang {
+  background: #1f2937 !important;
+  color: #58a6ff !important;
+}
+
+/* Theme Toggle Button Controls */
+#theme-toggle-btn, #theme-toggle-btn-anonymous {
+  background: rgba(0, 102, 204, 0.06) !important;
+  border: 1px solid rgba(0, 102, 204, 0.15) !important;
+  color: var(--muted) !important;
+}
+
+html.dark-theme #theme-toggle-btn, html.dark-theme #theme-toggle-btn-anonymous {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+#theme-icon, #theme-icon-anonymous {
+  color: var(--muted) !important;
+}
+
+html.dark-theme #theme-icon, html.dark-theme #theme-icon-anonymous {
+  color: #FFC107 !important;
+}
+
+/* Top Navigation Hamburger Menu */
+#hamburger {
+  color: var(--dark) !important;
+}
+
+html.dark-theme #hamburger {
+  color: #fff !important;
+}
+
+/* Clock Display Ticker */
+#nav-clock {
+  background: rgba(0, 102, 204, 0.06) !important;
+  border: 1px solid rgba(0, 102, 204, 0.15) !important;
+  color: var(--primary) !important;
+}
+
+html.dark-theme #nav-clock {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #58a6ff !important;
 }
 
 #bottomnav {
@@ -156,6 +240,11 @@ body {
   border-top: 1px solid var(--border) !important;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.04) !important;
   height: calc(var(--tab-h) + var(--safe-b)) !important;
+}
+
+html.dark-theme #bottomnav {
+  background: rgba(22, 27, 34, 0.85) !important;
+  border-top: 1px solid var(--border) !important;
 }
 
 .bnav-inner {
