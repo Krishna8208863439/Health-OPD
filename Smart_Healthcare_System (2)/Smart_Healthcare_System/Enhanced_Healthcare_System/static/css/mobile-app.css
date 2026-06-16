@@ -49,6 +49,7 @@ body {
   font-family: 'Inter', -apple-system, sans-serif;
   min-height: 100vh;
   margin-bottom: calc(var(--tab-h) + var(--safe-b));
+  overflow-x: hidden !important;
 }
 
 #page-wrap {
@@ -422,5 +423,9 @@ body {
   
   .sym-grid {
     grid-template-columns: 1fr 1fr !important;
+  }
+  
+  #nav-clock {
+    display: none !important;
   }
 }
