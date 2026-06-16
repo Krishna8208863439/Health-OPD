@@ -68,7 +68,7 @@ body {
 }
 
 /* ── Interactive Elements ── */
-.btn, .bnav-btn, .sev-btn, .sym-item {
+.btn, .bnav-item, .sev-btn, .sym-item {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-tap-highlight-color: transparent;
 }
@@ -158,32 +158,32 @@ body {
   height: calc(var(--tab-h) + var(--safe-b)) !important;
 }
 
-.bottomnav-inner {
+.bnav-inner {
   height: var(--tab-h) !important;
   max-width: 600px;
   margin: 0 auto;
 }
 
-.bnav-btn {
+.bnav-item {
   color: var(--muted) !important;
   font-size: 0.65rem !important;
   font-weight: 700 !important;
 }
 
-.bnav-btn.active {
+.bnav-item.active {
   color: var(--primary) !important;
 }
 
-.bnav-btn i {
+.bnav-item i {
   font-size: 1.35rem !important;
   margin-bottom: 4px;
 }
 
 /* SOS Navigation link button glow */
-.dnav-link.sos, .bnav-btn.sos-btn {
+.dnav-a.sos-link, .bnav-item.sos-tab {
   color: var(--danger) !important;
 }
-.bnav-btn.sos-btn i {
+.bnav-item.sos-tab i {
   animation: sosIconPulse 2s infinite ease-in-out;
 }
 
@@ -209,14 +209,14 @@ body {
   padding: 30px 24px 24px !important;
 }
 
-.drawer-link {
+.drawer-item {
   border-radius: 12px !important;
   margin: 4px 12px !important;
   padding: 10px 16px !important;
   font-weight: 600 !important;
 }
 
-.drawer-link:hover, .drawer-link.active {
+.drawer-item:hover, .drawer-item.active {
   background: var(--primary-bg) !important;
   color: var(--primary) !important;
 }
