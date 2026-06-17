@@ -250,17 +250,44 @@ html.dark-theme #bottomnav {
 .bnav-inner {
   height: var(--tab-h) !important;
   max-width: 600px;
+  width: 100% !important;
   margin: 0 auto;
+  display: flex !important;
 }
 
 .bnav-item {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   color: var(--muted) !important;
   font-size: 0.65rem !important;
   font-weight: 700 !important;
+  text-decoration: none !important;
+  position: relative !important;
 }
 
 .bnav-item.active {
   color: var(--primary) !important;
+}
+
+.bnav-item.active::before {
+  background: var(--primary) !important;
+}
+
+html.dark-theme .bnav-item.active::before {
+  background: #58a6ff !important;
+}
+
+.bnav-item > span {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .bnav-item i {
@@ -516,5 +543,32 @@ html.dark-theme #bottomnav {
   
   #nav-clock {
     display: none !important;
+  }
+
+  /* Bottom navigation bar mobile optimization */
+  #bottomnav {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+
+  .bnav-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+  }
+
+  .bnav-item {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    font-size: 0.58rem !important;
+  }
+
+  .bnav-item i {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
   }
 }
