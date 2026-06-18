@@ -73,6 +73,30 @@
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
     }
+
+    .btn-forgot {
+        background: transparent;
+        color: var(--accent);
+        border: 2px solid var(--accent);
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 10px;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        font-size: 0.95rem;
+    }
+
+    .btn-forgot:hover {
+        background: var(--accent);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    }
     
     .signup-link {
         text-align: center;
@@ -111,10 +135,14 @@
                 <input type="password" class="form-control" name="password" required placeholder="Enter your password">
             </div>
             
-            <button type="submit" class="btn btn-login">
+            <button type="submit" class="btn btn-login" id="login-btn">
                 <i class="fas fa-sign-in-alt"></i> Login
             </button>
         </form>
+
+        <a href="{{ url_for('forgot_password') }}" class="btn-forgot" id="forgot-password-btn">
+            <i class="fas fa-key"></i> Forgot Password?
+        </a>
         
         <div class="signup-link">
             <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up Here</a></p>

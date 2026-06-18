@@ -807,6 +807,75 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('login'))
 
+# ── Forgot Password ──────────────────────────────────────────────────────────
+
+@app.route('/forgot-password', methods=['GET'])
+def forgot_password():
+    """Render the multi-step forgot-password page."""
+    return render_template('forgot_password.html')
+
+
+@app.route('/forgot-password/verify', methods=['POST'])
+def forgot_password_verify():
+    """AJAX: check that the supplied e-mail belongs to a registered user."""
+    email = request.form.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'success': False, 'message': 'Please enter your email address.'})
+
+    conn = get_db()
+    cur  = conn.cursor()
+    user = cur.execute("SELECT id, full_name FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+    conn.close()
+
+    if user:
+        # Store the verified e-mail in the session so the reset step is tied to it
+        session['fp_email'] = email
+        return jsonify({'success': True, 'message': f'Email verified. Welcome back, {user["full_name"]}!'})
+    else:
+        return jsonify({'success': False, 'message': 'No account found with that email address.'})
+
+
+@app.route('/forgot-password/reset', methods=['POST'])
+def forgot_password_reset():
+    """AJAX: reset the password for the verified e-mail."""
+    email            = request.form.get('email', '').strip().lower()
+    new_password     = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+
+    # Server-side validation
+    if not email:
+        return jsonify({'success': False, 'message': 'Session expired. Please start again.'})
+
+    # Double-check the e-mail matches what was verified in the session
+    if session.get('fp_email', '').lower() != email:
+        return jsonify({'success': False, 'message': 'Session mismatch. Please start again.'})
+
+    if not new_password or len(new_password) < 6:
+        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'})
+
+    if new_password != confirm_password:
+        return jsonify({'success': False, 'message': 'Passwords do not match.'})
+
+    conn = get_db()
+    cur  = conn.cursor()
+    user = cur.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+
+    if not user:
+        conn.close()
+        return jsonify({'success': False, 'message': 'User not found. Please start again.'})
+
+    new_hash = generate_password_hash(new_password)
+    cur.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user['id']))
+    conn.commit()
+    conn.close()
+
+    # Clear the session key so it cannot be reused
+    session.pop('fp_email', None)
+
+    return jsonify({'success': True, 'message': 'Password reset successfully!'})
+
+# ── End Forgot Password ───────────────────────────────────────────────────────
+
 @app.route('/patient-dashboard')
 @login_required
 def patient_dashboard():
