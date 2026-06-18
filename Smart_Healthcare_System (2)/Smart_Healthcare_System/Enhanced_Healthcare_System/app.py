@@ -823,6 +823,68 @@ def login():
     
     return render_template('login.html')
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        contact = request.form.get('contact', '').strip()
+        
+        if not email or not contact:
+            flash('❌ Email and contact number are required.', 'danger')
+            return redirect(url_for('forgot_password'))
+            
+        conn = get_db()
+        cur = conn.cursor()
+        user = cur.execute("SELECT * FROM users WHERE email = ? AND contact = ?", (email, contact)).fetchone()
+        conn.close()
+        
+        if user:
+            session['reset_email'] = email
+            return redirect(url_for('reset_password'))
+        else:
+            flash('❌ No matching account found with that email and contact number.', 'danger')
+            return redirect(url_for('forgot_password'))
+            
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    email = session.get('reset_email')
+    if not email:
+        flash('❌ Unauthorized access. Please verify your details first.', 'danger')
+        return redirect(url_for('forgot_password'))
+        
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password or len(new_password) < 6:
+            flash('❌ Password must be at least 6 characters long.', 'danger')
+            return redirect(url_for('reset_password'))
+            
+        if new_password != confirm_password:
+            flash('❌ Passwords do not match.', 'danger')
+            return redirect(url_for('reset_password'))
+            
+        conn = get_db()
+        cur = conn.cursor()
+        password_hash = generate_password_hash(new_password)
+        cur.execute("UPDATE users SET password_hash = ? WHERE email = ?", (password_hash, email))
+        conn.commit()
+        conn.close()
+        
+        session.pop('reset_email', None)
+        flash('✅ Password updated successfully! You can now log in.', 'success')
+        return redirect(url_for('login'))
+        
+    return render_template('reset_password.html')
+
 @app.route('/logout')
 @login_required
 def logout():
