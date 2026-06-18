@@ -1,0 +1,43 @@
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+.Python
+
+# Virtual environments
+venv/
+env/
+.env/
+ENV/
+
+# Generated PDF reports (keep folder, not files)
+static/reports/*.pdf
+
+# ML model cache
+model_cache/
+*.pkl
+*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution
+dist/
+build/
+*.egg-info/
