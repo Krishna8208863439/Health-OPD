@@ -235,6 +235,47 @@
 }
 .log-api-btn:hover { background: #047857; }
 
+/* Health Verdict Banner */
+.health-verdict-banner {
+    display: none;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.verdict-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.verdict-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+}
+.verdict-emoji { font-size: 1.4rem; line-height: 1; }
+.verdict-label { font-size: 0.78rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.6); }
+.verdict-detail { font-size: 0.8rem; margin-top: 8px; line-height: 1.5; opacity: 0.9; }
+
+/* Non-food error card */
+.nonfood-error {
+    display: none;
+    background: #FFF1F2;
+    border: 2px solid #FDA4AF;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    margin-top: 12px;
+    animation: slideUp 0.35s ease;
+}
+.nonfood-error .nf-icon { font-size: 2.4rem; margin-bottom: 8px; }
+.nonfood-error h4 { color: #BE123C; font-weight: 800; margin-bottom: 6px; }
+.nonfood-error p { font-size: 0.83rem; color: #9F1239; margin: 0; }
+
 /* Fallback Selector */
 .fallback-selector {
     margin-top: 20px;
@@ -253,7 +294,7 @@
     <div class="ico">📸</div>
     <div>
         <h2>AI Food Scanner &amp; Calorie Tracker</h2>
-        <p>Align the food in the grid viewfinder and click Scan. Our recognition algorithm will scan and calculate calories immediately.</p>
+        <p>Point your camera or upload a food photo. We identify the food, calculate its exact calories &amp; macros, and tell you if it's <strong>healthy or not</strong>.</p>
     </div>
 </div>
 
@@ -325,6 +366,19 @@
                     <div class="result-food-name" id="res-food-name">Apple</div>
                     <div class="result-calories"><span id="res-calories">95</span> kcal</div>
                 </div>
+
+                <!-- ✅ / ⚠️ / ❌ Health Verdict Banner -->
+                <div class="health-verdict-banner" id="health-verdict-banner">
+                    <div class="verdict-row">
+                        <div class="verdict-badge">
+                            <span class="verdict-emoji" id="verdict-emoji">✅</span>
+                            <span id="verdict-title">HEALTHY CHOICE</span>
+                        </div>
+                        <span class="verdict-label" id="verdict-label-badge">GOOD FOOD</span>
+                    </div>
+                    <p class="verdict-detail" id="verdict-detail"></p>
+                </div>
+
                 <div class="macro-grid">
                     <div class="macro-item">
                         <div class="macro-val" id="res-protein">0.5g</div>
@@ -354,10 +408,10 @@
                     <p id="goal-fit-rationale" style="font-size: 0.84rem; line-height: 1.5; margin: 0;"></p>
                 </div>
 
-                <!-- ChatGPT Vision Response -->
+                <!-- AI Vision Analysis -->
                 <div class="chatgpt-response-box" style="margin-top: 14px; margin-bottom: 14px; background: #fff; border: 1.5px solid #D1FAE5; border-radius: 10px; padding: 12px 14px; text-align: left; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.05);">
                     <div style="display: flex; align-items: center; gap: 6px; font-weight: 800; color: #059669; font-size: 0.85rem; margin-bottom: 6px;">
-                        <i class="fas fa-robot"></i> ChatGPT Food Vision Analysis
+                        <i class="fas fa-robot"></i> Food Vision Analysis
                     </div>
                     <p id="chatgpt-vision-text" style="font-size: 0.82rem; color: #047857; line-height: 1.45; margin: 0; font-style: italic;"></p>
                 </div>
@@ -365,6 +419,13 @@
                 <button class="log-api-btn" onclick="logScannedCalories()">
                     💾 Log Calories to Wellness Log
                 </button>
+            </div>
+
+            <!-- Non-Food Error Card -->
+            <div class="nonfood-error" id="nonfood-error-card">
+                <div class="nf-icon">🚫</div>
+                <h4>Not a Food Item!</h4>
+                <p id="nonfood-error-msg">Please scan or upload an image of food or a drink only. Non-food objects cannot be analyzed.</p>
             </div>
         </div>
 
@@ -656,9 +717,11 @@ function syncCustomFoodName(val) {
 let lastScannedItem = null;
 
 function triggerScan() {
-    // Hide results card & show analyzer spinner
+    // Hide results card, error card & show analyzer spinner
     document.getElementById('scan-result-card').style.display = 'none';
     document.getElementById('goal-fit-card').style.display = 'none';
+    document.getElementById('nonfood-error-card').style.display = 'none';
+    document.getElementById('health-verdict-banner').style.display = 'none';
     
     // Capture snapshot if camera feed is active to freeze the image during scan
     if (streamActive && videoEl.style.display !== 'none') {
@@ -715,22 +778,32 @@ function triggerScan() {
 function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) {
     // Reset analyzer box HTML in case it was changed by TFJS
     document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Analyzing food patterns...</div><div style="font-size:0.78rem; color:#6B7280; margin-top:2px;">Comparing with nutrition index</div>';
+    document.getElementById('nonfood-error-card').style.display = 'none';
     
     // Call backend API
     fetch('/api/food/scan', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
     .then(response => {
+        if (response.status === 422) {
+            // Non-food item or invalid food name
+            return response.json().then(err => {
+                document.getElementById('analyzer-box').style.display = 'none';
+                document.getElementById('scan-action-btn').disabled = false;
+                document.getElementById('nonfood-error-msg').textContent = err.message || 'Please scan food items only.';
+                document.getElementById('nonfood-error-card').style.display = 'block';
+                throw null; // stop chain
+            });
+        }
         if (!response.ok) {
             return response.json().then(err => { throw new Error(err.message || "Failed to scan food.") });
         }
         return response.json();
     })
     .then(data => {
+        if (!data) return; // null from 422 handler
         document.getElementById('analyzer-box').style.display = 'none';
         document.getElementById('scan-action-btn').disabled = false;
 
@@ -744,6 +817,21 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
                 fat: data.fat
             };
 
+            // ── Render Health Verdict Banner ──────────────────────────────────
+            const hv = data.health_verdict;
+            if (hv) {
+                const banner = document.getElementById('health-verdict-banner');
+                document.getElementById('verdict-emoji').textContent = hv.emoji;
+                document.getElementById('verdict-title').textContent = hv.label;
+                document.getElementById('verdict-label-badge').textContent = hv.verdict === 'good' ? '✅ GOOD FOOD' : (hv.verdict === 'caution' ? '⚠️ MODERATE' : '❌ UNHEALTHY');
+                document.getElementById('verdict-detail').textContent = hv.detail;
+                banner.style.background = hv.bg;
+                banner.style.border = `2px solid ${hv.border}`;
+                banner.style.color = hv.text_color;
+                document.getElementById('verdict-title').style.color = hv.color;
+                banner.style.display = 'block';
+            }
+
             // Build API status description text
             let finalVisionApi = visionApiUsed || data.api_vision_used;
             let finalConfidence = confidenceScore || data.confidence;
@@ -752,11 +840,11 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
             if (finalVisionApi !== "N/A" || data.api_nutrition_used !== "N/A") {
                 apiInfo = `[LIVE MODE] Identified using ${finalVisionApi !== "N/A" ? finalVisionApi : 'Local Vision'} and nutrition via ${data.api_nutrition_used || 'Local Catalog'}.`;
             } else {
-                apiInfo = `[DEMO MODE] Identified using local smart heuristics. Configure API keys in environment variables for live connection.`;
+                apiInfo = `[DEMO MODE] Identified using local smart heuristics. Configure GEMINI_API_KEY in environment variables for live food recognition.`;
             }
 
-            // Construct GPT vision description narrative
-            const chatgptText = `Based on the visual features, texture, and color spectrum of this scan, I identify this item as ${data.food_name} with high confidence (${finalConfidence}%). A serving contains approximately ${data.calories} kcal, with a nutritional profile of ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. ${apiInfo}`;
+            // Construct AI vision description narrative
+            const chatgptText = `Food identified: ${data.food_name} (confidence: ${finalConfidence}%). A serving contains approximately ${data.calories} kcal — ${data.protein} protein, ${data.carbs} carbohydrates, and ${data.fat} fat. ${apiInfo}`;
 
             // Update DOM elements
             document.getElementById('res-food-name').textContent = data.food_name;
@@ -772,7 +860,6 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
             let fVal = parseFloat(data.fat) || 0;
             let totalMacros = pVal + cVal + fVal || 1;
             
-            // Allow bars to animate from 0 by doing it in next tick
             setTimeout(() => {
                 document.getElementById('bar-protein').style.width = Math.min(100, (pVal / totalMacros) * 100 * 1.5) + '%';
                 document.getElementById('bar-carbs').style.width = Math.min(100, (cVal / totalMacros) * 100 * 1.5) + '%';
@@ -788,7 +875,6 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
             goalFitTitle.textContent = data.diet_goal;
             goalFitRationale.textContent = data.rationale;
             
-            // Apply status color coding styles
             if (data.color_class === 'success') {
                 goalFitCard.style.background = '#ECFDF5';
                 goalFitCard.style.border = '2px solid #A7F3D0';
@@ -803,7 +889,7 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
                 goalFitBadge.style.background = '#F59E0B';
                 goalFitBadge.style.color = '#FFFFFF';
                 goalFitBadge.textContent = '⚠️ CAUTION FIT';
-            } else { // danger / doesn't fit
+            } else {
                 goalFitCard.style.background = '#FEF2F2';
                 goalFitCard.style.border = '2px solid #FCA5A5';
                 goalFitCard.style.color = '#991B1B';
@@ -825,6 +911,9 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
                 localStorage.setItem('cached_food_goal_title', data.diet_goal);
                 localStorage.setItem('cached_food_goal_rationale', data.rationale);
                 localStorage.setItem('cached_food_goal_color', data.color_class);
+                if (data.health_verdict) {
+                    localStorage.setItem('cached_health_verdict', JSON.stringify(data.health_verdict));
+                }
             } catch (cacheErr) {
                 console.warn("Storage quota exceeded or private mode, skipping caching:", cacheErr);
             }
@@ -834,6 +923,7 @@ function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) 
         }
     })
     .catch(err => {
+        if (err === null) return; // handled 422
         document.getElementById('analyzer-box').style.display = 'none';
         document.getElementById('scan-action-btn').disabled = false;
         alert(err.message || "An error occurred while analyzing the food.");

@@ -1593,15 +1593,25 @@ def scan_food():
     api_nutrition_used = "N/A"
     confidence = 1.0
 
-    # Step 1: Vision identification if image is provided and name is not explicitly passed
+    # Step 1: Vision identification – food-only validation built in
     if image_data and not food_name:
         try:
             food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data)
+        except ValueError as ve:
+            # Non-food item detected by Gemini/OpenAI vision
+            return jsonify({'status': 'error', 'message': str(ve)}), 422
         except Exception as e:
             return jsonify({'status': 'error', 'message': f'Vision analysis failed: {str(e)}'}), 500
 
     if not food_name:
         return jsonify({'status': 'error', 'message': 'Please provide a food name or upload a clear food image.'}), 400
+
+    # Validate manually typed food names against food keyword registry
+    if not food_scanner_service.is_food_item(food_name):
+        return jsonify({
+            'status': 'error',
+            'message': f'"{food_name}" does not appear to be a food item. Please enter a valid food or beverage name.'
+        }), 422
 
     # Step 2: Fetch nutrition info
     try:
@@ -1609,7 +1619,10 @@ def scan_food():
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Nutrition lookup failed: {str(e)}'}), 500
 
-    # Step 3: Check dietary goal compatibility
+    # Step 3: Overall Good / Bad health verdict
+    health_verdict = food_scanner_service.get_food_health_verdict(nutrition)
+
+    # Step 4: Dietary goal compatibility check
     diet_goal = getattr(current_user, 'diet_goal', 'Balanced')
     fits, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
 
@@ -1626,7 +1639,8 @@ def scan_food():
         'color_class': color_class,
         'api_vision_used': api_vision_used,
         'api_nutrition_used': api_nutrition_used,
-        'confidence': round(confidence * 100)
+        'confidence': round(confidence * 100),
+        'health_verdict': health_verdict
     })
 
 
