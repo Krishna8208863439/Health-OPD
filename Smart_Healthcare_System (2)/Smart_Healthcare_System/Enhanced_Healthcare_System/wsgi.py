@@ -1,11 +1,9 @@
 import sys
 import os
 
-# Exact path on PythonAnywhere for kd3114
-# Repo cloned as: /home/kd3114/Health-OPD
-# App lives at:   /home/kd3114/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System
-
-project_home = '/home/kd3114/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System'
+# PythonAnywhere path for account KD3114
+# Username is case-sensitive: KD3114 (uppercase)
+project_home = '/home/KD3114/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System'
 
 if project_home not in sys.path:
     sys.path.insert(0, project_home)

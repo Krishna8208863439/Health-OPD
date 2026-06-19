@@ -1,19 +1,15 @@
 #!/bin/bash
 # ============================================================
-#  HealthCare Plus – PythonAnywhere UPDATE Script for kd3114
-#  Run this in the PythonAnywhere Bash console to pull latest
-#  code and reload the web app.
-#
-#  HOW TO USE:
-#   1. Open PythonAnywhere Bash console for kd3114
-#   2. Run:  bash ~/update_app.sh
+#  HealthCare Plus — Quick Update Script for KD3114
+#  Run in PythonAnywhere Bash console:
+#    bash ~/Health-OPD/"Smart_Healthcare_System (2)"/Smart_Healthcare_System/Enhanced_Healthcare_System/update_pa.sh
 # ============================================================
 
-set -e
-
-USERNAME="kd3114"
+# IMPORTANT: Username is KD3114 (uppercase)
+USERNAME="KD3114"
 REPO_DIR="/home/$USERNAME/Health-OPD"
 APP_DIR="$REPO_DIR/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System"
+WSGI_FILE="/var/www/kd3114_pythonanywhere_com_wsgi.py"
 
 echo ""
 echo "=============================================="
@@ -27,29 +23,40 @@ git reset --hard origin/main
 git pull origin main
 
 echo ""
-echo "[✓] Latest code pulled from GitHub (feat: food scanner improvements)"
+echo "[✓] Latest code pulled from GitHub"
 echo ""
-echo "  Changes in this update:"
-echo "  - Food scanner now ONLY scans food items"
-echo "  - Non-food images are rejected with a clear error"
-echo "  - Good/Bad/Caution health verdict shown after scan"
-echo "  - Gemini AI vision used for accurate food identification"
+echo "  Food Scanner Features:"
+echo "  - ONLY scans food items (hands/objects rejected)"
+echo "  - Good / Bad / Caution health verdict shown"
+echo "  - Gemini AI vision for accurate food recognition"
 echo ""
 
-# Ensure static dirs exist
+# Ensure dirs exist
 mkdir -p "$APP_DIR/static/reports"
 mkdir -p "$APP_DIR/static/assets"
 
-echo "[✓] Directories verified"
+# Fix WSGI file with correct UPPERCASE username
+cat > "$WSGI_FILE" << EOF
+import sys
+import os
 
-# Touch wsgi to trigger reload
-touch /var/www/${USERNAME}_pythonanywhere_com_wsgi.py
+project_home = '/home/KD3114/Health-OPD/Smart_Healthcare_System (2)/Smart_Healthcare_System/Enhanced_Healthcare_System'
 
-echo "[✓] Web app reloaded"
+if project_home not in sys.path:
+    sys.path.insert(0, project_home)
+
+os.chdir(project_home)
+
+from app import app as application
+EOF
+
+# Touch to reload
+touch "$WSGI_FILE"
+
+echo "[✓] WSGI fixed and web app reloaded"
 echo ""
 echo "=============================================="
-echo "  DONE! App is live at:"
-echo "  https://$USERNAME.pythonanywhere.com"
-echo ""
-echo "  Food Scanner: https://$USERNAME.pythonanywhere.com/food-scanner"
+echo "  App is LIVE at:"
+echo "  https://kd3114.pythonanywhere.com"
+echo "  Food Scanner: /food-scanner"
 echo "=============================================="
