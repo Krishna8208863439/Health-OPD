@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+{% block title %}AI Health Assistant – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --chat-bg: #F8FAFC;
+  --chat-card: #FFFFFF;
+  --chat-border: #E2E8F0;
+  --chat-text: #1E293B;
+  --bot-bubble: #F1F5F9;
+  --user-bubble: linear-gradient(135deg, #0066CC, #0052A3);
+  --user-text: #FFFFFF;
+  --bot-text: #1E293B;
+  --emerg-bg: #FEF2F2;
+  --emerg-border: #FCA5A5;
+  --emerg-text: #991B1B;
+}
+
+/* ── Chat Page Layout ── */
+.chat-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: calc(100vh - 120px);
+  min-height: 580px;
+}
+
+@media(max-width: 900px) {
+  .chat-container { grid-template-columns: 1fr; height: auto; }
+  .chat-sidebar { display: none; }
+}
+
+/* ── Sidebar ── */
+.chat-sidebar {
+  background: var(--card); border-radius: 16px; border: 1px solid var(--border);
+  padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 20px;
+}
+.sidebar-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.topic-list { display: flex; flex-direction: column; gap: 8px; }
+.topic-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 10px; font-size: 0.82rem; font-weight: 700; color: var(--text);
+  cursor: pointer; transition: all 0.2s; background: var(--bg); border: 1px solid var(--border);
+}
+.topic-item:hover { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+
+/* ── Chat Window ── */
+.chat-window {
+  background: var(--card); border-radius: 16px; border: 1px solid var(--border);
+  box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden;
+  height: 100%;
+}
+.chat-header {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); color: white;
+}
+.chat-header h2 { font-size: 1.1rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px; }
+.chat-header p { margin: 2px 0 0; font-size: 0.72rem; opacity: 0.75; }
+
+/* Language Switcher */
+.lang-switcher {
+  display: flex; gap: 4px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 8px;
+}
+.lang-btn {
+  background: transparent; border: none; color: rgba(255,255,255,0.6); padding: 4px 10px;
+  font-size: 0.75rem; font-weight: 800; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+}
+.lang-btn.active { background: white; color: #1E293B; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* ── Chat Body (Scrollable Messages) ── */
+.chat-messages {
+  flex: 1; padding: 24px; overflow-y: auto; background: var(--chat-bg);
+  display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth;
+}
+
+/* Chat Bubbles */
+.message { display: flex; gap: 12px; max-width: 80%; }
+.message.bot { align-self: flex-start; }
+.message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.message.bot .avatar { background: white; border: 1px solid var(--border); }
+.message.user .avatar { background: var(--blue); color: white; }
+
+.bubble {
+  padding: 12px 16px; border-radius: 16px; font-size: 0.88rem; line-height: 1.5;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;
+}
+.message.bot .bubble {
+  background: var(--bot-bubble); color: var(--bot-text); border-top-left-radius: 4px;
+}
+.message.user .bubble {
+  background: var(--user-bubble); color: var(--user-text); border-top-right-radius: 4px;
+}
+
+/* Markdown formatting inside bubbles */
+.bubble p { margin-bottom: 8px; }
+.bubble p:last-child { margin-bottom: 0; }
+.bubble ul, .bubble ol { margin-left: 18px; margin-bottom: 8px; }
+.bubble strong { font-weight: 700; }
+
+/* Emergency Box */
+.emergency-alert {
+  background: var(--emerg-bg); border: 1px solid var(--emerg-border); color: var(--emerg-text);
+  border-radius: 12px; padding: 14px 18px; font-size: 0.85rem; line-height: 1.5;
+  margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex; gap: 4px; align-items: center; padding: 10px 14px;
+  background: var(--bot-bubble); border-radius: 16px; align-self: flex-start; margin-left: 48px;
+}
+.typing-dot {
+  width: 6px; height: 6px; background: #94A3B8; border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* ── Chat Footer (Input Area) ── */
+.chat-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border); background: var(--card);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.chips-row {
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+  white-space: nowrap; scrollbar-width: none;
+}
+.chips-row::-webkit-scrollbar { display: none; }
+.chip {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 20px;
+  padding: 6px 12px; font-size: 0.75rem; font-weight: 700; color: var(--text);
+  cursor: pointer; transition: all 0.2s;
+}
+.chip:hover { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+
+.input-row { display: flex; gap: 12px; }
+.chat-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 16px; font-size: 0.9rem; outline: none; background: var(--bg);
+  color: var(--text); transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-lt); }
+
+.send-btn {
+  background: linear-gradient(135deg, #0066CC, #0052A3);
+  color: white; border: none; border-radius: 12px; width: 46px; height: 46px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2); }
+.send-btn:active { transform: scale(0.96); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+  <!-- Sidebar (Left) -->
+  <div class="chat-sidebar">
+    <div class="sidebar-title">🤖 Topics Directory</div>
+    <p style="font-size:0.75rem; color:var(--muted); margin:0;">Click a topic to instantly query our localized medical knowledge base.</p>
+    <div class="topic-list">
+      <div class="topic-item" onclick="sendTopic('Dengue fever')">🦟 Dengue Fever</div>
+      <div class="topic-item" onclick="sendTopic('Malaria chills')">🦟 Malaria Advisory</div>
+      <div class="topic-item" onclick="sendTopic('Fever treatment')">🌡️ Fever / Temperature</div>
+      <div class="topic-item" onclick="sendTopic('Flu cold remedies')">🤧 Cold & Flu</div>
+      <div class="topic-item" onclick="sendTopic('Monsoon diseases')">🌧️ Monsoon Advisory</div>
+      <div class="topic-item" onclick="sendTopic('Diabetes sugar targets')">🩺 Diabetes Management</div>
+      <div class="topic-item" onclick="sendTopic('First Aid bleeding')">🏥 Emergency First Aid</div>
+      <div class="topic-item" onclick="sendTopic('Healthy diet index')">🥗 Nutrition & Diet</div>
+      <div class="topic-item" onclick="sendTopic('OPD queue desk system')">🎟️ OPD Queue Help</div>
+    </div>
+  </div>
+
+  <!-- Chat Window (Right) -->
+  <div class="chat-window">
+    <div class="chat-header">
+      <div>
+        <h2>🤖 AI Health Assistant</h2>
+        <p>Localized RAG Medical Knowledge Base · EN/MR Multilingual</p>
+      </div>
+      
+      <div class="lang-switcher">
+        <button class="lang-btn active" id="lang-en" onclick="setLanguage('en')">English</button>
+        <button class="lang-btn" id="lang-mr" onclick="setLanguage('mr')">मराठी</button>
+      </div>
+    </div>
+
+    <!-- Scrollable Chat Messages -->
+    <div class="chat-messages" id="chat-box">
+      <!-- Bot Greeting Message -->
+      <div class="message bot">
+        <div class="avatar">🤖</div>
+        <div class="bubble">
+          <p><strong>Hello! 👋 I'm your HealthCare+ AI assistant.</strong></p>
+          <p>I can answer questions about symptom management, monsoon safety, healthy diets, first aid, and how to use our smart OPD queue desk.</p>
+          <p>What health question can I help you with today? (Available in English and मराठी)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Input Area -->
+    <div class="chat-footer">
+      <!-- Quick Reply Suggestions -->
+      <div class="chips-row" id="chips-container">
+        {% for reply in quick_replies %}
+        <div class="chip" onclick="sendQuickReply('{{ reply }}')">{{ reply }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Input text form -->
+      <div class="input-row">
+        <input type="text" id="chat-input-field" class="chat-input" 
+               placeholder="Ask about symptoms, first aid, diet, OPD..."
+               onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" onclick="sendMessage()" id="send-msg-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentLanguage = 'en';
+
+const quickReplies = {
+  en: [
+    "Dengue symptoms", "Malaria prevention", "Fever home remedy",
+    "Monsoon health tips", "Diabetes diet", "Blood pressure control",
+    "First aid for bleeding", "COVID-19 guidelines", "How to use OPD queue"
+  ],
+  mr: [
+    "डेंग्यूची लक्षणे", "ताप उपाय", "मलेरिया प्रतिबंध",
+    "पावसाळी आजार", "मधुमेह आहार", "रक्तदाब नियंत्रण",
+    "OPD queue कसे वापरावे"
+  ]
+};
+
+const inputPlaceholders = {
+  en: "Ask about symptoms, first aid, diet, OPD...",
+  mr: "ताप, डेंग्यू, आहार, प्रथमोपचार याबद्दल विचारा..."
+};
+
+// ── Switch Language ──
+function setLanguage(lang) {
+  currentLanguage = lang;
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`lang-${lang}`).classList.add('active');
+  
+  // Update input placeholder
+  document.getElementById('chat-input-field').placeholder = inputPlaceholders[lang];
+
+  // Reload Quick replies
+  const container = document.getElementById('chips-container');
+  container.innerHTML = '';
+  quickReplies[lang].forEach(reply => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = reply;
+    chip.onclick = () => sendQuickReply(reply);
+    container.appendChild(chip);
+  });
+
+  // Inject greeting in selected language
+  if (lang === 'mr') {
+    appendBotMessage("नमस्कार! 👋 मी **HealthCare+ AI आरोग्य सहाय्यक** आहे. मी तुम्हाला आजारांची लक्षणे, प्रतिबंध, प्रथमोपचार आणि आहाराबद्दल मराठीत माहिती देऊ शकतो. आज तुम्हाला कोणती माहिती हवी आहे?");
+  } else {
+    appendBotMessage("Hello! 👋 I'm your **HealthCare+ AI Health Assistant**. I can help you with symptoms, monsoon advisories, healthy diets, and first aid tips. How can I help you today?");
+  }
+}
+
+// ── Send Topic from Sidebar ──
+function sendTopic(topic) {
+  document.getElementById('chat-input-field').value = topic;
+  sendMessage();
+}
+
+// ── Send Quick Reply Chip ──
+function sendQuickReply(text) {
+  document.getElementById('chat-input-field').value = text;
+  sendMessage();
+}
+
+// ── Append User Message ──
+function appendUserMessage(text) {
+  const chatBox = document.getElementById('chat-box');
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message user';
+  msgDiv.innerHTML = `
+    <div class="avatar">👤</div>
+    <div class="bubble"><p>${escapeHtml(text)}</p></div>
+  `;
+  chatBox.appendChild(msgDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ── Append Bot Message (Supports simple Markdown) ──
+function appendBotMessage(text, isEmergency = false) {
+  const chatBox = document.getElementById('chat-box');
+  
+  if (isEmergency) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'emergency-alert';
+    alertDiv.innerHTML = `
+      <span style="font-size:24px; line-height:1;">🚨</span>
+      <div>${formatMarkdown(text)}</div>
+    `;
+    chatBox.appendChild(alertDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return;
+  }
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message bot';
+  msgDiv.innerHTML = `
+    <div class="avatar">🤖</div>
+    <div class="bubble">${formatMarkdown(text)}</div>
+  `;
+  chatBox.appendChild(msgDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ── Show Typing Loader ──
+let typingIndicator = null;
+function showTyping() {
+  if (typingIndicator) return;
+  const chatBox = document.getElementById('chat-box');
+  typingIndicator = document.createElement('div');
+  typingIndicator.className = 'typing-indicator';
+  typingIndicator.innerHTML = `
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  `;
+  chatBox.appendChild(typingIndicator);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+  if (typingIndicator) {
+    typingIndicator.remove();
+    typingIndicator = null;
+  }
+}
+
+// ── Send Message to Server ──
+function sendMessage() {
+  const input = document.getElementById('chat-input-field');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Append user text
+  appendUserMessage(text);
+  input.value = '';
+
+  // Show typing indicator
+  showTyping();
+
+  const fd = new FormData();
+  fd.append('message', text);
+  fd.append('lang', currentLanguage);
+
+  fetch('/api/chatbot/message', {
+    method: 'POST',
+    body: fd
+  })
+  .then(r => r.json())
+  .then(data => {
+    removeTyping();
+    if (data.status === 'success') {
+      appendBotMessage(data.response, data.is_emergency);
+    } else {
+      appendBotMessage("Sorry, I encountered an issue processing that. Please try again.");
+    }
+  })
+  .catch(() => {
+    removeTyping();
+    appendBotMessage("Connection error. Please check your internet connection.");
+  });
+}
+
+// ── Helper Helpers ──
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatMarkdown(text) {
+  // Simple markdown converter (bold, bullets, newlines, alerts)
+  let html = text;
+  
+  // Escaping basic HTML to prevent injection, but allow markdown styling
+  html = escapeHtml(html);
+  
+  // Replace escaped markdown tokens back
+  html = html
+    // Bold: **text**
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Bullet lists: • text or * text
+    .replace(/(?:^|\n)[•\*]\s+(.*?)(?=\n|$)/g, '<li>$1</li>')
+    // Group adjacent list items
+    .replace(/(<li>.*?<\/li>)/g, '<ul>$1</ul>')
+    // Clean multiple consecutive <ul> blocks
+    .replace(/<\/ul>\s*<ul>/g, '')
+    // Newlines to <br> (only outside tags)
+    .replace(/\n/g, '<br>');
+
+  return html;
+}
+</script>
+{% endblock %}

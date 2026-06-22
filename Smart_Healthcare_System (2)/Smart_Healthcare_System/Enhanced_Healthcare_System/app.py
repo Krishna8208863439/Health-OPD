@@ -35,6 +35,9 @@ from ai_health_service import (
     analyze_natural_symptoms, generate_diet_plan, ai_chat_response,
     FIRST_AID_GUIDES, DISCLAIMER as HEALTH_DISCLAIMER, DISCLAIMER_MR as HEALTH_DISCLAIMER_MR
 )
+from chatbot_kb import get_chatbot_response, get_quick_replies, TOPIC_ICONS
+import json
+import random
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
@@ -345,10 +348,68 @@ def init_extra_tables():
         patient_id        INTEGER NOT NULL,
         department        TEXT NOT NULL,
         token_number      INTEGER NOT NULL,
+        triage_level      INTEGER DEFAULT 5,
+        chief_complaint   TEXT DEFAULT '',
         queue_date        TEXT NOT NULL,
         status            TEXT DEFAULT 'waiting',
+        called_at         TEXT DEFAULT '',
+        completed_at      TEXT DEFAULT '',
+        assigned_bed_id   INTEGER DEFAULT NULL,
         created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+    # Migrate opd_tickets if columns missing
+    for col, default_val in [
+        ('triage_level', '5'),
+        ('chief_complaint', "''"),
+        ('called_at', "''"),
+        ('completed_at', "''"),
+        ('assigned_bed_id', 'NULL'),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE opd_tickets ADD COLUMN {col} TEXT DEFAULT {default_val}")
+        except Exception:
+            pass
+
+    # Beds table
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS beds (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        ward_type     TEXT NOT NULL,
+        bed_number    TEXT NOT NULL,
+        status        TEXT DEFAULT 'available',
+        patient_id    INTEGER DEFAULT NULL,
+        patient_name  TEXT DEFAULT '',
+        admitted_at   TEXT DEFAULT '',
+        discharged_at TEXT DEFAULT '',
+        notes         TEXT DEFAULT '',
+        updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    # Queue stats for Little's Law
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS queue_stats (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        department      TEXT NOT NULL,
+        stat_date       TEXT NOT NULL,
+        hour_slot       INTEGER NOT NULL,
+        arrival_rate    REAL DEFAULT 0,
+        avg_service_min REAL DEFAULT 10,
+        avg_queue_len   REAL DEFAULT 0,
+        recorded_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""")
+
+    # Chatbot sessions
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS chatbot_sessions (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id  INTEGER DEFAULT NULL,
+        query       TEXT NOT NULL,
+        response    TEXT NOT NULL,
+        language    TEXT DEFAULT 'en',
+        topic       TEXT DEFAULT '',
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )""")
 
     cur.execute("""
@@ -2961,132 +3022,325 @@ def get_serving_token(department, today):
     conn.close()
     return serving_token
 
-@app.route('/opd-desk')
+@app.route('/sw.js')
+def serve_sw():
+    return send_file(os.path.join(os.path.dirname(__file__), 'static', 'sw.js'), mimetype='application/javascript')
+
+
+# ===========================================================
+#  SMART QUEUING & BED MANAGEMENT SYSTEM — ALL ROUTES
+# ===========================================================
+
+# ─── Helper: Priority Queue Sort ───────────────────────────
+def prioritize_queue(tickets):
+    """
+    Sort OPD queue by:
+    1. Triage severity (1=critical first, 5=routine last)
+    2. Arrival time (FIFO within same triage level)
+    Returns ordered list with position numbers.
+    """
+    def sort_key(t):
+        triage = t['triage_level'] if t['triage_level'] else 5
+        return (int(triage), t['created_at'] or '')
+    return sorted(tickets, key=sort_key)
+
+
+# ─── Helper: Little's Law Prediction ──────────────────────
+def predict_wait_littles_law(department, position_in_queue, today):
+    """
+    Uses Little's Law: L = λ * W  →  W = L / λ
+    λ = arrival rate (patients/hour) from today's data
+    Returns predicted wait time in minutes.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Count arrivals in last 1 hour for this department
+    one_hour_ago = (datetime.now() - timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
+    arrivals = cur.execute("""
+        SELECT COUNT(*) FROM opd_tickets
+        WHERE department = ? AND queue_date = ? AND created_at >= ?
+    """, (department, today, one_hour_ago)).fetchone()[0]
+
+    # λ = arrivals per hour
+    lambda_rate = max(arrivals, 1)  # avoid division by zero
+
+    # W (avg service time per patient) — from queue_stats or default 10 min
+    stats = cur.execute("""
+        SELECT avg_service_min FROM queue_stats
+        WHERE department = ? AND stat_date = ?
+        ORDER BY hour_slot DESC LIMIT 1
+    """, (department, today)).fetchone()
+    conn.close()
+
+    avg_service_min = stats['avg_service_min'] if stats else 10.0
+
+    # L = current queue length = position_in_queue
+    # W = L / λ  (Little's Law)
+    # Convert λ to patients/minute
+    lambda_per_min = lambda_rate / 60.0
+    if lambda_per_min > 0:
+        predicted_wait = (position_in_queue / lambda_per_min) * (avg_service_min / 10.0)
+    else:
+        predicted_wait = position_in_queue * avg_service_min
+
+    return round(max(predicted_wait, 0))
+
+
+# ─── Helper: Seed Default Beds ─────────────────────────────
+def seed_beds_if_empty():
+    """Auto-seed 20 beds across 4 ward types if beds table is empty."""
+    conn = get_db()
+    cur = conn.cursor()
+    count = cur.execute("SELECT COUNT(*) FROM beds").fetchone()[0]
+    if count == 0:
+        beds_data = [
+            # ICU — 5 beds
+            ('ICU', 'ICU-01'), ('ICU', 'ICU-02'), ('ICU', 'ICU-03'),
+            ('ICU', 'ICU-04'), ('ICU', 'ICU-05'),
+            # General Ward — 8 beds
+            ('General', 'GW-01'), ('General', 'GW-02'), ('General', 'GW-03'),
+            ('General', 'GW-04'), ('General', 'GW-05'), ('General', 'GW-06'),
+            ('General', 'GW-07'), ('General', 'GW-08'),
+            # Pediatric — 4 beds
+            ('Pediatric', 'PD-01'), ('Pediatric', 'PD-02'),
+            ('Pediatric', 'PD-03'), ('Pediatric', 'PD-04'),
+            # Emergency — 3 beds
+            ('Emergency', 'EM-01'), ('Emergency', 'EM-02'), ('Emergency', 'EM-03'),
+        ]
+        cur.executemany(
+            "INSERT INTO beds (ward_type, bed_number, status) VALUES (?, ?, 'available')",
+            beds_data
+        )
+        conn.commit()
+    conn.close()
+
+# Seed beds on startup
+try:
+    seed_beds_if_empty()
+except Exception as _seed_err:
+    print(f"[BED SEED] {_seed_err}")
+
+
+# ─────────────────────────────────────────────
+#  QUEUE DASHBOARD — Doctor/Admin
+# ─────────────────────────────────────────────
+@app.route('/queue-dashboard')
 @login_required
-def opd_desk():
-    if current_user.role != 'patient':
-        flash('Only patients can access the OPD Desk.', 'warning')
+def queue_dashboard():
+    if current_user.role not in ('doctor', 'admin'):
+        flash('Access restricted to doctors and admins.', 'danger')
         return redirect(url_for('index'))
-        
+
     today = datetime.now().strftime('%Y-%m-%d')
     conn = get_db()
     cur = conn.cursor()
-    
-    # Query patient's active ticket for today
-    ticket = cur.execute("""
-        SELECT * FROM opd_tickets
-        WHERE patient_id = ? AND queue_date = ? AND status != 'cancelled'
-        LIMIT 1
-    """, (current_user.id, today)).fetchone()
-    
-    ticket_dict = dict(ticket) if ticket else None
-    
-    serving_token = 0
-    patients_ahead = 0
-    est_wait_time = 0
-    
-    if ticket_dict:
-        serving_token = get_serving_token(ticket_dict['department'], today)
-        
-        # Calculate patients ahead who are currently waiting
-        patients_ahead_row = cur.execute("""
+
+    DEPARTMENTS = ['General Medicine', 'Cardiology', 'Pediatrics',
+                   'Orthopedics', 'Ophthalmology', 'Dermatology', 'Emergency']
+
+    dept_data = {}
+    for dept in DEPARTMENTS:
+        tickets = cur.execute("""
+            SELECT ot.*, u.full_name, u.age, u.contact
+            FROM opd_tickets ot
+            JOIN users u ON ot.patient_id = u.id
+            WHERE ot.department = ? AND ot.queue_date = ? AND ot.status NOT IN ('cancelled','completed')
+            ORDER BY ot.triage_level ASC, ot.created_at ASC
+        """, (dept, today)).fetchall()
+
+        waiting = [dict(t) for t in tickets if t['status'] == 'waiting']
+        serving = [dict(t) for t in tickets if t['status'] == 'serving']
+        total_done = cur.execute("""
             SELECT COUNT(*) FROM opd_tickets
-            WHERE department = ? AND queue_date = ? 
-              AND token_number >= ? AND token_number < ?
-              AND status != 'cancelled'
-        """, (ticket_dict['department'], today, serving_token, ticket_dict['token_number'])).fetchone()
-        patients_ahead = patients_ahead_row[0] if patients_ahead_row else 0
-        
-        # 10 minutes estimated per patient ahead
-        est_wait_time = patients_ahead * 10
-        
-        # Update active serving state dynamically
-        if ticket_dict['token_number'] < serving_token:
-            ticket_dict['status'] = 'completed'
-        elif ticket_dict['token_number'] == serving_token:
-            ticket_dict['status'] = 'serving'
-            
+            WHERE department = ? AND queue_date = ? AND status = 'completed'
+        """, (dept, today)).fetchone()[0]
+        total_today = cur.execute("""
+            SELECT COUNT(*) FROM opd_tickets
+            WHERE department = ? AND queue_date = ?
+        """, (dept, today)).fetchone()[0]
+
+        # Predict wait for first patient
+        predicted_wait = 0
+        if waiting:
+            predicted_wait = predict_wait_littles_law(dept, len(waiting), today)
+
+        dept_data[dept] = {
+            'waiting': waiting,
+            'serving': serving,
+            'total_done': total_done,
+            'total_today': total_today,
+            'queue_depth': len(waiting),
+            'predicted_wait': predicted_wait,
+        }
+
+    # Bed summary
+    bed_stats = cur.execute("""
+        SELECT ward_type,
+            SUM(CASE WHEN status='available' THEN 1 ELSE 0 END) as available,
+            SUM(CASE WHEN status='occupied' THEN 1 ELSE 0 END) as occupied,
+            COUNT(*) as total
+        FROM beds
+        GROUP BY ward_type
+    """).fetchall()
+
     conn.close()
-    
-    return render_template(
-        'opd_desk.html',
-        patient=current_user,
-        ticket=ticket_dict,
-        serving_token=serving_token,
-        patients_ahead=patients_ahead,
-        est_wait_time=est_wait_time,
+
+    return render_template('queue_dashboard.html',
+        dept_data=dept_data,
+        bed_stats=[dict(b) for b in bed_stats],
+        departments=DEPARTMENTS,
         today=today
     )
 
+
+# ─── API: Doctor calls next patient ────────────────────────
+@app.route('/api/doctor/next-patient', methods=['POST'])
+@login_required
+def doctor_next_patient():
+    if current_user.role not in ('doctor', 'admin'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    department = request.form.get('department', '').strip()
+    if not department:
+        return jsonify({'status': 'error', 'message': 'Department required'}), 400
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Mark current serving as completed
+    cur.execute("""
+        UPDATE opd_tickets SET status='completed', completed_at=?
+        WHERE department=? AND queue_date=? AND status='serving'
+    """, (now_str, department, today))
+
+    # Get prioritized next waiting ticket (lowest triage level first, then FIFO)
+    next_ticket = cur.execute("""
+        SELECT id FROM opd_tickets
+        WHERE department=? AND queue_date=? AND status='waiting'
+        ORDER BY CAST(triage_level AS INTEGER) ASC, created_at ASC
+        LIMIT 1
+    """, (department, today)).fetchone()
+
+    if next_ticket:
+        cur.execute("""
+            UPDATE opd_tickets SET status='serving', called_at=?
+            WHERE id=?
+        """, (now_str, next_ticket['id']))
+        conn.commit()
+
+        # Record service time stat
+        hour_slot = datetime.now().hour
+        arrival_count = cur.execute("""
+            SELECT COUNT(*) FROM opd_tickets
+            WHERE department=? AND queue_date=? AND created_at >= ?
+        """, (department, today, (datetime.now() - timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S'))).fetchone()[0]
+
+        cur.execute("""
+            INSERT INTO queue_stats (department, stat_date, hour_slot, arrival_rate, avg_service_min)
+            VALUES (?, ?, ?, ?, 10.0)
+        """, (department, today, hour_slot, max(arrival_count, 1)))
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'success', 'message': f'Next patient called for {department}', 'ticket_id': next_ticket['id']})
+    else:
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'info', 'message': f'No more patients waiting in {department}'})
+
+
+# ─── API: OPD generate (extended with triage) ──────────────
 @app.route('/api/opd/generate', methods=['POST'])
 @login_required
 def generate_opd_ticket():
     if current_user.role != 'patient':
         return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
-        
+
     department = request.form.get('department', '').strip()
+    triage_level = int(request.form.get('triage_level', 5))
+    chief_complaint = request.form.get('chief_complaint', '').strip()
+
     if not department:
         return jsonify({'status': 'error', 'message': 'Department is required.'}), 400
-        
+    if triage_level < 1 or triage_level > 5:
+        triage_level = 5
+
     today = datetime.now().strftime('%Y-%m-%d')
     conn = get_db()
     cur = conn.cursor()
-    
-    # Verify no active ticket exists for today
+
     existing = cur.execute("""
         SELECT id FROM opd_tickets
-        WHERE patient_id = ? AND queue_date = ? AND status != 'cancelled'
+        WHERE patient_id=? AND queue_date=? AND status NOT IN ('cancelled','completed')
     """, (current_user.id, today)).fetchone()
-    
+
     if existing:
         conn.close()
         return jsonify({'status': 'error', 'message': 'You already have an active OPD ticket for today.'}), 400
-        
-    # Get next token number
+
     max_token_row = cur.execute("""
         SELECT MAX(token_number) FROM opd_tickets
-        WHERE department = ? AND queue_date = ?
+        WHERE department=? AND queue_date=?
     """, (department, today)).fetchone()
-    
     next_token = (max_token_row[0] or 0) + 1
     created_at_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+
     cur.execute("""
-        INSERT INTO opd_tickets (patient_id, department, token_number, queue_date, status, created_at)
-        VALUES (?, ?, ?, ?, 'waiting', ?)
-    """, (current_user.id, department, next_token, today, created_at_str))
-    
+        INSERT INTO opd_tickets
+            (patient_id, department, token_number, triage_level, chief_complaint, queue_date, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, 'waiting', ?)
+    """, (current_user.id, department, next_token, triage_level, chief_complaint, today, created_at_str))
+
+    conn.commit()
+
+    # Update queue_stats arrival rate
+    hour_slot = datetime.now().hour
+    arrivals = cur.execute("""
+        SELECT COUNT(*) FROM opd_tickets
+        WHERE department=? AND queue_date=?
+    """, (department, today)).fetchone()[0]
+    cur.execute("""
+        INSERT INTO queue_stats (department, stat_date, hour_slot, arrival_rate)
+        VALUES (?, ?, ?, ?)
+    """, (department, today, hour_slot, arrivals))
     conn.commit()
     conn.close()
-    
+
+    # Triage label
+    triage_labels = {1: 'CRITICAL', 2: 'URGENT', 3: 'SEMI-URGENT', 4: 'NON-URGENT', 5: 'ROUTINE'}
+    triage_label = triage_labels.get(triage_level, 'ROUTINE')
+
     return jsonify({
         'status': 'success',
-        'message': f'OPD Ticket generated successfully for {department}! Your Token Number is {next_token}.',
+        'message': f'OPD Ticket generated for {department}! Token: {next_token} (Priority: {triage_label})',
         'token_number': next_token,
-        'department': department
+        'department': department,
+        'triage_level': triage_level,
+        'triage_label': triage_label
     })
 
+
+# ─── API: OPD cancel ───────────────────────────────────────
 @app.route('/api/opd/cancel/<int:ticket_id>', methods=['POST'])
 @login_required
 def cancel_opd_ticket(ticket_id):
     conn = get_db()
     cur = conn.cursor()
-    
-    # Verify ownership
     ticket = cur.execute("""
-        SELECT id FROM opd_tickets WHERE id = ? AND patient_id = ?
+        SELECT id FROM opd_tickets WHERE id=? AND patient_id=?
     """, (ticket_id, current_user.id)).fetchone()
-    
     if not ticket:
         conn.close()
         return jsonify({'status': 'error', 'message': 'Ticket not found or unauthorized.'}), 404
-        
-    cur.execute("UPDATE opd_tickets SET status = 'cancelled' WHERE id = ?", (ticket_id,))
+    cur.execute("UPDATE opd_tickets SET status='cancelled' WHERE id=?", (ticket_id,))
     conn.commit()
     conn.close()
-    
     return jsonify({'status': 'success', 'message': 'OPD Ticket cancelled successfully.'})
 
+
+# ─── API: Serving status (used by patient polling) ──────────
 @app.route('/api/opd/serving-status')
 @login_required
 def opd_serving_status():
@@ -3094,16 +3348,400 @@ def opd_serving_status():
     department = request.args.get('department')
     if not department:
         return jsonify({'status': 'error', 'message': 'Department is required.'}), 400
-        
-    serving = get_serving_token(department, today)
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Find current serving token
+    serving_row = cur.execute("""
+        SELECT token_number FROM opd_tickets
+        WHERE department=? AND queue_date=? AND status='serving'
+        ORDER BY triage_level ASC, created_at ASC LIMIT 1
+    """, (department, today)).fetchone()
+    serving = serving_row['token_number'] if serving_row else 0
+
+    conn.close()
     return jsonify({'status': 'success', 'serving_token': serving})
 
 
-@app.route('/sw.js')
-def serve_sw():
-    return send_file(os.path.join(os.path.dirname(__file__), 'static', 'sw.js'), mimetype='application/javascript')
+# ─── API: Predicted wait time ──────────────────────────────
+@app.route('/api/opd/predict-wait')
+@login_required
+def predict_wait_api():
+    today = datetime.now().strftime('%Y-%m-%d')
+    department = request.args.get('department')
+    position = request.args.get('position', 1, type=int)
+    if not department:
+        return jsonify({'status': 'error', 'message': 'Department required'}), 400
+    predicted = predict_wait_littles_law(department, position, today)
+    return jsonify({'status': 'success', 'predicted_wait_minutes': predicted})
 
 
+# ─── API: Department queue stats for charts ────────────────
+@app.route('/api/opd/department-stats')
+@login_required
+def department_stats_api():
+    if current_user.role not in ('doctor', 'admin'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+    rows = cur.execute("""
+        SELECT department,
+            SUM(CASE WHEN status='waiting' THEN 1 ELSE 0 END) as waiting,
+            SUM(CASE WHEN status='serving' THEN 1 ELSE 0 END) as serving,
+            SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status='cancelled' THEN 1 ELSE 0 END) as cancelled,
+            COUNT(*) as total
+        FROM opd_tickets WHERE queue_date=?
+        GROUP BY department
+    """, (today,)).fetchall()
+    conn.close()
+    return jsonify({'status': 'success', 'data': [dict(r) for r in rows]})
+
+
+# ─── API: Demo patient injector ────────────────────────────
+@app.route('/api/demo/inject-patients', methods=['POST'])
+@login_required
+def demo_inject_patients():
+    if current_user.role not in ('admin',):
+        return jsonify({'status': 'error', 'message': 'Admin only'}), 403
+
+    departments = ['General Medicine', 'Cardiology', 'Pediatrics', 'Orthopedics', 'Emergency']
+    complaints = [
+        'Fever and chills', 'Chest pain', 'Headache', 'Abdominal pain',
+        'Back pain', 'Cough and cold', 'Joint pain', 'Skin rash', 'Dizziness'
+    ]
+    names = [
+        'Amit Sharma', 'Priya Patel', 'Ravi Kumar', 'Sunita Devi', 'Vikram Singh',
+        'Meena Joshi', 'Raj Malhotra', 'Kavita Rao', 'Suresh Nair', 'Pooja Gupta'
+    ]
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Get or create a demo patient user
+    demo_user = cur.execute("SELECT id FROM users WHERE username='demo_patient'").fetchone()
+    if not demo_user:
+        from werkzeug.security import generate_password_hash as gph
+        cur.execute("""
+            INSERT INTO users (username, email, password_hash, full_name, age, role, is_approved)
+            VALUES ('demo_patient','demo@demo.com', ?, 'Demo Patient', 25, 'patient', 1)
+        """, (gph('demo123'),))
+        conn.commit()
+        demo_user = cur.execute("SELECT id FROM users WHERE username='demo_patient'").fetchone()
+
+    demo_pid = demo_user['id']
+    count = int(request.form.get('count', 8))
+    created_tokens = []
+
+    for i in range(count):
+        dept = random.choice(departments)
+        triage = random.choices([1, 2, 3, 4, 5], weights=[5, 10, 25, 35, 25])[0]
+        complaint = random.choice(complaints)
+        name = random.choice(names)
+
+        max_tok = cur.execute("""
+            SELECT MAX(token_number) FROM opd_tickets WHERE department=? AND queue_date=?
+        """, (dept, today)).fetchone()
+        next_tok = (max_tok[0] or 0) + 1
+
+        # Spread arrival times by 1-5 minutes apart for realism
+        offset_minutes = i * random.randint(1, 4)
+        created_time = (datetime.now() - timedelta(minutes=offset_minutes * 2)).strftime('%Y-%m-%d %H:%M:%S')
+
+        cur.execute("""
+            INSERT INTO opd_tickets
+                (patient_id, department, token_number, triage_level, chief_complaint, queue_date, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'waiting', ?)
+        """, (demo_pid, dept, next_tok, triage, complaint, today, created_time))
+
+        created_tokens.append({'dept': dept, 'token': next_tok, 'triage': triage, 'name': name})
+
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'message': f'{count} demo patients injected!', 'tokens': created_tokens})
+
+
+# ─────────────────────────────────────────────
+#  BED MANAGEMENT
+# ─────────────────────────────────────────────
+@app.route('/bed-management')
+@login_required
+def bed_management():
+    if current_user.role not in ('doctor', 'admin'):
+        flash('Access restricted to doctors and admins.', 'danger')
+        return redirect(url_for('index'))
+
+    conn = get_db()
+    cur = conn.cursor()
+    beds = cur.execute("SELECT * FROM beds ORDER BY ward_type, bed_number").fetchall()
+    patients = cur.execute(
+        "SELECT id, full_name, contact FROM users WHERE role='patient' ORDER BY full_name"
+    ).fetchall()
+    conn.close()
+
+    # Group by ward
+    wards = {}
+    for bed in beds:
+        w = bed['ward_type']
+        if w not in wards:
+            wards[w] = []
+        wards[w].append(dict(bed))
+
+    return render_template('bed_management.html',
+        wards=wards,
+        patients=[dict(p) for p in patients]
+    )
+
+
+@app.route('/api/beds/update-status', methods=['POST'])
+@login_required
+def update_bed_status():
+    if current_user.role not in ('doctor', 'admin'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    bed_id = request.form.get('bed_id', type=int)
+    new_status = request.form.get('status', '').strip()
+    notes = request.form.get('notes', '').strip()
+
+    valid_statuses = ['available', 'occupied', 'cleaning', 'maintenance']
+    if not bed_id or new_status not in valid_statuses:
+        return jsonify({'status': 'error', 'message': 'Invalid bed or status'}), 400
+
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn = get_db()
+    cur = conn.cursor()
+
+    if new_status == 'available':
+        cur.execute("""
+            UPDATE beds SET status=?, patient_id=NULL, patient_name='',
+                discharged_at=?, notes=?, updated_at=?
+            WHERE id=?
+        """, (new_status, now_str, notes, now_str, bed_id))
+    else:
+        cur.execute("""
+            UPDATE beds SET status=?, notes=?, updated_at=?
+            WHERE id=?
+        """, (new_status, notes, now_str, bed_id))
+
+    conn.commit()
+    bed = cur.execute("SELECT * FROM beds WHERE id=?", (bed_id,)).fetchone()
+    conn.close()
+    return jsonify({'status': 'success', 'message': f'Bed status updated to {new_status}', 'bed': dict(bed)})
+
+
+@app.route('/api/beds/assign', methods=['POST'])
+@login_required
+def assign_bed():
+    if current_user.role not in ('doctor', 'admin'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    bed_id = request.form.get('bed_id', type=int)
+    patient_id = request.form.get('patient_id', type=int)
+    patient_name = request.form.get('patient_name', '').strip()
+    notes = request.form.get('notes', '').strip()
+
+    if not bed_id:
+        return jsonify({'status': 'error', 'message': 'Bed ID required'}), 400
+
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Check bed is available
+    bed = cur.execute("SELECT * FROM beds WHERE id=?", (bed_id,)).fetchone()
+    if not bed or bed['status'] != 'available':
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Bed is not available'}), 400
+
+    # If patient_name not given, fetch from DB
+    if patient_id and not patient_name:
+        p = cur.execute("SELECT full_name FROM users WHERE id=?", (patient_id,)).fetchone()
+        if p:
+            patient_name = p['full_name']
+
+    cur.execute("""
+        UPDATE beds SET status='occupied', patient_id=?, patient_name=?,
+            admitted_at=?, discharged_at='', notes=?, updated_at=?
+        WHERE id=?
+    """, (patient_id, patient_name, now_str, notes, now_str, bed_id))
+    conn.commit()
+    bed_updated = cur.execute("SELECT * FROM beds WHERE id=?", (bed_id,)).fetchone()
+    conn.close()
+    return jsonify({'status': 'success', 'message': f'Bed {bed["bed_number"]} assigned to {patient_name}', 'bed': dict(bed_updated)})
+
+
+@app.route('/api/beds/discharge', methods=['POST'])
+@login_required
+def discharge_bed():
+    if current_user.role not in ('doctor', 'admin'):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+
+    bed_id = request.form.get('bed_id', type=int)
+    if not bed_id:
+        return jsonify({'status': 'error', 'message': 'Bed ID required'}), 400
+
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE beds SET status='cleaning', patient_id=NULL, patient_name='',
+            discharged_at=?, updated_at=?
+        WHERE id=?
+    """, (now_str, now_str, bed_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'message': 'Patient discharged. Bed marked for cleaning.'})
+
+
+@app.route('/api/beds/stats')
+@login_required
+def beds_stats_api():
+    conn = get_db()
+    cur = conn.cursor()
+    rows = cur.execute("""
+        SELECT ward_type,
+            SUM(CASE WHEN status='available' THEN 1 ELSE 0 END) as available,
+            SUM(CASE WHEN status='occupied' THEN 1 ELSE 0 END) as occupied,
+            SUM(CASE WHEN status='cleaning' THEN 1 ELSE 0 END) as cleaning,
+            SUM(CASE WHEN status='maintenance' THEN 1 ELSE 0 END) as maintenance,
+            COUNT(*) as total
+        FROM beds GROUP BY ward_type
+    """).fetchall()
+    conn.close()
+    return jsonify({'status': 'success', 'data': [dict(r) for r in rows]})
+
+
+# ─────────────────────────────────────────────
+#  AI HEALTH CHATBOT
+# ─────────────────────────────────────────────
+@app.route('/chatbot')
+@login_required
+def chatbot():
+    lang = request.args.get('lang', 'en')
+    quick_replies = get_quick_replies(lang)
+    return render_template('chatbot.html', quick_replies=quick_replies)
+
+
+@app.route('/api/chatbot/message', methods=['POST'])
+@login_required
+def chatbot_message():
+    user_message = (request.form.get('message') or '').strip()
+    lang_pref = request.form.get('lang', 'auto')
+
+    if not user_message:
+        return jsonify({'status': 'error', 'message': 'Empty message'}), 400
+
+    # Get response from knowledge base
+    result = get_chatbot_response(user_message)
+    lang = result.get('language', 'en')
+    topic = result.get('topic', 'unknown')
+    icon = TOPIC_ICONS.get(topic, '🤖')
+
+    # Save to DB
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        patient_id = current_user.id if current_user.is_authenticated else None
+        cur.execute("""
+            INSERT INTO chatbot_sessions (patient_id, query, response, language, topic)
+            VALUES (?, ?, ?, ?, ?)
+        """, (patient_id, user_message, result['response'], lang, topic))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[CHATBOT DB ERROR] {e}")
+
+    return jsonify({
+        'status': 'success',
+        'response': result['response'],
+        'language': lang,
+        'is_emergency': result.get('is_emergency', False),
+        'topic': topic,
+        'icon': icon,
+        'quick_replies': get_quick_replies(lang)
+    })
+
+
+# OPD desk route override (patient view)
+@app.route('/opd-desk')
+@login_required
+def opd_desk():
+    if current_user.role != 'patient':
+        flash('Only patients can access the OPD Desk.', 'warning')
+        return redirect(url_for('index'))
+
+    today = datetime.now().strftime('%Y-%m-%d')
+    conn = get_db()
+    cur = conn.cursor()
+
+    ticket = cur.execute("""
+        SELECT * FROM opd_tickets
+        WHERE patient_id=? AND queue_date=? AND status NOT IN ('cancelled','completed')
+        LIMIT 1
+    """, (current_user.id, today)).fetchone()
+
+    ticket_dict = dict(ticket) if ticket else None
+    serving_token = 0
+    patients_ahead = 0
+    est_wait_time = 0
+    queue_position = 0
+    priority_queue = []
+
+    if ticket_dict:
+        dept = ticket_dict['department']
+
+        # Get serving token
+        serving_row = cur.execute("""
+            SELECT token_number FROM opd_tickets
+            WHERE department=? AND queue_date=? AND status='serving'
+            LIMIT 1
+        """, (dept, today)).fetchone()
+        serving_token = serving_row['token_number'] if serving_row else 0
+
+        # Get full priority queue
+        all_waiting = cur.execute("""
+            SELECT id, token_number, triage_level, status, created_at, patient_id
+            FROM opd_tickets
+            WHERE department=? AND queue_date=? AND status NOT IN ('cancelled','completed')
+            ORDER BY CAST(triage_level AS INTEGER) ASC, created_at ASC
+        """, (dept, today)).fetchall()
+
+        priority_queue = [dict(t) for t in all_waiting]
+
+        # Find our position in priority queue
+        for idx, t in enumerate(priority_queue):
+            if t['patient_id'] == current_user.id:
+                queue_position = idx + 1
+                break
+
+        patients_ahead = max(0, queue_position - 1)
+        est_wait_time = predict_wait_littles_law(dept, patients_ahead, today)
+
+        if ticket_dict['status'] == 'serving':
+            ticket_dict['status'] = 'serving'
+        elif serving_token > ticket_dict['token_number']:
+            ticket_dict['status'] = 'completed'
+
+    conn.close()
+
+    triage_labels = {1: 'CRITICAL', 2: 'URGENT', 3: 'SEMI-URGENT', 4: 'NON-URGENT', 5: 'ROUTINE'}
+    triage_colors = {1: '#DC2626', 2: '#EA580C', 3: '#D97706', 4: '#65A30D', 5: '#6B7280'}
+
+    return render_template('opd_desk.html',
+        patient=current_user,
+        ticket=ticket_dict,
+        serving_token=serving_token,
+        patients_ahead=patients_ahead,
+        est_wait_time=est_wait_time,
+        queue_position=queue_position,
+        priority_queue=priority_queue[:10],
+        triage_labels=triage_labels,
+        triage_colors=triage_colors,
+        today=today
+    )
 
 
 if __name__ == '__main__':

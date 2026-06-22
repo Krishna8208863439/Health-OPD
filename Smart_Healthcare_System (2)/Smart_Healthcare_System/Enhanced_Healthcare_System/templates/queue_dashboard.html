@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+{% block title %}Smart Queue Dashboard – HealthCare Plus{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --q-critical: #DC2626; --q-urgent: #EA580C; --q-semi: #D97706;
+  --q-nonurgent: #65A30D; --q-routine: #6B7280;
+  --ward-icu: #7C3AED; --ward-gen: #0066CC; --ward-peds: #059669; --ward-em: #DC2626;
+}
+
+/* ── Page Layout ── */
+.qd-header {
+  background: linear-gradient(135deg, #0D1117 0%, #1E293B 100%);
+  color: white; border-radius: 18px; padding: 28px 32px;
+  margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.qd-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 4px; }
+.qd-header p { margin: 0; opacity: 0.7; font-size: 0.85rem; }
+.qd-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── Stats Row ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;
+}
+.stat-kpi {
+  background: var(--card); border-radius: 14px; padding: 20px 22px;
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+  border-top: 3px solid var(--blue);
+}
+.stat-kpi.red   { border-top-color: var(--q-critical); }
+.stat-kpi.orange{ border-top-color: var(--q-urgent); }
+.stat-kpi.green { border-top-color: var(--green); }
+.stat-kpi-val { font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1; }
+.stat-kpi-lbl { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Department Grid ── */
+.dept-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;
+  margin-bottom: 32px;
+}
+.dept-card {
+  background: var(--card); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+}
+.dept-card-header {
+  background: linear-gradient(135deg, #1E3A8A, #1e40af);
+  color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+}
+.dept-card-header h3 { font-size: 1rem; font-weight: 700; margin: 0; }
+.dept-badge { background: rgba(255,255,255,0.18); border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+.dept-card-body { padding: 18px 20px; }
+
+/* ── Serving banner ── */
+.serving-banner {
+  background: linear-gradient(135deg, #065F46, #047857);
+  color: white; border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.serving-token-num { font-size: 2rem; font-weight: 800; }
+.serving-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.8; }
+
+/* ── Queue List ── */
+.queue-list { max-height: 260px; overflow-y: auto; }
+.queue-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: 10px; margin-bottom: 6px; background: var(--bg);
+  border: 1px solid var(--border); transition: all 0.2s;
+}
+.queue-item:hover { background: var(--blue-lt); border-color: var(--blue); }
+.qi-pos { font-size: 0.75rem; font-weight: 800; color: var(--muted); width: 22px; text-align: center; }
+.qi-token { font-size: 1.1rem; font-weight: 800; color: var(--blue); width: 38px; }
+.qi-info { flex: 1; }
+.qi-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+.qi-complaint { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.triage-pill {
+  padding: 3px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
+}
+.t1 { background: #FEE2E2; color: #991B1B; }
+.t2 { background: #FFEDD5; color: #9A3412; }
+.t3 { background: #FEF3C7; color: #92400E; }
+.t4 { background: #DCFCE7; color: #166534; }
+.t5 { background: #F3F4F6; color: #374151; }
+
+/* ── Next Patient Btn ── */
+.next-btn {
+  width: 100%; margin-top: 14px; padding: 12px;
+  background: linear-gradient(135deg, #0066CC, #0052A3);
+  color: white; border: none; border-radius: 12px;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.next-btn:hover { background: linear-gradient(135deg, #0052A3, #003D7A); transform: translateY(-1px); }
+.next-btn:active { transform: scale(0.98); }
+.next-btn:disabled { background: #9CA3AF; cursor: not-allowed; transform: none; }
+
+/* ── Dept stats mini bar ── */
+.dept-stats-row { display: flex; gap: 8px; margin-top: 12px; }
+.ds-chip { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; text-align: center; }
+.ds-chip-val { font-size: 1.1rem; font-weight: 800; }
+.ds-chip-lbl { font-size: 0.68rem; color: var(--muted); font-weight: 600; }
+
+/* ── Bed Summary Section ── */
+.bed-section { margin-top: 32px; }
+.bed-section h2 { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+.bed-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.bed-ward-card {
+  background: var(--card); border-radius: 14px; padding: 20px;
+  box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;
+}
+.bed-ward-name { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.bed-donut { position: relative; display: inline-block; margin-bottom: 8px; }
+.bed-donut svg { transform: rotate(-90deg); }
+.bed-donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.bed-avail-num { font-size: 1.4rem; font-weight: 800; }
+.bed-avail-lbl { font-size: 0.65rem; color: var(--muted); font-weight: 600; }
+
+/* ── Chart Area ── */
+.chart-area { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 24px; }
+.chart-area h3 { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 18px; }
+
+/* ── Demo injector ── */
+.demo-panel { background: linear-gradient(135deg, #1E1B4B, #312E81); color: white; border-radius: 16px; padding: 24px; margin-top: 28px; }
+.demo-panel h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+.demo-panel p { opacity: 0.75; font-size: 0.82rem; margin-bottom: 18px; }
+
+/* ── Wait Predict Badge ── */
+.wait-predict { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 10px 14px; }
+.wait-predict-min { font-size: 1.3rem; font-weight: 800; color: #1D4ED8; }
+.wait-predict-lbl { font-size: 0.75rem; color: #3B82F6; font-weight: 600; }
+
+/* ── Live pulse dot ── */
+.live-dot { width: 10px; height: 10px; background: #10B981; border-radius: 50%; animation: livePulse 1.5s infinite; display: inline-block; }
+@keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } }
+
+@media(max-width: 768px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .dept-grid { grid-template-columns: 1fr; }
+  .qd-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Header ── -->
+<div class="qd-header">
+  <div>
+    <h1>🏥 Smart Queue Dashboard</h1>
+    <p><span class="live-dot"></span> Live queue monitoring · {{ today }} · Priority-based triage sorting enabled</p>
+  </div>
+  <div class="qd-header-actions">
+    <a href="{{ url_for('bed_management') }}" class="btn btn-success btn-sm" id="bed-mgmt-link">🛏️ Bed Management</a>
+    <a href="{{ url_for('chatbot') }}" class="btn btn-outline btn-sm" style="color:white; border-color:rgba(255,255,255,0.3);" id="chatbot-link">🤖 AI Chatbot</a>
+  </div>
+</div>
+
+<!-- ── KPI Stats Row ── -->
+<div class="stats-row" id="kpi-row">
+  {% set total_waiting = dept_data.values() | sum(attribute='queue_depth') %}
+  {% set total_done = dept_data.values() | sum(attribute='total_done') %}
+  {% set total_today = dept_data.values() | sum(attribute='total_today') %}
+  {% set total_beds_avail = bed_stats | sum(attribute='available') %}
+
+  <div class="stat-kpi red">
+    <div class="stat-kpi-val" id="kpi-waiting">{{ total_waiting }}</div>
+    <div class="stat-kpi-lbl">⏳ Currently Waiting</div>
+  </div>
+  <div class="stat-kpi green">
+    <div class="stat-kpi-val" id="kpi-done">{{ total_done }}</div>
+    <div class="stat-kpi-lbl">✅ Served Today</div>
+  </div>
+  <div class="stat-kpi orange">
+    <div class="stat-kpi-val" id="kpi-total">{{ total_today }}</div>
+    <div class="stat-kpi-lbl">📋 Total Patients Today</div>
+  </div>
+  <div class="stat-kpi">
+    <div class="stat-kpi-val" id="kpi-beds">{{ total_beds_avail }}</div>
+    <div class="stat-kpi-lbl">🛏️ Beds Available</div>
+  </div>
+</div>
+
+<!-- ── Analytics Chart ── -->
+<div class="chart-area">
+  <h3>📊 Department Queue Breakdown</h3>
+  <canvas id="deptChart" height="80"></canvas>
+</div>
+
+<!-- ── Department Panels ── -->
+<div class="dept-grid" id="dept-panels">
+  {% for dept, data in dept_data.items() %}
+  <div class="dept-card" id="dept-card-{{ loop.index }}" data-dept="{{ dept }}">
+    <div class="dept-card-header">
+      <h3>{{ dept }}</h3>
+      <span class="dept-badge">{{ data.queue_depth }} in queue</span>
+    </div>
+    <div class="dept-card-body">
+
+      {% if data.serving %}
+      {% set s = data.serving[0] %}
+      <div class="serving-banner">
+        <div>
+          <div class="serving-label">🟢 Now Serving</div>
+          <div class="serving-token-num">#{{ "%02d" | format(s.token_number) }}</div>
+          <div style="font-size:0.75rem; opacity:0.85;">{{ s.full_name }} · Age {{ s.age }}</div>
+        </div>
+        <span style="font-size: 36px;">👨‍⚕️</span>
+      </div>
+      {% else %}
+      <div style="text-align:center; padding:14px; background:var(--bg); border-radius:12px; margin-bottom:14px; color:var(--muted); font-size:0.82rem;">
+        No patient currently being served
+      </div>
+      {% endif %}
+
+      <!-- Little's Law wait prediction -->
+      {% if data.predicted_wait > 0 %}
+      <div class="wait-predict">
+        <div>
+          <div class="wait-predict-min">~{{ data.predicted_wait }} min</div>
+          <div class="wait-predict-lbl">⚡ Predicted wait (Little's Law)</div>
+        </div>
+        <span style="font-size:20px; margin-left:auto;">📐</span>
+      </div>
+      {% endif %}
+
+      <!-- Queue list -->
+      <div class="queue-list">
+        {% for t in data.waiting[:6] %}
+        <div class="queue-item">
+          <span class="qi-pos">#{{ loop.index }}</span>
+          <span class="qi-token">{{ "%02d" | format(t.token_number) }}</span>
+          <div class="qi-info">
+            <div class="qi-name">{{ t.full_name }}</div>
+            <div class="qi-complaint">{{ t.chief_complaint[:35] if t.chief_complaint else 'No complaint listed' }}</div>
+          </div>
+          <span class="triage-pill t{{ t.triage_level or 5 }}">
+            {% if t.triage_level == 1 %}🔴 Critical
+            {% elif t.triage_level == 2 %}🟠 Urgent
+            {% elif t.triage_level == 3 %}🟡 Semi-Urgent
+            {% elif t.triage_level == 4 %}🟢 Non-Urgent
+            {% else %}⚪ Routine{% endif %}
+          </span>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:24px; color:var(--muted); font-size:0.82rem;">
+          🎉 No patients waiting in this department
+        </div>
+        {% endfor %}
+        {% if data.waiting | length > 6 %}
+        <div style="text-align:center; font-size:0.78rem; color:var(--muted); padding:8px;">
+          +{{ data.waiting | length - 6 }} more patients in queue...
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Dept stats mini chips -->
+      <div class="dept-stats-row">
+        <div class="ds-chip">
+          <div class="ds-chip-val" style="color:var(--q-critical);">{{ data.queue_depth }}</div>
+          <div class="ds-chip-lbl">Waiting</div>
+        </div>
+        <div class="ds-chip">
+          <div class="ds-chip-val" style="color:var(--green);">{{ data.total_done }}</div>
+          <div class="ds-chip-lbl">Done</div>
+        </div>
+        <div class="ds-chip">
+          <div class="ds-chip-val">{{ data.total_today }}</div>
+          <div class="ds-chip-lbl">Total</div>
+        </div>
+      </div>
+
+      <!-- Next Patient Button -->
+      <button class="next-btn" id="next-btn-{{ loop.index }}"
+              onclick="callNextPatient('{{ dept }}', {{ loop.index }})"
+              {% if not data.waiting %}disabled{% endif %}>
+        <i class="fas fa-forward"></i> Call Next Patient
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ── Bed Overview ── -->
+<div class="bed-section">
+  <h2>🛏️ Bed Availability Overview</h2>
+  <div class="bed-summary-grid">
+    {% for b in bed_stats %}
+    <div class="bed-ward-card">
+      <div class="bed-ward-name"
+           style="color:{% if b.ward_type=='ICU' %}var(--ward-icu){% elif b.ward_type=='Emergency' %}var(--ward-em){% elif b.ward_type=='Pediatric' %}var(--ward-peds){% else %}var(--ward-gen){% endif %}">
+        {% if b.ward_type == 'ICU' %}🔵{% elif b.ward_type == 'Emergency' %}🔴{% elif b.ward_type == 'Pediatric' %}🟢{% else %}⚪{% endif %}
+        {{ b.ward_type }}
+      </div>
+      {% set pct = ((b.available / b.total) * 100) | round | int if b.total > 0 else 0 %}
+      {% set radius = 42 %}
+      {% set circumference = 2 * 3.14159 * radius %}
+      {% set dash = (pct / 100) * circumference %}
+      <div class="bed-donut">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle cx="55" cy="55" r="{{ radius }}" fill="none" stroke="#E5E7EB" stroke-width="10"/>
+          <circle cx="55" cy="55" r="{{ radius }}" fill="none"
+                  stroke="{% if pct > 60 %}#10B981{% elif pct > 30 %}#F59E0B{% else %}#EF4444{% endif %}"
+                  stroke-width="10" stroke-dasharray="{{ dash }} {{ circumference }}"
+                  stroke-linecap="round" style="transition:stroke-dasharray 0.8s ease;"/>
+        </svg>
+        <div class="bed-donut-center">
+          <div class="bed-avail-num">{{ b.available }}</div>
+          <div class="bed-avail-lbl">/ {{ b.total }}</div>
+        </div>
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted);">{{ pct }}% available</div>
+      <a href="{{ url_for('bed_management') }}" class="btn btn-sm btn-outline" style="margin-top:10px; width:100%;" id="view-beds-{{ b.ward_type }}">View Beds</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ── Demo Injector (Admin Only) ── -->
+{% if current_user.role == 'admin' %}
+<div class="demo-panel">
+  <h3>🎭 Demo Mode — Patient Injector</h3>
+  <p>Instantly inject simulated patients into the queue for live demonstration. Patients have randomized triage levels and departments.</p>
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <select id="demo-count" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:8px; padding:8px 12px; font-size:0.9rem;">
+      <option value="5">5 patients</option>
+      <option value="8" selected>8 patients</option>
+      <option value="12">12 patients</option>
+      <option value="20">20 patients</option>
+    </select>
+    <button id="inject-btn" onclick="injectDemoPatients()" class="btn btn-success">
+      🚀 Inject Demo Patients
+    </button>
+    <span id="inject-result" style="font-size:0.82rem; opacity:0.8;"></span>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Chart.js Department Chart ──
+let deptChart = null;
+
+function buildDeptChart(data) {
+  const ctx = document.getElementById('deptChart').getContext('2d');
+  const labels = data.map(d => d.department);
+  const waiting = data.map(d => d.waiting || 0);
+  const completed = data.map(d => d.completed || 0);
+
+  if (deptChart) deptChart.destroy();
+  deptChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Waiting', data: waiting, backgroundColor: '#EF4444', borderRadius: 6 },
+        { label: 'Completed', data: completed, backgroundColor: '#10B981', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { stacked: false, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+
+// Load chart data
+function loadChartData() {
+  fetch('/api/opd/department-stats')
+    .then(r => r.json())
+    .then(d => { if (d.status === 'success') buildDeptChart(d.data); })
+    .catch(() => {});
+}
+loadChartData();
+
+// ── Call Next Patient ──
+function callNextPatient(dept, idx) {
+  const btn = document.getElementById(`next-btn-${idx}`);
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calling...';
+
+  const fd = new FormData();
+  fd.append('department', dept);
+
+  fetch('/api/doctor/next-patient', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success' || data.status === 'info') {
+        showToast(data.message, data.status === 'success' ? 'success' : 'info');
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        showToast(data.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-forward"></i> Call Next Patient';
+      }
+    })
+    .catch(() => {
+      showToast('Network error', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-forward"></i> Call Next Patient';
+    });
+}
+
+// ── Demo Patient Injector ──
+function injectDemoPatients() {
+  const btn = document.getElementById('inject-btn');
+  const result = document.getElementById('inject-result');
+  const count = document.getElementById('demo-count').value;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Injecting...';
+  result.textContent = '';
+
+  const fd = new FormData();
+  fd.append('count', count);
+
+  fetch('/api/demo/inject-patients', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      result.textContent = '✅ ' + data.message;
+      btn.disabled = false;
+      btn.innerHTML = '🚀 Inject Demo Patients';
+      setTimeout(() => window.location.reload(), 1500);
+    })
+    .catch(() => {
+      result.textContent = '❌ Failed to inject';
+      btn.disabled = false;
+      btn.innerHTML = '🚀 Inject Demo Patients';
+    });
+}
+
+// ── Toast Notification ──
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `flash-msg flash-${type === 'error' ? 'danger' : type === 'info' ? 'info' : 'success'}`;
+  t.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;max-width:380px;';
+  t.innerHTML = `<span>${type === 'success' ? '✅' : type === 'info' ? 'ℹ️' : '❌'}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Auto-refresh every 15 seconds ──
+setInterval(() => {
+  loadChartData();
+  // Update KPIs silently
+  fetch('/api/opd/department-stats').then(r => r.json()).then(d => {
+    if (d.status === 'success') {
+      let totalWaiting = d.data.reduce((s, x) => s + (x.waiting || 0), 0);
+      let totalDone = d.data.reduce((s, x) => s + (x.completed || 0), 0);
+      let totalToday = d.data.reduce((s, x) => s + (x.total || 0), 0);
+      document.getElementById('kpi-waiting').textContent = totalWaiting;
+      document.getElementById('kpi-done').textContent = totalDone;
+      document.getElementById('kpi-total').textContent = totalToday;
+    }
+  }).catch(() => {});
+  // Update bed stats
+  fetch('/api/beds/stats').then(r => r.json()).then(d => {
+    if (d.status === 'success') {
+      let avail = d.data.reduce((s, x) => s + (x.available || 0), 0);
+      document.getElementById('kpi-beds').textContent = avail;
+    }
+  }).catch(() => {});
+}, 15000);
+</script>
+{% endblock %}

@@ -78,6 +78,50 @@
     color: var(--opd-primary);
 }
 
+/* Triage Selection Grid */
+.triage-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.triage-btn {
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px 4px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.triage-btn.t1 { background: #FEE2E2; color: #991B1B; }
+.triage-btn.t2 { background: #FFEDD5; color: #9A3412; }
+.triage-btn.t3 { background: #FEF3C7; color: #92400E; }
+.triage-btn.t4 { background: #DCFCE7; color: #166534; }
+.triage-btn.t5 { background: #F3F4F6; color: #374151; }
+.triage-btn.selected {
+    border-color: var(--opd-primary);
+    box-shadow: 0 0 10px rgba(0, 102, 204, 0.25);
+    transform: scale(1.06);
+}
+
+.triage-pill {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.triage-pill.t1 { background: #FEE2E2; color: #991B1B; }
+.triage-pill.t2 { background: #FFEDD5; color: #9A3412; }
+.triage-pill.t3 { background: #FEF3C7; color: #92400E; }
+.triage-pill.t4 { background: #DCFCE7; color: #166534; }
+.triage-pill.t5 { background: #F3F4F6; color: #374151; }
+
 /* Visual Ticket UI */
 .ticket-container {
     background: linear-gradient(135deg, #1E3A8A 0%, #0D1117 100%);
@@ -234,8 +278,9 @@
         {% else %}
         <h4><i class="fas fa-notes-medical" style="color:var(--opd-green);"></i> Request OPD Ticket</h4>
         <form id="opd-ticket-form">
-            <!-- Hidden input for selected department -->
+            <!-- Hidden inputs for selection -->
             <input type="hidden" name="department" id="selected-dept" value="General Medicine">
+            <input type="hidden" name="triage_level" id="selected-triage" value="5">
             
             <div class="form-group" style="margin-bottom: 16px;">
                 <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Choose Department</label>
@@ -248,9 +293,30 @@
                     <div class="preset-btn" onclick="selectDept('Dermatology', this)">Dermatology</div>
                 </div>
             </div>
+
+            <!-- Triage Severity Selector -->
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Symptom Severity (Triage)</label>
+                <div class="triage-grid">
+                    <div class="triage-btn t1" onclick="selectTriage(1, this)" title="Critical/Emergency">1</div>
+                    <div class="triage-btn t2" onclick="selectTriage(2, this)" title="Urgent / Severe Pain">2</div>
+                    <div class="triage-btn t3" onclick="selectTriage(3, this)" title="Semi-Urgent / Persistent Cough">3</div>
+                    <div class="triage-btn t4" onclick="selectTriage(4, this)" title="Non-Urgent / Minor Cold">4</div>
+                    <div class="triage-btn t5 selected" onclick="selectTriage(5, this)" title="Routine / Checkup">5</div>
+                </div>
+                <div id="triage-desc" style="font-size:0.75rem; font-weight:700; color:#374151; margin-top:2px; text-transform:uppercase; letter-spacing:0.3px;">
+                    Level 5: Routine Checkup / Regular Consultation
+                </div>
+            </div>
+
+            <!-- Chief Complaint Field -->
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label style="font-weight:700; font-size:0.8rem; text-transform:uppercase; color:#6B7280; display:block; margin-bottom:8px;">Chief Complaint / Symptoms</label>
+                <textarea name="chief_complaint" id="chief-complaint" rows="3" style="width:100%; border:1px solid #D1D5DB; border-radius:10px; padding:10px; font-size:0.85rem; outline:none; resize:none;" placeholder="Briefly describe your symptoms (e.g. fever for 2 days, mild chest tightness)..."></textarea>
+            </div>
             
             <div style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px; padding:12px; font-size:0.78rem; color:#1E40AF; margin-bottom:18px; line-height: 1.4;">
-                ℹ️ Each patient is allocated approximately 10 minutes. Your ticket is valid only for today ({{ today }}).
+                ℹ️ Each patient is allocated approximately 10 minutes. High triage levels (1-3) jump queue position automatically. Your ticket is valid only for today ({{ today }}).
             </div>
             
             <button type="button" onclick="generateTicket()" id="generate-btn" class="btn btn-primary w-100" style="padding:12px; font-weight:700;">
@@ -269,11 +335,23 @@
         <div class="ticket-container">
             <div class="ticket-header">
                 <span class="ticket-dept" id="live-dept">{{ ticket.department }}</span>
+                <span class="triage-pill t{{ ticket.triage_level or 5 }}" style="margin-left: auto; margin-right: 10px;" id="live-triage-badge">
+                    {% if ticket.triage_level == 1 %}🔴 Critical
+                    {% elif ticket.triage_level == 2 %}🟠 Urgent
+                    {% elif ticket.triage_level == 3 %}🟡 Semi-Urgent
+                    {% elif ticket.triage_level == 4 %}🟢 Non-Urgent
+                    {% else %}⚪ Routine{% endif %}
+                </span>
                 <span class="ticket-date">{{ ticket.queue_date }}</span>
             </div>
             <div class="ticket-body">
                 <span class="ticket-token" id="live-token-num">{{ "%02d"|format(ticket.token_number) }}</span>
                 <span class="ticket-token-lbl">Your Token Number</span>
+                {% if ticket.chief_complaint %}
+                <div style="font-size:0.78rem; opacity:0.85; margin-top:12px; border-top:1px dashed rgba(255,255,255,0.18); padding-top:10px; text-align:left;">
+                    <strong>Complaint:</strong> "{{ ticket.chief_complaint }}"
+                </div>
+                {% endif %}
             </div>
             
             <!-- Live Progress Steps -->
@@ -324,7 +402,7 @@
                 <span class="stat-val" id="lbl-ahead">{{ patients_ahead }}</span>
             </div>
             <div class="stat-row-item" style="border-top:1px dashed #E5E7EB; padding-top:8px;">
-                <span class="stat-lbl">Estimated Wait Time:</span>
+                <span class="stat-lbl">Estimated Wait Time (Little's Law):</span>
                 <span class="stat-val" id="lbl-wait" style="color:var(--opd-primary);">{{ est_wait_time }} mins</span>
             </div>
         </div>
@@ -351,15 +429,36 @@ function selectDept(dept, element) {
     element.classList.add('selected');
 }
 
+const triageLabels = {
+    1: "Level 1: Critical / Emergency (Immediate Care)",
+    2: "Level 2: Urgent (Severe symptoms / high distress)",
+    3: "Level 3: Semi-Urgent (Mild to moderate symptoms)",
+    4: "Level 4: Non-Urgent (Minor cold / local discomfort)",
+    5: "Level 5: Routine Checkup / Regular Consultation"
+};
+
+function selectTriage(level, element) {
+    document.getElementById('selected-triage').value = level;
+    document.querySelectorAll('.triage-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    document.getElementById('triage-desc').textContent = triageLabels[level];
+}
+
 function generateTicket() {
     const btn = document.getElementById('generate-btn');
     btn.disabled = true;
     btn.textContent = 'Generating...';
     
     const dept = document.getElementById('selected-dept').value;
+    const triage = document.getElementById('selected-triage').value;
+    const complaint = document.getElementById('chief-complaint').value;
     
     const formData = new FormData();
     formData.append('department', dept);
+    formData.append('triage_level', triage);
+    formData.append('chief_complaint', complaint);
     
     fetch('/api/opd/generate', {
         method: 'POST',
@@ -426,7 +525,20 @@ function updateQueueStatus() {
             // Update UI elements
             document.getElementById('lbl-serving').textContent = serving;
             document.getElementById('lbl-ahead').textContent = patientsAhead;
-            document.getElementById('lbl-wait').textContent = `${patientsAhead * 10} mins`;
+            
+            // Fetch Little's Law predicted wait time
+            fetch(`/api/opd/predict-wait?department=${encodeURIComponent(department)}&position=${patientsAhead}`)
+            .then(r => r.json())
+            .then(predictData => {
+                if (predictData.status === 'success') {
+                    document.getElementById('lbl-wait').textContent = `${predictData.predicted_wait_minutes} mins`;
+                } else {
+                    document.getElementById('lbl-wait').textContent = `${patientsAhead * 10} mins`;
+                }
+            })
+            .catch(() => {
+                document.getElementById('lbl-wait').textContent = `${patientsAhead * 10} mins`;
+            });
             
             // Notification logic for 3-5 slots away
             if (patientsAhead >= 3 && patientsAhead <= 5) {
