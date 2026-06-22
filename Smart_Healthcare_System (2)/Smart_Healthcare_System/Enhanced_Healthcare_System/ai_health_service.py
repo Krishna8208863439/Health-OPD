@@ -6,7 +6,123 @@ Uses rule-based intelligence with optional OpenAI/Gemini if API keys are set.
 
 import os
 import re
+import requests
+import json
 from symptom_engine import assess_symptoms, get_severity, get_medicines_for_disease, SYMPTOMS
+
+def call_gemini(prompt: str, system_instruction: str = None) -> str:
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        return None
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
+    }
+    if system_instruction:
+        payload["systemInstruction"] = {
+            "parts": [{"text": system_instruction}]
+        }
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        if response.status_code == 200:
+            result = response.json()
+            if 'candidates' in result and len(result['candidates']) > 0:
+                candidate = result['candidates'][0]
+                if 'content' in candidate and 'parts' in candidate['content'] and len(candidate['content']['parts']) > 0:
+                    return candidate['content']['parts'][0]['text']
+    except Exception as e:
+        print(f"[GEMINI] API Call failed: {e}")
+    return None
+
+def assess_symptoms_with_gemini(symptoms_or_text, user_profile=None):
+    """
+    Calls the Gemini API to get a structured symptom assessment and diagnosis.
+    symptoms_or_text can be a list of symptoms or a raw text string.
+    """
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        return None
+
+    # Format user profile info if available
+    profile_info = ""
+    if user_profile:
+        profile_info = (
+            f"User Profile details:\n"
+            f"- Age: {user_profile.get('age', 'N/A')}\n"
+            f"- Gender: {user_profile.get('gender', 'N/A')}\n"
+            f"- City: {user_profile.get('city', 'Pune')}\n"
+            f"- Diet Preference/Goal: {user_profile.get('diet_goal', 'N/A')}\n"
+            f"- Medical Conditions: {user_profile.get('medical_conditions', 'None')}\n"
+        )
+
+    # Format the symptom input
+    if isinstance(symptoms_or_text, list):
+        symptom_desc = f"The user selected the following specific symptom tags: {', '.join(symptoms_or_text)}."
+    else:
+        symptom_desc = f"The user described their symptoms as follows: \"{symptoms_or_text}\"."
+
+    # Prompt
+    prompt = (
+        f"You are a professional clinical AI diagnostics assistant.\n"
+        f"{profile_info}\n"
+        f"Symptom inputs:\n{symptom_desc}\n\n"
+        "Please perform a symptom assessment and diagnosis. Provide the response strictly in JSON format matching the following schema:\n"
+        "{\n"
+        "  \"disease\": \"Primary predicted disease name (e.g. Influenza, COVID-19, Migraine, Gastroenteritis)\",\n"
+        "  \"description\": \"A short medical explanation/description of the predicted disease (1-2 sentences)\",\n"
+        "  \"confidence_pct\": integer_percentage_between_0_and_100,\n"
+        "  \"severity\": \"HIGH 🔴\" or \"MEDIUM 🟡\" or \"LOW 🟢\",\n"
+        "  \"matched_strong\": [\"list\", \"of\", \"symptoms\", \"strongly\", \"indicative\"],\n"
+        "  \"matched_moderate\": [\"list\", \"of\", \"symptoms\", \"moderately\", \"indicative\"],\n"
+        "  \"medicines\": {\n"
+        "     \"PRIMARY\": [\"Primary prescription medicine details (e.g. Oseltamivir 75mg twice daily for 5 days)\"],\n"
+        "     \"SECONDARY\": [\"Supporting or secondary medication details\"],\n"
+        "     \"HOME_REMEDIES\": [\"Home care remedies, hydration, rest tips\"],\n"
+        "     \"WHEN_TO_SEE_DOCTOR\": \"Specific warning signs or indicators on when to see a doctor\"\n"
+        "  },\n"
+        "  \"otc_medicines\": [\n"
+        "     {\n"
+        "       \"name\": \"OTC Medicine Name (e.g. Paracetamol 500mg)\",\n"
+        "       \"usage\": \"Relief of fever and mild pain\",\n"
+        "       \"dosage\": \"1 tablet every 6 hours as needed\",\n"
+        "       \"side_effects\": \"Minimal, liver safety warnings\"\n"
+        "     }\n"
+        "  ],\n"
+        "  \"alternative_diagnoses\": [\n"
+        "     {\n"
+        "       \"disease\": \"Alternative Disease Name\",\n"
+        "       \"description\": \"Brief description\",\n"
+        "       \"confidence_pct\": integer_percentage\n"
+        "     }\n"
+        "  ],\n"
+        "  \"doctor_advice\": \"General clinical advice for the patient. ALWAYS include a bold medical disclaimer in the user's preferred language or English at the end.\",\n"
+        "  \"emergency_warnings\": [\"List of severe emergency signs like chest pain, short of breath, unconscious\"]\n"
+        "}\n"
+        "Ensure the response is a single, valid JSON block. Return ONLY the JSON content."
+    )
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json"}
+    }
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        if response.status_code == 200:
+            result = response.json()
+            if 'candidates' in result and len(result['candidates']) > 0:
+                cand = result['candidates'][0]
+                if 'content' in cand and 'parts' in cand['content'] and len(cand['content']['parts']) > 0:
+                    text = cand['content']['parts'][0]['text'].strip()
+                    parsed = json.loads(text)
+                    return parsed
+    except Exception as e:
+        print(f"[GEMINI] Symptom assessment failed: {e}")
+    return None
 
 # ── Marathi digit → ASCII digit mapping ──
 _MR_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
@@ -281,6 +397,58 @@ def get_otc_suggestions(symptom_ids: list, disease: str = "") -> list:
 
 def analyze_natural_symptoms(text: str) -> dict:
     """Full NLP symptom analysis pipeline."""
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            gemini_assessment = assess_symptoms_with_gemini(text)
+            if gemini_assessment:
+                symptom_ids = gemini_assessment.get("parsed_symptoms", [])
+                parsed_labels = [SYMPTOMS.get(s, s.replace("_", " ").title()) for s in symptom_ids]
+                
+                top = {
+                    "disease": gemini_assessment.get("disease", "Unknown Condition"),
+                    "description": gemini_assessment.get("description", ""),
+                    "confidence_pct": gemini_assessment.get("confidence_pct", 70)
+                }
+                
+                results = [top]
+                for r in gemini_assessment.get("alternative_diagnoses", []):
+                    results.append({
+                        "disease": r.get("disease"),
+                        "description": r.get("description", ""),
+                        "confidence_pct": r.get("confidence_pct", 30)
+                    })
+                
+                severity = gemini_assessment.get("severity", "MEDIUM 🟡")
+                medicines = gemini_assessment.get("medicines", {
+                    "PRIMARY": [],
+                    "SECONDARY": [],
+                    "HOME_REMEDIES": [],
+                    "WHEN_TO_SEE_DOCTOR": ""
+                })
+                otc = gemini_assessment.get("otc_medicines", [])
+                emergencies = gemini_assessment.get("emergency_warnings", [])
+                
+                human_summary = _build_human_summary(text, symptom_ids, top, results[1:3], otc, emergencies)
+                
+                return {
+                    "success": True,
+                    "input_text": text,
+                    "parsed_symptoms": symptom_ids,
+                    "parsed_labels": parsed_labels,
+                    "results": results,
+                    "top_result": top,
+                    "alt_results": results[1:],
+                    "severity": severity,
+                    "medicines": medicines,
+                    "otc_medicines": otc,
+                    "emergency_warnings": emergencies,
+                    "human_summary": human_summary,
+                    "disclaimer": DISCLAIMER,
+                }
+        except Exception as e:
+            print(f"[GEMINI] analyze_natural_symptoms pipeline fallback: {e}")
+
     symptom_ids = parse_natural_language(text)
     emergencies = check_emergency(text, symptom_ids)
 
@@ -989,20 +1157,65 @@ def ai_chat_response(message: str, user_context: dict = None) -> str:
                     "रुग्णालय", "रुग्णालये", "दवाखाना", "क्लिनिक", "मार्ग", "नकाशा", "जवळचे"]
     if any(w in msg for w in hospital_kws):
         user_city = ctx.get("city", "Pune")
+        user_lat = ctx.get("latitude")
+        user_lng = ctx.get("longitude")
+        try:
+            user_lat = float(user_lat) if user_lat is not None else None
+            user_lng = float(user_lng) if user_lng is not None else None
+        except (ValueError, TypeError):
+            user_lat = None
+            user_lng = None
+
         from hospital_finder import find_hospitals, get_directions_url
-        hospitals = find_hospitals(city=user_city)
+        hospitals = find_hospitals(city=user_city, user_lat=user_lat, user_lng=user_lng)
         if not hospitals:
             hospitals = find_hospitals(city="Default")
             
-        closest_hospitals = hospitals[:2]
-        
+        closest_hospitals = hospitals[:3]
+        user_loc = {"lat": user_lat, "lng": user_lng} if (user_lat is not None and user_lng is not None) else None
+
+        gemini_key = os.environ.get("GEMINI_API_KEY")
+        if gemini_key:
+            try:
+                hosp_data = []
+                for h in closest_hospitals:
+                    dir_url = get_directions_url(h, user_location=user_loc)
+                    hosp_data.append({
+                        "name": h.get("name"),
+                        "address": h.get("address"),
+                        "distance_km": round(h.get("distance", 0), 2),
+                        "rating": h.get("rating"),
+                        "beds": h.get("beds"),
+                        "route_url": dir_url
+                    })
+                
+                prompt = (
+                    f"The user is looking for the nearest hospitals. User city is: {user_city}.\n"
+                    f"Here is the list of nearest hospitals based on their location:\n"
+                    f"{json.dumps(hosp_data, indent=2)}\n\n"
+                    f"Please format this into a friendly, helpful guide for the user in BOTH English and Marathi (bilingual format, with clear sections for each language).\n"
+                    f"For each hospital, include its name, distance (in km), rating, total beds, and a clickable Markdown link for the route using the provided `route_url` (with the text 'Click here for the nearest route on Map' in English, and 'नकाशावर सर्वात जवळचा मार्ग मिळवण्यासाठी येथे क्लिक करा' in Marathi).\n"
+                    f"Add any helpful advice for the user (e.g., calling 108 in case of an emergency, checking bed availability).\n"
+                    f"Always end with the medical disclaimer:\n"
+                    f"English: **{DISCLAIMER_EN}**\n"
+                    f"Marathi: **{DISCLAIMER_MR}**"
+                )
+                
+                system_instruction = "You are a professional medical assistant guide for the HealthCare+ app. You format hospital locator outputs clearly in bilingual English and Marathi."
+                ai_resp = call_gemini(prompt, system_instruction)
+                if ai_resp:
+                    return ai_resp
+            except Exception as e:
+                print(f"[GEMINI] Hospital formatting failed: {e}")
+
+        # Fallback to local rule-based formatting
         en_hosp_list = []
-        for h in closest_hospitals:
-            dir_url = get_directions_url(h)
+        for h in closest_hospitals[:2]:
+            dir_url = get_directions_url(h, user_location=user_loc)
             en_hosp_list.append(
                 f"- **{h['name']}**\n"
                 f"  - Address: {h['address']}\n"
-                f"  - Distance: {h['distance']} km\n"
+                f"  - Distance: {round(h['distance'], 2)} km\n"
                 f"  - Rating: {h['rating']}/5\n"
                 f"  - Beds: {h['beds']} beds\n"
                 f"  - Route: [Click here for the nearest route on Map]({dir_url})"
@@ -1010,12 +1223,12 @@ def ai_chat_response(message: str, user_context: dict = None) -> str:
         en_hosp_text = "\n".join(en_hosp_list)
         
         mr_hosp_list = []
-        for h in closest_hospitals:
-            dir_url = get_directions_url(h)
+        for h in closest_hospitals[:2]:
+            dir_url = get_directions_url(h, user_location=user_loc)
             mr_hosp_list.append(
                 f"- **{h['name']}**\n"
                 f"  - पत्ता: {h['address']}\n"
-                f"  - अंतर: {h['distance']} किमी\n"
+                f"  - अंतर: {round(h['distance'], 2)} किमी\n"
                 f"  - रेटिंग: {h['rating']}/5\n"
                 f"  - बेड: {h['beds']} खाटा\n"
                 f"  - मार्ग: [Click here for the nearest route on Map]({dir_url})"
@@ -1181,6 +1394,33 @@ def ai_chat_response(message: str, user_context: dict = None) -> str:
 
 
 def _try_api_chat(message, ctx):
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            lang = ctx.get('lang', 'en')
+            system_instruction = (
+                "You are a professional AI health assistant for a platform called HealthCare+.\n"
+                f"User Context: {json.dumps(ctx)}\n"
+                "Guidelines:\n"
+                "1. Respond friendly and professionally in the user's preferred language (e.g., 'mr' for Marathi, 'en' for English).\n"
+                "2. If the user's language is 'mr' (Marathi), write the response primarily in Marathi or bilingual (English + Marathi) where necessary for clarity.\n"
+                "3. If they ask about symptoms, diet, lifestyle, or general health issues, provide clear suggestions.\n"
+                "4. ALWAYS append the official bold medical disclaimer at the end:\n"
+                "   For English: **Medical Disclaimer: These are general OTC suggestions only. Consult a healthcare professional before taking any medication. This is NOT a substitute for professional medical diagnosis.**\n"
+                "   For Marathi: **वैद्यकीय अस्वीकरण: या फक्त सामान्य ओटीसी (OTC) शिफारसी आहेत. कोणतेही औषध घेण्यापूर्वी वैद्यकीय व्यावसायिकाचा सल्ला घ्या. हे व्यावसायिक वैद्यकीय निदानासाठी पर्याय नाही.**\n"
+            )
+            prompt = f"User message: {message}\nProvide a response based on the guidelines."
+            resp = call_gemini(prompt, system_instruction)
+            if resp:
+                # Ensure disclaimer is present
+                disclaimer = DISCLAIMER_MR if lang == 'mr' else DISCLAIMER_EN
+                bold_disclaimer = f"**{disclaimer.replace('**', '').replace('⚠️ ', '')}**"
+                if bold_disclaimer not in resp and disclaimer not in resp:
+                    resp += f"\n\n{bold_disclaimer}"
+                return resp
+        except Exception as e:
+            print(f"[GEMINI] Chat API failed: {e}")
+
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if openai_key:
         try:

@@ -5,51 +5,85 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_number(self, page_count):
+        self.saveState()
+        self.setFont("Helvetica", 8)
+        self.setFillColor(colors.HexColor('#6B7280')) # Slate Gray
+        
+        # Footer dividing line
+        self.setStrokeColor(colors.HexColor('#E2E8F0'))
+        self.setLineWidth(0.75)
+        self.line(40, 45, 555, 45)
+        
+        # Footer text
+        self.drawString(40, 30, "HealthCare+ Clinical Information System • Daily Health Summary")
+        self.drawRightString(555, 30, f"Page {self._pageNumber} of {page_count}")
+        self.restoreState()
+
 
 def generate_health_report(patient_name, age, contact, diet_goal, health_score, food_logs, medication_logs, symptom_logs, file_path):
     """
-    Generate a professional hospital-branded PDF health report.
+    Generate a professional hospital-branded PDF health report with premium layout and styling.
     """
-    # Page setup
+    # Page setup (margins: left=40, right=40, top=40, bottom=55 for footer space)
     doc = SimpleDocTemplate(
         file_path,
         pagesize=A4,
         rightMargin=40,
         leftMargin=40,
         topMargin=40,
-        bottomMargin=40
+        bottomMargin=55
     )
     
     # Styles
     styles = getSampleStyleSheet()
     
-    # Custom Styles
+    # Custom Premium Typography Styles
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=24,
+        fontSize=22,
         textColor=colors.white,
-        spaceAfter=6
+        spaceAfter=4
     )
     
     subtitle_style = ParagraphStyle(
         'DocSubTitle',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=11,
-        textColor=colors.HexColor('#E5E7EB'),
-        spaceAfter=12
+        fontSize=10,
+        textColor=colors.HexColor('#F1F5F9'),
+        spaceAfter=8
     )
     
     h1_style = ParagraphStyle(
         'SectionHeading',
         parent=styles['Heading2'],
         fontName='Helvetica-Bold',
-        fontSize=14,
-        textColor=colors.HexColor('#0066CC'),
-        spaceBefore=16,
-        spaceAfter=10,
+        fontSize=13,
+        textColor=colors.HexColor('#1E3A8A'), # Navy Blue
+        spaceBefore=14,
+        spaceAfter=8,
         keepWithNext=True
     )
     
@@ -57,22 +91,16 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
         'BodyDark',
         parent=styles['BodyText'],
         fontName='Helvetica',
-        fontSize=10,
-        textColor=colors.HexColor('#1F2937'),
-        leading=14
-    )
-    
-    body_bold_style = ParagraphStyle(
-        'BodyDarkBold',
-        parent=body_style,
-        fontName='Helvetica-Bold'
+        fontSize=9.5,
+        textColor=colors.HexColor('#1E293B'), # Slate 800
+        leading=13.5
     )
     
     table_header_style = ParagraphStyle(
         'TableHeader',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=9,
+        fontSize=8.5,
         textColor=colors.white
     )
     
@@ -80,47 +108,54 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
         'TableCell',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9,
-        textColor=colors.HexColor('#374151'),
-        leading=12
+        fontSize=8.5,
+        textColor=colors.HexColor('#334155'), # Slate 700
+        leading=11.5
     )
 
     story = []
     
-    # Color system
-    primary_color = colors.HexColor('#0066CC')
-    neutral_light = colors.HexColor('#F3F4F6')
-    border_color = colors.HexColor('#E5E7EB')
+    # Premium Color Palette
+    primary_color = colors.HexColor('#1E3A8A')  # Deep Navy Blue
+    secondary_color = colors.HexColor('#0284C7') # Premium Sky Blue
+    neutral_light = colors.HexColor('#F8FAFC')   # Slate 50
+    border_color = colors.HexColor('#E2E8F0')    # Slate 200
     
-    # ─── HEADER BLOCK ───
-    # We will build a table container with primary background for the header
+    # ─── HEADER BLOCK WITH HOSPITAL BRANDING ───
     header_data = [
         [
             Paragraph("HealthCare Plus Hospital", title_style),
-            Paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}", ParagraphStyle('DateText', parent=title_style, alignment=2, fontSize=11))
+            Paragraph(f"Report Date: {datetime.now().strftime('%B %d, %Y')}", ParagraphStyle('DateText', parent=title_style, alignment=2, fontSize=10))
         ],
         [
             Paragraph("Personalized Daily Patient Health Report", subtitle_style),
-            Paragraph("System: Connected Care", ParagraphStyle('SystemText', parent=subtitle_style, alignment=2, fontSize=9))
+            Paragraph("System Status: Active Care", ParagraphStyle('SystemText', parent=subtitle_style, alignment=2, fontSize=8))
         ]
     ]
     
-    header_table = Table(header_data, colWidths=[330, 180])
+    header_table = Table(header_data, colWidths=[315, 200])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), primary_color),
-        ('PADDING', (0,0), (-1,-1), 16),
+        ('PADDING', (0,0), (-1,-1), 14),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
     ]))
     
     story.append(header_table)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 12))
     
-    # ─── PATIENT INFORMATION & HEALTH SCORE CARD ───
+    # ─── PATIENT BIO & HEALTH SCORE CARD ───
     score_display = f"{health_score}/100"
-    score_label = "Optimal Condition" if health_score >= 80 else ("Moderate Condition" if health_score >= 60 else "Requires Attention")
-    score_color = '#10B981' if health_score >= 80 else ('#F59E0B' if health_score >= 60 else '#EF4444')
-    
+    if health_score >= 80:
+        score_label = "Optimal Condition"
+        score_color = '#10B981' # Emerald Green
+    elif health_score >= 60:
+        score_label = "Moderate Condition"
+        score_color = '#F59E0B' # Amber Yellow
+    else:
+        score_label = "Requires Attention"
+        score_color = '#EF4444' # Crimson Red
+        
     patient_info_html = f"""
     <b>Patient Bio Information:</b><br/>
     Name: {patient_name}<br/>
@@ -130,9 +165,9 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
     """
     
     score_html = f"""
-    <font size="12" color="{score_color}"><b>Today's Daily Health Score:</b></font><br/>
-    <font size="32" color="{score_color}"><b>{score_display}</b></font><br/>
-    <font size="10" color="#6B7280"><b>Status: {score_label}</b></font>
+    <font size="11" color="{score_color}"><b>Today's Health Score:</b></font><br/>
+    <font size="30" color="{score_color}"><b>{score_display}</b></font><br/>
+    <font size="9.5" color="#475569"><b>Status: {score_label}</b></font>
     """
     
     info_card_data = [
@@ -142,17 +177,17 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
         ]
     ]
     
-    info_card_table = Table(info_card_data, colWidths=[320, 190])
+    info_card_table = Table(info_card_data, colWidths=[315, 200])
     info_card_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), neutral_light),
         ('BOX', (0,0), (-1,-1), 1, border_color),
         ('INNERGRID', (0,0), (-1,-1), 0.5, border_color),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('PADDING', (0,0), (-1,-1), 14),
+        ('PADDING', (0,0), (-1,-1), 12),
     ]))
     
     story.append(info_card_table)
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 10))
     
     # ─── SECTION 1: MEDICATION ADHERENCE LOGS ───
     story.append(Paragraph("1. Medication Adherence Tracker", h1_style))
@@ -177,11 +212,11 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
                 Paragraph(log['created_at'], table_cell_style)
             ])
             
-        med_table = Table(med_table_data, colWidths=[160, 100, 100, 150])
+        med_table = Table(med_table_data, colWidths=[155, 90, 90, 180])
         med_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), primary_color),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-            ('TOPPADDING', (0,0), (-1,-1), 8),
+            ('BACKGROUND', (0,0), (-1,0), secondary_color),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, neutral_light]),
             ('GRID', (0,0), (-1,-1), 0.5, border_color),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -190,7 +225,7 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
     else:
         story.append(Paragraph("<i>No medication reminders logged today.</i>", body_style))
         
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 10))
     
     # ─── SECTION 2: CALORIE & DIET LOG ───
     story.append(Paragraph("2. Daily Diet & Calorie Scanner Logs", h1_style))
@@ -218,11 +253,11 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
                 Paragraph(fitness_html, table_cell_style)
             ])
             
-        food_table = Table(food_table_data, colWidths=[150, 90, 150, 120])
+        food_table = Table(food_table_data, colWidths=[150, 85, 145, 135])
         food_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), primary_color),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-            ('TOPPADDING', (0,0), (-1,-1), 8),
+            ('BACKGROUND', (0,0), (-1,0), secondary_color),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, neutral_light]),
             ('GRID', (0,0), (-1,-1), 0.5, border_color),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -231,7 +266,7 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
     else:
         story.append(Paragraph("<i>No food scans logged today.</i>", body_style))
         
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 10))
     
     # ─── SECTION 3: DAILY SYMPTOM JOURNAL TIMELINE ───
     story.append(Paragraph("3. Daily Symptom Journal Notes", h1_style))
@@ -256,11 +291,11 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
                 Paragraph(log['symptoms'], table_cell_style)
             ])
             
-        symptom_table = Table(symptom_table_data, colWidths=[90, 80, 100, 240])
+        symptom_table = Table(symptom_table_data, colWidths=[85, 75, 95, 260])
         symptom_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), primary_color),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-            ('TOPPADDING', (0,0), (-1,-1), 8),
+            ('BACKGROUND', (0,0), (-1,0), secondary_color),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
             ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, neutral_light]),
             ('GRID', (0,0), (-1,-1), 0.5, border_color),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
@@ -269,12 +304,11 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
     else:
         story.append(Paragraph("<i>No symptom notes logged recently.</i>", body_style))
         
-    story.append(Spacer(1, 15))
+    story.append(Spacer(1, 10))
     
     # ─── SECTION 4: CLINICAL CORRELATIONAL AI INSIGHTS ───
     story.append(Paragraph("4. Clinical AI Insights & Correlations", h1_style))
     
-    # Generate some dynamic mock insights based on the data presence
     insights_html = ""
     if len(medication_logs) > 0 and len(symptom_logs) > 0:
         missed_meds = sum(1 for log in medication_logs if log['status'] == 'skipped')
@@ -294,14 +328,14 @@ def generate_health_report(patient_name, age, contact, diet_goal, health_score, 
         insights_html = "<i>Insufficient data points to generate AI correlations. Patient needs to log more food and symptom data.</i>"
         
     insight_card_data = [[Paragraph(insights_html, body_style)]]
-    insight_table = Table(insight_card_data, colWidths=[510])
+    insight_table = Table(insight_card_data, colWidths=[515])
     insight_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')),
-        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#BFDBFE')),
-        ('PADDING', (0,0), (-1,-1), 16),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#EFF6FF')), # Light slate-blue
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#BFDBFE')),
+        ('PADDING', (0,0), (-1,-1), 12),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     story.append(insight_table)
     
-    # Build Document
-    doc.build(story)
+    # Build Document with custom NumberedCanvas page numbering
+    doc.build(story, canvasmaker=NumberedCanvas)

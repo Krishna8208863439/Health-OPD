@@ -72,6 +72,25 @@
 
 {% block extra_js %}
 <script>
+let userLatitude = null;
+let userLongitude = null;
+
+function detectUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                userLatitude = pos.coords.latitude;
+                userLongitude = pos.coords.longitude;
+                console.log("GPS Location set for AI Assistant:", userLatitude, userLongitude);
+            },
+            err => {
+                console.log("GPS Location error:", err);
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+        );
+    }
+}
+
 function addMsg(text, isUser) {
     const el = document.createElement('div');
     el.className = 'msg ' + (isUser ? 'msg-user' : 'msg-bot');
@@ -103,7 +122,9 @@ async function sendChat() {
             body: JSON.stringify({ 
                 message: msg, 
                 water_glasses: {{ water_glasses }},
-                lang: activeLang
+                lang: activeLang,
+                latitude: userLatitude,
+                longitude: userLongitude
             })
         });
         const data = await resp.json();
@@ -129,10 +150,11 @@ window.onLanguageChange = function(lang) {
     updatePlaceholder(lang);
 };
 
-// Update input placeholder on initial page load
+// Update input placeholder and detect location on initial page load
 document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('health-lang-pref') || 'en';
     updatePlaceholder(savedLang);
+    detectUserLocation();
 });
 </script>
 {% endblock %}

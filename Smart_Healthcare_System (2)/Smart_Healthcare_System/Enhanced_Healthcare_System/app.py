@@ -1230,39 +1230,111 @@ def assess_predict():
     symptom_severity = request.form.get('symptom_severity', 'moderate')
     symptom_duration = request.form.get('symptom_duration', '1-3 days')
 
-    # Run the symptom assessment engine
-    results = assess_symptoms(present_symptoms)
+    # Run the symptom assessment engine (Gemini primary with rules-based fallback)
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    gemini_assessment = None
+    if gemini_key:
+        user_profile = {
+            'age': current_user.age,
+            'gender': getattr(current_user, 'gender', 'N/A'),
+            'city': current_user.city,
+            'diet_goal': getattr(current_user, 'diet_goal', 'Balanced'),
+            'medical_conditions': getattr(current_user, 'medical_conditions', 'None')
+        }
+        try:
+            from ai_health_service import assess_symptoms_with_gemini
+            gemini_assessment = assess_symptoms_with_gemini(present_symptoms, user_profile)
+        except Exception as e:
+            print(f"[GEMINI] Prediction route failed: {e}")
 
-    if not results:
-        flash('Not enough symptom information to make a diagnosis. Please select more symptoms.', 'danger')
-        return redirect(url_for('symptom_assessment'))
-
-    # Top result
-    top = results[0]
-    disease_name    = top['disease']
-    confidence_pct  = top['confidence_pct']
-    severity_str    = get_severity(confidence_pct, disease_name)
-
-    # Colour per confidence
-    if confidence_pct >= 70:
-        top['color'] = '#DC3545'
-    elif confidence_pct >= 45:
-        top['color'] = '#FFC107'
-    else:
-        top['color'] = '#28A745'
-
-    # Colour alternate results
-    alt_colors = ['#6c757d', '#6c757d', '#6c757d', '#6c757d']
-    for i, r in enumerate(results[1:], 0):
-        if r['confidence_pct'] >= 70:
-            r['color'] = '#DC3545'
-        elif r['confidence_pct'] >= 45:
-            r['color'] = '#FFC107'
+    if gemini_assessment:
+        top = {
+            'disease': gemini_assessment.get('disease', 'Unknown Condition'),
+            'description': gemini_assessment.get('description', ''),
+            'confidence_pct': gemini_assessment.get('confidence_pct', 70),
+            'matched_strong': gemini_assessment.get('matched_strong', []),
+            'matched_moderate': gemini_assessment.get('matched_moderate', [])
+        }
+        disease_name = top['disease']
+        confidence_pct = top['confidence_pct']
+        severity_str = gemini_assessment.get('severity', 'MEDIUM 🟡')
+        
+        # Color matching
+        if confidence_pct >= 70:
+            top['color'] = '#DC3545'
+        elif confidence_pct >= 45:
+            top['color'] = '#FFC107'
         else:
-            r['color'] = '#28A745'
+            top['color'] = '#28A745'
+            
+        results = [top]
+        for r in gemini_assessment.get('alternative_diagnoses', []):
+            alt_color = '#28A745'
+            pct = r.get('confidence_pct', 30)
+            if pct >= 70:
+                alt_color = '#DC3545'
+            elif pct >= 45:
+                alt_color = '#FFC107'
+            results.append({
+                'disease': r.get('disease'),
+                'description': r.get('description', ''),
+                'confidence_pct': pct,
+                'color': alt_color
+            })
+            
+        medicines = gemini_assessment.get('medicines', {
+            'PRIMARY': [],
+            'SECONDARY': [],
+            'HOME_REMEDIES': [],
+            'WHEN_TO_SEE_DOCTOR': ''
+        })
+        otc_medicines = gemini_assessment.get('otc_medicines', [])
+        doctor_advice = gemini_assessment.get('doctor_advice', 'Consult a doctor.')
+    else:
+        results = assess_symptoms(present_symptoms)
+        if not results:
+            flash('Not enough symptom information to make a diagnosis. Please select more symptoms.', 'danger')
+            return redirect(url_for('symptom_assessment'))
 
-    # Get medicines
-    medicines = get_medicines_for_disease(disease_name, severity_str)
+        # Top result
+        top = results[0]
+        disease_name    = top['disease']
+        confidence_pct  = top['confidence_pct']
+        severity_str    = get_severity(confidence_pct, disease_name)
+
+        # Colour per confidence
+        if confidence_pct >= 70:
+            top['color'] = '#DC3545'
+        elif confidence_pct >= 45:
+            top['color'] = '#FFC107'
+        else:
+            top['color'] = '#28A745'
+
+        # Colour alternate results
+        for r in results[1:]:
+            if r['confidence_pct'] >= 70:
+                r['color'] = '#DC3545'
+            elif r['confidence_pct'] >= 45:
+                r['color'] = '#FFC107'
+            else:
+                r['color'] = '#28A745'
+
+        # Get medicines
+        medicines = get_medicines_for_disease(disease_name, severity_str)
+        
+        otc_medicines = []
+        try:
+            from ai_health_service import get_otc_suggestions
+            otc_medicines = get_otc_suggestions(present_symptoms, disease_name)
+        except Exception:
+            pass
+
+        doctor_advice_map = {
+            "HIGH 🔴":   "Seek immediate medical attention. Visit the emergency department or call 108. This condition requires urgent professional medical care.",
+            "MEDIUM 🟡": "Consult a doctor within 24 hours. Follow prescribed medications strictly. Monitor your condition and seek immediate care if symptoms worsen.",
+            "LOW 🟢":    "Monitor symptoms at home. Stay hydrated and rest adequately. Consult a doctor if symptoms persist beyond 3–5 days or worsen.",
+        }
+        doctor_advice = doctor_advice_map.get(severity_str, doctor_advice_map["MEDIUM 🟡"])
 
     # Hospital preferences
     hospital_type = request.form.get('hospital_type')
@@ -1335,13 +1407,6 @@ def assess_predict():
     doctor_name  = doc_list[hash(disease_name) % len(doc_list)]
     doctor_phone = hospitals_list[0]['phone'] if hospitals_list else "+91-800-HEALTH"
 
-    doctor_advice_map = {
-        "HIGH 🔴":   "Seek immediate medical attention. Visit the emergency department or call 108. This condition requires urgent professional medical care.",
-        "MEDIUM 🟡": "Consult a doctor within 24 hours. Follow prescribed medications strictly. Monitor your condition and seek immediate care if symptoms worsen.",
-        "LOW 🟢":    "Monitor symptoms at home. Stay hydrated and rest adequately. Consult a doctor if symptoms persist beyond 3–5 days or worsen.",
-    }
-    doctor_advice = doctor_advice_map.get(severity_str, doctor_advice_map["MEDIUM 🟡"])
-
     # Generate PDF (reuse existing generate_pdf function)
     prediction_data_for_pdf = {
         'disease':              disease_name,
@@ -1380,13 +1445,6 @@ def assess_predict():
     ))
     conn.commit()
     conn.close()
-
-    otc_medicines = []
-    try:
-        from ai_health_service import get_otc_suggestions
-        otc_medicines = get_otc_suggestions(present_symptoms, disease_name)
-    except Exception:
-        pass
 
     return render_template(
         'assessment_result.html',
@@ -2766,6 +2824,8 @@ def api_ai_chat():
         'lang': data.get('lang', 'en'),
         'user_id': current_user.id,
         'city': getattr(current_user, 'city', 'Pune'),
+        'latitude': data.get('latitude'),
+        'longitude': data.get('longitude'),
     }
     reply = ai_chat_response(message, ctx)
     return jsonify({'status': 'success', 'reply': reply})
@@ -3615,55 +3675,9 @@ def beds_stats_api():
 
 
 # ─────────────────────────────────────────────
-#  AI HEALTH CHATBOT
+#  OLD AI HEALTH CHATBOT - REMOVED
+#  (Replaced by the new AI Assistant at /ai-assistant)
 # ─────────────────────────────────────────────
-@app.route('/chatbot')
-@login_required
-def chatbot():
-    lang = request.args.get('lang', 'en')
-    quick_replies = get_quick_replies(lang)
-    return render_template('chatbot.html', quick_replies=quick_replies)
-
-
-@app.route('/api/chatbot/message', methods=['POST'])
-@login_required
-def chatbot_message():
-    user_message = (request.form.get('message') or '').strip()
-    lang_pref = request.form.get('lang', 'auto')
-
-    if not user_message:
-        return jsonify({'status': 'error', 'message': 'Empty message'}), 400
-
-    # Get response from knowledge base
-    result = get_chatbot_response(user_message)
-    lang = result.get('language', 'en')
-    topic = result.get('topic', 'unknown')
-    icon = TOPIC_ICONS.get(topic, '🤖')
-
-    # Save to DB
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        patient_id = current_user.id if current_user.is_authenticated else None
-        cur.execute("""
-            INSERT INTO chatbot_sessions (patient_id, query, response, language, topic)
-            VALUES (?, ?, ?, ?, ?)
-        """, (patient_id, user_message, result['response'], lang, topic))
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        print(f"[CHATBOT DB ERROR] {e}")
-
-    return jsonify({
-        'status': 'success',
-        'response': result['response'],
-        'language': lang,
-        'is_emergency': result.get('is_emergency', False),
-        'topic': topic,
-        'icon': icon,
-        'quick_replies': get_quick_replies(lang)
-    })
-
 
 # OPD desk route override (patient view)
 @app.route('/opd-desk')

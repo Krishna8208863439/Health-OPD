@@ -288,6 +288,47 @@ def get_food_nutrition(food_name):
     """
     clean_name = food_name.strip().lower()
 
+    # ── Try Gemini Nutrition API (JSON Mode) ──────────────────────────────────
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            prompt = (
+                f"Identify and provide the estimated nutritional information per 100g of: {clean_name}.\n"
+                "Return the response in JSON format matching exactly this schema:\n"
+                "{\n"
+                "  \"name\": string,\n"
+                "  \"calories\": integer,\n"
+                "  \"protein\": number (float),\n"
+                "  \"carbs\": number (float),\n"
+                "  \"fat\": number (float)\n"
+                "}\n"
+                "Ensure the JSON is valid and only return the JSON, no markdown formatting."
+            )
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseMimeType": "application/json"}
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=10)
+            if response.status_code == 200:
+                result = response.json()
+                if 'candidates' in result and len(result['candidates']) > 0:
+                    cand = result['candidates'][0]
+                    if 'content' in cand and 'parts' in cand['content'] and len(cand['content']['parts']) > 0:
+                        text = cand['content']['parts'][0]['text'].strip()
+                        nut_data = json.loads(text)
+                        nutrition = {
+                            "name": str(nut_data.get("name", food_name)).title(),
+                            "calories": round(float(nut_data.get("calories", 0))),
+                            "protein": round(float(nut_data.get("protein", 0)), 1),
+                            "carbs": round(float(nut_data.get("carbs", 0)), 1),
+                            "fat": round(float(nut_data.get("fat", 0)), 1)
+                        }
+                        return nutrition, "Gemini Nutrition API"
+        except Exception as e:
+            print(f"[NUTRITION SERVICE] Gemini failed: {e}. Trying other sources...")
+
     # ── Try Open Food Facts API (Free, no key required) ──────────────────────
     try:
         url = (
