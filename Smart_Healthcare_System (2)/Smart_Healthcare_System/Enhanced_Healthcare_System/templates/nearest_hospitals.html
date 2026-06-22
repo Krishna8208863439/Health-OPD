@@ -290,22 +290,34 @@
 <!-- Loading overlay -->
 <div id="loading-overlay">
   <div class="spinner"></div>
-  <span>Detecting your location…</span>
+  <span class="lang-en">Detecting your location…</span>
+  <span class="lang-mr">तुमचे स्थान शोधत आहे…</span>
 </div>
 
 <!-- Hero -->
 <div class="nh-hero">
-  <h1><i class="fas fa-hospital-symbol"></i> Nearest Hospital Finder</h1>
-  <p>Find hospitals near you with phone numbers and directions</p>
+  <h1><i class="fas fa-hospital-symbol"></i> 
+    <span class="lang-en">Nearest Hospital Finder</span>
+    <span class="lang-mr">जवळचे रुग्णालय शोधक</span>
+  </h1>
+  <p>
+    <span class="lang-en">Find hospitals near you with phone numbers and directions</span>
+    <span class="lang-mr">तुमच्या जवळील रुग्णालये, फोन नंबर आणि दिशा मार्ग शोधा</span>
+  </p>
   <div id="status-pill">
     <div id="status-dot"></div>
-    <span id="status-text">Tap "Use My Location" to find nearby hospitals</span>
+    <span id="status-text">
+      <span class="lang-en">Tap "Use My Location" to find nearby hospitals</span>
+      <span class="lang-mr">जवळची रुग्णालये शोधण्यासाठी "माझे स्थान वापरा" वर टॅप करा</span>
+    </span>
   </div>
 </div>
 
 <!-- Locate button -->
 <button id="locate-btn" onclick="getLocation()">
-  <i class="fas fa-crosshairs"></i> Use My Location
+  <i class="fas fa-crosshairs"></i> 
+  <span class="lang-en">Use My Location</span>
+  <span class="lang-mr">माझे स्थान वापरा</span>
 </button>
 
 <!-- Search -->
@@ -314,42 +326,86 @@
 <!-- Filters -->
 <div class="filters-row">
   <select id="f-type" onchange="renderList()">
-    <option value="">All Types</option>
-    <option value="Government">🏛 Government</option>
-    <option value="Private">🏢 Private</option>
+    <option value="" class="lang-en">All Types</option>
+    <option value="" class="lang-mr">सर्व प्रकार</option>
+    <option value="Government" class="lang-en">🏛 Government</option>
+    <option value="शासकीय" class="lang-mr">🏛 शासकीय (Government)</option>
+    <option value="Private" class="lang-en">🏢 Private</option>
+    <option value="खाजगी" class="lang-mr">🏢 खाजगी (Private)</option>
   </select>
   <select id="f-spec" onchange="renderList()">
-    <option value="">All Specialties</option>
-    <option value="Emergency">🚨 Emergency</option>
-    <option value="Cardiology">❤️ Cardiology</option>
-    <option value="Neurology">🧠 Neurology</option>
-    <option value="Oncology">🎗 Oncology</option>
-    <option value="General Medicine">🩺 General</option>
-    <option value="Surgery">🔪 Surgery</option>
+    <option value="" class="lang-en">All Specialties</option>
+    <option value="" class="lang-mr">सर्व वैशिष्ट्ये</option>
+    <option value="Emergency" class="lang-en">🚨 Emergency</option>
+    <option value="आणीबाणी" class="lang-mr">🚨 आणीबाणी (Emergency)</option>
+    <option value="Cardiology" class="lang-en">❤️ Cardiology</option>
+    <option value="हृदयरोग" class="lang-mr">❤️ हृदयरोग (Cardiology)</option>
+    <option value="Neurology" class="lang-en">🧠 Neurology</option>
+    <option value="चेतातंतू" class="lang-mr">🧠 चेतातंतू (Neurology)</option>
+    <option value="Oncology" class="lang-en">🎗 Oncology</option>
+    <option value="कर्करोग" class="lang-mr">🎗 कर्करोग (Oncology)</option>
+    <option value="General Medicine" class="lang-en">🩺 General</option>
+    <option value="सामान्य औषध" class="lang-mr">🩺 सामान्य औषध (General)</option>
+    <option value="Surgery" class="lang-en">🔪 Surgery</option>
+    <option value="शस्त्रक्रिया" class="lang-mr">🔪 शस्त्रक्रिया (Surgery)</option>
   </select>
   <input id="f-dist" type="number" placeholder="Max km" min="1" max="9999" oninput="renderList()" style="max-width:90px;">
 </div>
 
 <!-- Emergency Hotlines -->
 <div class="hotlines-card">
-  <div class="hotlines-title">🚨 Emergency Hotlines — Tap to Call</div>
+  <div class="hotlines-title">
+    <span class="lang-en">🚨 Emergency Hotlines — Tap to Call</span>
+    <span class="lang-mr">🚨 आपत्कालीन सेवा — कॉल करण्यासाठी टॅप करा</span>
+  </div>
   <div class="hotlines-grid">
-    <a class="hl-btn" href="tel:108"><i class="fas fa-ambulance"></i> 108 — Ambulance</a>
-    <a class="hl-btn" href="tel:112"><i class="fas fa-phone"></i> 112 — National</a>
-    <a class="hl-btn" href="tel:104"><i class="fas fa-notes-medical"></i> 104 — Health</a>
-    <a class="hl-btn" href="tel:102"><i class="fas fa-baby"></i> 102 — Maternity</a>
+    <a class="hl-btn" href="tel:108">
+      <i class="fas fa-ambulance"></i> 
+      <span class="lang-en">108 — Ambulance</span>
+      <span class="lang-mr">108 — रुग्णवाहिका</span>
+    </a>
+    <a class="hl-btn" href="tel:112">
+      <i class="fas fa-phone"></i> 
+      <span class="lang-en">112 — National</span>
+      <span class="lang-mr">112 — राष्ट्रीय क्रमांक</span>
+    </a>
+    <a class="hl-btn" href="tel:104">
+      <i class="fas fa-notes-medical"></i> 
+      <span class="lang-en">104 — Health Help</span>
+      <span class="lang-mr">104 — आरोग्य मदत</span>
+    </a>
+    <a class="hl-btn" href="tel:102">
+      <i class="fas fa-baby"></i> 
+      <span class="lang-en">102 — Maternity</span>
+      <span class="lang-mr">102 — प्रसूती सेवा</span>
+    </a>
   </div>
 </div>
 
 <!-- Nearest hospital banner -->
 <div id="nearest-banner">
-  <div class="nb-label">🥇 Nearest Hospital From You</div>
+  <div class="nb-label">
+    <span class="lang-en">🥇 Nearest Hospital From You</span>
+    <span class="lang-mr">🥇 तुमच्या सर्वात जवळचे रुग्णालय</span>
+  </div>
   <div class="nb-name"  id="nb-name">—</div>
   <div class="nb-info"  id="nb-info">—</div>
   <div class="nb-btns">
-    <a class="nb-btn" id="nb-call"  href="#"><i class="fas fa-phone"></i> Call Now</a>
-    <a class="nb-btn" id="nb-route" href="#" target="_blank"><i class="fas fa-directions"></i> Route</a>
-    <a class="nb-btn" id="nb-map"   href="#" target="_blank"><i class="fas fa-map-marked-alt"></i> Map</a>
+    <a class="nb-btn" id="nb-call"  href="#">
+      <i class="fas fa-phone"></i> 
+      <span class="lang-en">Call Now</span>
+      <span class="lang-mr">आता कॉल करा</span>
+    </a>
+    <a class="nb-btn" id="nb-route" href="#" target="_blank">
+      <i class="fas fa-directions"></i> 
+      <span class="lang-en">Route</span>
+      <span class="lang-mr">मार्ग</span>
+    </a>
+    <a class="nb-btn" id="nb-map"   href="#" target="_blank">
+      <i class="fas fa-map-marked-alt"></i> 
+      <span class="lang-en">Map</span>
+      <span class="lang-mr">नकाशा</span>
+    </a>
   </div>
 </div>
 
@@ -360,7 +416,8 @@
 <div id="hospital-list"></div>
 <div id="no-results">
   <i class="fas fa-hospital-alt"></i>
-  No hospitals match your filters.<br>Try relaxing the distance or type filter.
+  <span class="lang-en">No hospitals match your filters.<br>Try relaxing the distance or type filter.</span>
+  <span class="lang-mr">तुमच्या फिल्टरशी जुळणारे कोणतेही रुग्णालय आढळले नाही.<br>कृपया अंतर किंवा प्रकार बदलून पहा.</span>
 </div>
 
 {% endblock %}
@@ -381,7 +438,11 @@ function haversine(a, b, c, d) {
 }
 
 function eta(km) {
+  const lang = localStorage.getItem('health-lang-pref') || 'en';
   const m = Math.round((km / 40) * 60);
+  if (lang === 'mr') {
+    return m < 60 ? `${m} मि.` : `${Math.floor(m/60)} ता. ${m%60} मि.`;
+  }
   return m < 60 ? `${m} min` : `${Math.floor(m/60)}h ${m%60}m`;
 }
 
@@ -403,23 +464,46 @@ function setStatus(msg, ok = true) {
   document.getElementById('status-dot').style.background = ok ? '#86efac' : '#FCA5A5';
 }
 
-/* ── Get live GPS ── */
+/* ── Get live GPS and fetch nearby hospitals ── */
 function getLocation() {
   if (!navigator.geolocation) { setStatus('Geolocation not supported', false); return; }
+  const lang = localStorage.getItem('health-lang-pref') || 'en';
   document.getElementById('loading-overlay').style.display = 'flex';
-  setStatus('📡 Detecting location…');
+  document.getElementById('loading-overlay').querySelector('span').textContent =
+    lang === 'mr' ? 'तुमचे स्थान शोधत आहे…' : 'Detecting your location…';
+  setStatus(lang === 'mr' ? '📡 स्थान शोधत आहे...' : '📡 Detecting location…');
   navigator.geolocation.getCurrentPosition(
     pos => {
-      document.getElementById('loading-overlay').style.display = 'none';
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
-      setStatus(`📍 Location found: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`);
-      renderList();
+      setStatus(lang === 'mr' ? '📡 रुग्णालये शोधत आहे...' : '📡 Finding nearby hospitals...');
+      fetch(`/api/hospitals/nearby?lat=${userLat}&lng=${userLng}&lang=${lang}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('loading-overlay').style.display = 'none';
+          if (data.status === 'success' && data.hospitals && data.hospitals.length > 0) {
+            ALL_HOSPITALS.length = 0;
+            ALL_HOSPITALS.push(...data.hospitals);
+            setStatus(lang === 'mr' ? `📍 स्थान सापडले: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}` : `📍 Location found: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`);
+          } else {
+            setStatus(lang === 'mr' ? '⚠️ रुग्णालये शोधण्यात अपयश आले, स्थानिक डेटा वापरत आहे.' : '⚠️ Failed to fetch live hospitals, using local database.', false);
+          }
+          renderList();
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('loading-overlay').style.display = 'none';
+          setStatus(lang === 'mr' ? '⚠️ त्रुटी: स्थानिक डेटा वापरत आहे.' : '⚠️ Error fetching live hospitals, using local database.', false);
+          renderList();
+        });
     },
     err => {
       document.getElementById('loading-overlay').style.display = 'none';
       const msgs = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Timeout' };
-      setStatus('⚠️ ' + (msgs[err.code] || err.message) + ' — showing all hospitals', false);
+      const mr_msgs = { 1: 'स्थान परवानगी नाकारली', 2: 'स्थान अनुपलब्ध', 3: 'वेळ संपली' };
+      setStatus(lang === 'mr'
+        ? '⚠️ ' + (mr_msgs[err.code] || 'स्थान शोधण्यात अडचण') + ' — स्थानिक रुग्णालये दाखवत आहे'
+        : '⚠️ ' + (msgs[err.code] || err.message) + ' — showing all hospitals', false);
       renderList();
     },
     { timeout: 14000, enableHighAccuracy: true }
@@ -428,6 +512,7 @@ function getLocation() {
 
 /* ── Render hospital list ── */
 function renderList() {
+  const lang = localStorage.getItem('health-lang-pref') || 'en';
   const ft  = document.getElementById('f-type').value;
   const fs  = document.getElementById('f-spec').value;
   const fd  = parseFloat(document.getElementById('f-dist').value) || null;
@@ -464,15 +549,20 @@ function renderList() {
     return;
   }
   noRes.style.display = 'none';
-  count.textContent = `${list.length} hospital${list.length !== 1 ? 's' : ''} found${userLat !== null ? ' · sorted by distance' : ''}`;
+  count.textContent = lang === 'mr'
+    ? `${list.length} रुग्णालय${list.length !== 1 ? 'े' : ''} सापडली${userLat !== null ? ' · अंतराच्या क्रमाने' : ''}`
+    : `${list.length} hospital${list.length !== 1 ? 's' : ''} found${userLat !== null ? ' · sorted by distance' : ''}`;
 
   /* Nearest banner */
   if (userLat !== null) {
     const n = list[0];
     document.getElementById('nearest-banner').style.display = 'block';
     document.getElementById('nb-name').textContent = n.name;
+    
+    const distText = lang === 'mr' ? `${n.distance.toFixed(1)} किमी` : `${n.distance.toFixed(1)} km`;
+    const etaText = eta(n.distance);
     document.getElementById('nb-info').innerHTML =
-      `📞 ${n.phone}  ·  🚗 ${n.distance.toFixed(1)} km  ·  ⏱ ${eta(n.distance)}  ·  ⭐ ${n.rating}`;
+      `📞 ${n.phone}  ·  🚗 ${distText}  ·  ⏱ ${etaText}  ·  ⭐ ${n.rating}`;
     document.getElementById('nb-call').href  = `tel:${n.phone}`;
     document.getElementById('nb-route').href = dirUrl(n);
     document.getElementById('nb-map').href   = mapUrl(n);
@@ -483,17 +573,29 @@ function renderList() {
   /* Cards */
   list.forEach((h, idx) => {
     const rankClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
-    const hasEmerg  = h.specialty.includes('Emergency');
-    const rankLabel = idx === 0 && userLat !== null ? '🥇 Nearest' :
-                      idx === 1 && userLat !== null ? '🥈 2nd Nearest' :
-                      idx === 2 && userLat !== null ? '🥉 3rd Nearest' : `#${idx+1}`;
+    const hasEmerg  = h.specialty.includes('Emergency') || h.specialty.includes('आणीबाणी');
+    const rankLabel = idx === 0 && userLat !== null ? (lang === 'mr' ? '🥇 सर्वात जवळचे' : '🥇 Nearest') :
+                      idx === 1 && userLat !== null ? (lang === 'mr' ? '🥈 दुसरे सर्वात जवळचे' : '🥈 2nd Nearest') :
+                      idx === 2 && userLat !== null ? (lang === 'mr' ? '🥉 तिसरे सर्वात जवळचे' : '🥉 3rd Nearest') : `#${idx+1}`;
 
-    const typeBadge = h.type === 'Government'
-      ? '<span class="hc-type-badge hc-gov">🏛 Govt</span>'
-      : '<span class="hc-type-badge hc-pvt">🏢 Pvt</span>';
+    const typeLabel = (h.type === 'Government' || h.type === 'शासकीय')
+      ? (lang === 'mr' ? '🏛 शासकीय' : '🏛 Govt')
+      : (lang === 'mr' ? '🏢 खाजगी' : '🏢 Pvt');
+    const typeBadgeClass = (h.type === 'Government' || h.type === 'शासकीय') ? 'hc-gov' : 'hc-pvt';
+    const typeBadge = `<span class="hc-type-badge ${typeBadgeClass}">${typeLabel}</span>`;
+
+    // Size badge
+    let sizeBadge = '';
+    if (h.size) {
+      const isBig = h.size === 'Big Hospital' || h.size === 'मोठे रुग्णालय';
+      const sizeLabel = h.size; // Already translated by backend or local fallback
+      sizeBadge = `<span class="hc-type-badge" style="margin-left: 6px; background: ${isBig ? '#F3EEFF' : '#EFF6FF'}; color: ${isBig ? '#6B21A8' : '#1D4ED8'};">${sizeLabel}</span>`;
+    }
+
+    const badgeContainer = `<div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">${typeBadge}${sizeBadge}</div>`;
 
     const specTags = h.specialty.slice(0, 4).map(s =>
-      `<span class="hc-spec${s === 'Emergency' ? ' emerg-spec' : ''}">${s}</span>`
+      `<span class="hc-spec${(s === 'Emergency' || s === 'आणीबाणी') ? ' emerg-spec' : ''}">${s}</span>`
     ).join('');
 
     const card = document.createElement('div');
@@ -504,17 +606,17 @@ function renderList() {
           <div class="hc-rank">${rankLabel}</div>
           <div class="hc-name">${h.name}</div>
         </div>
-        ${typeBadge}
+        ${badgeContainer}
       </div>
 
       <div class="hc-specs">${specTags}</div>
 
       <div class="hc-meta">
-        ${userLat !== null ? `<span class="meta-chip chip-dist"><i class="fas fa-route"></i> ${h.distance.toFixed(1)} km</span>` : ''}
+        ${userLat !== null ? `<span class="meta-chip chip-dist"><i class="fas fa-route"></i> ${h.distance.toFixed(1)} ${lang === 'mr' ? 'किमी' : 'km'}</span>` : ''}
         ${userLat !== null ? `<span class="meta-chip chip-dist" style="background:#F0FDF4;color:#15803D;"><i class="fas fa-clock"></i> ~${eta(h.distance)}</span>` : ''}
         <span class="meta-chip chip-rating"><i class="fas fa-star"></i> ${h.rating}/5</span>
-        ${h.beds ? `<span class="meta-chip chip-beds"><i class="fas fa-bed"></i> ${h.beds} beds</span>` : ''}
-        ${h['24hrs'] ? '<span class="meta-chip chip-24h"><i class="fas fa-circle"></i> 24h Open</span>' : ''}
+        ${h.beds ? `<span class="meta-chip chip-beds"><i class="fas fa-bed"></i> ${h.beds} ${lang === 'mr' ? 'बेड्स' : 'beds'}</span>` : ''}
+        ${h['24hrs'] ? `<span class="meta-chip chip-24h"><i class="fas fa-circle"></i> ${lang === 'mr' ? '२४ तास सुरू' : '24h Open'}</span>` : ''}
       </div>
 
       <div class="hc-info">
@@ -531,19 +633,67 @@ function renderList() {
 
       <div class="hc-actions">
         <a class="hc-btn btn-call"  href="tel:${h.phone}">
-          <i class="fas fa-phone"></i> Call
+          <i class="fas fa-phone"></i> ${lang === 'mr' ? 'कॉल करा' : 'Call'}
         </a>
         <a class="hc-btn btn-route" href="${dirUrl(h)}" target="_blank">
-          <i class="fas fa-directions"></i> Route
+          <i class="fas fa-directions"></i> ${lang === 'mr' ? 'मार्ग' : 'Route'}
         </a>
         <a class="hc-btn btn-map"   href="${mapUrl(h)}" target="_blank">
-          <i class="fas fa-map-marked-alt"></i> Map
+          <i class="fas fa-map-marked-alt"></i> ${lang === 'mr' ? 'नकाशा' : 'Map'}
         </a>
       </div>
     `;
     listEl.appendChild(card);
   });
 }
+
+// Global hook to update placeholders and translate dynamic text on language change
+window.onLanguageChange = function(lang) {
+  const searchBox = document.getElementById('search-box');
+  if (searchBox) {
+    searchBox.placeholder = lang === 'mr'
+      ? "🔍 रुग्णालयाचे नाव, शहर किंवा वैशिष्ट्य शोधा..."
+      : "🔍  Search hospital name, city or specialty…";
+  }
+  const fDist = document.getElementById('f-dist');
+  if (fDist) {
+    fDist.placeholder = lang === 'mr' ? "कमाल किमी" : "Max km";
+  }
+
+  // Update initial status text if location not found yet
+  if (userLat === null) {
+    setStatus(lang === 'mr'
+      ? 'जवळची रुग्णालये शोधण्यासाठी "माझे स्थान वापरा" वर टॅप करा'
+      : 'Tap "Use My Location" to find nearby hospitals');
+  }
+
+  // Re-fetch from nearby API with selected language if we have live GPS
+  if (userLat !== null && userLng !== null) {
+    document.getElementById('loading-overlay').style.display = 'flex';
+    document.getElementById('loading-overlay').querySelector('span').textContent =
+      lang === 'mr' ? 'रुग्णालये शोधत आहे…' : 'Detecting your location…';
+    fetch(`/api/hospitals/nearby?lat=${userLat}&lng=${userLng}&lang=${lang}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        if (data.status === 'success' && data.hospitals && data.hospitals.length > 0) {
+          ALL_HOSPITALS.length = 0;
+          ALL_HOSPITALS.push(...data.hospitals);
+          setStatus(lang === 'mr'
+            ? `📍 स्थान सापडले: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`
+            : `📍 Location found: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`);
+        }
+        renderList();
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('loading-overlay').style.display = 'none';
+        renderList();
+      });
+  } else {
+    renderList();
+  }
+};
 
 /* ── Auto-request location on page load ── */
 window.addEventListener('load', () => {

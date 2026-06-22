@@ -50,6 +50,20 @@ login_manager.login_view = 'login'
 
 # ================= DATABASE SETUP =================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Manually load .env file if it exists (for local and PythonAnywhere deployment)
+env_path = os.path.join(BASE_DIR, ".env")
+if os.path.exists(env_path):
+    try:
+        with open(env_path, encoding='utf-8') as f:
+            for line in f:
+                if line.strip() and not line.strip().startswith('#') and '=' in line:
+                    key, val = line.strip().split('=', 1)
+                    os.environ[key.strip()] = val.strip().strip('"').strip("'")
+        print("Loaded .env environment variables successfully!")
+    except Exception as e:
+        print(f"Error loading .env file: {e}")
+
 DB_PATH = os.path.join(BASE_DIR, "healthcare.db")
 
 def get_db():
@@ -953,17 +967,7 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('login'))
 
-@app.route('/symptom-entry')
-@login_required
-def symptom_entry():
-    return render_template('symptom_entry.html', patient=current_user)
 
-@app.route('/predict', methods=['POST'])
-@login_required
-def predict():
-    # Legacy route — redirect to the new rule-based assessment
-    flash('Please use the new Symptom Assessment for accurate results.', 'info')
-    return redirect(url_for('symptom_assessment'))
 
 @app.route('/history')
 @login_required
@@ -1209,6 +1213,174 @@ def nearest_hospitals():
                            hospitals_json=hospitals_json)
 
 
+@app.route('/api/hospitals/nearby')
+@login_required
+def api_hospitals_nearby():
+    """Find nearest hospitals dynamically based on live coordinates, using Places/Gemini APIs."""
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+    lang = request.args.get('lang', 'en')
+    
+    if not lat or not lng:
+        return jsonify({'status': 'error', 'message': 'Coordinates missing.'}), 400
+        
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Invalid coordinates.'}), 400
+        
+    hospitals = []
+    
+    # Check Google Places API key
+    google_key = os.environ.get("GOOGLE_PLACES_API_KEY") or os.environ.get("GOOGLE_MAPS_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    
+    if google_key:
+        try:
+            import requests
+            url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius=10000&type=hospital&key={google_key}"
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                results = response.json().get('results', [])
+                for r in results[:10]:
+                    name = r.get('name', 'Hospital')
+                    vicinity = r.get('vicinity', 'Nearby')
+                    rating = r.get('rating', 4.0)
+                    user_ratings = r.get('user_ratings_total', 0)
+                    loc = r.get('geometry', {}).get('location', {})
+                    h_lat = loc.get('lat', 0.0)
+                    h_lng = loc.get('lng', 0.0)
+                    
+                    name_lower = name.lower()
+                    if any(k in name_lower for k in ['clinic', 'dispensary', 'health centre', 'nursing home', 'care center']) or user_ratings < 30:
+                        size = "Small Hospital / Clinic"
+                    else:
+                        size = "Big Hospital"
+                        
+                    hospitals.append({
+                        "name": name,
+                        "type": "Private" if "private" in name_lower or "clinic" in name_lower else "Government",
+                        "specialty": ["General Medicine", "Emergency"],
+                        "address": vicinity,
+                        "phone": "+91-800-HEALTH",
+                        "distance": 0.0,
+                        "rating": rating,
+                        "lat": h_lat,
+                        "lng": h_lng,
+                        "beds": 50 if size == "Small Hospital / Clinic" else 500,
+                        "size": size,
+                        "24hrs": True
+                    })
+        except Exception as e:
+            print(f"[GOOGLE PLACES API] Error: {e}")
+            
+    # Fallback to Gemini if no hospitals found and Gemini key exists
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not hospitals and gemini_key:
+        try:
+            import requests
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            prompt = (
+                f"The user is at latitude {lat}, longitude {lng}.\n"
+                "Recommend 5 real, actual hospitals in this region (including both small clinics/hospitals and big multispecialty hospitals). "
+                "Provide the response STRICTLY in JSON format matching this schema:\n"
+                "{\n"
+                "  \"hospitals\": [\n"
+                "    {\n"
+                "      \"name\": \"Hospital Name\",\n"
+                "      \"type\": \"Government\" or \"Private\",\n"
+                "      \"size\": \"Small Hospital / Clinic\" or \"Big Hospital\",\n"
+                "      \"specialty\": [\"Emergency\", \"General Medicine\"],\n"
+                "      \"address\": \"Street Address\",\n"
+                "      \"phone\": \"Contact Number\",\n"
+                "      \"rating\": 4.2,\n"
+                "      \"lat\": latitude_float,\n"
+                "      \"lng\": longitude_float,\n"
+                "      \"beds\": 300\n"
+                "    }\n"
+                "  ]\n"
+                "}\n"
+                "Ensure the JSON is valid and only return the JSON, no markdown formatting."
+            )
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseMimeType": "application/json"}
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                cand = data['candidates'][0]['content']['parts'][0]['text'].strip()
+                parsed = json.loads(cand)
+                hospitals = parsed.get('hospitals', [])
+        except Exception as e:
+            print(f"[GEMINI HOSPITALS API] Error: {e}")
+            
+    # Translate to Marathi if language is mr
+    if hospitals and lang == 'mr' and gemini_key:
+        try:
+            import requests
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            headers = {"Content-Type": "application/json"}
+            prompt = (
+                f"Translate the following hospital details into pure, clean Marathi Devanagari script. "
+                "Do NOT mix English and Marathi. Translate hospital types, sizes, specialties, addresses, and names. "
+                "Do not use Hinglish or Latin characters.\n"
+                f"{json.dumps({'hospitals': hospitals})}\n"
+                "Return ONLY valid JSON."
+            )
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseMimeType": "application/json"}
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                cand = data['candidates'][0]['content']['parts'][0]['text'].strip()
+                parsed = json.loads(cand)
+                translated_hospitals = parsed.get('hospitals', [])
+                if translated_hospitals:
+                    hospitals = translated_hospitals
+        except Exception as e:
+            print(f"[GEMINI TRANSLATOR] Hospital translation failed: {e}")
+            
+    # Translate local translations if lang is mr
+    if lang == 'mr':
+        for h in hospitals:
+            if h.get('type') == 'Government':
+                h['type'] = 'शासकीय'
+            elif h.get('type') == 'Private':
+                h['type'] = 'खाजगी'
+            if h.get('size') == 'Big Hospital':
+                h['size'] = 'मोठे रुग्णालय'
+            elif h.get('size') == 'Small Hospital / Clinic':
+                h['size'] = 'छोटे रुग्णालय / क्लिनिक'
+            h['specialty'] = ['आणीबाणी' if s == 'Emergency' else ('सामान्य औषध' if s == 'General Medicine' else s) for s in h.get('specialty', [])]
+            
+    # Fallback to local catalog if no hospitals
+    if not hospitals:
+        for city_key, city_list in HOSPITALS_BY_CITY.items():
+            if city_key == "Default":
+                continue
+            for h in city_list:
+                entry = dict(h)
+                entry['city'] = city_key
+                entry['size'] = "Big Hospital" if entry['beds'] >= 300 else "Small Hospital / Clinic"
+                if lang == 'mr':
+                    if entry.get('type') == 'Government':
+                        entry['type'] = 'शासकीय'
+                    elif entry.get('type') == 'Private':
+                        entry['type'] = 'खाजगी'
+                    if entry.get('size') == 'Big Hospital':
+                        entry['size'] = 'मोठे रुग्णालय'
+                    elif entry.get('size') == 'Small Hospital / Clinic':
+                        entry['size'] = 'छोटे रुग्णालय / क्लिनिक'
+                    entry['specialty'] = ['आणीबाणी' if s == 'Emergency' else ('सामान्य औषध' if s == 'General Medicine' else s) for s in entry.get('specialty', [])]
+                hospitals.append(entry)
+                
+    return jsonify({'status': 'success', 'hospitals': hospitals})
+
+
 @app.route('/emergency')
 @login_required
 def emergency():
@@ -1239,7 +1411,8 @@ def assess_predict():
             'gender': getattr(current_user, 'gender', 'N/A'),
             'city': current_user.city,
             'diet_goal': getattr(current_user, 'diet_goal', 'Balanced'),
-            'medical_conditions': getattr(current_user, 'medical_conditions', 'None')
+            'medical_conditions': getattr(current_user, 'medical_conditions', 'None'),
+            'lang': request.form.get('lang', 'en').strip()
         }
         try:
             from ai_health_service import assess_symptoms_with_gemini
@@ -1473,11 +1646,12 @@ def assess_predict():
 def assess_nlp():
     """Natural-language symptom assessment with AI analysis and OTC suggestions."""
     text = request.form.get('symptom_text', '').strip()
+    lang = request.form.get('lang', 'en').strip()
     if not text:
         flash('Please describe your symptoms.', 'danger')
         return redirect(url_for('symptom_assessment'))
 
-    analysis = analyze_natural_symptoms(text)
+    analysis = analyze_natural_symptoms(text, lang)
     if not analysis.get('success'):
         flash(analysis.get('message', 'Could not analyze symptoms.'), 'warning')
         return redirect(url_for('symptom_assessment'))
@@ -1707,6 +1881,7 @@ def scan_food():
     data = request.get_json() or {}
     food_name = data.get('food_name', '').strip()
     image_data = data.get('image_data', '')
+    lang = data.get('lang', 'en')
 
     api_vision_used = "N/A"
     api_nutrition_used = "N/A"
@@ -1718,18 +1893,30 @@ def scan_food():
             food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data)
         except ValueError as ve:
             # Non-food item detected by Gemini/OpenAI vision
-            return jsonify({'status': 'error', 'message': str(ve)}), 422
+            msg = str(ve)
+            if lang == 'mr':
+                msg = "ही प्रतिमा अन्न घटक दर्शवत नाही. कृपया केवळ अन्न किंवा पेयाची प्रतिमा स्कॅन करा."
+            return jsonify({'status': 'error', 'message': msg}), 422
         except Exception as e:
-            return jsonify({'status': 'error', 'message': f'Vision analysis failed: {str(e)}'}), 500
+            msg = f'Vision analysis failed: {str(e)}'
+            if lang == 'mr':
+                msg = f'दृष्टी विश्लेषण अपयशी ठरले: {str(e)}'
+            return jsonify({'status': 'error', 'message': msg}), 500
 
     if not food_name:
-        return jsonify({'status': 'error', 'message': 'Please provide a food name or upload a clear food image.'}), 400
+        msg = 'Please provide a food name or upload a clear food image.'
+        if lang == 'mr':
+            msg = 'कृपया अन्नपदार्थाचे नाव प्रविष्ट करा किंवा स्पष्ट अन्न प्रतिमा अपलोड करा.'
+        return jsonify({'status': 'error', 'message': msg}), 400
 
     # Validate manually typed food names against food keyword registry
     if not food_scanner_service.is_food_item(food_name):
+        msg = f'"{food_name}" does not appear to be a food item. Please enter a valid food or beverage name.'
+        if lang == 'mr':
+            msg = f'"{food_name}" हा खाद्यपदार्थ वाटत नाही. कृपया वैध अन्न किंवा पेयाचे नाव प्रविष्ट करा.'
         return jsonify({
             'status': 'error',
-            'message': f'"{food_name}" does not appear to be a food item. Please enter a valid food or beverage name.'
+            'message': msg
         }), 422
 
     # Step 2: Fetch nutrition info
@@ -1738,12 +1925,41 @@ def scan_food():
     except Exception as e:
         return jsonify({'status': 'error', 'message': f'Nutrition lookup failed: {str(e)}'}), 500
 
-    # Step 3: Overall Good / Bad health verdict
-    health_verdict = food_scanner_service.get_food_health_verdict(nutrition)
-
-    # Step 4: Dietary goal compatibility check
+    # Step 3 & 4: Overall Good / Bad health verdict & Goal fitness
     diet_goal = getattr(current_user, 'diet_goal', 'Balanced')
-    fits, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
+    
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    gemini_eval = None
+    if gemini_key:
+        try:
+            gemini_eval = food_scanner_service.evaluate_food_with_gemini(nutrition, diet_goal, lang)
+        except Exception as e:
+            print(f"[GEMINI FOOD ROUTE EVALUATOR] Fallback due to error: {e}")
+            
+    if gemini_eval:
+        fits = gemini_eval.get('fits_goal', True)
+        rationale = gemini_eval.get('rationale', '')
+        color_class = gemini_eval.get('color_class', 'success')
+        health_verdict = gemini_eval.get('health_verdict', {
+            'verdict': 'good',
+            'title': 'Healthy Choice' if lang != 'mr' else 'निरोगी पर्याय',
+            'detail': '',
+            'emoji': '✅'
+        })
+    else:
+        health_verdict = food_scanner_service.get_food_health_verdict(nutrition)
+        fits, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
+        
+        # Translate to Marathi fallback if lang is Marathi
+        if lang == 'mr':
+            if health_verdict.get('verdict') == 'good':
+                health_verdict = {'verdict': 'good', 'title': 'निरोगी निवड', 'detail': 'आरोग्यासाठी फायदेशीर.', 'emoji': '✅'}
+            elif health_verdict.get('verdict') == 'caution':
+                health_verdict = {'verdict': 'caution', 'title': 'सावधगिरी बाळगा', 'detail': 'मर्यादित प्रमाणात सेवन करा.', 'emoji': '⚠️'}
+            else:
+                health_verdict = {'verdict': 'bad', 'title': 'टाळा / मर्यादित करा', 'detail': 'आरोग्यासाठी हानिकारक असू शकते.', 'emoji': '❌'}
+            
+            rationale = rationale.replace("Fits Weight Loss", "वजन कमी करण्यास मदत करते").replace("Excellent for Muscle Gain", "स्नायू वाढवण्यासाठी उत्कृष्ट").replace("Fits Goal", "ध्येयाशी सुसंगत")
 
     return jsonify({
         'status': 'success',

@@ -677,3 +677,61 @@ def evaluate_goal_fitness(nutrition, diet_goal):
             return (True,
                 f"⚠️ {name} is calorie-dense ({cals} kcal). Balance remaining "
                 "meals with light, fresh ingredients today.", "warning")
+
+
+def evaluate_food_with_gemini(nutrition, diet_goal, lang):
+    """
+    Use Gemini API to get a premium verdict and diet goal fitness explanation
+    in the user's selected language.
+    """
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key:
+        return None
+
+    # Construct prompt
+    prompt = (
+        f"Perform a diet fitness assessment for the following food item:\n"
+        f"- Food Name: {nutrition.get('name')}\n"
+        f"- Calories: {nutrition.get('calories')} kcal\n"
+        f"- Protein: {nutrition.get('protein')}g\n"
+        f"- Carbs: {nutrition.get('carbs')}g\n"
+        f"- Fat: {nutrition.get('fat')}g\n"
+        f"- Active Diet Goal: {diet_goal}\n"
+        f"- Preferred Output Language: {'Marathi' if lang == 'mr' else 'English'}\n\n"
+        "Return the response in JSON format matching exactly this schema:\n"
+        "{\n"
+        "  \"health_verdict\": {\n"
+        "     \"verdict\": \"good\" or \"caution\" or \"bad\",\n"
+        "     \"title\": \"A short title (e.g. 'Healthy Choice' or 'निरोगी पर्याय')\",\n"
+        "     \"detail\": \"A short explanation of why it is good/caution/bad for health\",\n"
+        "     \"emoji\": \"✅\" or \"⚠️\" or \"❌\"\n"
+        "  },\n"
+        "  \"fits_goal\": true or false,\n"
+        "  \"rationale\": \"A detailed explanation of how this fits or doesn't fit the active diet goal\",\n"
+        "  \"color_class\": \"success\" or \"warning\" or \"danger\"\n"
+        "}\n"
+        "Ensure the response is a single, valid JSON block. Return ONLY the JSON, do not wrap in markdown or anything else. "
+        "Strictly translate all user-facing strings (title, detail, rationale) to the Preferred Output Language (Marathi or English). "
+        "If Preferred Output Language is Marathi, write all responses strictly in Devanagari script in clean, pure Marathi "
+        "without mixing English words, without transliterating English terms, and without bilingual Hinglish/Marathish phrasing."
+    )
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json"}
+    }
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        if response.status_code == 200:
+            result = response.json()
+            if 'candidates' in result and len(result['candidates']) > 0:
+                cand = result['candidates'][0]
+                if 'content' in cand and 'parts' in cand['content'] and len(cand['content']['parts']) > 0:
+                    text = cand['content']['parts'][0]['text'].strip()
+                    parsed = json.loads(text)
+                    return parsed
+    except Exception as e:
+        print(f"[GEMINI FOOD EVALUATOR] Failed: {e}")
+    return None

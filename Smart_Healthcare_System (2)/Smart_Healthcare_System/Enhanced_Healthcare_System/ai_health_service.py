@@ -64,11 +64,35 @@ def assess_symptoms_with_gemini(symptoms_or_text, user_profile=None):
     else:
         symptom_desc = f"The user described their symptoms as follows: \"{symptoms_or_text}\"."
 
+    # Language instruction
+    lang = user_profile.get('lang', 'en') if user_profile else 'en'
+    if lang == 'mr':
+        lang_instruction = (
+            "IMPORTANT: The user has selected Marathi as their preferred language. "
+            "You MUST write ALL user-facing text fields (such as 'disease', 'description', 'doctor_advice', "
+            "'medicines.PRIMARY', 'medicines.SECONDARY', 'medicines.HOME_REMEDIES', 'medicines.WHEN_TO_SEE_DOCTOR', "
+            "'otc_medicines.name', 'otc_medicines.usage', 'otc_medicines.dosage', 'otc_medicines.side_effects', "
+            "'alternative_diagnoses.disease', 'alternative_diagnoses.description') STRICTLY in pure, clean Marathi Devanagari script. "
+            "Do NOT write in English, do NOT mix English and Marathi, do NOT use Latin characters, and do NOT use Hinglish/Latin script transliterations. "
+            "The entire clinical assessment text fields MUST be completely in Marathi. Every word must be written in standard Marathi. "
+            "For example, do NOT write English terms in Devanagari (like 'फ्लू' or 'मेडिसिन') if standard Marathi words like 'इन्फ्लूएंझा' or 'औषध' exist. "
+            "For the doctor_advice field, always append this Marathi medical disclaimer at the end:\n"
+            "**वैद्यकीय अस्वीकरण: या फक्त सामान्य ओटीसी (OTC) शिफारसी आहेत. कोणतेही औषध घेण्यापूर्वी वैद्यकीय व्यावसायिकाचा सल्ला घ्या. हे व्यावसायिक वैद्यकीय निदानासाठी पर्याय नाही.**"
+        )
+    else:
+        lang_instruction = (
+            "IMPORTANT: The user has selected English as their preferred language. "
+            "You MUST write ALL user-facing text fields STRICTLY in English. Do NOT mix other languages. "
+            "For the doctor_advice field, always append this English medical disclaimer at the end:\n"
+            "**Medical Disclaimer: These are general OTC suggestions only. Consult a healthcare professional before taking any medication. This is NOT a substitute for professional medical diagnosis.**"
+        )
+
     # Prompt
     prompt = (
         f"You are a professional clinical AI diagnostics assistant.\n"
         f"{profile_info}\n"
         f"Symptom inputs:\n{symptom_desc}\n\n"
+        f"{lang_instruction}\n\n"
         "Please perform a symptom assessment and diagnosis. Provide the response strictly in JSON format matching the following schema:\n"
         "{\n"
         "  \"disease\": \"Primary predicted disease name (e.g. Influenza, COVID-19, Migraine, Gastroenteritis)\",\n"
@@ -1403,7 +1427,9 @@ def _try_api_chat(message, ctx):
                 f"User Context: {json.dumps(ctx)}\n"
                 "Guidelines:\n"
                 "1. Respond friendly and professionally in the user's preferred language (e.g., 'mr' for Marathi, 'en' for English).\n"
-                "2. If the user's language is 'mr' (Marathi), write the response primarily in Marathi or bilingual (English + Marathi) where necessary for clarity.\n"
+                "2. If the user's language is 'mr' (Marathi), you MUST write the entire response strictly in clean, pure Marathi Devanagari script. "
+                "Do NOT mix English and Marathi, do NOT use Latin characters, and do NOT use Hinglish or Latin-script transliterations. The output must be completely, 100% in Marathi. "
+                "Write all terms, headings, and explanations in standard Marathi.\n"
                 "3. If they ask about symptoms, diet, lifestyle, or general health issues, provide clear suggestions.\n"
                 "4. ALWAYS append the official bold medical disclaimer at the end:\n"
                 "   For English: **Medical Disclaimer: These are general OTC suggestions only. Consult a healthcare professional before taking any medication. This is NOT a substitute for professional medical diagnosis.**\n"

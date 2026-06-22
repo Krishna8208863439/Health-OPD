@@ -349,6 +349,10 @@
                 Capture or upload a photo of your meal to calculate its macronutrient profile.
             </p>
             
+            <button class="btn btn-primary w-100" id="capture-btn" onclick="captureAndScan()" style="background: linear-gradient(135deg, #0066CC 0%, #004a99 100%); border: none; font-weight: 700; display: none; margin-bottom: 12px; align-items: center; justify-content: center; gap: 8px;">
+                📷 <span class="lang-en">Click Image &amp; Scan</span><span class="lang-mr">फोटो काढून स्कॅन करा</span>
+            </button>
+            
             <button class="btn-scan" id="scan-action-btn" onclick="triggerScan()">
                 <i class="fas fa-dot-circle"></i> Scan Food Item
             </button>
@@ -429,32 +433,7 @@
             </div>
         </div>
 
-        <!-- Custom Selector/Input Fallback -->
-        <div class="fallback-selector">
-            <div class="panel-title" style="font-size:0.92rem; margin-bottom:8px;">
-                <i class="fas fa-search" style="color:var(--purple);"></i>
-                Identify Any Food / Custom Scan
-            </div>
-            <p style="font-size:0.76rem; color:#6B7280; margin-bottom:12px;">
-                Type any food item name below and click <b>Scan</b> to estimate nutrition:
-            </p>
-            <div class="form-group" style="margin-bottom:8px;">
-                <input type="text" id="custom_food_name" class="form-control" placeholder="e.g. Cheese Pizza, Chicken Biryani, Mango..." style="font-size:0.85rem; padding:8px 10px;">
-            </div>
-            <p style="font-size:0.72rem; color:var(--muted); margin-bottom:8px;">Or select from common presets:</p>
-            <div class="form-group" style="margin-bottom:0;">
-                <select id="simulated_food" class="form-control" style="font-size:0.85rem; padding:8px 10px;" onchange="syncCustomFoodName(this.value)">
-                    <option value="">-- Quick Presets --</option>
-                    <option value="Apple">🍎 Fresh Apple</option>
-                    <option value="Banana">🍌 Ripe Banana</option>
-                    <option value="Salad">🥗 Mixed Green Salad</option>
-                    <option value="Chicken">🍗 Grilled Chicken (150g)</option>
-                    <option value="Paneer">🧀 Paneer Tikka (100g)</option>
-                    <option value="Roti">🫓 Wheat Roti (1 piece)</option>
-                    <option value="DalRice">🍛 Dal Rice Bowl</option>
-                </select>
-            </div>
-        </div>
+        <!-- Fallback selector removed to simplify UI -->
 
     </div>
 
@@ -630,6 +609,8 @@ async function startCamera(e) {
         blockedView.style.display = 'none';
         overlayGrid.style.display = 'block';
         streamActive = true;
+        const capBtn = document.getElementById('capture-btn');
+        if (capBtn) capBtn.style.display = 'flex';
         
         try {
             await videoEl.play();
@@ -666,9 +647,18 @@ function captureSnapshot() {
             previewEl.style.display = 'block';
             videoEl.style.display = 'none';
             document.getElementById('resume-hint').style.display = 'block';
+            const capBtn = document.getElementById('capture-btn');
+            if (capBtn) capBtn.style.display = 'none';
         } catch (e) {
             console.warn("Failed to capture video snapshot:", e);
         }
+    }
+}
+
+function captureAndScan() {
+    if (streamActive && videoEl && videoEl.style.display !== 'none') {
+        captureSnapshot();
+        triggerScan();
     }
 }
 
@@ -732,46 +722,17 @@ function triggerScan() {
     document.getElementById('scan-action-btn').disabled = true;
 
     // Build the request payload
-    let payload = {};
-    let customName = document.getElementById('custom_food_name').value.trim();
+    let payload = {
+        lang: localStorage.getItem('health-lang-pref') || 'en'
+    };
     
-    if (customName) {
-        payload.food_name = customName;
+    if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
+        payload.image_data = previewEl.src;
         sendScanRequest(payload);
-    } else if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
-        // Use TensorFlow.js MobileNet to classify the image
-        document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Loading Vision AI Model...</div><div style="font-size:0.78rem; color:#6B7280; margin-top:2px;">(Running locally in browser)</div>';
-        
-        mobilenet.load().then(model => {
-            document.getElementById('analyzer-box').innerHTML = '<div class="analyzing-ring"></div><div style="font-weight:700; color:#059669; font-size:0.92rem;">Analyzing image pixels...</div>';
-            
-            const img = new Image();
-            img.src = previewEl.src;
-            img.onload = () => {
-                model.classify(img).then(predictions => {
-                    if (predictions && predictions.length > 0) {
-                        let topPrediction = predictions[0].className.split(',')[0];
-                        payload.food_name = topPrediction;
-                        payload.image_data = previewEl.src; // still send image data if needed
-                        sendScanRequest(payload, "TensorFlow.js MobileNet (Local AI)", Math.round(predictions[0].probability * 100));
-                    } else {
-                        throw new Error("Could not recognize food in the image.");
-                    }
-                }).catch(err => {
-                    console.error("Classification error:", err);
-                    payload.image_data = previewEl.src;
-                    sendScanRequest(payload);
-                });
-            };
-        }).catch(err => {
-            console.error("TFJS load error:", err);
-            payload.image_data = previewEl.src;
-            sendScanRequest(payload);
-        });
     } else {
         document.getElementById('analyzer-box').style.display = 'none';
         document.getElementById('scan-action-btn').disabled = false;
-        alert("Please capture or upload an image first.");
+        alert(localStorage.getItem('health-lang-pref') === 'mr' ? "कृपया आधी प्रतिमा कॅप्चर करा किंवा अपलोड करा." : "Please capture or upload an image first.");
     }
 }
 
