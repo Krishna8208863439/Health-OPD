@@ -146,7 +146,7 @@ def identify_food_from_image(image_base64_or_bytes, filename=None):
         if basename and not is_food_item(basename):
             raise ValueError(
                 f"'{basename}' does not appear to be a food item. "
-                "Please scan only food or drink items."
+                "There is not a food."
             )
 
     # Clean the input (remove base64 header if present)
@@ -204,7 +204,7 @@ def identify_food_from_image(image_base64_or_bytes, filename=None):
                 if detected.upper() == "NOT_FOOD" or "NOT_FOOD" in detected.upper():
                     raise ValueError(
                         "This image does not appear to contain a food item. "
-                        "Please scan only food or drink items."
+                        "There is not a food."
                     )
 
                 if detected and len(detected) > 1:
@@ -212,7 +212,7 @@ def identify_food_from_image(image_base64_or_bytes, filename=None):
                     if not is_food_item(detected):
                         raise ValueError(
                             f"'{detected}' does not appear to be a food item. "
-                            "Please point the camera at food or drink only."
+                            "There is not a food."
                         )
                     return detected, 0.93, "Gemini Vision API"
         except ValueError:
@@ -263,13 +263,13 @@ def identify_food_from_image(image_base64_or_bytes, filename=None):
                 if "NOT_FOOD" in detected.upper():
                     raise ValueError(
                         "This image does not appear to contain a food item. "
-                        "Please scan only food or drink items."
+                        "There is not a food."
                     )
 
                 if detected and not is_food_item(detected):
                     raise ValueError(
                         f"'{detected}' does not appear to be a food item. "
-                        "Please point the camera at food or drink only."
+                        "There is not a food."
                     )
                 if detected:
                     return detected, 0.95, "OpenAI Vision API"

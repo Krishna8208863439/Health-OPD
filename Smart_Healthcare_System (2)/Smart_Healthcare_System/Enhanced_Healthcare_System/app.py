@@ -1827,6 +1827,82 @@ def diet_plans():
     return render_template('diet_plan.html', patient=current_user, profile=profile)
 
 
+@app.route('/api/diet/chat', methods=['POST'])
+@login_required
+def api_diet_chat():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Only patients can access the diet coach.'}), 403
+    
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    lang = data.get('lang', 'en')
+    
+    if not message:
+        return jsonify({'status': 'error', 'message': 'Message is empty'}), 400
+        
+    conn = get_db()
+    cur = conn.cursor()
+    row = cur.execute("SELECT * FROM users WHERE id=?", (current_user.id,)).fetchone()
+    conn.close()
+    profile = dict(row) if row else {}
+    
+    profile_summary = f"Age: {current_user.age}, Gender: {profile.get('gender', 'N/A')}, Height: {profile.get('height', 'N/A')} cm, Weight: {profile.get('weight', 'N/A')} kg, Activity Level: {profile.get('activity_level', 'N/A')}, Medical Conditions: {profile.get('medical_conditions', 'None')}, Dietary Preference: {profile.get('dietary_preference', 'vegetarian')}, Active Diet Goal: {profile.get('diet_goal', 'Balanced')}."
+    
+    system_instruction = (
+        "You are a professional AI Dietitian and Diet Coach for the HealthCare+ platform.\n"
+        f"User Profile: {profile_summary}\n\n"
+        "Guidelines:\n"
+        "1. Answer the user's questions about food, diet, and nutrition professionally and warmly.\n"
+        "2. Keep the responses concise, positive, action-oriented, and structured with clean markdown (bullet points, bold text).\n"
+        "3. Tailor recommendations to their profile (e.g. active diet goal, dietary preference, medical conditions).\n"
+        "4. Respond strictly in the requested language. If the language is 'mr' (Marathi), write the entire response in pure Marathi (Devanagari script), without using English/Latin characters or Hinglish transliterations. If 'en', write in English.\n"
+        "5. Always append this disclaimer at the end:\n"
+        "   - For English: '*Disclaimer: Diet suggestions are for informational purposes. Consult a certified nutritionist or doctor for medical dietary requirements.*'\n"
+        "   - For Marathi: '*अस्वीकरण: आहाराच्या शिफारसी केवळ माहितीच्या उद्देशाने आहेत. वैद्यकीय आहाराच्या गरजांसाठी प्रमाणित पोषणतज्ज्ञ किंवा डॉक्टरांचा सल्ला घ्या.*'\n"
+    )
+    
+    response_text = None
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        from ai_health_service import call_gemini
+        try:
+            prompt = f"User: {message}"
+            response_text = call_gemini(prompt, system_instruction)
+        except Exception as e:
+            print(f"Gemini Diet Chat failed: {e}")
+            
+    if not response_text:
+        diet_goal = profile.get('diet_goal', 'Balanced')
+        pref = profile.get('dietary_preference', 'vegetarian')
+        if lang == 'mr':
+            response_text = (
+                f"नमस्कार! मी तुमचा एआय आहार मार्गदर्शक आहे.\n\n"
+                f"तुमचे सध्याचे ध्येय **{diet_goal}** आहे आणि तुमची आवड **{pref}** आहे.\n"
+                f"तुम्ही विचारले: '{message}'.\n\n"
+                f"**शिफारसी:**\n"
+                f"- तुमच्या शरीराच्या गरजेनुसार रोज पुरेसे पाणी प्या.\n"
+                f"- आहारात हिरव्या पालेभाज्या, फळे आणि कडधान्यांचा समावेश करा.\n"
+                f"- तळलेले आणि जास्त साखर असलेले पदार्थ टाळा.\n\n"
+                f"*अस्वीकरण: आहाराच्या शिफारसी केवळ माहितीच्या उद्देशाने आहेत. वैद्यकीय आहाराच्या गरजांसाठी प्रमाणित पोषणतज्ज्ञ किंवा डॉक्टरांचा सल्ला घ्या.*"
+            )
+        else:
+            response_text = (
+                f"Hello! I am your AI Diet Coach.\n\n"
+                f"Your current goal is **{diet_goal}** with a **{pref}** preference.\n"
+                f"You asked: '{message}'.\n\n"
+                f"**Key recommendations:**\n"
+                f"- Hydrate adequately throughout the day.\n"
+                f"- Focus on whole foods, green leafy vegetables, and lean protein sources matching your preference.\n"
+                f"- Avoid heavily processed foods, refined sugars, and trans fats.\n\n"
+                f"*Disclaimer: Diet suggestions are for informational purposes. Consult a certified nutritionist or doctor for medical dietary requirements.*"
+            )
+            
+    return jsonify({
+        'status': 'success',
+        'response': response_text
+    })
+
+
 @app.route('/api/diet/generate', methods=['POST'])
 @login_required
 def api_generate_diet():
@@ -1896,7 +1972,7 @@ def scan_food():
             # Non-food item detected by Gemini/OpenAI vision
             msg = str(ve)
             if lang == 'mr':
-                msg = "ही प्रतिमा अन्न घटक दर्शवत नाही. कृपया केवळ अन्न किंवा पेयाची प्रतिमा स्कॅन करा."
+                msg = "ही प्रतिमा अन्न घटक दर्शवत नाही. कृपया केवळ अन्न किंवा पेयाची प्रतिमा स्कॅन करा. (There is not a food.)"
             return jsonify({'status': 'error', 'message': msg}), 422
         except Exception as e:
             msg = f'Vision analysis failed: {str(e)}'
@@ -1912,9 +1988,9 @@ def scan_food():
 
     # Validate manually typed food names against food keyword registry
     if not food_scanner_service.is_food_item(food_name):
-        msg = f'"{food_name}" does not appear to be a food item. Please enter a valid food or beverage name.'
+        msg = f'"{food_name}" does not appear to be a food item. There is not a food.'
         if lang == 'mr':
-            msg = f'"{food_name}" हा खाद्यपदार्थ वाटत नाही. कृपया वैध अन्न किंवा पेयाचे नाव प्रविष्ट करा.'
+            msg = f'"{food_name}" हा खाद्यपदार्थ वाटत नाही. (There is not a food.)'
         return jsonify({
             'status': 'error',
             'message': msg
@@ -3896,83 +3972,11 @@ def beds_stats_api():
 #  (Replaced by the new AI Assistant at /ai-assistant)
 # ─────────────────────────────────────────────
 
-# OPD desk route override (patient view)
+# OPD desk route override (patient view) - REMOVED
 @app.route('/opd-desk')
 @login_required
 def opd_desk():
-    if current_user.role != 'patient':
-        flash('Only patients can access the OPD Desk.', 'warning')
-        return redirect(url_for('index'))
-
-    today = datetime.now().strftime('%Y-%m-%d')
-    conn = get_db()
-    cur = conn.cursor()
-
-    ticket = cur.execute("""
-        SELECT * FROM opd_tickets
-        WHERE patient_id=? AND queue_date=? AND status NOT IN ('cancelled','completed')
-        LIMIT 1
-    """, (current_user.id, today)).fetchone()
-
-    ticket_dict = dict(ticket) if ticket else None
-    serving_token = 0
-    patients_ahead = 0
-    est_wait_time = 0
-    queue_position = 0
-    priority_queue = []
-
-    if ticket_dict:
-        dept = ticket_dict['department']
-
-        # Get serving token
-        serving_row = cur.execute("""
-            SELECT token_number FROM opd_tickets
-            WHERE department=? AND queue_date=? AND status='serving'
-            LIMIT 1
-        """, (dept, today)).fetchone()
-        serving_token = serving_row['token_number'] if serving_row else 0
-
-        # Get full priority queue
-        all_waiting = cur.execute("""
-            SELECT id, token_number, triage_level, status, created_at, patient_id
-            FROM opd_tickets
-            WHERE department=? AND queue_date=? AND status NOT IN ('cancelled','completed')
-            ORDER BY CAST(triage_level AS INTEGER) ASC, created_at ASC
-        """, (dept, today)).fetchall()
-
-        priority_queue = [dict(t) for t in all_waiting]
-
-        # Find our position in priority queue
-        for idx, t in enumerate(priority_queue):
-            if t['patient_id'] == current_user.id:
-                queue_position = idx + 1
-                break
-
-        patients_ahead = max(0, queue_position - 1)
-        est_wait_time = predict_wait_littles_law(dept, patients_ahead, today)
-
-        if ticket_dict['status'] == 'serving':
-            ticket_dict['status'] = 'serving'
-        elif serving_token > ticket_dict['token_number']:
-            ticket_dict['status'] = 'completed'
-
-    conn.close()
-
-    triage_labels = {1: 'CRITICAL', 2: 'URGENT', 3: 'SEMI-URGENT', 4: 'NON-URGENT', 5: 'ROUTINE'}
-    triage_colors = {1: '#DC2626', 2: '#EA580C', 3: '#D97706', 4: '#65A30D', 5: '#6B7280'}
-
-    return render_template('opd_desk.html',
-        patient=current_user,
-        ticket=ticket_dict,
-        serving_token=serving_token,
-        patients_ahead=patients_ahead,
-        est_wait_time=est_wait_time,
-        queue_position=queue_position,
-        priority_queue=priority_queue[:10],
-        triage_labels=triage_labels,
-        triage_colors=triage_colors,
-        today=today
-    )
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':

@@ -1,1371 +1,901 @@
 {% extends "base.html" %}
-{% block title %}Diet Plans - HealthCare Plus{% endblock %}
+{% block title %}AI Diet Coach - HealthCare Plus{% endblock %}
 
 {% block extra_css %}
 <style>
 :root {
-    --diet-primary: #0066CC;
     --diet-green: #10B981;
-    --diet-orange: #F59E0B;
-    --diet-red: #EF4444;
-    --diet-purple: #8B5CF6;
-    --veg-color: #16a34a;
-    --nonveg-color: #dc2626;
+    --diet-green-dark: #059669;
+    --diet-green-light: #ECFDF5;
+    --diet-green-border: #A7F3D0;
+    --chat-bg-light: #F9FAFB;
+    --chat-bubble-user: #10B981;
+    --chat-bubble-ai: #FFFFFF;
+    --chat-bubble-ai-border: #E5E7EB;
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
 }
 
-/* ── DARK MODE ── */
-html.dark-theme body { background:#0d1117 !important; }
-html.dark-theme .diet-hero { box-shadow:0 8px 30px rgba(16,185,129,0.15); }
-html.dark-theme .active-banner {
-    background:#1b3a24 !important; border-color:#2d6a3f !important;
-    color:#4ade80 !important;
-}
-html.dark-theme .veg-toggle-bar { background:#21262d !important; border-color:#30363d !important; }
-html.dark-theme .veg-toggle-btn { color:#8b949e !important; }
-html.dark-theme .diet-option-btn {
-    background:#161b22 !important; border-color:#30363d !important; color:#c9d1d9 !important;
-}
-html.dark-theme .diet-option-btn:hover { border-color:var(--diet-green) !important; }
-html.dark-theme .diet-option-btn.active {
-    border-color:var(--diet-green) !important; background:#1b3a24 !important; color:#4ade80 !important;
-}
-html.dark-theme .meal-card {
-    background:#161b22 !important; border-color:#30363d !important;
-    box-shadow:0 4px 20px rgba(0,0,0,0.4) !important;
-}
-html.dark-theme .meal-card-header { border-bottom-color:#30363d !important; }
-html.dark-theme .meal-card-title { color:#c9d1d9 !important; }
-html.dark-theme .meal-description { color:#8b949e !important; }
-html.dark-theme .meal-block {
-    background:#21262d !important; border-color:#30363d !important;
-}
-html.dark-theme .meal-block-title { color:#8b949e !important; }
-html.dark-theme .meal-block-content { color:#c9d1d9 !important; }
-html.dark-theme .add-meal-section {
-    background:#21262d !important; border-color:#30363d !important;
-}
-html.dark-theme .add-meal-section h6 { color:#c9d1d9 !important; }
-html.dark-theme .add-meal-row select,
-html.dark-theme .add-meal-row input[type="text"] {
-    background:#161b22 !important; border-color:#30363d !important; color:#c9d1d9 !important;
-}
-html.dark-theme .profile-card {
-    background:#161b22 !important; border-color:#30363d !important;
-}
-html.dark-theme .profile-card label { color:#8b949e !important; }
-html.dark-theme .profile-card input,
-html.dark-theme .profile-card select {
-    background:#21262d !important; border-color:#30363d !important; color:#c9d1d9 !important;
-}
-html.dark-theme #ai-plan-result {
-    background:#1b3a24 !important; border-color:#2d6a3f !important; color:#c9d1d9 !important;
+/* Dark Theme overrides */
+html.dark-theme :root {
+    --diet-green-light: #064E3B;
+    --diet-green-border: #047857;
+    --chat-bg-light: #111827;
+    --chat-bubble-ai: #1F2937;
+    --chat-bubble-ai-border: #374151;
+    --text-dark: #F9FAFB;
+    --text-muted: #9CA3AF;
 }
 
-/* ── FLOATING PAGE CONTROLS ── */
-.page-controls {
-    position:fixed; bottom:24px; right:20px; z-index:9999;
-    display:flex; flex-direction:column; gap:10px; align-items:flex-end;
-}
-.ctrl-btn {
-    display:flex; align-items:center; gap:8px;
-    padding:10px 16px; border-radius:30px; border:none; cursor:pointer;
-    font-weight:700; font-size:0.82rem; box-shadow:0 4px 18px rgba(0,0,0,0.2);
-    transition:all 0.22s; white-space:nowrap;
-}
-.ctrl-btn.theme-ctrl { background:#1a202c; color:#fff; }
-html.dark-theme .ctrl-btn.theme-ctrl { background:#f7fafc; color:#1a202c; }
-.ctrl-btn.lang-ctrl { background:#10B981; color:#fff; }
-.ctrl-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
-@media(max-width:600px) { .page-controls { bottom:14px; right:10px; } }
-
-.diet-hero {
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    color: white;
-    border-radius: 16px;
-    padding: 32px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
-}
-.diet-hero .ico { font-size: 56px; }
-.diet-hero h2  { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
-.diet-hero p   { font-size: 0.9rem; opacity: 0.9; margin: 0; }
-
-.active-banner {
-    background: #ECFDF5;
-    border: 2px solid #A7F3D0;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: #065F46;
-}
-.active-banner strong { font-size: 1.05rem; }
-
-/* ── Veg / Non-Veg Toggle ── */
-.veg-toggle-bar {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    background: #F3F4F6;
-    border-radius: 12px;
-    padding: 4px;
-    width: fit-content;
-    margin-bottom: 22px;
-    border: 1px solid #E5E7EB;
-}
-.veg-toggle-btn {
-    padding: 9px 26px;
-    border-radius: 9px;
-    border: none;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 0.88rem;
-    transition: all 0.22s;
-    background: transparent;
-    color: #6B7280;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.veg-toggle-btn.active-veg {
-    background: #16a34a;
-    color: white;
-    box-shadow: 0 3px 12px rgba(22,163,74,0.35);
-}
-.veg-toggle-btn.active-nonveg {
-    background: #dc2626;
-    color: white;
-    box-shadow: 0 3px 12px rgba(220,38,38,0.35);
-}
-.veg-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-}
-.veg-dot-green  { background: #16a34a; border: 1.5px solid #15803d; }
-.veg-dot-red    { background: #dc2626; border: 1.5px solid #b91c1c; }
-
-/* ── Diet Type Tabs ── */
-.diet-selector {
+/* Page Layout */
+.diet-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
-}
-.diet-option-btn {
-    background: #fff;
-    border: 2px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 14px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 700;
-    font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
-.diet-option-btn .btn-emoji { font-size: 22px; }
-.diet-option-btn:hover {
-    border-color: var(--diet-green);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-}
-.diet-option-btn.active {
-    border-color: var(--diet-green);
-    background: #ECFDF5;
-    color: #047857;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+    animation: fadeIn 0.4s ease-out;
 }
 
-/* ── Meal Card ── */
-.meal-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    border: 1px solid #E5E7EB;
-    padding: 28px;
-    margin-bottom: 24px;
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
+@media (max-width: 992px) {
+    .diet-container {
+        grid-template-columns: 1fr;
+    }
 }
-.meal-card.active-meal { display: block; }
+
+/* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.meal-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #F3F4F6;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.meal-card-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #1F2937;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.meal-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #fff;
-}
-.badge-weight  { background: var(--diet-primary); }
-.badge-muscle  { background: var(--diet-purple); }
-.badge-diabetic{ background: var(--diet-orange); }
-.badge-heart   { background: var(--diet-red); }
-.badge-balanced{ background: var(--diet-green); }
-
-.meal-description {
-    font-size: 0.9rem;
-    color: #4B5563;
-    margin-bottom: 24px;
-    line-height: 1.55;
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Sub-type indicator badge */
-.pref-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 18px;
-}
-.pref-badge.veg-badge    { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
-.pref-badge.nonveg-badge { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-
-/* ── Meal Blocks Grid ── */
-.meal-timeline {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.meal-block {
-    background: #F9FAFB;
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 16px;
-}
-.meal-block-title {
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #9CA3AF;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.meal-block-content {
-    font-size: 0.9rem;
-    color: #1F2937;
-    font-weight: 600;
-    line-height: 1.5;
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
 
-/* ── Custom Meal Items added by user ── */
-.custom-meals-list {
-    margin-top: 12px;
+/* Profile Card Styling */
+.diet-sidebar {
     display: flex;
     flex-direction: column;
+    gap: 20px;
+}
+
+.profile-card {
+    background: var(--chat-bubble-ai);
+    border: 1px solid var(--chat-bubble-ai-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    transition: all 0.3s ease;
+}
+
+.profile-card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--chat-bubble-ai-border);
+    padding-bottom: 12px;
+}
+
+.profile-header i {
+    font-size: 24px;
+    color: var(--diet-green);
+}
+
+.profile-header h4 {
+    margin: 0;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.form-control-diet {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--chat-bubble-ai-border);
+    background: var(--chat-bg-light);
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.form-control-diet:focus {
+    outline: none;
+    border-color: var(--diet-green);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+}
+
+.btn-diet-save {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--diet-green) 0%, var(--diet-green-dark) 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
 }
-.custom-meal-item {
+
+.btn-diet-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16,185,129,0.3);
+}
+
+/* Active Diet Banner */
+.active-plan-badge {
+    background: var(--diet-green-light);
+    border: 1px solid var(--diet-green-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-dark);
+}
+
+.active-plan-badge .icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--diet-green);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.active-plan-badge .details {
+    display: flex;
+    flex-direction: column;
+}
+
+.active-plan-badge .details .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.active-plan-badge .details .val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--diet-green);
+}
+
+/* Chat Section Styling */
+.chat-card {
+    background: var(--chat-bubble-ai);
+    border: 1px solid var(--chat-bubble-ai-border);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    height: 700px;
+    overflow: hidden;
+}
+
+.chat-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--chat-bubble-ai-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #F0FDF4;
-    border: 1px solid #BBF7D0;
-    border-radius: 8px;
-    padding: 9px 14px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #166534;
 }
-.custom-meal-item.nonveg-item {
-    background: #FFF1F2;
-    border-color: #FECACA;
-    color: #991B1B;
-}
-.custom-meal-item .del-btn {
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: #9CA3AF;
-    font-size: 0.95rem;
-    padding: 0 4px;
-    transition: color 0.15s;
-}
-.custom-meal-item .del-btn:hover { color: #EF4444; }
 
-/* ── Add Meal Section ── */
-.add-meal-section {
-    background: #F9FAFB;
-    border: 2px dashed #D1D5DB;
-    border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 20px;
-    transition: border-color 0.2s;
+.chat-header .coach-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
-.add-meal-section:focus-within { border-color: var(--diet-green); }
-.add-meal-section h6 {
+
+.chat-header .coach-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--diet-green) 0%, var(--diet-green-dark) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.25);
+}
+
+.chat-header .coach-meta h5 {
+    margin: 0;
     font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+}
+
+.chat-header .coach-meta p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: var(--chat-bg-light);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Scrollbar Customization */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--chat-bubble-ai-border);
+    border-radius: 3px;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    animation: slideIn 0.25s ease-out forwards;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message-bubble.user {
+    background: var(--chat-bubble-user);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.15);
+}
+
+.message-bubble.ai {
+    background: var(--chat-bubble-ai);
+    color: var(--text-dark);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--chat-bubble-ai-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.message-bubble ul, .message-bubble ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.message-bubble li {
+    margin-bottom: 4px;
+}
+
+.message-bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.chat-time {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+    text-align: right;
+    display: block;
+}
+
+.message-bubble.ai .chat-time {
+    color: var(--text-muted);
+}
+
+/* Suggestion Chips */
+.suggestion-chips-container {
+    padding: 12px 24px;
+    background: var(--chat-bg-light);
+    border-top: 1px solid var(--chat-bubble-ai-border);
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.suggestion-chips-container::-webkit-scrollbar {
+    height: 4px;
+}
+.suggestion-chips-container::-webkit-scrollbar-thumb {
+    background: var(--chat-bubble-ai-border);
+    border-radius: 2px;
+}
+
+.suggestion-chip {
+    padding: 8px 16px;
+    background: var(--chat-bubble-ai);
+    border: 1px solid var(--chat-bubble-ai-border);
+    color: var(--diet-green-dark);
+    font-weight: 600;
     font-size: 0.85rem;
-    color: #374151;
-    margin-bottom: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 6px;
 }
-.add-meal-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.add-meal-row select,
-.add-meal-row input[type="text"] {
-    flex: 1;
-    min-width: 120px;
-    padding: 9px 12px;
-    border: 1px solid #D1D5DB;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    color: #1F2937;
-    background: white;
-    transition: border-color 0.2s;
-}
-.add-meal-row select:focus,
-.add-meal-row input[type="text"]:focus {
-    border-color: var(--diet-green);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
-}
-.btn-add-meal {
+
+.suggestion-chip:hover {
     background: var(--diet-green);
     color: white;
+    border-color: var(--diet-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(16,185,129,0.15);
+}
+
+/* Input Area */
+.chat-input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--chat-bubble-ai-border);
+    background: var(--chat-bubble-ai);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.chat-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.chat-text-input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 30px;
+    border: 1px solid var(--chat-bubble-ai-border);
+    background: var(--chat-bg-light);
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.chat-text-input:focus {
+    border-color: var(--diet-green);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+
+.btn-send {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     border: none;
-    border-radius: 8px;
-    padding: 9px 18px;
-    font-weight: 700;
-    font-size: 0.88rem;
+    background: var(--diet-green);
+    color: white;
+    font-size: 18px;
     cursor: pointer;
-    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-send:hover {
+    background: var(--diet-green-dark);
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(16,185,129,0.3);
+}
+
+/* Thinking Indicator */
+.thinking-bubble {
+    align-self: flex-start;
+    background: var(--chat-bubble-ai);
+    border: 1px solid var(--chat-bubble-ai-border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 14px 20px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.thinking-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.thinking-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--diet-green);
+    animation: pulse 1s infinite ease-in-out;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Control Button Page Toggles */
+.page-controls {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.ctrl-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.82rem;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    transition: all 0.22s;
     white-space: nowrap;
 }
-.btn-add-meal:hover { background: #059669; transform: translateY(-1px); }
 
-/* ── Select Diet button ── */
-.select-diet-btn {
-    background: var(--diet-green);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 28px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 0.94rem;
-    transition: all 0.18s;
-}
-.select-diet-btn:hover { background: #059669; transform: translateY(-1px); }
-.select-diet-btn.is-active-btn {
-    background: #E5E7EB;
-    color: #9CA3AF;
-    cursor: not-allowed;
-}
-
-@media(max-width: 600px) {
-    .diet-hero         { flex-direction: column; text-align: center; }
-    .meal-card-header  { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .veg-toggle-bar    { width: 100%; justify-content: center; }
-}
+.ctrl-btn.theme-ctrl { background: #1a202c; color: #fff; }
+html.dark-theme .ctrl-btn.theme-ctrl { background: #f7fafc; color: #1a202c; }
+.ctrl-btn.lang-ctrl { background: var(--diet-green); color: #fff; }
+.ctrl-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header Hero -->
+    <div style="background: linear-gradient(135deg, var(--diet-green) 0%, var(--diet-green-dark) 100%); color: white; border-radius: 16px; padding: 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16,185,129,0.15);">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 style="font-weight: 800; margin: 0; display: flex; align-items: center; gap: 12px;">
+                    🍏 <span class="lang-en">AI Diet Coach</span><span class="lang-mr">एआय आहार मार्गदर्शक</span>
+                </h2>
+                <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 0.95rem;">
+                    <span class="lang-en">Get instant personalized meal recommendations, nutrition advice, and diet plans from your digital health assistant.</span>
+                    <span class="lang-mr">तुमच्या डिजिटल आरोग्य सहाय्यकाकडून त्वरित वैयक्तिकृत जेवण शिफारसी, पोषण सल्ला आणि आहार योजना मिळवा.</span>
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-light text-success fw-bold" onclick="resetChatHistory()" style="border-radius: 30px; font-size: 0.85rem; padding: 8px 18px;">
+                    🔄 <span class="lang-en">Reset Conversation</span><span class="lang-mr">संभाषण रीसेट करा</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
-<!-- ══ FLOATING PAGE CONTROLS (Dark Mode + Language) ══ -->
+    <!-- Main Content Area -->
+    <div class="diet-container">
+        <!-- Left Column: Diet Profile Update Form -->
+        <div class="diet-sidebar">
+            <!-- Active Diet Banner -->
+            <div class="active-plan-badge">
+                <div class="icon-wrap">
+                    🎯
+                </div>
+                <div class="details">
+                    <span class="label"><span class="lang-en">Current Goal</span><span class="lang-mr">सध्याचे ध्येय</span></span>
+                    <span class="val">
+                        <span class="lang-en">{{ profile.diet_goal or 'Balanced' }}</span>
+                        <span class="lang-mr">
+                            {% if profile.diet_goal == 'Weight Loss' %}वजन कमी करणे
+                            {% elif profile.diet_goal == 'Muscle Gain' %}स्नायू वाढवणे
+                            {% elif profile.diet_goal == 'Diabetic Care' %}मधुमेह नियंत्रण
+                            {% elif profile.diet_goal == 'Heart Healthy' %}हृदय आरोग्य
+                            {% else %}संतुलित आहार
+                            {% endif %}
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Profile form -->
+            <div class="profile-card">
+                <div class="profile-header">
+                    <i class="fas fa-sliders-h"></i>
+                    <h4>
+                        <span class="lang-en">Diet Profile</span><span class="lang-mr">आहार प्रोफाइल</span>
+                    </h4>
+                </div>
+                
+                <form method="POST" action="{{ url_for('diet_plans') }}">
+                    <input type="hidden" name="action" value="save_profile">
+                    
+                    <div class="form-group">
+                        <label>
+                            <span class="lang-en">Dietary Goal</span><span class="lang-mr">आहार ध्येय</span>
+                        </label>
+                        <select name="diet_goal" class="form-control-diet">
+                            <option value="Balanced" {% if profile.diet_goal == 'Balanced' %}selected{% endif %}>🟢 Balanced Diet</option>
+                            <option value="Weight Loss" {% if profile.diet_goal == 'Weight Loss' %}selected{% endif %}>🔥 Weight Loss</option>
+                            <option value="Muscle Gain" {% if profile.diet_goal == 'Muscle Gain' %}selected{% endif %}>💪 Muscle Gain</option>
+                            <option value="Diabetic Care" {% if profile.diet_goal == 'Diabetic Care' %}selected{% endif %}>🩸 Diabetic Care</option>
+                            <option value="Heart Healthy" {% if profile.diet_goal == 'Heart Healthy' %}selected{% endif %}>❤️ Heart Healthy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="lang-en">Diet Preference</span><span class="lang-mr">आहार प्राधान्य</span>
+                        </label>
+                        <select name="dietary_preference" class="form-control-diet">
+                            <option value="vegetarian" {% if profile.dietary_preference == 'vegetarian' %}selected{% endif %}>🌱 Vegetarian</option>
+                            <option value="non-vegetarian" {% if profile.dietary_preference == 'non-vegetarian' %}selected{% endif %}>🍗 Non-Vegetarian</option>
+                            <option value="vegan" {% if profile.dietary_preference == 'vegan' %}selected{% endif %}>🥗 Vegan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row row">
+                        <div class="col-6 form-group">
+                            <label><span class="lang-en">Height (cm)</span><span class="lang-mr">उंची (सेमी)</span></label>
+                            <input type="number" name="height" class="form-control-diet" value="{{ profile.height or 170 }}" required>
+                        </div>
+                        <div class="col-6 form-group">
+                            <label><span class="lang-en">Weight (kg)</span><span class="lang-mr">वजन (किलो)</span></label>
+                            <input type="number" name="weight" class="form-control-diet" value="{{ profile.weight or 70 }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="lang-en">Gender</span><span class="lang-mr">लिंग</span>
+                        </label>
+                        <select name="gender" class="form-control-diet">
+                            <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other" {% if profile.gender == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="lang-en">Activity Level</span><span class="lang-mr">क्रियेशीलता स्तर</span>
+                        </label>
+                        <select name="activity_level" class="form-control-diet">
+                            <option value="sedentary" {% if profile.activity_level == 'sedentary' %}selected{% endif %}>Sedentary (No exercise)</option>
+                            <option value="moderate" {% if profile.activity_level == 'moderate' %}selected{% endif %}>Moderate (3-5 days/week)</option>
+                            <option value="active" {% if profile.activity_level == 'active' %}selected{% endif %}>Highly Active (Heavy exercise)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <span class="lang-en">Medical Conditions</span><span class="lang-mr">वैद्यकीय परिस्थिती</span>
+                        </label>
+                        <input type="text" name="medical_conditions" class="form-control-diet" placeholder="e.g., None, Hypertension" value="{{ profile.medical_conditions or '' }}">
+                    </div>
+
+                    <button type="submit" class="btn-diet-save mt-2">
+                        <i class="fas fa-save"></i>
+                        <span class="lang-en">Update Coach Context</span><span class="lang-mr">कोच संदर्भ अपडेट करा</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Chatbot Window -->
+        <div class="chat-card">
+            <!-- Chat Head -->
+            <div class="chat-header">
+                <div class="coach-info">
+                    <div class="coach-avatar">
+                        🥗
+                    </div>
+                    <div class="coach-meta">
+                        <h5>
+                            <span class="lang-en">NutriAI Coach</span><span class="lang-mr">न्यूट्रिएआय कोच</span>
+                        </h5>
+                        <p>
+                            🟢 <span class="lang-en">Powered by Gemini · Online</span><span class="lang-mr">जेमिनीद्वारे संचालित · ऑनलाइन</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Message Panels -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- AI Welcomes -->
+                <div class="message-bubble ai">
+                    <p class="lang-en">Hello! I am your personalized **NutriAI Coach**. I have loaded your medical profile (Goal: **{{ profile.diet_goal or 'Balanced' }}**, Preference: **{{ profile.dietary_preference or 'vegetarian' }}**).</p>
+                    <p class="lang-mr">नमस्कार! मी तुमचा वैयक्तिकृत **न्यूट्रिएआय कोच** आहे. मी तुमचे आरोग्य तपशील लोड केले आहेत (ध्येय: **{% if profile.diet_goal == 'Weight Loss' %}वजन कमी करणे{% elif profile.diet_goal == 'Muscle Gain' %}स्नायू वाढवणे{% elif profile.diet_goal == 'Diabetic Care' %}मधुमेह नियंत्रण{% elif profile.diet_goal == 'Heart Healthy' %}हृदय आरोग्य{% else %}संतुलित आहार{% endif %}**, प्राधान्य: **{% if profile.dietary_preference == 'vegetarian' %}शाकाहारी{% else %}मांसाहारी{% endif %}**).</p>
+                    
+                    <p class="lang-en">How can I help you today? You can ask me to write a custom meal plan, suggest protein-rich items, or check recipes!</p>
+                    <p class="lang-mr">आज मी तुम्हाला कशी मदत करू शकतो? तुम्ही मला सानुकूल जेवण योजना तयार करण्यास, प्रथिनेयुक्त पदार्थांची शिफारस करण्यास किंवा पाककृती सुचवण्यास सांगू शकता!</p>
+                </div>
+                
+                <!-- Thinking placeholder -->
+                <div class="thinking-bubble" id="thinking-indicator">
+                    <span class="lang-en">Coach is cooking ideas</span><span class="lang-mr">आहारतज्ज्ञ विचार करत आहेत</span>
+                    <div class="thinking-dots">
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Suggestion Chips -->
+            <div class="suggestion-chips-container">
+                <button class="suggestion-chip" onclick="handleChipClick(this)">
+                    <span>📋</span>
+                    <span class="lang-en">Write a 1-day meal plan</span>
+                    <span class="lang-mr">१-दिवसाची जेवण योजना लिहा</span>
+                </button>
+                <button class="suggestion-chip" onclick="handleChipClick(this)">
+                    <span>🥚</span>
+                    <span class="lang-en">High protein foods list</span>
+                    <span class="lang-mr">उच्च प्रथिनेयुक्त खाद्यपदार्थ</span>
+                </button>
+                <button class="suggestion-chip" onclick="handleChipClick(this)">
+                    <span>🍇</span>
+                    <span class="lang-en">Healthy weight loss snacks</span>
+                    <span class="lang-mr">वजन कमी करण्यासाठी निरोगी स्नॅक्स</span>
+                </button>
+                <button class="suggestion-chip" onclick="handleChipClick(this)">
+                    <span>🚫</span>
+                    <span class="lang-en">Foods to avoid for heart health</span>
+                    <span class="lang-mr">हृदय निरोगी ठेवण्यासाठी वर्ज्य अन्न</span>
+                </button>
+            </div>
+
+            <!-- Input message row -->
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chat-text-input" class="chat-text-input" 
+                           placeholder="Ask about diet plans, food nutrition, calorie count..."
+                           onkeypress="handleKeyPress(event)">
+                </div>
+                <button class="btn-send" onclick="sendUserMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Controls (Theme/Lang switcher overrides) -->
 <div class="page-controls">
-    <button class="ctrl-btn lang-ctrl" onclick="togglePageLang()" title="Switch Language">
-        <span id="page-lang-icon">🇮🇳</span>
-        <span class="lang-en">मराठीत पहा</span>
-        <span class="lang-mr">View in English</span>
-    </button>
-    <button class="ctrl-btn theme-ctrl" onclick="togglePageTheme()" title="Toggle Theme">
+    <button class="ctrl-btn theme-ctrl" onclick="togglePageTheme()">
         <span id="page-theme-icon">🌙</span>
-        <span class="lang-en">Dark Mode</span>
-        <span class="lang-mr">डार्क मोड</span>
+        <span class="lang-en">Theme</span><span class="lang-mr">रंग थीम</span>
+    </button>
+    <button class="ctrl-btn lang-ctrl" onclick="togglePageLang()">
+        🌐 <span class="lang-en">मराठी</span><span class="lang-mr">English</span>
     </button>
 </div>
-
-<div class="diet-hero">
-    <div class="ico">🥗</div>
-    <div>
-        <h2>
-            <span class="lang-en">Personalized Diet Plans</span>
-            <span class="lang-mr">वैयक्तिक आहार योजना</span>
-        </h2>
-        <p>
-            <span class="lang-en">Choose a diet plan tailored to your medical condition and lifestyle goals. Switch between Vegetarian and Non-Vegetarian options and add your own custom meals.</span>
-            <span class="lang-mr">तुमच्या वैद्यकीय स्थिती आणि जीवनशैलीच्या ध्येयानुसार आहार योजना निवडा. शाकाहारी आणि मांसाहारी पर्याय बदला आणि स्वतःचे जेवण जोडा.</span>
-        </p>
-    </div>
-</div>
-
-{% if patient.diet_goal %}
-<div class="active-banner">
-    <div>
-        🎯
-        <span class="lang-en">Your current active diet goal is set to: <strong>{{ patient.diet_goal }}</strong></span>
-        <span class="lang-mr">तुमचे सध्याचे सक्रिय आहाराचे ध्येय: <strong>{{ patient.diet_goal }}</strong></span>
-    </div>
-    <span style="background:rgba(16,185,129,0.15);border-radius:20px;padding:4px 12px;font-size:0.8rem;font-weight:700;">
-        <span class="lang-en">✓ Active Plan</span>
-        <span class="lang-mr">✓ सक्रिय योजना</span>
-    </span>
-</div>
-{% endif %}
-
-<!-- Health Profile for AI Personalization -->
-<div class="profile-card" style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);border:1px solid #E5E7EB;margin-bottom:22px;">
-    <h4 style="font-weight:800;color:#059669;margin-bottom:16px;">
-        🧬
-        <span class="lang-en">Your Health Profile (for AI Diet Plans)</span>
-        <span class="lang-mr">तुमची आरोग्य माहिती (AI आहार योजनेसाठी)</span>
-    </h4>
-    <form method="POST" action="{{ url_for('diet_plans') }}">
-        <input type="hidden" name="action" value="save_profile">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px;">
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Age</span><span class="lang-mr">वय</span>
-                </label>
-                <input type="number" value="{{ patient.age }}" disabled style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Gender</span><span class="lang-mr">लिंग</span>
-                </label>
-                <select name="gender" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-                    <option value="male" {% if profile.get('gender','male')=='male' %}selected{% endif %}>
-                        <span class="lang-en">Male</span> / पुरुष
-                    </option>
-                    <option value="female" {% if profile.get('gender')=='female' %}selected{% endif %}>
-                        <span class="lang-en">Female</span> / महिला
-                    </option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Height (cm)</span><span class="lang-mr">उंची (सें.मी.)</span>
-                </label>
-                <input name="height" type="number" value="{{ profile.get('height','170') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Weight (kg)</span><span class="lang-mr">वजन (किग्रॅ)</span>
-                </label>
-                <input name="weight" type="number" value="{{ profile.get('weight','70') }}" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Activity</span><span class="lang-mr">क्रियाशीलता</span>
-                </label>
-                <select name="activity_level" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-                    {% for lvl in ['sedentary','light','moderate','active','very_active'] %}
-                    <option value="{{ lvl }}" {% if profile.get('activity_level','moderate')==lvl %}selected{% endif %}>{{ lvl|title }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                    <span class="lang-en">Diet Preference</span><span class="lang-mr">आहार पसंती</span>
-                </label>
-                <select name="dietary_preference" id="profile-pref" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-                    <option value="vegetarian" {% if profile.get('dietary_preference','vegetarian')=='vegetarian' %}selected{% endif %}>🌿 Vegetarian / शाकाहारी</option>
-                    <option value="non_vegetarian" {% if profile.get('dietary_preference')=='non_vegetarian' %}selected{% endif %}>🍗 Non-Vegetarian / मांसाहारी</option>
-                </select>
-            </div>
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="font-size:.75rem;font-weight:700;color:#6B7280;">
-                <span class="lang-en">Medical Conditions</span>
-                <span class="lang-mr">वैद्यकीय स्थिती</span>
-            </label>
-            <input name="medical_conditions" value="{{ profile.get('medical_conditions','') }}"
-                placeholder="e.g. diabetes, hypertension / मधुमेह, उच्च रक्तदाब"
-                style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;">
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button type="submit" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">
-                💾 <span class="lang-en">Save Profile</span><span class="lang-mr">प्रोफाइल जतन करा</span>
-            </button>
-            <button type="button" onclick="generateAIPlan()" style="background:linear-gradient(135deg,#6C63FF,#00D4FF);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;">
-                🤖 <span class="lang-en">Generate AI Diet Plan</span><span class="lang-mr">AI आहार योजना तयार करा</span>
-            </button>
-        </div>
-    </form>
-    <div id="ai-plan-result" style="display:none;margin-top:18px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:18px;"></div>
-</div>
-
-<!-- Veg / Non-Veg Toggle -->
-<div class="veg-toggle-bar">
-    <button class="veg-toggle-btn active-veg" id="toggle-veg" onclick="setDietPref('veg')">
-        <span class="veg-dot veg-dot-green"></span>
-        🌿 <span class="lang-en">Vegetarian</span><span class="lang-mr">शाकाहारी</span>
-    </button>
-    <button class="veg-toggle-btn" id="toggle-nonveg" onclick="setDietPref('nonveg')">
-        <span class="veg-dot veg-dot-red"></span>
-        🍗 <span class="lang-en">Non-Vegetarian</span><span class="lang-mr">मांसाहारी</span>
-    </button>
-</div>
-
-<!-- Selection Tabs -->
-<div class="diet-selector">
-    <button class="diet-option-btn active" id="btn-Weight" onclick="showDiet('Weight')">
-        <span class="btn-emoji">🏃‍♂️</span>
-        <span class="lang-en">Weight Loss</span>
-        <span class="lang-mr">वजन कमी करणे</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Muscle" onclick="showDiet('Muscle')">
-        <span class="btn-emoji">💪</span>
-        <span class="lang-en">Muscle Gain</span>
-        <span class="lang-mr">स्नायू वाढवणे</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Diabetic" onclick="showDiet('Diabetic')">
-        <span class="btn-emoji">🩸</span>
-        <span class="lang-en">Diabetic Care</span>
-        <span class="lang-mr">मधुमेह काळजी</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Heart" onclick="showDiet('Heart')">
-        <span class="btn-emoji">❤️</span>
-        <span class="lang-en">Heart Healthy</span>
-        <span class="lang-mr">हृदय निरोगी</span>
-    </button>
-    <button class="diet-option-btn" id="btn-Balanced" onclick="showDiet('Balanced')">
-        <span class="btn-emoji">🍽️</span>
-        <span class="lang-en">Balanced Indian</span>
-        <span class="lang-mr">संतुलित भारतीय</span>
-    </button>
-</div>
-
-<div class="diet-details">
-
-    <!-- ══════════════════════════════════════
-         1. WEIGHT LOSS
-    ══════════════════════════════════════ -->
-    <div class="meal-card active-meal" id="diet-Weight">
-        <div class="meal-card-header">
-            <div class="meal-card-title">
-                🏃‍♂️
-                <span class="lang-en">Weight Loss Diet Plan</span>
-                <span class="lang-mr">वजन कमी करण्याची आहार योजना</span>
-            </div>
-            <span class="meal-badge badge-weight">
-                <span class="lang-en">Low Carb</span>
-                <span class="lang-mr">कमी कर्ब</span>
-            </span>
-        </div>
-        <div class="meal-description">
-            <span class="lang-en">Designed to reduce body weight by controlling carbohydrate intake, increasing proteins, and encouraging thermogenesis. Excellent for managing lipid profile and visceral fat.</span>
-            <span class="lang-mr">कार्बोहायड्रेट नियंत्रण, प्रथिने वाढवणे आणि उष्णजनन (thermogenesis) द्वारे शरीराचे वजन कमी करण्यासाठी डिझाइन केलेले. लिपिड प्रोफाइल आणि व्हिसेरल फॅट व्यवस्थापनासाठी उत्तम.</span>
-        </div>
-
-        <!-- VEG meals -->
-        <div class="veg-content">
-            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Tofu scramble with spinach & mushrooms, unsweetened green tea, and a small bowl of papaya.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Boiled paneer salad with cucumbers, bell peppers, tomatoes, chickpeas, and olive oil dressing.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">A handful of almonds (8–10) or dry roasted makhana (foxnuts).</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Sautéed broccoli, beans, and carrots with grilled paneer/tofu blocks. No rice or wheat.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- NON-VEG meals -->
-        <div class="nonveg-content" style="display:none;">
-            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Veggie omelette (2 eggs) with spinach, unsweetened green tea, and a boiled egg white on the side.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Grilled chicken breast (150g) over a large salad with cucumbers, bell peppers, tomatoes, and lemon dressing.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Hard boiled egg (1) or tuna strips with cucumber sticks. Avoid any fried snacks.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Grilled salmon (120g) with sautéed broccoli, beans, and carrots. No rice/wheat bread.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Custom Meal -->
-        <div class="add-meal-section">
-            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
-            <div class="add-meal-row">
-                <select id="add-type-Weight">
-                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
-                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
-                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
-                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
-                </select>
-                <input type="text" id="add-text-Weight"
-                    placeholder="e.g. 1 cup oats with banana / उदा. ओट्स + केळी">
-                <button class="btn-add-meal" onclick="addCustomMeal('Weight')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
-            </div>
-            <div class="custom-meals-list" id="custom-list-Weight"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('diet_plans') }}">
-            <input type="hidden" name="diet_goal" value="Weight Loss">
-            {% if patient.diet_goal == 'Weight Loss' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>
-                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
-            </button>
-            {% else %}
-            <button type="submit" class="select-diet-btn">
-                🎯 <span class="lang-en">Select Weight Loss Plan</span><span class="lang-mr">वजन कमी योजना निवडा</span>
-            </button>
-            {% endif %}
-        </form>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         2. MUSCLE GAIN
-    ══════════════════════════════════════ -->
-    <div class="meal-card" id="diet-Muscle">
-        <div class="meal-card-header">
-            <div class="meal-card-title">
-                💪
-                <span class="lang-en">Muscle Gain Diet Plan</span>
-                <span class="lang-mr">स्नायू वाढवण्याची आहार योजना</span>
-            </div>
-            <span class="meal-badge badge-muscle">
-                <span class="lang-en">High Protein</span>
-                <span class="lang-mr">उच्च प्रथिने</span>
-            </span>
-        </div>
-        <div class="meal-description">
-            <span class="lang-en">Focuses on muscle hypertrophy and tissue repair. Provides clean caloric surplus with high proteins, moderate complex carbs, and healthy fats to support active recovery.</span>
-            <span class="lang-mr">स्नायू वाढवणे आणि ऊती दुरुस्तीवर लक्ष केंद्रित. उच्च प्रथिने, मध्यम कॉम्प्लेक्स कार्ब्स आणि निरोगी चरबीसह स्वच्छ कॅलरी अतिरिक्तता प्रदान करते.</span>
-        </div>
-
-        <div class="veg-content">
-            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Oatmeal (1 cup) with milk, peanut butter, banana, and a scoop of plant-based protein powder.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Soya chunks curry (200g) with brown rice (1.5 cups), mixed green salad, and curd.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">150g Greek yogurt topped with pumpkin seeds, walnuts, and a drizzle of honey.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Baked paneer with sweet potato mash, sautéed asparagus, and black dal.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nonveg-content" style="display:none;">
-            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Oatmeal with milk, peanut butter, banana, and 3 boiled egg whites or a whey protein shake.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Chicken breast curry (200g) with brown rice (1.5 cups) and mixed green salad.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Whey protein shake or 2 boiled eggs with Greek yogurt and pumpkin seeds.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Grilled fish (150g) or chicken with sweet potato mash, sautéed asparagus, and black dal.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="add-meal-section">
-            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
-            <div class="add-meal-row">
-                <select id="add-type-Muscle">
-                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
-                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
-                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
-                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
-                </select>
-                <input type="text" id="add-text-Muscle"
-                    placeholder="e.g. 2 eggs + whey shake / उदा. २ अंडी + व्हे शेक">
-                <button class="btn-add-meal" onclick="addCustomMeal('Muscle')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
-            </div>
-            <div class="custom-meals-list" id="custom-list-Muscle"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('diet_plans') }}">
-            <input type="hidden" name="diet_goal" value="Muscle Gain">
-            {% if patient.diet_goal == 'Muscle Gain' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>
-                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
-            </button>
-            {% else %}
-            <button type="submit" class="select-diet-btn">
-                🎯 <span class="lang-en">Select Muscle Gain Plan</span><span class="lang-mr">स्नायू वाढ योजना निवडा</span>
-            </button>
-            {% endif %}
-        </form>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         3. DIABETIC CARE
-    ══════════════════════════════════════ -->
-    <div class="meal-card" id="diet-Diabetic">
-        <div class="meal-card-header">
-            <div class="meal-card-title">
-                🩸
-                <span class="lang-en">Diabetic Care Diet Plan</span>
-                <span class="lang-mr">मधुमेह काळजी आहार योजना</span>
-            </div>
-            <span class="meal-badge badge-diabetic">
-                <span class="lang-en">Low Glycemic Index</span>
-                <span class="lang-mr">कमी ग्लायसेमिक इंडेक्स</span>
-            </span>
-        </div>
-        <div class="meal-description">
-            <span class="lang-en">Formulated to regulate insulin response and prevent blood glucose spikes. Uses foods with low glycemic index, high fiber, and complex grains.</span>
-            <span class="lang-mr">इन्सुलिन प्रतिसाद नियंत्रित करण्यासाठी आणि रक्त ग्लुकोज वाढ रोखण्यासाठी तयार केलेले. कमी ग्लायसेमिक इंडेक्स, उच्च फायबर आणि कॉम्प्लेक्स धान्यांचा वापर.</span>
-        </div>
-
-        <div class="veg-content">
-            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Methi (fenugreek) paratha with minimal oil or Moong dal chilla with garlic chutney.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Chickpea (chana) curry or rajma with 1 multigrain roti, curd, and a large plate of raw salad.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Sprouted moong salad with onion, tomato, lemon juice, and green coriander.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Grilled tofu with cauliflower rice, sautéed bell peppers, and a bowl of spinach soup.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nonveg-content" style="display:none;">
-            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">2-egg white omelette with mushrooms and spinach, or boiled eggs with methi roti.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Grilled chicken (120g) with 1 multigrain roti, raw salad, and curd. No rice.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Boiled egg (1) with cucumber sticks, or a small bowl of sprouted moong chaat.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Grilled fish (100g) with cauliflower rice and sautéed vegetables. Light spinach soup.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="add-meal-section">
-            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
-            <div class="add-meal-row">
-                <select id="add-type-Diabetic">
-                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
-                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
-                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
-                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
-                </select>
-                <input type="text" id="add-text-Diabetic"
-                    placeholder="e.g. Moong dal soup with sprouts / मूग डाळ सूप">
-                <button class="btn-add-meal" onclick="addCustomMeal('Diabetic')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
-            </div>
-            <div class="custom-meals-list" id="custom-list-Diabetic"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('diet_plans') }}">
-            <input type="hidden" name="diet_goal" value="Diabetic Care">
-            {% if patient.diet_goal == 'Diabetic Care' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>
-                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
-            </button>
-            {% else %}
-            <button type="submit" class="select-diet-btn">
-                🎯 <span class="lang-en">Select Diabetic Care Plan</span><span class="lang-mr">मधुमेह काळजी योजना निवडा</span>
-            </button>
-            {% endif %}
-        </form>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         4. HEART HEALTHY
-    ══════════════════════════════════════ -->
-    <div class="meal-card" id="diet-Heart">
-        <div class="meal-card-header">
-            <div class="meal-card-title">
-                ❤️
-                <span class="lang-en">Heart Healthy Diet Plan</span>
-                <span class="lang-mr">हृदय निरोगी आहार योजना</span>
-            </div>
-            <span class="meal-badge badge-heart">
-                <span class="lang-en">Low Sodium</span>
-                <span class="lang-mr">कमी सोडियम</span>
-            </span>
-        </div>
-        <div class="meal-description">
-            <span class="lang-en">Reduces stress on blood vessels by limiting sodium, cholesterol, and saturated trans-fats. Emphasizes potassium, magnesium, and omega-3 fatty acids.</span>
-            <span class="lang-mr">सोडियम, कोलेस्टेरॉल आणि संतृप्त ट्रान्स-फॅट मर्यादित करून रक्तवाहिन्यांवरील ताण कमी करते. पोटॅशियम, मॅग्नेशियम आणि ओमेगा-३ फॅटी ऍसिडवर भर.</span>
-        </div>
-
-        <div class="veg-content">
-            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Fruit bowl (apple, papaya, guava) topped with chia seeds, with a cup of unsweetened almond milk.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Oats khichdi with plenty of vegetables (carrots, peas, beans), raw salad, and flaxseed dressing.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">An apple or pear slices with a cup of light green tea. Strictly no salt.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Tofu clear vegetable soup with a slice of whole wheat multigrain toast and steamed broccoli.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nonveg-content" style="display:none;">
-            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Egg white omelette (2) with spinach and tomatoes, with unsweetened almond milk.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Oats khichdi with vegetables plus a 100g grilled chicken breast. No added salt.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Apple/pear slices with light green tea. 1 boiled egg optional. No salt.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Baked cod or salmon (120g) with a slice of whole wheat toast and steamed vegetables.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="add-meal-section">
-            <h6>➕ Add Your Own Meal</h6>
-            <div class="add-meal-row">
-                <select id="add-type-Heart">
-                    <option value="🍳 Breakfast">🍳 Breakfast</option>
-                    <option value="🍲 Lunch">🍲 Lunch</option>
-                    <option value="🥜 Snack">🥜 Snack</option>
-                    <option value="🥗 Dinner">🥗 Dinner</option>
-                </select>
-                <input type="text" id="add-text-Heart" placeholder="e.g. Walnut & flaxseed salad">
-                <button class="btn-add-meal" onclick="addCustomMeal('Heart')">+ Add</button>
-            </div>
-            <div class="custom-meals-list" id="custom-list-Heart"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('diet_plans') }}">
-            <input type="hidden" name="diet_goal" value="Heart Healthy">
-            {% if patient.diet_goal == 'Heart Healthy' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>✓ Active Plan</button>
-            {% else %}
-            <button type="submit" class="select-diet-btn">🎯 Select Heart Healthy Plan</button>
-            {% endif %}
-        </form>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         5. BALANCED INDIAN
-    ══════════════════════════════════════ -->
-    <div class="meal-card" id="diet-Balanced">
-        <div class="meal-card-header">
-            <div class="meal-card-title">
-                🍽️
-                <span class="lang-en">Balanced Indian Diet Plan</span>
-                <span class="lang-mr">संतुलित भारतीय आहार योजना</span>
-            </div>
-            <span class="meal-badge badge-balanced">
-                <span class="lang-en">General Wellness</span>
-                <span class="lang-mr">सामान्य आरोग्य</span>
-            </span>
-        </div>
-        <div class="meal-description">
-            <span class="lang-en">A balanced approach using traditional Indian cooking and ingredients. Provides a wholesome mix of macro and micro nutrients for general health maintenance.</span>
-            <span class="lang-mr">पारंपारिक भारतीय स्वयंपाक आणि घटकांचा वापर करून संतुलित दृष्टिकोन. सामान्य आरोग्य राखण्यासाठी मॅक्रो आणि मायक्रो पोषणद्रव्यांचे सर्वसमावेशक मिश्रण.</span>
-        </div>
-
-        <div class="veg-content">
-            <span class="pref-badge veg-badge">🌿 Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Vegetable Poha or Rava Idli (2) with sambhar and mint-coriander chutney.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Whole wheat chapati (2), dal fry, mix-veg sabji (dry), curd (1 cup), and fresh salad.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Roasted makhana (foxnuts) or roasted chana with hot tea/coffee (minimal sugar).</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Moong dal khichdi with 1 tsp ghee, aloo-palak sabji, and roasted papad.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="nonveg-content" style="display:none;">
-            <span class="pref-badge nonveg-badge">🍗 Non-Vegetarian Plan</span>
-            <div class="meal-timeline">
-                <div class="meal-block">
-                    <div class="meal-block-title">🍳 Breakfast</div>
-                    <div class="meal-block-content">Egg bhurji (2 eggs) with whole wheat toast and a glass of low-fat milk.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🍲 Lunch</div>
-                    <div class="meal-block-content">Whole wheat chapati (2), chicken curry (100g), mix-veg sabji, curd, and fresh salad.</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥜 Snack</div>
-                    <div class="meal-block-content">Boiled egg (1) or roasted chana with hot tea/coffee (minimal sugar).</div>
-                </div>
-                <div class="meal-block">
-                    <div class="meal-block-title">🥗 Dinner</div>
-                    <div class="meal-block-content">Chicken/fish curry (100g) with moong dal khichdi, 1 tsp ghee, and roasted papad.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="add-meal-section">
-            <h6>➕ <span class="lang-en">Add Your Own Meal</span><span class="lang-mr">स्वतःचे जेवण जोडा</span></h6>
-            <div class="add-meal-row">
-                <select id="add-type-Balanced">
-                    <option value="🍳 Breakfast">🍳 Breakfast / न्याहारी</option>
-                    <option value="🍲 Lunch">🍲 Lunch / जेवण</option>
-                    <option value="🥜 Snack">🥜 Snack / नाश्ता</option>
-                    <option value="🥗 Dinner">🥗 Dinner / रात्रीचे जेवण</option>
-                </select>
-                <input type="text" id="add-text-Balanced"
-                    placeholder="e.g. 1 bowl curd with banana / दही आणि केळी">
-                <button class="btn-add-meal" onclick="addCustomMeal('Balanced')">+ <span class="lang-en">Add</span><span class="lang-mr">जोडा</span></button>
-            </div>
-            <div class="custom-meals-list" id="custom-list-Balanced"></div>
-        </div>
-
-        <form method="POST" action="{{ url_for('diet_plans') }}">
-            <input type="hidden" name="diet_goal" value="Balanced">
-            {% if patient.diet_goal == 'Balanced' %}
-            <button type="button" class="select-diet-btn is-active-btn" disabled>
-                ✓ <span class="lang-en">Active Plan</span><span class="lang-mr">सक्रिय योजना</span>
-            </button>
-            {% else %}
-            <button type="submit" class="select-diet-btn">
-                🎯 <span class="lang-en">Select Balanced Plan</span><span class="lang-mr">संतुलित योजना निवडा</span>
-            </button>
-            {% endif %}
-        </form>
-    </div>
-
-</div><!-- /.diet-details -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// ── Diet preference state ──
-let currentPref = 'veg';
+// Key translation mappings for placeholders and labels
+const inputPlaceholders = {
+    en: "Ask about diet plans, food nutrition, calorie count...",
+    mr: "आहार योजना, अन्न पोषण, कॅलरी मोजणीबद्दल विचारा..."
+};
 
-// ── Veg / Non-Veg Toggle ──
-function setDietPref(pref) {
-    currentPref = pref;
-    const vegBtn    = document.getElementById('toggle-veg');
-    const nonvegBtn = document.getElementById('toggle-nonveg');
-
-    vegBtn.classList.remove('active-veg', 'active-nonveg');
-    nonvegBtn.classList.remove('active-veg', 'active-nonveg');
-
-    if (pref === 'veg') {
-        vegBtn.classList.add('active-veg');
-    } else {
-        nonvegBtn.classList.add('active-nonveg');
-    }
-
-    // Show/hide veg & nonveg content blocks
-    document.querySelectorAll('.veg-content').forEach(el => {
-        el.style.display = (pref === 'veg') ? 'block' : 'none';
-    });
-    document.querySelectorAll('.nonveg-content').forEach(el => {
-        el.style.display = (pref === 'nonveg') ? 'block' : 'none';
-    });
-
-    // Re-colour custom meal items
-    document.querySelectorAll('.custom-meal-item').forEach(item => {
-        if (pref === 'nonveg') item.classList.add('nonveg-item');
-        else item.classList.remove('nonveg-item');
-    });
-}
-
-// ── Show/hide diet plan tab ──
-function showDiet(dietType) {
-    document.querySelectorAll('.meal-card').forEach(card => card.classList.remove('active-meal'));
-    document.getElementById('diet-' + dietType).classList.add('active-meal');
-    document.querySelectorAll('.diet-option-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('btn-' + dietType).classList.add('active');
-}
-
-// ── Add custom meal ──
-function addCustomMeal(planKey) {
-    const typeEl = document.getElementById('add-type-' + planKey);
-    const textEl = document.getElementById('add-text-' + planKey);
-    const listEl = document.getElementById('custom-list-' + planKey);
-
-    const mealType = typeEl.value.trim();
-    const mealText = textEl.value.trim();
-    if (!mealText) {
-        textEl.style.borderColor = '#EF4444';
-        textEl.placeholder = '⚠️ Please describe the meal first!';
-        setTimeout(() => {
-            textEl.style.borderColor = '';
-            textEl.placeholder = '';
-        }, 2000);
-        return;
-    }
-
-    const isNonVeg = (currentPref === 'nonveg');
-    const itemEl = document.createElement('div');
-    itemEl.className = 'custom-meal-item' + (isNonVeg ? ' nonveg-item' : '');
-    itemEl.innerHTML = `
-        <span><strong>${mealType}:</strong> ${mealText}</span>
-        <button class="del-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>
-    `;
-    listEl.appendChild(itemEl);
-    textEl.value = '';
-
-    // Quick animation
-    itemEl.style.opacity = '0';
-    itemEl.style.transform = 'translateY(-6px)';
-    setTimeout(() => {
-        itemEl.style.transition = 'all 0.25s';
-        itemEl.style.opacity = '1';
-        itemEl.style.transform = 'translateY(0)';
-    }, 10);
-}
-
-async function generateAIPlan() {
-    const labelTranslations = {
-        "breakfast": { en: "Breakfast", mr: "न्याहारी" },
-        "mid_morning": { en: "Mid-Morning", mr: "सकाळचा नाश्ता" },
-        "lunch": { en: "Lunch", mr: "दुपारचे जेवण" },
-        "evening_snack": { en: "Evening Snack", mr: "संध्याकाळचा नाश्ता" },
-        "dinner": { en: "Dinner", mr: "रात्रीचे जेवण" },
-        "water": { en: "Water", mr: "पाणी" },
-        "weekly_planner": { en: "Weekly Planner", mr: "साप्ताहिक नियोजन" },
-        "grocery_list": { en: "Grocery List", mr: "खरेदी सूची" },
-        "protein": { en: "Protein", mr: "प्रथिने" },
-        "carbs": { en: "Carbs", mr: "कर्बोदके" },
-        "fat": { en: "Fat", mr: "चरबी" },
-        "water_intake": { en: "Water Intake", mr: "पाणी पिण्याचे प्रमाण" },
-        "daily_calories": { en: "Daily Calories", mr: "दैनिक कॅलरीज" },
-        "ai_plan": { en: "Your AI Plan", mr: "तुमची AI आहार योजना" },
-        "generating": { en: "Generating personalized plan...", mr: "वैयक्तिक आहार योजना तयार करत आहे..." },
-        "failed": { en: "Failed to generate plan.", mr: "आहार योजना तयार करण्यात अपयश आले." },
-        "error_gen": { en: "Error generating plan.", mr: "योजना तयार करताना त्रुटी आली." }
-    };
-
-    const foodTranslations = {
-        // Veg items
-        "oats with milk, banana, and almonds": "दूध, केळी आणि बदामासोबत ओट्स",
-        "green tea + handful of walnuts": "ग्रीन टी + मूठभर अक्रोड",
-        "2 chapati, dal fry, mix veg sabji, curd, salad": "२ चपाती, डाळ फ्राय, मिक्स व्हेज भाजी, दही, सॅलड",
-        "roasted makhana or fruit bowl": "भाजलेले मखाणे किंवा फळांची वाटी",
-        "moong dal khichdi, palak sabji, 1 tsp ghee": "मूग डाळ खिचडी, पालक भाजी, १ चमचा तूप",
-        "8–10 glasses (2–2.5 litres)": "८-१० ग्लास (२-२.५ लिटर)",
-        "moong dal chilla with mint chutney": "पुदिना चटणीसोबत मूग डाळ चिला",
-        "1 multigrain roti, chana curry, large salad, curd": "१ मल्टिग्रेन रोटी, चणा करी, भरपूर सॅलड, दही",
-        "grilled paneer, cauliflower rice, spinach soup": "ग्रील्ड पनीर, फ्लॉवर राईस, पालक सूप",
-        "vegetable poha + green tea": "व्हेजिटेबल पोहे + ग्रीन टी",
-        "brown rice (1 cup), dal, steamed vegetables": "ब्राउन राईस (१ कप), डाळ, उकडलेल्या भाज्या",
-        "sautéed vegetables with tofu, no rice": "टॉफूसोबत परतून घेतलेल्या भाज्या (भात नाही)",
-        "oats + milk + peanut butter + banana + protein shake": "ओट्स + दूध + पीनट बटर + केळी + प्रोटीन शेक",
-        "brown rice (2 cups), soya chunks curry, salad, curd": "ब्राउन राईस (२ कप), सोया चंक्स करी, सॅलड, दही",
-        "paneer tikka, sweet potato, black dal": "पनीर टिक्का, रताळे, काळी डाळ",
-        "fruit bowl with chia seeds + almond milk": "चिया सीड्ससह फळांची वाटी + बदाम दूध",
-        "oats khichdi with vegetables, flaxseed salad": "भाज्यांसह ओट्स खिचडी, अळशीचे सॅलड",
-        "tofu soup, multigrain toast, steamed broccoli": "टोफू सूप, मल्टिग्रेन टोस्ट, उकडलेली ब्रोकोली",
-
-        // Non-veg items
-        "2 boiled eggs, whole wheat toast, low-fat milk": "२ उकडलेली अंडी, संपूर्ण गव्हाचा टोस्ट, कमी चरबीचे दूध",
-        "apple + green tea": "सफरचंद + ग्रीन टी",
-        "chicken breast (120g), brown rice, vegetables, salad": "चिकन ब्रेस्ट (१२० ग्रॅम), ब्राउन राईस, भाज्या, सॅलड",
-        "boiled egg or roasted chana": "उकडलेले अंडे किंवा भाजलेले चणे",
-        "fish curry (100g), chapati, green salad": "फिश करी (१०० ग्रॅम), चपाती, हिरवे सॅलड",
-        "egg white omelette with spinach": "पालक घातलेले अंड्याच्या पांढऱ्या भागाचे ऑम्लेट",
-        "grilled chicken (100g), 1 roti, salad, curd": "ग्रील्ड चिकन (१०० ग्रॅम), १ रोटी, सॅलड, दही",
-        "grilled fish, sautéed vegetables, light soup": "ग्रील्ड फिश, परतून घेतलेल्या भाज्या, हलके सूप",
-        "veggie omelette (2 eggs) + green tea": "व्हेजी ऑम्लेट (२ अंडी) + ग्रीन टी",
-        "grilled chicken salad (150g), lemon dressing": "ग्रील्ड चिकन सॅलड (१५० ग्रॅम), लिंबू ड्रेसिंग",
-        "grilled salmon (120g) with steamed vegetables": "स्टीम केलेल्या भाज्यांसह ग्रील्ड सॅल्मन (१२० ग्रॅम)",
-        "4 egg whites + oats + whey protein shake": "४ अंड्याचा पांढरा भाग + ओट्स + व्हे प्रोटीन शेक",
-        "chicken curry (200g), brown rice (2 cups), salad": "चिकन करी (२०० ग्रॅम), ब्राउन राईस (२ कप), सॅलड",
-        "grilled fish (150g), sweet potato, asparagus": "ग्रील्ड फिश (१५० ग्रॅम), रताळे, शतावरी (asparagus)",
-
-        // Grocery items
-        "oats (500g)": "ओट्स (५०० ग्रॅम)",
-        "milk (1l)": "दूध (१ लिटर)",
-        "bananas (6)": "केळी (६)",
-        "mixed dal (500g)": "मिश्र डाळ (५०० ग्रॅम)",
-        "whole wheat flour (1kg)": "संपूर्ण गव्हाचे पीठ (१ किलो)",
-        "brown rice (1kg)": "ब्राउन राईस (१ किलो)",
-        "paneer (200g)": "पनीर (२०० ग्रॅम)",
-        "eggs (12)": "अंडी (१२)",
-        "chicken breast (500g)": "चिकन ब्रेस्ट (५०० ग्रॅम)",
-        "fish fillets (300g)": "माशांचे तुकडे (३०० ग्रॅम)",
-        "mixed vegetables (1kg)": "मिश्र भाज्या (१ किलो)",
-        "salad greens": "हिरवे सॅलड",
-        "almonds (200g)": "बदाम (२०० ग्रॅम)",
-        "makhana (200g)": "मखाणा (२०० ग्रॅम)",
-        "curd/yogurt (500g)": "दही/योगर्ट (५०० ग्रॅम)",
-        "spinach (250g)": "पालक (२५० ग्रॅम)",
-        "tofu (200g)": "टोफू (२०० ग्रॅम)",
-        
-        // Weekly themes
-        "high protein": "उच्च प्रथिने",
-        "low carb": "कमी कर्बोदके",
-        "salad day": "सॅलड दिवस",
-        "lean protein": "लीन प्रोटीन",
-        "soup day": "सूप दिवस",
-        "light meals": "हलके जेवण",
-        "meal prep": "जेवण पूर्वतयारी",
-        "heavy protein": "भरपूर प्रथिने",
-        "carb load": "कार्ब लोड",
-        "recovery": "रिकव्हरी",
-        "strength": "ताकद वाढवणे",
-        "active": "सक्रिय",
-        "cheat meal": "चीट मील",
-        "rest & recover": "विश्रांती आणि रिकव्हरी",
-        "low gi": "कमी ग्लायसेमिक इंडेक्स (Low GI)",
-        "fiber rich": "फायबर समृद्ध",
-        "no sugar": "विना साखर",
-        "whole grains": "तृणधान्ये",
-        "lean meals": "कमी चरबीचे जेवण",
-        "veggie focus": "भाज्यांवर लक्ष",
-        "balance": "संतुलन",
-        "low sodium": "कमी सोडियम",
-        "omega-3": "ओमेगा-३",
-        "plant based": "वनस्पतीजन्य",
-        "light dinner": "हलके रात्रीचे जेवण",
-        "fresh produce": "ताजी उत्पादने",
-        "indian classic": "पारंपरिक भारतीय",
-        "south indian": "दाक्षिणात्य भारतीय",
-        "north indian": "उत्तर भारतीय",
-        "protein focus": "प्रथिनांवर भर",
-        "veggie day": "व्हेज दिवस",
-        "family meal": "कौटुंबिक जेवण",
-        "light": "हलके",
-
-        // General fallback mapping
-        "oats": "ओट्स",
-        "dal": "डाळ",
-        "vegetables": "भाज्या",
-        "fruits": "फळे",
-        "eggs/chicken (as per preference)": "अंडी/चिकन (पसंतीनुसार)"
-    };
-
-    const dayTranslations = {
-        "monday": "सोमवार",
-        "tuesday": "मंगळवार",
-        "wednesday": "बुधवार",
-        "thursday": "गुरुवार",
-        "friday": "शुक्रवार",
-        "saturday": "शनिवार",
-        "sunday": "रविवार"
-    };
-
-    function t(str) {
-        if (!str) return "";
-        const key = str.toLowerCase().trim();
-        if (foodTranslations[key]) {
-            return foodTranslations[key];
-        }
-        let result = str;
-        for (const [eng, mar] of Object.entries(foodTranslations)) {
-            if (eng.length > 3 && key.includes(eng)) {
-                result = result.replace(new RegExp(eng, 'gi'), mar);
+// Simple Client Markdown Formatter
+function parseMarkdown(text) {
+    if (!text) return "";
+    let html = text;
+    
+    // Bold parsing (**text** -> <strong>text</strong>)
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Bullet list parsing
+    // Split into lines and parse lines starting with - or *
+    let lines = html.split('\n');
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line.startsWith('* ') || line.startsWith('- ')) {
+            let itemText = line.substring(2);
+            if (!inList) {
+                lines[i] = '<ul><li>' + itemText + '</li>';
+                inList = true;
+            } else {
+                lines[i] = '<li>' + itemText + '</li>';
+            }
+        } else {
+            if (inList) {
+                lines[i] = '</ul>' + lines[i];
+                inList = false;
             }
         }
-        return result;
     }
+    if (inList) {
+        lines[lines.length - 1] += '</ul>';
+    }
+    html = lines.join('\n');
+    
+    // Line breaks to <br>
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
+}
 
-    const pref = document.getElementById('profile-pref').value;
-    const goal = "{{ patient.diet_goal or 'Balanced' }}";
-    const body = {
-        gender: document.querySelector('[name=gender]').value,
-        height: document.querySelector('[name=height]').value,
-        weight: document.querySelector('[name=weight]').value,
-        activity_level: document.querySelector('[name=activity_level]').value,
-        medical_conditions: document.querySelector('[name=medical_conditions]').value,
-        dietary_preference: pref,
-        diet_goal: goal,
-    };
-    const el = document.getElementById('ai-plan-result');
-    el.style.display = 'block';
-    el.innerHTML = `
-        <p class="lang-en">⏳ ${labelTranslations.generating.en}</p>
-        <p class="lang-mr">⏳ ${labelTranslations.generating.mr}</p>
-    `;
+// Session Storage Chat Key (Unique to user)
+const storageKey = "diet_chat_history_user_{{ patient.id }}";
 
-    try {
-        const resp = await fetch('/api/diet/generate', {
-            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
-        });
-        const data = await resp.json();
-        if (data.status !== 'success') {
-            const errMsg = data.message || labelTranslations.error_gen.en;
-            el.innerHTML = `
-                <p class="lang-en">❌ ${errMsg}</p>
-                <p class="lang-mr">❌ ${labelTranslations.error_gen.mr}</p>
-            `;
-            return;
+// Load chat history from sessionStorage
+function loadChatHistory() {
+    const history = sessionStorage.getItem(storageKey);
+    if (history) {
+        try {
+            const messages = JSON.parse(history);
+            const chatBox = document.getElementById('chat-messages');
+            const indicator = document.getElementById('thinking-indicator');
+            
+            messages.forEach(msg => {
+                const bubble = createMessageBubble(msg.text, msg.sender, msg.timestamp);
+                chatBox.insertBefore(bubble, indicator);
+            });
+            scrollToBottom();
+        } catch(e) {
+            console.error("Failed to parse chat history:", e);
         }
-        const p = data.plan;
-        const meals = pref === 'vegetarian' ? p.vegetarian : p.non_vegetarian;
-        let html = `
-            <h5 style="font-weight:800;color:#065F46;margin-bottom:10px;">
-                <span class="lang-en">🤖 ${labelTranslations.ai_plan.en} — BMI ${p.bmi}, ${p.daily_calories} kcal/day, ${p.water_intake_litres}L water</span>
-                <span class="lang-mr">🤖 ${labelTranslations.ai_plan.mr} — बीएमआय ${p.bmi}, ${p.daily_calories} कॅलरी/दिवस, ${p.water_intake_litres} लिटर पाणी</span>
-            </h5>
-        `;
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;">';
-        for (const [k,v] of Object.entries(meals)) {
-            const engKey = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            const marKey = labelTranslations[k] ? labelTranslations[k].mr : engKey;
-            html += `
-                <div style="background:#fff;border-radius:8px;padding:10px;border:1px solid #D1FAE5;">
-                    <strong>
-                        <span class="lang-en">${engKey}:</span>
-                        <span class="lang-mr">${marKey}:</span>
-                    </strong><br>
-                    <span class="lang-en">${v}</span>
-                    <span class="lang-mr">${t(v)}</span>
-                </div>
-            `;
-        }
-        html += '</div>';
-        
-        const weeklyEn = p.weekly_plan.map(d=>d.day+': '+d.theme).join(' · ');
-        const weeklyMr = p.weekly_plan.map(d=> (dayTranslations[d.day.toLowerCase()] || d.day) + ': ' + t(d.theme)).join(' · ');
-        
-        const groceryEn = p.grocery_list.join(', ');
-        const groceryMr = p.grocery_list.map(item => t(item)).join(', ');
-
-        html += `
-            <p>
-                <strong>
-                    <span class="lang-en">${labelTranslations.weekly_planner.en}:</span>
-                    <span class="lang-mr">${labelTranslations.weekly_planner.mr}:</span>
-                </strong> 
-                <span class="lang-en">${weeklyEn}</span>
-                <span class="lang-mr">${weeklyMr}</span>
-            </p>
-        `;
-        html += `
-            <p>
-                <strong>
-                    <span class="lang-en">${labelTranslations.grocery_list.en}:</span>
-                    <span class="lang-mr">${labelTranslations.grocery_list.mr}:</span>
-                </strong> 
-                <span class="lang-en">${groceryEn}</span>
-                <span class="lang-mr">${groceryMr}</span>
-            </p>
-        `;
-        html += `
-            <p style="font-size:.8rem;color:#6B7280;">
-                <span class="lang-en">Protein: ${p.nutrition.protein_g}g | Carbs: ${p.nutrition.carbs_g}g | Fat: ${p.nutrition.fat_g}g</span>
-                <span class="lang-mr">प्रथिने: ${p.nutrition.protein_g}ग्रॅम | कर्बोदके: ${p.nutrition.carbs_g}ग्रॅम | चरबी: ${p.nutrition.fat_g}ग्रॅम</span>
-            </p>
-        `;
-        el.innerHTML = html;
-    } catch(e) {
-        el.innerHTML = `
-            <p class="lang-en">❌ ${labelTranslations.failed.en}</p>
-            <p class="lang-mr">❌ ${labelTranslations.failed.mr}</p>
-        `;
     }
 }
 
-// ── Page-level Theme + Lang controls ──
+// Save message to sessionStorage
+function saveMessageToHistory(text, sender) {
+    let history = sessionStorage.getItem(storageKey);
+    let messages = history ? JSON.parse(history) : [];
+    
+    messages.push({
+        text: text,
+        sender: sender,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    
+    sessionStorage.setItem(storageKey, JSON.stringify(messages));
+}
+
+// Reset Chat History
+function resetChatHistory() {
+    if (confirm("Are you sure you want to clear your diet coaching conversation?")) {
+        sessionStorage.removeItem(storageKey);
+        // Reload page to return to welcome state
+        window.location.reload();
+    }
+}
+
+// Create HTML bubble
+function createMessageBubble(text, sender, timeStr) {
+    const bubble = document.createElement('div');
+    bubble.className = `message-bubble ${sender}`;
+    
+    const formattedText = parseMarkdown(text);
+    const time = timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    bubble.innerHTML = `${formattedText} <span class="chat-time">${time}</span>`;
+    return bubble;
+}
+
+// Scroll chat container
+function scrollToBottom() {
+    const chatBox = document.getElementById('chat-messages');
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Trigger sending a user query
+function sendUserMessage(overrideText) {
+    const inputEl = document.getElementById('chat-text-input');
+    const text = (overrideText || inputEl.value).trim();
+    if (!text) return;
+    
+    if (!overrideText) {
+        inputEl.value = "";
+    }
+    
+    const chatBox = document.getElementById('chat-messages');
+    const indicator = document.getElementById('thinking-indicator');
+    
+    // Create and append user bubble
+    const userBubble = createMessageBubble(text, 'user');
+    chatBox.insertBefore(userBubble, indicator);
+    saveMessageToHistory(text, 'user');
+    scrollToBottom();
+    
+    // Show thinking indicator
+    indicator.style.display = 'flex';
+    scrollToBottom();
+    
+    // Determine language preference
+    const isMR = document.documentElement.classList.contains('show-mr');
+    const lang = isMR ? 'mr' : 'en';
+    
+    // Call API
+    fetch('/api/diet/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message: text,
+            lang: lang
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // Hide thinking indicator
+        indicator.style.display = 'none';
+        
+        if (data.status === 'success') {
+            const aiBubble = createMessageBubble(data.response, 'ai');
+            chatBox.insertBefore(aiBubble, indicator);
+            saveMessageToHistory(data.response, 'ai');
+        } else {
+            const errorMsg = lang === 'mr' ? "क्षमस्व, मी आत्ता प्रतिसाद देऊ शकत नाही." : "Sorry, I encountered an error while processing your request.";
+            const aiBubble = createMessageBubble(`❌ ${errorMsg} (${data.message})`, 'ai');
+            chatBox.insertBefore(aiBubble, indicator);
+        }
+        scrollToBottom();
+    })
+    .catch(err => {
+        indicator.style.display = 'none';
+        const errorMsg = lang === 'mr' ? "कनेक्शन एरर. कृपया पुन्हा प्रयत्न करा." : "Connection error. Please try again.";
+        const aiBubble = createMessageBubble(`❌ ${errorMsg}`, 'ai');
+        chatBox.insertBefore(aiBubble, indicator);
+        scrollToBottom();
+    });
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter') {
+        sendUserMessage();
+    }
+}
+
+function handleChipClick(chipEl) {
+    // Extract lang text based on active visibility
+    const isMR = document.documentElement.classList.contains('show-mr');
+    const textSpan = chipEl.querySelector(isMR ? '.lang-mr' : '.lang-en');
+    const text = textSpan ? textSpan.innerText.trim() : chipEl.innerText.trim();
+    sendUserMessage(text);
+}
+
+// ── Page Theme/Lang switcher helpers ──
 function togglePageTheme() {
     const html = document.documentElement;
     const isDark = html.classList.toggle('dark-theme');
@@ -1373,28 +903,45 @@ function togglePageTheme() {
     const icon = document.getElementById('page-theme-icon');
     if (icon) icon.textContent = isDark ? '☀️' : '🌙';
 }
+
 function togglePageLang() {
     const html = document.documentElement;
     const isEN = html.classList.contains('show-en');
-    if (typeof globalSwitchLanguage === 'function') globalSwitchLanguage(isEN ? 'mr' : 'en');
+    const nextLang = isEN ? 'mr' : 'en';
+    
+    if (typeof globalSwitchLanguage === 'function') {
+        globalSwitchLanguage(nextLang);
+    } else {
+        // Fallback if global is not defined
+        html.classList.remove('show-en', 'show-mr');
+        html.classList.add(`show-${nextLang}`);
+        localStorage.setItem('health-lang-pref', nextLang);
+    }
+    
+    // Update placeholders
+    const inputEl = document.getElementById('chat-text-input');
+    if (inputEl) {
+        inputEl.placeholder = inputPlaceholders[nextLang];
+    }
 }
 
-// ── Auto-show correct tab on load ──
+// Initialization on DOM load
 document.addEventListener('DOMContentLoaded', () => {
-    const activeGoal = "{{ patient.diet_goal }}";
-    if      (activeGoal === 'Weight Loss')   showDiet('Weight');
-    else if (activeGoal === 'Muscle Gain')   showDiet('Muscle');
-    else if (activeGoal === 'Diabetic Care') showDiet('Diabetic');
-    else if (activeGoal === 'Heart Healthy') showDiet('Heart');
-    else if (activeGoal === 'Balanced')      showDiet('Balanced');
-
-    // Start in Veg mode
-    setDietPref('veg');
-
-    // Sync theme button icon
+    // Set theme button correctly
     const isDark = document.documentElement.classList.contains('dark-theme');
     const icon = document.getElementById('page-theme-icon');
     if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+    
+    // Sync placeholders to active language
+    const isMR = document.documentElement.classList.contains('show-mr');
+    const lang = isMR ? 'mr' : 'en';
+    const inputEl = document.getElementById('chat-text-input');
+    if (inputEl) {
+        inputEl.placeholder = inputPlaceholders[lang];
+    }
+    
+    // Load existing history
+    loadChatHistory();
 });
 </script>
 {% endblock %}
