@@ -1940,182 +1940,19 @@ def api_generate_diet():
 @app.route('/food-scanner')
 @login_required
 def food_scanner():
-    if current_user.role != 'patient':
-        flash('Only patients can access the food scanner.', 'warning')
-        return redirect(url_for('index'))
-    return render_template('food_scanner.html', patient=current_user)
+    return redirect(url_for('index'))
 
 
 @app.route('/api/food/scan', methods=['POST'])
 @login_required
 def scan_food():
-    if current_user.role != 'patient':
-        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
-
-    import food_scanner_service
-
-    data = request.get_json() or {}
-    food_name = data.get('food_name', '').strip()
-    image_data = data.get('image_data', '')
-    lang = data.get('lang', 'en')
-    filename = data.get('filename', '')
-
-    api_vision_used = "N/A"
-    api_nutrition_used = "N/A"
-    confidence = 1.0
-
-    # Step 1: Vision identification – food-only validation built in
-    if image_data and not food_name:
-        try:
-            food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data, filename=filename)
-        except ValueError as ve:
-            # Non-food item detected by Gemini/OpenAI vision
-            msg = str(ve)
-            if lang == 'mr':
-                msg = "ही प्रतिमा अन्न घटक दर्शवत नाही. कृपया केवळ अन्न किंवा पेयाची प्रतिमा स्कॅन करा. (There is not a food.)"
-            return jsonify({'status': 'error', 'message': msg}), 422
-        except Exception as e:
-            msg = f'Vision analysis failed: {str(e)}'
-            if lang == 'mr':
-                msg = f'दृष्टी विश्लेषण अपयशी ठरले: {str(e)}'
-            return jsonify({'status': 'error', 'message': msg}), 500
-
-    if not food_name:
-        msg = 'Please provide a food name or upload a clear food image.'
-        if lang == 'mr':
-            msg = 'कृपया अन्नपदार्थाचे नाव प्रविष्ट करा किंवा स्पष्ट अन्न प्रतिमा अपलोड करा.'
-        return jsonify({'status': 'error', 'message': msg}), 400
-
-    # Validate manually typed food names against food keyword registry
-    if not food_scanner_service.is_food_item(food_name):
-        msg = f'"{food_name}" does not appear to be a food item. There is not a food.'
-        if lang == 'mr':
-            msg = f'"{food_name}" हा खाद्यपदार्थ वाटत नाही. (There is not a food.)'
-        return jsonify({
-            'status': 'error',
-            'message': msg
-        }), 422
-
-    # Step 2: Fetch nutrition info
-    try:
-        nutrition, api_nutrition_used = food_scanner_service.get_food_nutrition(food_name)
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Nutrition lookup failed: {str(e)}'}), 500
-
-    # Step 3 & 4: Overall Good / Bad health verdict & Goal fitness
-    diet_goal = getattr(current_user, 'diet_goal', 'Balanced')
-    
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    gemini_eval = None
-    if gemini_key:
-        try:
-            gemini_eval = food_scanner_service.evaluate_food_with_gemini(nutrition, diet_goal, lang)
-        except Exception as e:
-            print(f"[GEMINI FOOD ROUTE EVALUATOR] Fallback due to error: {e}")
-            
-    if gemini_eval:
-        fits = gemini_eval.get('fits_goal', True)
-        rationale = gemini_eval.get('rationale', '')
-        color_class = gemini_eval.get('color_class', 'success')
-        health_verdict = gemini_eval.get('health_verdict', {
-            'verdict': 'good',
-            'title': 'Healthy Choice' if lang != 'mr' else 'निरोगी पर्याय',
-            'detail': '',
-            'emoji': '✅'
-        })
-    else:
-        health_verdict = food_scanner_service.get_food_health_verdict(nutrition)
-        fits, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
-        
-        # Translate to Marathi fallback if lang is Marathi
-        if lang == 'mr':
-            if health_verdict.get('verdict') == 'good':
-                health_verdict = {'verdict': 'good', 'title': 'निरोगी निवड', 'detail': 'आरोग्यासाठी फायदेशीर.', 'emoji': '✅'}
-            elif health_verdict.get('verdict') == 'caution':
-                health_verdict = {'verdict': 'caution', 'title': 'सावधगिरी बाळगा', 'detail': 'मर्यादित प्रमाणात सेवन करा.', 'emoji': '⚠️'}
-            else:
-                health_verdict = {'verdict': 'bad', 'title': 'टाळा / मर्यादित करा', 'detail': 'आरोग्यासाठी हानिकारक असू शकते.', 'emoji': '❌'}
-            
-            rationale = rationale.replace("Fits Weight Loss", "वजन कमी करण्यास मदत करते").replace("Excellent for Muscle Gain", "स्नायू वाढवण्यासाठी उत्कृष्ट").replace("Fits Goal", "ध्येयाशी सुसंगत")
-
-    return jsonify({
-        'status': 'success',
-        'food_name': nutrition['name'],
-        'calories': nutrition['calories'],
-        'protein': f"{nutrition['protein']}g",
-        'carbs': f"{nutrition['carbs']}g",
-        'fat': f"{nutrition['fat']}g",
-        'diet_goal': diet_goal,
-        'fits_goal': fits,
-        'rationale': rationale,
-        'color_class': color_class,
-        'api_vision_used': api_vision_used,
-        'api_nutrition_used': api_nutrition_used,
-        'confidence': round(confidence * 100),
-        'health_verdict': health_verdict
-    })
+    return jsonify({'status': 'error', 'message': 'Food scanner feature is disabled.'}), 403
 
 
 @app.route('/api/food/log', methods=['POST'])
 @login_required
 def log_food_calories():
-    if current_user.role != 'patient':
-        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
-        
-    data = request.get_json() or {}
-    try:
-        calories = int(data.get('calories', 0))
-    except (ValueError, TypeError):
-        calories = 0
-    food_name = data.get('food_name', 'Scanned Food')
-    
-    if calories <= 0:
-        return jsonify({'status': 'error', 'message': 'Invalid calories'}), 400
-        
-    today = datetime.now().strftime('%Y-%m-%d')
-    protein = data.get('protein', '0g')
-    carbs = data.get('carbs', '0g')
-    fat = data.get('fat', '0g')
-    goal_fitness = data.get('goal_fitness', 'success')
-
-    conn = get_db()
-    cur  = conn.cursor()
-
-    # Log to detailed food tracker
-    cur.execute("""
-        INSERT INTO food_logs (patient_id, food_name, calories, protein, carbs, fat, goal_fitness, log_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (current_user.id, food_name, calories, protein, carbs, fat, goal_fitness, today))
-    
-    existing = cur.execute(
-        "SELECT id, calories, notes FROM wellness_log WHERE patient_id=? AND log_date=?",
-        (current_user.id, today)
-    ).fetchone()
-    
-    if existing:
-        new_cals = (existing['calories'] or 0) + calories
-        new_notes = (existing['notes'] or '').strip()
-        log_entry = f"Scanned: {food_name} (+{calories} kcal)"
-        if new_notes:
-            new_notes = f"{new_notes} | {log_entry}"
-        else:
-            new_notes = log_entry
-            
-        cur.execute("""
-            UPDATE wellness_log 
-            SET calories = ?, notes = ? 
-            WHERE id = ?
-        """, (new_cals, new_notes, existing['id']))
-    else:
-        new_notes = f"Scanned: {food_name} (+{calories} kcal)"
-        cur.execute("""
-            INSERT INTO wellness_log (patient_id, log_date, water_glasses, sleep_hours, steps, mood, exercise_min, calories, notes)
-            VALUES (?, ?, 0, 0, 0, 'okay', 0, ?, ?)
-        """, (current_user.id, today, calories, new_notes))
-        
-    conn.commit()
-    conn.close()
-    return jsonify({'status': 'success', 'message': f'Logged {calories} kcal for {food_name}!'})
+    return jsonify({'status': 'error', 'message': 'Food scanner feature is disabled.'}), 403
 
 
 # ================= FITNESS COACHING =================
@@ -2123,10 +1960,7 @@ def log_food_calories():
 @app.route('/fitness-coaching')
 @login_required
 def fitness_coaching():
-    if current_user.role != 'patient':
-        flash('Only patients can access fitness coaching.', 'warning')
-        return redirect(url_for('index'))
-    return render_template('fitness_coaching.html', patient=current_user)
+    return redirect(url_for('index'))
 
 
 # ================= PROFILE MANAGEMENT =================

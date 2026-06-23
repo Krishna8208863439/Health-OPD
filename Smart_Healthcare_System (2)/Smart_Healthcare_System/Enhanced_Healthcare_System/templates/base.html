@@ -353,8 +353,6 @@ a{color:inherit;text-decoration:none;}
       <a class="dnav-a" href="{{ url_for('vitals') }}"><i class="fas fa-heartbeat"></i> <span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></a>
       <a class="dnav-a" href="{{ url_for('wellness') }}"><i class="fas fa-leaf"></i> <span class="lang-en">Wellness</span><span class="lang-mr">निरोगीपणा</span></a>
       <a class="dnav-a" href="{{ url_for('diet_plans') }}"><i class="fas fa-apple-alt"></i> <span class="lang-en">Diets</span><span class="lang-mr">आहार</span></a>
-      <a class="dnav-a" href="{{ url_for('food_scanner') }}"><i class="fas fa-camera"></i> <span class="lang-en">Scanner</span><span class="lang-mr">स्कॅनर</span></a>
-      <a class="dnav-a" href="{{ url_for('fitness_coaching') }}"><i class="fas fa-dumbbell"></i> <span class="lang-en">Coach</span><span class="lang-mr">फिटनेस कोच</span></a>
       <a class="dnav-a" href="{{ url_for('reminders') }}"><i class="fas fa-pills"></i> <span class="lang-en">Meds</span><span class="lang-mr">औषधे</span></a>
       <a class="dnav-a sos-link" href="{{ url_for('emergency') }}"><i class="fas fa-ambulance"></i> <span class="lang-en">SOS</span><span class="lang-mr">मदत</span></a>
       <a class="user-pill" href="{{ url_for('profile') }}">
@@ -435,8 +433,6 @@ a{color:inherit;text-decoration:none;}
       <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span><span class="lang-en">Health Vitals</span><span class="lang-mr">महत्त्वाचे आरोग्य संकेतक</span></a>
       <a class="drawer-item" href="{{ url_for('wellness') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-leaf"></i></span><span class="lang-en">Daily Wellness</span><span class="lang-mr">दैनिक निरोगीपणा</span></a>
       <a class="drawer-item" href="{{ url_for('diet_plans') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-apple-alt"></i></span><span class="lang-en">Diet Plans</span><span class="lang-mr">आहार योजना</span></a>
-      <a class="drawer-item" href="{{ url_for('food_scanner') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-camera"></i></span><span class="lang-en">Food Scanner</span><span class="lang-mr">अन्न स्कॅनर</span></a>
-      <a class="drawer-item" href="{{ url_for('fitness_coaching') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-dumbbell"></i></span><span class="lang-en">Fitness Coaching</span><span class="lang-mr">फिटनेस कोचिंग</span></a>
       <a class="drawer-item" href="{{ url_for('lab_results') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-flask"></i></span><span class="lang-en">Lab Results</span><span class="lang-mr">लॅब रिपोर्ट</span></a>
       <a class="drawer-item" href="{{ url_for('bmi_calculator') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-weight"></i></span><span class="lang-en">BMI &amp; Health Calculator</span><span class="lang-mr">बीएमआय आणि आरोग्य कॅल्क्युलेटर</span></a>
       <div class="drawer-sec"><span class="lang-en">Appointments &amp; Meds</span><span class="lang-mr">अपॉइंटमेंट आणि औषधे</span></div>
@@ -489,7 +485,7 @@ a{color:inherit;text-decoration:none;}
   <div class="bnav-inner">
     {% if current_user.role == 'patient' %}
       <a class="bnav-item" href="{{ url_for('index') }}"              data-path="/">             <i class="fas fa-home"></i><span><span class="lang-en">Home</span><span class="lang-mr">होम</span></span></a>
-      <a class="bnav-item" href="{{ url_for('food_scanner') }}"       data-path="/food-scanner"> <i class="fas fa-camera"></i><span><span class="lang-en">Scanner</span><span class="lang-mr">स्कॅनर</span></span></a>
+      <a class="bnav-item" href="{{ url_for('diet_plans') }}"          data-path="/diet-plans"> <i class="fas fa-apple-alt"></i><span><span class="lang-en">Diets</span><span class="lang-mr">आहार</span></span></a>
       <a class="bnav-item" href="{{ url_for('vitals') }}"             data-path="/vitals">       <i class="fas fa-heartbeat"></i><span><span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></span></a>
       <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-th-large"></i><span><span class="lang-en">More</span><span class="lang-mr">अधिक</span></span></a>
     {% elif current_user.role == 'doctor' %}
