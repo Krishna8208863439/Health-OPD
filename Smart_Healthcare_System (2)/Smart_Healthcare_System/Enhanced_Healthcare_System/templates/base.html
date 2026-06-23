@@ -347,7 +347,6 @@ a{color:inherit;text-decoration:none;}
   <div id="desktop-nav">
     {% if current_user.role == 'patient' %}
       <a class="dnav-a" href="{{ url_for('health_dashboard') }}"><i class="fas fa-chart-pie"></i> <span class="lang-en">Dashboard</span><span class="lang-mr">डॅशबोर्ड</span></a>
-      <a class="dnav-a" href="{{ url_for('symptom_assessment') }}"><i class="fas fa-stethoscope"></i> <span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></a>
       <a class="dnav-a" href="{{ url_for('ai_assistant') }}"><i class="fas fa-robot"></i> <span class="lang-en">AI</span><span class="lang-mr">एआय</span></a>
       <a class="dnav-a" href="{{ url_for('symptom_journal') }}"><i class="fas fa-book-medical"></i> <span class="lang-en">Journal</span><span class="lang-mr">रोजनिशी</span></a>
       <a class="dnav-a" href="{{ url_for('nearest_hospitals') }}"><i class="fas fa-hospital-symbol"></i> <span class="lang-en">Hospitals</span><span class="lang-mr">रुग्णालये</span></a>
@@ -432,7 +431,6 @@ a{color:inherit;text-decoration:none;}
       <a class="drawer-item" href="{{ url_for('health_dashboard') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-chart-pie"></i></span><span class="lang-en">Health Dashboard</span><span class="lang-mr">आरोग्य डॅशबोर्ड</span></a>
       <a class="drawer-item" href="{{ url_for('opd_desk') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-ticket-alt"></i></span><span class="lang-en">OPD Queue Desk</span><span class="lang-mr">ओपीडी रांग डेस्क</span></a>
       <a class="drawer-item" href="{{ url_for('ai_assistant') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-robot"></i></span><span class="lang-en">AI Health Assistant</span><span class="lang-mr">एआय आरोग्य सहाय्यक</span></a>
-      <a class="drawer-item" href="{{ url_for('symptom_assessment') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-stethoscope"></i></span><span class="lang-en">Symptom Assessment</span><span class="lang-mr">लक्षणे मूल्यांकन</span></a>
       <a class="drawer-item" href="{{ url_for('symptom_journal') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-book-medical"></i></span><span class="lang-en">Symptom Journal</span><span class="lang-mr">लक्षण रोजनिशी</span></a>
       <a class="drawer-item" href="{{ url_for('nearest_hospitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-hospital-symbol"></i></span><span class="lang-en">Nearest Hospitals</span><span class="lang-mr">जवळचे रुग्णालय</span></a>
       <a class="drawer-item" href="{{ url_for('vitals') }}" onclick="closeDrawer()"><span class="di"><i class="fas fa-heartbeat"></i></span><span class="lang-en">Health Vitals</span><span class="lang-mr">महत्त्वाचे आरोग्य संकेतक</span></a>
@@ -492,7 +490,7 @@ a{color:inherit;text-decoration:none;}
   <div class="bnav-inner">
     {% if current_user.role == 'patient' %}
       <a class="bnav-item" href="{{ url_for('index') }}"              data-path="/">             <i class="fas fa-home"></i><span><span class="lang-en">Home</span><span class="lang-mr">होम</span></span></a>
-      <a class="bnav-item" href="{{ url_for('symptom_assessment') }}" data-path="/assessment">   <i class="fas fa-stethoscope"></i><span><span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></span></a>
+      <a class="bnav-item" href="{{ url_for('food_scanner') }}"       data-path="/food-scanner"> <i class="fas fa-camera"></i><span><span class="lang-en">Scanner</span><span class="lang-mr">स्कॅनर</span></span></a>
       <a class="bnav-item" href="{{ url_for('vitals') }}"             data-path="/vitals">       <i class="fas fa-heartbeat"></i><span><span class="lang-en">Vitals</span><span class="lang-mr">वाइटल्स</span></span></a>
       <a class="bnav-item" href="#" onclick="openDrawer();return false;"><i class="fas fa-th-large"></i><span><span class="lang-en">More</span><span class="lang-mr">अधिक</span></span></a>
     {% elif current_user.role == 'doctor' %}

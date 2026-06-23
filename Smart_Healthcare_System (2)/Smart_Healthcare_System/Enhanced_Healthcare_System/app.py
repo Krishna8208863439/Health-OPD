@@ -1391,13 +1391,13 @@ def emergency():
 @app.route('/assessment')
 @login_required
 def symptom_assessment():
-    return render_template('symptom_assessment.html', patient=current_user)
+    return redirect(url_for('index'))
 
 
 @app.route('/assessment/predict', methods=['POST'])
 @login_required
 def assess_predict():
-    # Collect selected symptoms
+    return redirect(url_for('index'))
     present_symptoms = request.form.getlist('symptoms')
     symptom_severity = request.form.get('symptom_severity', 'moderate')
     symptom_duration = request.form.get('symptom_duration', '1-3 days')
@@ -1644,7 +1644,7 @@ def assess_predict():
 @app.route('/assessment/nlp', methods=['POST'])
 @login_required
 def assess_nlp():
-    """Natural-language symptom assessment with AI analysis and OTC suggestions."""
+    return redirect(url_for('index'))
     text = request.form.get('symptom_text', '').strip()
     lang = request.form.get('lang', 'en').strip()
     if not text:
@@ -1882,6 +1882,7 @@ def scan_food():
     food_name = data.get('food_name', '').strip()
     image_data = data.get('image_data', '')
     lang = data.get('lang', 'en')
+    filename = data.get('filename', '')
 
     api_vision_used = "N/A"
     api_nutrition_used = "N/A"
@@ -1890,7 +1891,7 @@ def scan_food():
     # Step 1: Vision identification – food-only validation built in
     if image_data and not food_name:
         try:
-            food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data)
+            food_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data, filename=filename)
         except ValueError as ve:
             # Non-food item detected by Gemini/OpenAI vision
             msg = str(ve)

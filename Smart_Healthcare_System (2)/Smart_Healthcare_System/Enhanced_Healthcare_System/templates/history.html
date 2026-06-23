@@ -54,9 +54,9 @@
     {% else %}
     <div style="text-align: center; padding: 50px; color: #6C757D;">
         <p style="font-size: 18px; margin-bottom: 20px;">📋 No medical history found</p>
-        <p>Start by entering your symptoms to get a prediction.</p>
-        <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary" style="margin-top: 20px;">
-            <span class="lang-en">🩺 Assess Symptoms</span><span class="lang-mr">🩺 लक्षण तपासणी</span>
+        <p>Start by talking to our AI health assistant to manage your health.</p>
+        <a href="{{ url_for('ai_assistant') }}" class="btn btn-primary" style="margin-top: 20px;">
+            <span class="lang-en">🤖 Consult AI Assistant</span><span class="lang-mr">🤖 एआय सहाय्यक सल्ला</span>
         </a>
     </div>
     {% endif %}

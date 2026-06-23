@@ -133,12 +133,22 @@ def is_food_item(detected_name: str) -> bool:
 # STEP 1: IDENTIFY FOOD FROM IMAGE
 # ─────────────────────────────────────────────────────────────────────────────
 
-def identify_food_from_image(image_base64_or_bytes):
+def identify_food_from_image(image_base64_or_bytes, filename=None):
     """
     Identify the food in the image using Vision APIs or a smart fallback.
     Raises ValueError if the image does not contain a food item.
     Returns: (food_name, confidence, api_used)
     """
+    if filename:
+        import os
+        basename = os.path.splitext(filename)[0].replace('-', ' ').replace('_', ' ').lower()
+        basename = re.sub(r'[^a-zA-Z\s]', '', basename).strip()
+        if basename and not is_food_item(basename):
+            raise ValueError(
+                f"'{basename}' does not appear to be a food item. "
+                "Please scan only food or drink items."
+            )
+
     # Clean the input (remove base64 header if present)
     base64_data = ""
     if isinstance(image_base64_or_bytes, str):

@@ -518,9 +518,9 @@
 <!-- ── QUICK ACTIONS ── -->
 <div class="sec-hdr"><span class="sec-title"><span class="lang-en">Quick Actions</span><span class="lang-mr">जलद कृती</span></span></div>
 <div class="qa-grid">
-  <a class="qa-btn" href="{{ url_for('symptom_assessment') }}">
-    <div class="qa-icon ic-blue"><i class="fas fa-stethoscope"></i></div>
-    <span class="qa-label"><span class="lang-en">Assess</span><span class="lang-mr">तपासणी</span></span>
+  <a class="qa-btn" href="{{ url_for('food_scanner') }}">
+    <div class="qa-icon ic-blue"><i class="fas fa-camera"></i></div>
+    <span class="qa-label"><span class="lang-en">Scanner</span><span class="lang-mr">स्कॅनर</span></span>
   </a>
   <a class="qa-btn" href="{{ url_for('nearest_hospitals') }}">
     <div class="qa-icon ic-green"><i class="fas fa-hospital-symbol"></i></div>
@@ -662,7 +662,6 @@
     &nbsp; <span class="lang-en">Risk:</span><span class="lang-mr">जोखीम:</span> {{ last_prediction.risk_percentage }}% · {{ last_prediction.timestamp[:10] }}
   </div>
   <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-    <a href="{{ url_for('symptom_assessment') }}" class="btn btn-primary btn-sm"><span class="lang-en"><i class="fas fa-redo"></i> Re-assess</span><span class="lang-mr"><i class="fas fa-redo"></i> पुन्हा तपासा</span></a>
     {% if last_prediction.pdf_path %}
     <a href="{{ url_for('download_pdf', filename=last_prediction.pdf_path) }}" class="btn btn-outline btn-sm"><span class="lang-en"><i class="fas fa-download"></i> Report</span><span class="lang-mr"><i class="fas fa-download"></i> अहवाल</span></a>
     {% endif %}
@@ -737,18 +736,7 @@
   </div>
   
   <div class="guide-grid">
-    <!-- Card 1: Symptom Assessment -->
-    <div class="guide-card">
-      <div class="guide-card-icon ic-blue">
-        <i class="fas fa-stethoscope"></i>
-      </div>
-      <div class="guide-card-body">
-        <h4 class="guide-card-title lang-en">Symptom Assessment</h4>
-        <h4 class="guide-card-title lang-mr">लक्षण मूल्यांकन</h4>
-        <p class="guide-card-desc lang-en">Input your symptoms to get a real-time risk assessment, disease likelihood, severity level, and specific clinical advice.</p>
-        <p class="guide-card-desc lang-mr">रिअल-टाइम जोखीम मूल्यांकन, रोगाची शक्यता, तीव्रतेची पातळी आणि वैद्यकीय सल्ला मिळवण्यासाठी तुमची लक्षणे प्रविष्ट करा.</p>
-      </div>
-    </div>
+
 
     <!-- Card 2: Hospital GPS Finder -->
     <div class="guide-card">
