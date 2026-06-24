@@ -291,12 +291,168 @@ def identify_food_from_image(image_base64_or_bytes, filename=None):
 # STEP 2: FETCH NUTRITION INFORMATION
 # ─────────────────────────────────────────────────────────────────────────────
 
+def get_usda_nutrition(food_name):
+    """
+    Search the USDA database in healthcare.db for the best matching item.
+    Returns: nutrition_dict or None
+    """
+    import sqlite3
+    import os
+
+    clean_query = food_name.strip().lower()
+    if not clean_query:
+        return None
+
+    # Database path relative to this file
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(base_dir, "healthcare.db")
+    if not os.path.exists(db_path):
+        return None
+
+    try:
+        conn = sqlite3.connect(db_path, timeout=5.0)
+        cur = conn.cursor()
+        
+        # Check if the table exists
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usda_food_nutrition'")
+        if not cur.fetchone():
+            conn.close()
+            return None
+
+        # 1. Check for exact match first
+        cur.execute(
+            "SELECT name, calories, protein, carbs, fat FROM usda_food_nutrition WHERE LOWER(name) = ? LIMIT 1",
+            (clean_query,)
+        )
+        row = cur.fetchone()
+        if row:
+            conn.close()
+            return {
+                "name": row[0],
+                "calories": round(row[1]),
+                "protein": round(row[2], 1),
+                "carbs": round(row[3], 1),
+                "fat": round(row[4], 1)
+            }
+
+        # 2. Try FTS5 MATCH query if fts table exists
+        candidates = []
+        has_fts = False
+        try:
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usda_food_nutrition_fts'")
+            has_fts = cur.fetchone() is not None
+        except Exception:
+            pass
+
+        query_tokens = [w for w in re.split(r'[^a-zA-Z0-9]', clean_query) if w]
+        if not query_tokens:
+            conn.close()
+            return None
+
+        if has_fts:
+            # Build FTS match expression: "token1* AND token2*"
+            match_expr = " AND ".join([f"{token}*" for token in query_tokens])
+            try:
+                cur.execute(
+                    "SELECT name, calories, protein, carbs, fat FROM usda_food_nutrition_fts WHERE name MATCH ? LIMIT 30",
+                    (match_expr,)
+                )
+                candidates = cur.fetchall()
+            except Exception:
+                candidates = []
+
+        # 3. Fallback to LIKE if FTS yielded nothing
+        if not candidates:
+            # Match if name contains all tokens
+            like_clauses = " AND ".join(["name LIKE ?" for _ in query_tokens])
+            like_params = [f"%{token}%" for token in query_tokens]
+            try:
+                cur.execute(
+                    f"SELECT name, calories, protein, carbs, fat FROM usda_food_nutrition WHERE {like_clauses} LIMIT 30",
+                    like_params
+                )
+                candidates = cur.fetchall()
+            except Exception:
+                # If still nothing, try matching ANY token
+                try:
+                    any_like_clauses = " OR ".join(["name LIKE ?" for _ in query_tokens])
+                    cur.execute(
+                        f"SELECT name, calories, protein, carbs, fat FROM usda_food_nutrition WHERE {any_like_clauses} LIMIT 30",
+                        like_params
+                    )
+                    candidates = cur.fetchall()
+                except Exception:
+                    candidates = []
+
+        conn.close()
+
+        if not candidates:
+            return None
+
+        # 4. Score and select the best candidate
+        best_candidate = None
+        best_score = -1
+
+        for name, calories, protein, carbs, fat in candidates:
+            cand_lower = name.lower()
+            cand_tokens = [w for w in re.split(r'[^a-zA-Z0-9]', cand_lower) if w]
+            if not cand_tokens:
+                continue
+                
+            match_score = 0.0
+            for q in query_tokens:
+                token_scores = []
+                for ct in cand_tokens:
+                    if ct == q:
+                        token_scores.append(1.0)
+                    elif ct.startswith(q):
+                        token_scores.append(0.8 * (len(q) / len(ct)))
+                    elif q.startswith(ct):
+                        token_scores.append(0.5 * (len(ct) / len(q)))
+                if token_scores:
+                    match_score += max(token_scores)
+            
+            # Normalize match score
+            score = match_score / len(query_tokens)
+            
+            # Tiny penalty for name length (prefers shorter, generic names)
+            score -= len(name) * 0.0005
+            
+            # Bonus if the candidate starts with the exact first token of the query
+            if cand_tokens[0] == query_tokens[0]:
+                score += 0.2
+            elif cand_tokens[0].startswith(query_tokens[0]):
+                score += 0.1
+
+            if score > best_score:
+                best_score = score
+                best_candidate = {
+                    "name": name,
+                    "calories": round(calories),
+                    "protein": round(protein, 1),
+                    "carbs": round(carbs, 1),
+                    "fat": round(fat, 1)
+                }
+
+        return best_candidate
+    except Exception as e:
+        print(f"[USDA LOOKUP ERROR] {e}")
+        return None
+
+
 def get_food_nutrition(food_name):
     """
     Fetch nutrition information from a nutrition API or local smart catalog.
     Returns: (nutrition_dict, api_used)
     """
     clean_name = food_name.strip().lower()
+
+    # ── Try Local USDA Database First ──────────────────────────────────────────
+    usda_match = get_usda_nutrition(clean_name)
+    if usda_match:
+        return usda_match, "USDA FoodData Central"
+
+    # ── Try Gemini Nutrition API (JSON Mode) ──────────────────────────────────
 
     # ── Try Gemini Nutrition API (JSON Mode) ──────────────────────────────────
     gemini_key = os.environ.get("GEMINI_API_KEY")

@@ -2051,6 +2051,74 @@ def upload_food_dataset():
         return jsonify({'status': 'error', 'message': f'Failed to parse CSV file: {str(e)}'}), 500
 
 
+@app.route('/api/food/search')
+@login_required
+def search_food_items():
+    import re
+    q = request.args.get('q', '').strip()
+    if not q or len(q) < 1:
+        return jsonify([])
+        
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Check if FTS virtual table exists
+    has_fts = False
+    try:
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usda_food_nutrition_fts'")
+        has_fts = cur.fetchone() is not None
+    except Exception:
+        pass
+        
+    results = []
+    tokens = [w for w in re.split(r'[^a-zA-Z0-9]', q) if w]
+    
+    if tokens:
+        if has_fts:
+            # FTS MATCH search
+            match_expr = " AND ".join([f"{token}*" for token in tokens])
+            try:
+                cur.execute("""
+                    SELECT name, calories, protein, carbs, fat 
+                    FROM usda_food_nutrition_fts 
+                    WHERE name MATCH ? 
+                    LIMIT 15
+                """, (match_expr,))
+                results = cur.fetchall()
+            except Exception:
+                results = []
+        
+        # Fallback to standard LIKE search
+        if not results:
+            like_clauses = " AND ".join(["name LIKE ?" for _ in tokens])
+            like_params = [f"%{token}%" for token in tokens]
+            try:
+                cur.execute(f"""
+                    SELECT name, calories, protein, carbs, fat 
+                    FROM usda_food_nutrition 
+                    WHERE {like_clauses} 
+                    LIMIT 15
+                """, like_params)
+                results = cur.fetchall()
+            except Exception:
+                results = []
+                
+    conn.close()
+    
+    # Format the output list
+    output = []
+    for r in results:
+        output.append({
+            'name': r[0],
+            'calories': round(r[1]),
+            'protein': f"{round(r[2], 1)}g",
+            'carbs': f"{round(r[3], 1)}g",
+            'fat': f"{round(r[4], 1)}g"
+        })
+        
+    return jsonify(output)
+
+
 @app.route('/api/food/scan', methods=['POST'])
 @login_required
 def scan_food():

@@ -286,8 +286,38 @@
 @media(max-width: 768px) {
     .scanner-container { grid-template-columns: 1fr; }
 }
-#health-verdict-banner, .macro-grid, #goal-fit-card, .chatgpt-response-box {
-    display: none !important;
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #F3F4F6;
+    transition: background 0.15s, padding-left 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.suggestion-item:hover {
+    background: #F0FDFA;
+    padding-left: 20px;
+}
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+.suggestion-food-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1F2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 75%;
+}
+.suggestion-food-cals {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #059669;
+    background: #D1FAE5;
+    padding: 2px 8px;
+    border-radius: 12px;
 }
 </style>
 {% endblock %}
@@ -374,9 +404,21 @@
                 <div id="csv-upload-status" style="margin-top: 8px; font-size: 0.76rem; font-weight: 700; display: none;"></div>
             </div>
             
-            <!-- Manual Text Input (Hidden to support image scan only) -->
-            <div style="display: none;">
-                <input type="text" id="custom_food_name" class="form-control" value="">
+            <!-- USDA Food Search & Direct Lookup -->
+            <div class="usda-search-box" style="margin-bottom: 20px; position: relative;">
+                <div style="font-weight: 800; font-size: 0.88rem; color: #1F2937; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-search" style="color: #059669;"></i>
+                    <span class="lang-en">Search Food in USDA Database</span>
+                    <span class="lang-mr">USDA डेटाबेसमध्ये अन्न शोधा</span>
+                </div>
+                <div class="search-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="custom_food_name" class="form-control" placeholder="Type to search (e.g. Apple, Pizza, Biryani...)" style="padding-right: 40px; border-radius: 10px; border: 1.5px solid #D1D5DB; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;" oninput="onSearchInput(this.value)">
+                    <i class="fas fa-times" id="clear-search-btn" style="position: absolute; right: 12px; cursor: pointer; color: #9CA3AF; display: none;" onclick="clearSearchInput()"></i>
+                </div>
+                <!-- Autocomplete suggestions dropdown -->
+                <div id="search-suggestions" style="position: absolute; left: 0; right: 0; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; z-index: 50; display: none; margin-top: 4px;">
+                    <!-- populated dynamically -->
+                </div>
             </div>
 
             <button class="btn btn-primary w-100" id="capture-btn" onclick="captureAndScan()" style="background: linear-gradient(135deg, #0066CC 0%, #004a99 100%); border: none; font-weight: 700; display: none; margin-bottom: 12px; align-items: center; justify-content: center; gap: 8px;">
@@ -776,6 +818,72 @@ function syncCustomFoodName(val) {
 
 // Trigger Scan calling backend API
 let lastScannedItem = null;
+let searchTimeout = null;
+
+function onSearchInput(val) {
+    const clearBtn = document.getElementById('clear-search-btn');
+    const suggestionsEl = document.getElementById('search-suggestions');
+    
+    if (!val || val.trim().length < 1) {
+        clearBtn.style.display = 'none';
+        suggestionsEl.style.display = 'none';
+        return;
+    }
+    
+    clearBtn.style.display = 'block';
+    
+    // Debounce search requests
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/food/search?q=${encodeURIComponent(val.trim())}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length > 0) {
+                    suggestionsEl.innerHTML = '';
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerHTML = `
+                            <div class="suggestion-food-name">${item.name}</div>
+                            <div class="suggestion-food-cals">${item.calories} kcal</div>
+                        `;
+                        div.onclick = () => selectSuggestion(item);
+                        suggestionsEl.appendChild(div);
+                    });
+                    suggestionsEl.style.display = 'block';
+                } else {
+                    suggestionsEl.style.display = 'none';
+                }
+            })
+            .catch(err => console.error("Search autocomplete error:", err));
+    }, 200);
+}
+
+function selectSuggestion(item) {
+    document.getElementById('custom_food_name').value = item.name;
+    document.getElementById('search-suggestions').style.display = 'none';
+    
+    // Set preview filename/state
+    uploadedFileName = "";
+    
+    // Auto-trigger scan for direct lookup
+    triggerScan();
+}
+
+function clearSearchInput() {
+    document.getElementById('custom_food_name').value = '';
+    document.getElementById('clear-search-btn').style.display = 'none';
+    document.getElementById('search-suggestions').style.display = 'none';
+}
+
+// Close autocomplete suggestions when clicking outside
+document.addEventListener('click', (e) => {
+    const suggestionsEl = document.getElementById('search-suggestions');
+    const inputEl = document.getElementById('custom_food_name');
+    if (suggestionsEl && e.target !== suggestionsEl && e.target !== inputEl) {
+        suggestionsEl.style.display = 'none';
+    }
+});
 
 function triggerScan() {
     // Hide results card, error card & show analyzer spinner
@@ -802,13 +910,18 @@ function triggerScan() {
     
     if (previewEl.style.display === 'block' && previewEl.src.startsWith('data:image')) {
         payload.image_data = previewEl.src;
+    }
+    
+    // Allow lookup if we have an image OR a searched food name
+    if (payload.image_data || payload.food_name) {
         sendScanRequest(payload);
     } else {
         document.getElementById('analyzer-box').style.display = 'none';
         document.getElementById('scan-action-btn').disabled = false;
-        alert(localStorage.getItem('health-lang-pref') === 'mr' ? "कृपया आधी प्रतिमा कॅप्चर करा किंवा अपलोड करा." : "Please capture or upload an image first.");
+        alert(localStorage.getItem('health-lang-pref') === 'mr' ? "कृपया कॅमेरा वापरा, फोटो अपलोड करा किंवा शोध बॉक्समध्ये नाव टाईप करा." : "Please capture an image, upload a file, or type a food name to search.");
     }
 }
+
 
 function sendScanRequest(payload, visionApiUsed = null, confidenceScore = null) {
     // Reset analyzer box HTML in case it was changed by TFJS

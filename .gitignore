@@ -42,3 +42,7 @@ build/
 model_cache.pkl
 *.pkl
 
+# Large dataset directories
+FoodData_Central_csv_2025-12-18/
+FoodData_Central_csv_2026-04-30/
+archive (1)/
