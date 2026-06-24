@@ -333,6 +333,19 @@ def init_extra_tables():
     )""")
 
     cur.execute("""
+    CREATE TABLE IF NOT EXISTS custom_food_items (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_id    INTEGER NOT NULL,
+        food_name     TEXT NOT NULL,
+        calories      INTEGER NOT NULL,
+        protein       TEXT DEFAULT '0g',
+        carbs         TEXT DEFAULT '0g',
+        fat           TEXT DEFAULT '0g',
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id)
+    )""")
+
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS medication_logs (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_id    INTEGER NOT NULL,
@@ -1940,19 +1953,260 @@ def api_generate_diet():
 @app.route('/food-scanner')
 @login_required
 def food_scanner():
-    return redirect(url_for('index'))
+    if current_user.role != 'patient':
+        flash('Only patients can access the Food Scanner.', 'warning')
+        return redirect(url_for('index'))
+    return render_template('food_scanner.html', patient=current_user)
+
+
+@app.route('/api/food/upload-dataset', methods=['POST'])
+@login_required
+def upload_food_dataset():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Only patients can upload datasets.'}), 403
+        
+    if 'file' not in request.files:
+        return jsonify({'status': 'error', 'message': 'No file uploaded.'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': 'No file selected.'}), 400
+        
+    if not file.filename.endswith('.csv'):
+        return jsonify({'status': 'error', 'message': 'Please upload a CSV file.'}), 400
+        
+    try:
+        import io
+        import csv
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        reader = csv.reader(stream)
+        header = next(reader)
+        
+        # Normalize headers to lowercase
+        header = [h.strip().lower() for h in header]
+        
+        # Helper to find column index
+        def find_index(keywords):
+            for kw in keywords:
+                for idx, h in enumerate(header):
+                    if kw in h:
+                        return idx
+            return -1
+
+        name_idx = find_index(['food_name', 'name', 'description', 'item', 'food'])
+        cal_idx = find_index(['calories', 'calorie', 'energy', 'kcal', 'val'])
+        prot_idx = find_index(['protein', 'prot'])
+        carb_idx = find_index(['carbs', 'carb', 'carbohydrate'])
+        fat_idx = find_index(['fat', 'fats'])
+        
+        if name_idx == -1 or cal_idx == -1:
+            return jsonify({
+                'status': 'error', 
+                'message': 'Invalid CSV headers. Must contain at least a Food Name and Calories column.'
+            }), 400
+            
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Clear existing custom food items for this user to avoid duplicate datasets
+        cur.execute("DELETE FROM custom_food_items WHERE patient_id = ?", (current_user.id,))
+        
+        row_count = 0
+        for row in reader:
+            if not row or len(row) <= max(name_idx, cal_idx):
+                continue
+                
+            food_name = row[name_idx].strip()
+            if not food_name:
+                continue
+                
+            try:
+                calories_val = int(float(row[cal_idx]))
+            except ValueError:
+                calories_val = 0
+                
+            protein_val = row[prot_idx].strip() if (prot_idx != -1 and prot_idx < len(row)) else '0g'
+            carb_val = row[carb_idx].strip() if (carb_idx != -1 and carb_idx < len(row)) else '0g'
+            fat_val = row[fat_idx].strip() if (fat_idx != -1 and fat_idx < len(row)) else '0g'
+            
+            # Ensure they have 'g' suffix or add it
+            if protein_val and not protein_val.endswith('g'): protein_val += 'g'
+            if carb_val and not carb_val.endswith('g'): carb_val += 'g'
+            if fat_val and not fat_val.endswith('g'): fat_val += 'g'
+            
+            cur.execute("""
+                INSERT INTO custom_food_items (patient_id, food_name, calories, protein, carbs, fat)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (current_user.id, food_name, calories_val, protein_val, carb_val, fat_val))
+            row_count += 1
+            
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'Successfully imported {row_count} food items from your dataset!'
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed to parse CSV file: {str(e)}'}), 500
 
 
 @app.route('/api/food/scan', methods=['POST'])
 @login_required
 def scan_food():
-    return jsonify({'status': 'error', 'message': 'Food scanner feature is disabled.'}), 403
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Only patients can scan food.'}), 403
+        
+    data = request.get_json() or {}
+    manual_food_name = data.get('food_name', '').strip()
+    image_data = data.get('image_data', '')
+    lang = data.get('lang', 'en')
+    filename = data.get('filename', '')
+
+    # 1. Resolve food name
+    detected_name = ""
+    confidence = 100
+    api_vision_used = "Manual Input"
+    
+    if manual_food_name:
+        detected_name = manual_food_name
+    elif image_data:
+        try:
+            import food_scanner_service
+            # image_data is a base64 data URI: data:image/jpeg;base64,...
+            detected_name, confidence, api_vision_used = food_scanner_service.identify_food_from_image(image_data, filename)
+            confidence = int(confidence * 100)
+        except ValueError as val_err:
+            return jsonify({'status': 'error', 'message': str(val_err)}), 422
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'Vision identification failed: {str(e)}'}), 500
+    else:
+        return jsonify({'status': 'error', 'message': 'Please provide a food name or upload an image.'}), 400
+
+    # 2. Get nutrition info (Check custom dataset first)
+    nutrition = None
+    api_nutrition_used = ""
+    
+    conn = get_db()
+    cur = conn.cursor()
+    custom_item = cur.execute("""
+        SELECT food_name, calories, protein, carbs, fat 
+        FROM custom_food_items 
+        WHERE patient_id = ? AND (LOWER(food_name) = ? OR LOWER(food_name) LIKE ?)
+        LIMIT 1
+    """, (current_user.id, detected_name.lower(), f"%{detected_name.lower()}%")).fetchone()
+    conn.close()
+    
+    if custom_item:
+        nutrition = {
+            "name": custom_item["food_name"],
+            "calories": custom_item["calories"],
+            "protein": custom_item["protein"],
+            "carbs": custom_item["carbs"],
+            "fat": custom_item["fat"]
+        }
+        api_nutrition_used = "User Custom Dataset (Uploaded)"
+    else:
+        import food_scanner_service
+        try:
+            nutrition, api_nutrition_used = food_scanner_service.get_food_nutrition(detected_name)
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'Failed to retrieve nutrition details: {str(e)}'}), 500
+
+    if not nutrition:
+        return jsonify({'status': 'error', 'message': 'Nutrition details could not be estimated.'}), 500
+
+    # 3. Assess diet goal fitness
+    import food_scanner_service
+    diet_goal = current_user.diet_goal or "Balanced"
+    
+    eval_result = None
+    if os.environ.get("GEMINI_API_KEY"):
+        eval_result = food_scanner_service.evaluate_food_with_gemini(nutrition, diet_goal, lang)
+        
+    if eval_result:
+        health_verdict = eval_result.get("health_verdict")
+        fits_goal = eval_result.get("fits_goal")
+        rationale = eval_result.get("rationale")
+        color_class = eval_result.get("color_class")
+    else:
+        health_verdict = food_scanner_service.get_food_health_verdict(nutrition)
+        fits_boolean, rationale, color_class = food_scanner_service.evaluate_goal_fitness(nutrition, diet_goal)
+        fits_goal = fits_boolean
+
+    # Format protein, carbs, fat to ensure they end in 'g' for frontend display
+    def ensure_g(val):
+        val_str = str(val).strip()
+        if not val_str.endswith('g') and val_str.replace('.', '', 1).isdigit():
+            val_str += 'g'
+        return val_str
+
+    protein_str = ensure_g(nutrition.get("protein", 0))
+    carbs_str = ensure_g(nutrition.get("carbs", 0))
+    fat_str = ensure_g(nutrition.get("fat", 0))
+
+    return jsonify({
+        "status": "success",
+        "food_name": nutrition.get("name", detected_name).title(),
+        "calories": int(nutrition.get("calories", 0)),
+        "protein": protein_str,
+        "carbs": carbs_str,
+        "fat": fat_str,
+        "health_verdict": health_verdict,
+        "api_vision_used": api_vision_used,
+        "api_nutrition_used": api_nutrition_used,
+        "confidence": confidence,
+        "diet_goal": diet_goal,
+        "rationale": rationale,
+        "color_class": color_class
+    })
 
 
 @app.route('/api/food/log', methods=['POST'])
 @login_required
 def log_food_calories():
-    return jsonify({'status': 'error', 'message': 'Food scanner feature is disabled.'}), 403
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Only patients can log food.'}), 403
+        
+    data = request.get_json() or {}
+    food_name = data.get('food_name')
+    calories = data.get('calories')
+    protein = data.get('protein')
+    carbs = data.get('carbs')
+    fat = data.get('fat')
+    goal_fitness = data.get('goal_fitness', 'success')
+    
+    def clean_macro(val):
+        if isinstance(val, str):
+            val = val.replace('g', '').strip()
+        try:
+            return float(val) if val else 0.0
+        except ValueError:
+            return 0.0
+
+    p_val = clean_macro(protein)
+    c_val = clean_macro(carbs)
+    f_val = clean_macro(fat)
+    
+    try:
+        calories_val = int(calories)
+    except (ValueError, TypeError):
+        calories_val = 0
+
+    if not food_name:
+        return jsonify({'status': 'error', 'message': 'Food name is required.'}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    cur.execute("""
+        INSERT INTO food_logs (patient_id, log_date, food_name, calories, protein, carbs, fat, goal_fitness)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (current_user.id, today_str, food_name, calories_val, str(p_val) + 'g', str(c_val) + 'g', str(f_val) + 'g', goal_fitness))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'success', 'message': f'Successfully logged {food_name} ({calories_val} kcal)!'})
 
 
 # ================= FITNESS COACHING =================
@@ -1960,7 +2214,88 @@ def log_food_calories():
 @app.route('/fitness-coaching')
 @login_required
 def fitness_coaching():
-    return redirect(url_for('index'))
+    if current_user.role != 'patient':
+        flash('Only patients can access Fitness Coaching.', 'warning')
+        return redirect(url_for('index'))
+    return render_template('fitness_coaching.html', patient=current_user)
+
+
+@app.route('/api/fitness/chat', methods=['POST'])
+@login_required
+def api_fitness_chat():
+    if current_user.role != 'patient':
+        return jsonify({'status': 'error', 'message': 'Only patients can access the fitness coach.'}), 403
+        
+    data = request.get_json() or {}
+    message = data.get('message', '').strip()
+    lang = data.get('lang', 'en')
+    
+    if not message:
+        return jsonify({'status': 'error', 'message': 'Message is empty'}), 400
+        
+    context_str = ""
+    try:
+        import csv
+        csv_path = os.path.join(os.path.dirname(__file__), 'fitness_exercises.csv')
+        if os.path.exists(csv_path):
+            matching_exercises = []
+            msg_lower = message.lower()
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    name_match = row.get('exercise_name', '').lower() in msg_lower
+                    muscle_match = row.get('muscle_group', '').lower() in msg_lower
+                    cat_match = row.get('category', '').lower() in msg_lower
+                    
+                    if name_match or muscle_match or cat_match:
+                        matching_exercises.append(
+                            f"- {row.get('exercise_name')} ({row.get('category')}, {row.get('difficulty')} level): "
+                            f"Targeting {row.get('muscle_group')}. Description: {row.get('description')}. "
+                            f"Instructions: {row.get('instructions')}"
+                        )
+            if matching_exercises:
+                context_str = "Relevant Exercise Database Entries found matching user keywords:\n" + "\n".join(matching_exercises[:3])
+    except Exception as e:
+        print(f"Error reading fitness exercises dataset: {e}")
+
+    profile_summary = (
+        f"Age: {current_user.age}, Goal: {current_user.diet_goal or 'Balanced'}."
+    )
+    
+    system_instruction = (
+        "You are a professional AI Fitness Coach and Personal Trainer named Coach Max for the HealthCare+ platform.\n"
+        f"User Profile: {profile_summary}\n"
+        f"{context_str}\n\n"
+        "Guidelines:\n"
+        "1. Answer the user's questions about exercises, workouts, gym routines, and muscle building professionally and warmly.\n"
+        "2. Keep the responses concise, positive, action-oriented, and structured with clean markdown (bullet points, bold text).\n"
+        "3. Incorporate information from the matching exercise database context if relevant.\n"
+        "4. Respond strictly in the requested language. If the language is 'mr' (Marathi), write the entire response in pure Marathi (Devanagari script), without using English/Latin characters or Hinglish transliterations. If 'en', write in English.\n"
+        "5. Always append this disclaimer at the end:\n"
+        "   - For English: '*Disclaimer: Fitness suggestions are for informational purposes. Consult a certified personal trainer or doctor before beginning any vigorous exercise program.*'\n"
+        "   - For Marathi: '*अस्वीकरण: फिटनेसच्या शिफारसी केवळ माहितीच्या उद्देशाने आहेत. कोणताही व्यायाम सुरू करण्यापूर्वी प्रमाणित वैयक्तिक ट्रेनर किंवा डॉक्टरांचा सल्ला घ्या.*'\n"
+    )
+    
+    response_text = None
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_key:
+        from ai_health_service import call_gemini
+        try:
+            prompt = f"User: {message}"
+            response_text = call_gemini(prompt, system_instruction)
+        except Exception as e:
+            print(f"Gemini Fitness Chat failed: {e}")
+            
+    if not response_text:
+        return jsonify({
+            'status': 'success',
+            'response': None
+        })
+        
+    return jsonify({
+        'status': 'success',
+        'response': response_text
+    })
 
 
 # ================= PROFILE MANAGEMENT =================

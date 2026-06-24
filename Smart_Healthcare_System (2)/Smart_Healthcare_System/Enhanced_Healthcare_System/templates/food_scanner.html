@@ -349,6 +349,24 @@
                 Capture or upload a photo of your meal to calculate its macronutrient profile.
             </p>
             
+            <!-- Custom CSV Dataset Uploader -->
+            <div class="csv-upload-box" style="margin-bottom: 20px; padding: 14px; background: #F3F4F6; border: 1.5px dashed #D1D5DB; border-radius: 12px; text-align: center;">
+                <div style="font-weight: 800; font-size: 0.85rem; color: #374151; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fas fa-file-csv" style="color: #059669; font-size: 1.1rem;"></i>
+                    <span class="lang-en">Custom Nutrition CSV Dataset</span>
+                    <span class="lang-mr">कस्टम पोषण CSV डेटासेट</span>
+                </div>
+                <p style="font-size: 0.76rem; color: #6B7280; margin: 0 0 10px 0; line-height: 1.35;">
+                    <span class="lang-en">Upload a custom CSV file with food name and calories to prioritize your own items.</span>
+                    <span class="lang-mr">तुमच्या स्वतःच्या अन्न घटकांना प्राधान्य देण्यासाठी फूड नाव आणि कॅलरीज असलेली CSV फाइल अपलोड करा.</span>
+                </p>
+                <input type="file" id="csv-dataset-input" accept=".csv" style="display: none;" onchange="handleCsvUpload(event)">
+                <button class="btn btn-sm btn-outline" onclick="document.getElementById('csv-dataset-input').click()" style="background: white; border-color: #d1d5db; color: #374151; font-weight: 700; font-size: 0.78rem; padding: 6px 12px; border-radius: 8px;">
+                    📁 <span class="lang-en">Choose CSV File</span><span class="lang-mr">CSV फाईल निवडा</span>
+                </button>
+                <div id="csv-upload-status" style="margin-top: 8px; font-size: 0.76rem; font-weight: 700; display: none;"></div>
+            </div>
+            
             <!-- Manual Text Input -->
             <div style="margin-top:12px; margin-bottom: 16px;">
                 <input type="text" id="custom_food_name" class="form-control" placeholder="Or type food name manually (e.g. Apple, Pizza)..." style="font-size:0.9rem; padding:10px;">
@@ -706,6 +724,40 @@ function handleImageUpload(event) {
         }
     };
     reader.readAsDataURL(file);
+}
+
+// Handle CSV Dataset Upload File
+async function handleCsvUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const statusEl = document.getElementById('csv-upload-status');
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#374151';
+    statusEl.innerHTML = localStorage.getItem('health-lang-pref') === 'mr' ? '⏳ डेटासेट अपलोड करत आहे...' : '⏳ Uploading dataset...';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/food/upload-dataset', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.status === 'success') {
+            statusEl.style.color = '#059669';
+            statusEl.innerHTML = `✅ ${data.message}`;
+        } else {
+            statusEl.style.color = '#EF4444';
+            statusEl.innerHTML = `❌ ${data.message || 'Failed to upload.'}`;
+        }
+    } catch (err) {
+        console.error("CSV Upload failed:", err);
+        statusEl.style.color = '#EF4444';
+        statusEl.innerHTML = localStorage.getItem('health-lang-pref') === 'mr' ? '❌ अपलोड अयशस्वी.' : '❌ Upload failed.';
+    }
 }
 
 // Sync Dropdown Select to Search Box

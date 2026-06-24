@@ -345,10 +345,32 @@ function runCalculations() {
 const chatBox = document.getElementById('chat-box');
 const inputEl = document.getElementById('user-msg-input');
 
+function formatMarkdown(text) {
+    if (!text) return "";
+    let html = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    
+    // Bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italics
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Bullets (line starting with - or *)
+    html = html.replace(/^[\s]*[-*]\s+(.*)$/gm, '• $1');
+    // Newlines to <br>
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
 function appendMessage(text, sender) {
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${sender}`;
-    bubble.textContent = text;
+    if (sender === 'coach') {
+        bubble.innerHTML = formatMarkdown(text);
+    } else {
+        bubble.textContent = text;
+    }
     chatBox.appendChild(bubble);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -408,7 +430,7 @@ function getCoachReply(msg) {
     }
 }
 
-function sendMessage() {
+async function sendMessage() {
     const val = inputEl.value.trim();
     if (!val) return;
 
@@ -416,11 +438,52 @@ function sendMessage() {
     appendMessage(val, 'user');
     inputEl.value = '';
 
-    // Show simulated typing loader
-    setTimeout(() => {
-        const reply = getCoachReply(val);
-        appendMessage(reply, 'coach');
-    }, 800);
+    // Show simulated typing loader (dots)
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'chat-bubble coach typing-bubble';
+    typingBubble.textContent = '...';
+    chatBox.appendChild(typingBubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const currentLang = localStorage.getItem('health-lang-pref') || 'en';
+
+    try {
+        const response = await fetch('/api/fitness/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: val,
+                lang: currentLang
+            })
+        });
+
+        // Remove typing bubble
+        if (typingBubble.parentNode) {
+            typingBubble.parentNode.removeChild(typingBubble);
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'success' && data.response) {
+                appendMessage(data.response, 'coach');
+                return;
+            }
+        }
+        
+        // Fallback to local response if data.response is null or empty
+        const fallbackReply = getCoachReply(val);
+        appendMessage(fallbackReply, 'coach');
+    } catch (err) {
+        console.error("Fitness coach chat API error, falling back to local replies:", err);
+        // Remove typing bubble
+        if (typingBubble.parentNode) {
+            typingBubble.parentNode.removeChild(typingBubble);
+        }
+        const fallbackReply = getCoachReply(val);
+        appendMessage(fallbackReply, 'coach');
+    }
 }
 
 // Live placeholder updates on language toggle

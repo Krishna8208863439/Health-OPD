@@ -483,10 +483,21 @@ def get_food_health_verdict(nutrition):
         label    : human-readable short label
         detail   : one-sentence explanation
     """
-    cals = nutrition.get("calories", 0)
-    fat  = nutrition.get("fat", 0)
-    carbs = nutrition.get("carbs", 0)
-    protein = nutrition.get("protein", 0)
+    def to_float(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, (int, float)):
+            return float(val)
+        val_str = str(val).lower().replace('g', '').strip()
+        try:
+            return float(val_str) if val_str else 0.0
+        except ValueError:
+            return 0.0
+
+    cals = int(to_float(nutrition.get("calories", 0)))
+    fat  = to_float(nutrition.get("fat", 0))
+    carbs = to_float(nutrition.get("carbs", 0))
+    protein = to_float(nutrition.get("protein", 0))
     name = nutrition.get("name", "This food")
 
     # Score system (0–100, higher = healthier)
