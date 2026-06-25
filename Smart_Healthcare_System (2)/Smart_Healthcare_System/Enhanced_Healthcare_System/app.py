@@ -1959,97 +1959,6 @@ def food_scanner():
     return render_template('food_scanner.html', patient=current_user)
 
 
-@app.route('/api/food/upload-dataset', methods=['POST'])
-@login_required
-def upload_food_dataset():
-    if current_user.role != 'patient':
-        return jsonify({'status': 'error', 'message': 'Only patients can upload datasets.'}), 403
-        
-    if 'file' not in request.files:
-        return jsonify({'status': 'error', 'message': 'No file uploaded.'}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'status': 'error', 'message': 'No file selected.'}), 400
-        
-    if not file.filename.endswith('.csv'):
-        return jsonify({'status': 'error', 'message': 'Please upload a CSV file.'}), 400
-        
-    try:
-        import io
-        import csv
-        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-        reader = csv.reader(stream)
-        header = next(reader)
-        
-        # Normalize headers to lowercase
-        header = [h.strip().lower() for h in header]
-        
-        # Helper to find column index
-        def find_index(keywords):
-            for kw in keywords:
-                for idx, h in enumerate(header):
-                    if kw in h:
-                        return idx
-            return -1
-
-        name_idx = find_index(['food_name', 'name', 'description', 'item', 'food'])
-        cal_idx = find_index(['calories', 'calorie', 'energy', 'kcal', 'val'])
-        prot_idx = find_index(['protein', 'prot'])
-        carb_idx = find_index(['carbs', 'carb', 'carbohydrate'])
-        fat_idx = find_index(['fat', 'fats'])
-        
-        if name_idx == -1 or cal_idx == -1:
-            return jsonify({
-                'status': 'error', 
-                'message': 'Invalid CSV headers. Must contain at least a Food Name and Calories column.'
-            }), 400
-            
-        conn = get_db()
-        cur = conn.cursor()
-        
-        # Clear existing custom food items for this user to avoid duplicate datasets
-        cur.execute("DELETE FROM custom_food_items WHERE patient_id = ?", (current_user.id,))
-        
-        row_count = 0
-        for row in reader:
-            if not row or len(row) <= max(name_idx, cal_idx):
-                continue
-                
-            food_name = row[name_idx].strip()
-            if not food_name:
-                continue
-                
-            try:
-                calories_val = int(float(row[cal_idx]))
-            except ValueError:
-                calories_val = 0
-                
-            protein_val = row[prot_idx].strip() if (prot_idx != -1 and prot_idx < len(row)) else '0g'
-            carb_val = row[carb_idx].strip() if (carb_idx != -1 and carb_idx < len(row)) else '0g'
-            fat_val = row[fat_idx].strip() if (fat_idx != -1 and fat_idx < len(row)) else '0g'
-            
-            # Ensure they have 'g' suffix or add it
-            if protein_val and not protein_val.endswith('g'): protein_val += 'g'
-            if carb_val and not carb_val.endswith('g'): carb_val += 'g'
-            if fat_val and not fat_val.endswith('g'): fat_val += 'g'
-            
-            cur.execute("""
-                INSERT INTO custom_food_items (patient_id, food_name, calories, protein, carbs, fat)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (current_user.id, food_name, calories_val, protein_val, carb_val, fat_val))
-            row_count += 1
-            
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            'status': 'success', 
-            'message': f'Successfully imported {row_count} food items from your dataset!'
-        })
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Failed to parse CSV file: {str(e)}'}), 500
-
 
 @app.route('/api/food/search')
 @login_required
@@ -2151,35 +2060,15 @@ def scan_food():
     else:
         return jsonify({'status': 'error', 'message': 'Please provide a food name or upload an image.'}), 400
 
-    # 2. Get nutrition info (Check custom dataset first)
+    # 2. Get nutrition info
     nutrition = None
     api_nutrition_used = ""
     
-    conn = get_db()
-    cur = conn.cursor()
-    custom_item = cur.execute("""
-        SELECT food_name, calories, protein, carbs, fat 
-        FROM custom_food_items 
-        WHERE patient_id = ? AND (LOWER(food_name) = ? OR LOWER(food_name) LIKE ?)
-        LIMIT 1
-    """, (current_user.id, detected_name.lower(), f"%{detected_name.lower()}%")).fetchone()
-    conn.close()
-    
-    if custom_item:
-        nutrition = {
-            "name": custom_item["food_name"],
-            "calories": custom_item["calories"],
-            "protein": custom_item["protein"],
-            "carbs": custom_item["carbs"],
-            "fat": custom_item["fat"]
-        }
-        api_nutrition_used = "User Custom Dataset (Uploaded)"
-    else:
-        import food_scanner_service
-        try:
-            nutrition, api_nutrition_used = food_scanner_service.get_food_nutrition(detected_name)
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': f'Failed to retrieve nutrition details: {str(e)}'}), 500
+    import food_scanner_service
+    try:
+        nutrition, api_nutrition_used = food_scanner_service.get_food_nutrition(detected_name)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': f'Failed to retrieve nutrition details: {str(e)}'}), 500
 
     if not nutrition:
         return jsonify({'status': 'error', 'message': 'Nutrition details could not be estimated.'}), 500
