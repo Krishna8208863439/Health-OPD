@@ -1,0 +1,86 @@
+{
+  "disease": "heart",
+  "model_name": "RandomForestClassifier",
+  "total_features": 13,
+  "features": [
+    {
+      "feature": "thal",
+      "raw_importance": 0.180834,
+      "percentage": 18.08,
+      "description": "Thalassemia defect severity (Normal, Fixed, Reversible)"
+    },
+    {
+      "feature": "cp",
+      "raw_importance": 0.143625,
+      "percentage": 14.36,
+      "description": "Chest pain type (Typical, Atypical, Non-Anginal, Asymptomatic)"
+    },
+    {
+      "feature": "ca",
+      "raw_importance": 0.12302,
+      "percentage": 12.3,
+      "description": "Number of major vessels (0-3) colored by fluoroscopy"
+    },
+    {
+      "feature": "thalach",
+      "raw_importance": 0.118712,
+      "percentage": 11.87,
+      "description": "Maximum heart rate achieved during stress test"
+    },
+    {
+      "feature": "oldpeak",
+      "raw_importance": 0.087506,
+      "percentage": 8.75,
+      "description": "ST depression induced by exercise relative to rest"
+    },
+    {
+      "feature": "exang",
+      "raw_importance": 0.064662,
+      "percentage": 6.47,
+      "description": "Exercise induced angina presence"
+    },
+    {
+      "feature": "trestbps",
+      "raw_importance": 0.060566,
+      "percentage": 6.06,
+      "description": "Resting blood pressure in mm Hg"
+    },
+    {
+      "feature": "age",
+      "raw_importance": 0.059463,
+      "percentage": 5.95,
+      "description": "Patient age in years"
+    },
+    {
+      "feature": "slope",
+      "raw_importance": 0.051403,
+      "percentage": 5.14,
+      "description": "Slope of peak exercise ST segment"
+    },
+    {
+      "feature": "chol",
+      "raw_importance": 0.047988,
+      "percentage": 4.8,
+      "description": "Serum cholesterol in mg/dl"
+    },
+    {
+      "feature": "sex",
+      "raw_importance": 0.04089,
+      "percentage": 4.09,
+      "description": "Patient sex (0: Female, 1: Male)"
+    },
+    {
+      "feature": "restecg",
+      "raw_importance": 0.016327,
+      "percentage": 1.63,
+      "description": "Resting electrocardiographic findings"
+    },
+    {
+      "feature": "fbs",
+      "raw_importance": 0.005004,
+      "percentage": 0.5,
+      "description": "Fasting blood sugar > 120 mg/dl indicator"
+    }
+  ],
+  "total_percentage": 100.0
+}

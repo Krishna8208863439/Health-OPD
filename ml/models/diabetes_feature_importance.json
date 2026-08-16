@@ -1,0 +1,56 @@
+{
+  "disease": "diabetes",
+  "model_name": "GradientBoostingClassifier",
+  "total_features": 8,
+  "features": [
+    {
+      "feature": "Glucose",
+      "raw_importance": 0.388813,
+      "percentage": 38.88,
+      "description": "Plasma glucose concentration (2h post oral glucose tolerance test)"
+    },
+    {
+      "feature": "BMI",
+      "raw_importance": 0.1915,
+      "percentage": 19.15,
+      "description": "Body Mass Index (weight in kg / height in m^2)"
+    },
+    {
+      "feature": "Age",
+      "raw_importance": 0.118353,
+      "percentage": 11.84,
+      "description": "Patient age in years"
+    },
+    {
+      "feature": "DiabetesPedigreeFunction",
+      "raw_importance": 0.115152,
+      "percentage": 11.52,
+      "description": "Genetic predisposition score based on family pedigree"
+    },
+    {
+      "feature": "Insulin",
+      "raw_importance": 0.075299,
+      "percentage": 7.53,
+      "description": "2-Hour serum insulin (mu U/ml)"
+    },
+    {
+      "feature": "Pregnancies",
+      "raw_importance": 0.053585,
+      "percentage": 5.36,
+      "description": "Number of gestational events / pregnancies"
+    },
+    {
+      "feature": "BloodPressure",
+      "raw_importance": 0.029601,
+      "percentage": 2.96,
+      "description": "Diastolic blood pressure in mm Hg"
+    },
+    {
+      "feature": "SkinThickness",
+      "raw_importance": 0.027696,
+      "percentage": 2.77,
+      "description": "Triceps skin fold thickness in mm"
+    }
+  ],
+  "total_percentage": 100.01
+}

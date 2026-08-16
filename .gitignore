@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+backend/env/
+venv/
+env/
+ENV/
+*.log
+backend/logs/*.log
+backend/test_report_*.pdf
+
+# Node & Frontend
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/.vite/
+.npm
+*.tsbuildinfo
+
+# Legacy Archives
+Smart_Healthcare_System (2)/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Database (optional: keep initial schema/migrations, ignore runtime test db or keep db template)
+database/*.db-journal
+database/*.db-wal
