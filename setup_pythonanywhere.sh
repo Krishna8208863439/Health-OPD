@@ -66,14 +66,23 @@ if [ -f "$WSGI_FILE" ] || [ -d "/var/www" ]; then
 import sys
 import os
 
-project_home = os.path.expanduser('~/Health-OPD/backend')
-if project_home not in sys.path:
-    sys.path.insert(0, project_home)
+backend_dir = os.path.expanduser('~/Health-OPD/backend')
+root_dir = os.path.expanduser('~/Health-OPD')
+
+for p in [backend_dir, root_dir]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 os.environ['FLASK_ENV'] = 'production'
 os.environ['DEBUG'] = 'False'
 
-from app import app as application
+try:
+    from app import app as application
+except Exception as e:
+    import traceback
+    print("ERROR LOADING FLASK WSGI APPLICATION:", file=sys.stderr)
+    traceback.print_exc()
+    raise e
 EOF
     echo "✅ Updated $WSGI_FILE automatically!"
 fi
