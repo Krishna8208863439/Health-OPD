@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Mail, Lock, LogIn, AlertCircle, CheckCircle, ArrowRight, UserCheck } from 'lucide-react';
+import { Activity, Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -28,12 +28,6 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemoAccount = () => {
-    setEmail('krishna@healthcare.ai');
-    setPassword('password123');
-    setError(null);
-  };
-
   return (
     <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-12 flex items-center justify-center animate-fade-in">
       <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-8 sm:p-10 space-y-6">
@@ -45,24 +39,6 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Patient & Clinician Portal</h1>
           <p className="text-xs text-slate-500 font-mono">Sign in to access your electronic health records</p>
-        </div>
-
-        {/* Demo Account Quick Pill */}
-        <div className="p-3.5 rounded-2xl bg-cyan-50 border border-cyan-200 text-xs flex items-center justify-between">
-          <div className="space-y-0.5">
-            <div className="font-bold text-cyan-900 flex items-center gap-1.5">
-              <UserCheck className="w-4 h-4 text-cyan-600" />
-              <span>Demo Patient Credentials</span>
-            </div>
-            <div className="text-[11px] text-cyan-700 font-mono">krishna@healthcare.ai • password123</div>
-          </div>
-          <button
-            type="button"
-            onClick={fillDemoAccount}
-            className="px-3 py-1 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[11px] transition shadow-sm"
-          >
-            Auto-Fill
-          </button>
         </div>
 
         {/* Error Alert */}

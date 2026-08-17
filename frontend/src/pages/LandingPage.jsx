@@ -87,14 +87,6 @@ export default function LandingPage({ onOpenSOS }) {
               <UserPlus className="w-4 h-4" />
               <span>Create New Patient Account</span>
             </Link>
-
-            <button
-              onClick={() => login('krishna@healthcare.ai', 'password123')}
-              className="px-5 py-3.5 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs font-mono transition flex items-center gap-2"
-            >
-              <UserCheck className="w-4 h-4 text-emerald-400" />
-              <span>Instant Demo Sign-In</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/10 text-xs font-mono text-slate-400">
