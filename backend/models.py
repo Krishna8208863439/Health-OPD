@@ -57,5 +57,81 @@ class ModelMetrics(db.Model):
             "created_at": self.created_at.isoformat()
         }
 
-    def __repr__(self):
-        return f"<ModelMetrics id={self.id} disease={self.disease} model={self.model_name} acc={self.accuracy} f1={self.f1_score}>"
+
+class VitalsLog(db.Model):
+    __tablename__ = 'vitals_logs'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    systolic = db.Column(db.Integer, nullable=False) # e.g. 120
+    diastolic = db.Column(db.Integer, nullable=False) # e.g. 80
+    heart_rate = db.Column(db.Integer, nullable=False) # e.g. 72
+    glucose = db.Column(db.Float, nullable=False) # e.g. 95
+    spo2 = db.Column(db.Integer, default=98, nullable=False) # e.g. 98%
+    temperature = db.Column(db.Float, default=98.6, nullable=False) # e.g. 98.6 F
+    health_score = db.Column(db.Integer, default=85, nullable=False)
+    notes = db.Column(db.String(255), default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "systolic": self.systolic,
+            "diastolic": self.diastolic,
+            "heart_rate": self.heart_rate,
+            "glucose": self.glucose,
+            "spo2": self.spo2,
+            "temperature": self.temperature,
+            "health_score": self.health_score,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+class MedicineReminder(db.Model):
+    __tablename__ = 'medicine_reminders'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(150), nullable=False)
+    dosage = db.Column(db.String(100), nullable=False) # e.g. "500 mg"
+    timing = db.Column(db.String(100), nullable=False) # e.g. "Morning & Night"
+    meal_instruction = db.Column(db.String(50), default="After Meal") # "Before Meal", "After Meal"
+    stock_count = db.Column(db.Integer, default=30)
+    taken_today = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "dosage": self.dosage,
+            "timing": self.timing,
+            "meal_instruction": self.meal_instruction,
+            "stock_count": self.stock_count,
+            "taken_today": self.taken_today,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+class OPDTicket(db.Model):
+    __tablename__ = 'opd_tickets'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    patient_name = db.Column(db.String(120), default="Patient")
+    department = db.Column(db.String(80), nullable=False) # e.g. "Cardiology", "General Medicine"
+    token_number = db.Column(db.Integer, nullable=False)
+    triage_level = db.Column(db.String(50), default="ROUTINE") # "CRITICAL", "URGENT", "ROUTINE"
+    chief_complaint = db.Column(db.String(255), default="")
+    status = db.Column(db.String(50), default="waiting") # "waiting", "in_consultation", "completed"
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "patient_name": self.patient_name,
+            "department": self.department,
+            "token_number": self.token_number,
+            "triage_level": self.triage_level,
+            "chief_complaint": self.chief_complaint,
+            "status": self.status,
+            "created_at": self.created_at.isoformat()
+        }

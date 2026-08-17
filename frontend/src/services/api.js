@@ -15,6 +15,7 @@ export const checkHealth = async () => {
   return response.data;
 };
 
+// --- ML Predictions ---
 export const predictDiabetes = async (payload) => {
   const response = await api.post('/predict/diabetes', payload);
   return response.data;
@@ -60,6 +61,67 @@ export const getReportDownloadUrl = (id) => {
     ? API_BASE_URL 
     : `${window.location.origin}${API_BASE_URL}`;
   return `${baseUrl}/report/${id}`;
+};
+
+// --- HealthCare+ Unified Services ---
+export const getHospitals = async (params = {}) => {
+  const response = await api.get('/hospitals', { params });
+  return response.data;
+};
+
+export const getVitals = async () => {
+  const response = await api.get('/vitals');
+  return response.data;
+};
+
+export const logVitals = async (payload) => {
+  const response = await api.post('/vitals', payload);
+  return response.data;
+};
+
+export const getMedicines = async () => {
+  const response = await api.get('/medicines');
+  return response.data;
+};
+
+export const addMedicine = async (payload) => {
+  const response = await api.post('/medicines', payload);
+  return response.data;
+};
+
+export const updateMedicine = async (payload) => {
+  const response = await api.put('/medicines', payload);
+  return response.data;
+};
+
+export const deleteMedicine = async (id) => {
+  const response = await api.delete('/medicines', { params: { id } });
+  return response.data;
+};
+
+export const sendChatMessage = async (message) => {
+  const response = await api.post('/chat', { message });
+  return response.data;
+};
+
+export const getOPDTickets = async () => {
+  const response = await api.get('/opd/tickets');
+  return response.data;
+};
+
+export const createOPDTicket = async (payload) => {
+  const response = await api.post('/opd/tickets', payload);
+  return response.data;
+};
+
+export const getDietPlans = async () => {
+  const response = await api.get('/diet/plans');
+  return response.data;
+};
+
+export const triggerSOS = async (payload = {}) => {
+  const response = await api.post('/sos/trigger', payload);
+  return response.data;
 };
 
 export default api;
