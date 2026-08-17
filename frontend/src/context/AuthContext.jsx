@@ -13,17 +13,10 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
     }
-    // Default demo user
-    return {
-      id: 1,
-      full_name: "Krishna Rajaram Devadkar",
-      email: "krishna@healthcare.ai",
-      phone: "+91 98765 43210",
-      role: "patient"
-    };
+    return null; // Logged out by default until sign in
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('healthcare_token') || 'demo_token');
+  const [token, setToken] = useState(() => localStorage.getItem('healthcare_token') || null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

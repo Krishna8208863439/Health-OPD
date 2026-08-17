@@ -12,7 +12,8 @@ export default function Navbar({ onOpenSOS }) {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
+  // Protected clinical navigation links visible AFTER sign in
+  const authenticatedLinks = [
     { name: 'Home', path: '/' },
     { name: 'Hospitals', path: '/hospitals', icon: Building2 },
     { name: 'Vitals & Score', path: '/vitals', icon: Activity },
@@ -25,6 +26,13 @@ export default function Navbar({ onOpenSOS }) {
     { name: 'Analytics', path: '/dashboard', icon: LayoutDashboard },
     { name: 'History', path: '/history', icon: History },
   ];
+
+  // Public links visible before sign in
+  const publicLinks = [
+    { name: 'Home', path: '/' },
+  ];
+
+  const visibleLinks = user ? authenticatedLinks : publicLinks;
 
   const isActive = (path) => {
     if (path === '/' && location.pathname !== '/') return false;
@@ -57,9 +65,9 @@ export default function Navbar({ onOpenSOS }) {
           </div>
         </Link>
 
-        {/* Desktop Nav Items */}
+        {/* Desktop Nav Items - Visible depending on Auth status */}
         <nav className="hidden xl:flex items-center gap-1">
-          {navLinks.map((link) => {
+          {visibleLinks.map((link) => {
             const active = isActive(link.path);
             const Icon = link.icon;
             return (
@@ -80,7 +88,7 @@ export default function Navbar({ onOpenSOS }) {
         </nav>
 
         {/* Right Action: Auth / User Profile + SOS Button & Mobile Menu */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           
           {/* Emergency SOS Button */}
           <button
@@ -93,36 +101,37 @@ export default function Navbar({ onOpenSOS }) {
 
           {/* User Auth Section */}
           {user ? (
-            <div className="hidden sm:flex items-center gap-2 pl-1 border-l border-slate-200">
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                <div className="w-6 h-6 rounded-full bg-cyan-100 text-cyan-800 font-bold flex items-center justify-center text-[11px]">
-                  {user.full_name ? user.full_name.charAt(0) : 'U'}
+            <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                <div className="w-6 h-6 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-[11px]">
+                  {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span className="font-semibold text-slate-800 max-w-[120px] truncate hidden md:inline">
-                  {user.full_name || 'Patient'}
+                <span className="font-semibold text-slate-800 max-w-[130px] truncate hidden sm:inline">
+                  {user.full_name}
                 </span>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition"
-                title="Log Out"
+                className="px-3 py-1.5 rounded-xl text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 font-semibold text-xs transition flex items-center gap-1"
+                title="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Log Out</span>
               </button>
             </div>
           ) : (
-            <div className="hidden sm:flex items-center gap-1.5 pl-1 border-l border-slate-200">
+            <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
               <Link
                 to="/login"
-                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition flex items-center gap-1"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition flex items-center gap-1.5"
               >
-                <LogIn className="w-3.5 h-3.5" />
+                <LogIn className="w-3.5 h-3.5 text-cyan-600" />
                 <span>Sign In</span>
               </Link>
               <Link
                 to="/register"
-                className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-cyan-600/20"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Create Account</span>
@@ -145,12 +154,12 @@ export default function Navbar({ onOpenSOS }) {
       {mobileMenuOpen && (
         <div className="xl:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-5 space-y-2 shadow-xl max-h-[85vh] overflow-y-auto">
           
-          {/* User Status Bar in Mobile Menu */}
+          {/* User Status in Mobile Menu */}
           {user ? (
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-xs">
-                  {user.full_name ? user.full_name.charAt(0) : 'U'}
+                <div className="w-9 h-9 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm">
+                  {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
                   <div className="font-bold text-xs text-slate-900">{user.full_name}</div>
@@ -163,7 +172,7 @@ export default function Navbar({ onOpenSOS }) {
                   setMobileMenuOpen(false);
                   handleLogout();
                 }}
-                className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center gap-1 border border-rose-200"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Log Out</span>
@@ -176,7 +185,7 @@ export default function Navbar({ onOpenSOS }) {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs flex items-center justify-center gap-1.5"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-4 h-4 text-cyan-600" />
                 <span>Sign In</span>
               </Link>
               <Link
@@ -191,7 +200,7 @@ export default function Navbar({ onOpenSOS }) {
           )}
 
           <div className="border-t border-slate-100 pt-2 space-y-1">
-            {navLinks.map((link) => {
+            {visibleLinks.map((link) => {
               const active = isActive(link.path);
               const Icon = link.icon;
               return (

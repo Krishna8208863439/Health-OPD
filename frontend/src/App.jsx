@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -33,22 +34,27 @@ export default function App() {
           <Navbar onOpenSOS={() => setSosOpen(true)} />
           <main className="flex-1">
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<LandingPage onOpenSOS={() => setSosOpen(true)} />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/hospitals" element={<HospitalsPage />} />
-              <Route path="/vitals" element={<VitalsPage />} />
-              <Route path="/meds" element={<MedsPage />} />
-              <Route path="/chat" element={<ChatbotPage />} />
-              <Route path="/opd" element={<OPDPage />} />
-              <Route path="/diet" element={<DietPage />} />
-              <Route path="/predict/diabetes" element={<DiabetesPredictPage />} />
-              <Route path="/predict/heart" element={<HeartPredictPage />} />
-              <Route path="/result/:id" element={<ResultPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/history" element={<HistoryPage />} />
-              <Route path="/models" element={<ModelsPage />} />
+
+              {/* Protected Clinical Routes (Accessible after Sign-In) */}
+              <Route path="/hospitals" element={<ProtectedRoute><HospitalsPage /></ProtectedRoute>} />
+              <Route path="/vitals" element={<ProtectedRoute><VitalsPage /></ProtectedRoute>} />
+              <Route path="/meds" element={<ProtectedRoute><MedsPage /></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+              <Route path="/opd" element={<ProtectedRoute><OPDPage /></ProtectedRoute>} />
+              <Route path="/diet" element={<ProtectedRoute><DietPage /></ProtectedRoute>} />
+              <Route path="/predict/diabetes" element={<ProtectedRoute><DiabetesPredictPage /></ProtectedRoute>} />
+              <Route path="/predict/heart" element={<ProtectedRoute><HeartPredictPage /></ProtectedRoute>} />
+              <Route path="/result/:id" element={<ProtectedRoute><ResultPage /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+              <Route path="/models" element={<ProtectedRoute><ModelsPage /></ProtectedRoute>} />
+              
+              {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
