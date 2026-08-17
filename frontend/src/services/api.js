@@ -119,8 +119,34 @@ export const getDietPlans = async () => {
   return response.data;
 };
 
-export const triggerSOS = async (payload = {}) => {
-  const response = await api.post('/sos/trigger', payload);
+export const triggerSOS = async (coords = {}) => {
+  const response = await api.post('/sos/trigger', coords);
+  return response.data;
+};
+
+// --- User Authentication ---
+export const loginUser = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const registerUser = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const forgotPassword = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await api.post('/auth/reset-password', payload);
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
   return response.data;
 };
 

@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify, send_file, current_app
-from models import db, Prediction, ModelMetrics, VitalsLog, MedicineReminder, OPDTicket
+from models import db, User, Prediction, ModelMetrics, VitalsLog, MedicineReminder, OPDTicket
 from services.predictor import prediction_service
 from services.pdf_generator import generate_prediction_pdf
 from services.healthcare_service import (
@@ -396,3 +396,128 @@ def handle_sos():
         ],
         "coordinates": {"lat": lat, "lng": lng}
     }), 200
+
+
+# =========================================================================
+# 5. USER AUTHENTICATION & PROFILE ENDPOINTS
+# =========================================================================
+
+def seed_default_user():
+    if User.query.count() == 0:
+        default_user = User(
+            full_name="Krishna Rajaram Devadkar",
+            email="krishna@healthcare.ai",
+            phone="+91 98765 43210",
+            role="patient"
+        )
+        default_user.set_password("password123")
+        db.session.add(default_user)
+        db.session.commit()
+        current_app.logger.info("Default patient user seeded: krishna@healthcare.ai")
+
+
+@api_bp.route('/auth/register', methods=['POST'])
+def auth_register():
+    data = request.get_json() or {}
+    full_name = data.get('full_name', '').strip()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    phone = data.get('phone', '').strip()
+
+    if not full_name or not email or not password:
+        return jsonify({"error": "Validation Error", "message": "Full name, email, and password are required."}), 400
+
+    existing = User.query.filter_by(email=email).first()
+    if existing:
+        return jsonify({"error": "Conflict", "message": "An account with this email address already exists."}), 409
+
+    user = User(
+        full_name=full_name,
+        email=email,
+        phone=phone,
+        role="patient"
+    )
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    token = f"token_{user.id}_{int(datetime.utcnow().timestamp())}"
+    return jsonify({
+        "status": "success",
+        "message": "Account created successfully.",
+        "user": user.to_dict(),
+        "token": token
+    }), 201
+
+
+@api_bp.route('/auth/login', methods=['POST'])
+def auth_login():
+    seed_default_user()
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+
+    if not email or not password:
+        return jsonify({"error": "Bad Request", "message": "Email and password are required."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user or not user.check_password(password):
+        return jsonify({"error": "Unauthorized", "message": "Invalid email or password credentials."}), 401
+
+    token = f"token_{user.id}_{int(datetime.utcnow().timestamp())}"
+    return jsonify({
+        "status": "success",
+        "message": "Logged in successfully.",
+        "user": user.to_dict(),
+        "token": token
+    }), 200
+
+
+@api_bp.route('/auth/forgot-password', methods=['POST'])
+def auth_forgot_password():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+
+    if not email:
+        return jsonify({"error": "Bad Request", "message": "Please provide a valid registered email address."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    # Return success even if not found to avoid user enumeration, but in demo mode grant immediate reset capability
+    return jsonify({
+        "status": "success",
+        "message": "Password reset instructions and verification code have been dispatched to your email.",
+        "email": email,
+        "reset_token": f"reset_mock_token_{int(datetime.utcnow().timestamp())}"
+    }), 200
+
+
+@api_bp.route('/auth/reset-password', methods=['POST'])
+def auth_reset_password():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    new_password = data.get('new_password', '')
+
+    if not email or not new_password:
+        return jsonify({"error": "Bad Request", "message": "Email and new password are required."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "Not Found", "message": "No account found associated with this email."}), 404
+
+    user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Password has been successfully updated. You may now log in."
+    }), 200
+
+
+@api_bp.route('/auth/me', methods=['GET'])
+def auth_me():
+    seed_default_user()
+    user = User.query.first()
+    if user:
+        return jsonify({"user": user.to_dict()}), 200
+    return jsonify({"user": None}), 200
+

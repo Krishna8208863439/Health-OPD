@@ -6,8 +6,10 @@ import {
   Building2, Pill, Bot, Ticket, Apple, ShieldAlert, Phone, MapPin, ChevronRight, Award
 } from 'lucide-react';
 import { getDashboardSummary, getVitals, getHospitals } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function LandingPage({ onOpenSOS }) {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     total_predictions: 29,
     diabetes_predictions: 17,
@@ -57,11 +59,11 @@ export default function LandingPage({ onOpenSOS }) {
             <span>Welcome to HealthCare+ Clinical Portal</span>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
-            Krishna Rajaram Devadkar
+            {user ? user.full_name : "Guest Patient"}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-mono flex items-center gap-1.5">
             <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>Active Patient Profile • Kolhapur Medical Registry</span>
+            <span>{user ? `${user.email} • Active Patient Profile` : "Demo Mode • Log in to sync patient records"}</span>
           </p>
         </div>
 
