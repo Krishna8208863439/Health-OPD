@@ -242,7 +242,11 @@ export default function ResultPage() {
           {Object.entries(record.input_data || {}).map(([key, val]) => (
             <div key={key} className="p-3 rounded-xl bg-slate-50 border border-slate-200">
               <div className="text-[10px] text-slate-500 font-mono uppercase font-semibold">{key}</div>
-              <div className="text-sm font-bold text-slate-900 font-mono mt-0.5">{String(val)}</div>
+              <div className="text-sm font-bold text-slate-900 font-mono mt-0.5">
+                {key.toLowerCase() === 'sex'
+                  ? (String(val) === '1' || String(val).toLowerCase() === 'male' ? 'Male' : 'Female')
+                  : String(val)}
+              </div>
             </div>
           ))}
         </div>

@@ -118,14 +118,23 @@ def generate_prediction_pdf(prediction_record: dict) -> io.BytesIO:
     elements.append(Paragraph("Patient Clinical Measurements & Biometric Inputs", section_heading))
     input_data = prediction_record.get('input_data', {})
     
+    def format_input_val(k, v):
+        if str(k).strip().lower() == 'sex':
+            s = str(v).strip().lower()
+            if s in ('1', '1.0', 'male', 'm'):
+                return 'Male'
+            elif s in ('0', '0.0', 'female', 'f'):
+                return 'Female'
+        return str(v)
+
     input_rows = []
     keys = list(input_data.keys())
     for i in range(0, len(keys), 2):
         k1 = keys[i]
-        v1 = input_data[k1]
+        v1 = format_input_val(k1, input_data[k1])
         if i + 1 < len(keys):
             k2 = keys[i+1]
-            v2 = input_data[k2]
+            v2 = format_input_val(k2, input_data[k2])
             input_rows.append([
                 Paragraph(f"<b>{k1}:</b>", body_style), Paragraph(str(v1), body_style),
                 Paragraph(f"<b>{k2}:</b>", body_style), Paragraph(str(v2), body_style)

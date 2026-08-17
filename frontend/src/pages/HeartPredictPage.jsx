@@ -158,8 +158,8 @@ export default function HeartPredictPage() {
               onChange={handleChange}
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
-              <option value={1}>Male (1)</option>
-              <option value={0}>Female (0)</option>
+              <option value={1}>Male</option>
+              <option value={0}>Female</option>
             </select>
           </div>
 
