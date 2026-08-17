@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from config import Config
 from models import db, Prediction, ModelMetrics
@@ -115,6 +115,22 @@ def create_app(config_class=Config):
     def test_error_route():
         app.logger.info("Executing deliberate test error trigger for Phase 5 verification...")
         raise RuntimeError("Deliberate 500 error triggered for Phase 5 error handling & logging verification")
+
+    # Serve React Frontend SPA and static assets
+    frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist'))
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        if path != "" and os.path.exists(os.path.join(frontend_dist, path)):
+            return send_from_directory(frontend_dist, path)
+        index_file = os.path.join(frontend_dist, 'index.html')
+        if os.path.exists(index_file):
+            return send_from_directory(frontend_dist, 'index.html')
+        return jsonify({
+            "status": "HealthPredict AI Backend API Active",
+            "message": "Frontend distribution build not found. Run 'npm run build' in frontend directory."
+        })
 
     return app
 

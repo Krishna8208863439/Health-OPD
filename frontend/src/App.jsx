@@ -14,7 +14,7 @@ import ModelsPage from './pages/ModelsPage';
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 font-sans">
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-cyan-500 selection:text-white font-sans">
         <Navbar />
         <main className="flex-1">
           <Routes>

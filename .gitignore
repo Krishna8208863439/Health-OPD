@@ -16,7 +16,6 @@ backend/test_report_*.pdf
 # Node & Frontend
 frontend/node_modules/
 node_modules/
-frontend/dist/
 frontend/.vite/
 .npm
 *.tsbuildinfo

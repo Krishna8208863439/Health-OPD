@@ -84,32 +84,32 @@ export default function HeartPredictPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-rose-400 text-xs font-mono font-semibold">
-            <Heart className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-rose-700 text-xs font-mono font-semibold">
+            <Heart className="w-4 h-4 text-rose-600" />
             <span>CARDIOVASCULAR SCREENING MODULE</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Coronary Heart Disease Risk Calculator</h1>
-          <p className="text-slate-400 text-xs sm:text-sm">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Coronary Heart Disease Risk Calculator</h1>
+          <p className="text-slate-600 text-xs sm:text-sm">
             Trained Random Forest Classifier • Cleveland Heart Disease Registry (14 Attributes)
           </p>
         </div>
 
         {/* Clinical Presets */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-400 font-mono flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-rose-400" /> Presets:
+          <span className="text-xs text-slate-500 font-mono flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-rose-600" /> Presets:
           </span>
           {presets.map((p, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => loadPreset(p.data)}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-300 font-medium transition"
+              className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-xs text-slate-700 font-medium transition shadow-sm"
             >
               {p.name}
             </button>
@@ -119,8 +119,8 @@ export default function HeartPredictPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
           <span>{error}</span>
         </div>
       )}
@@ -128,12 +128,12 @@ export default function HeartPredictPage() {
       {/* Main Input Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-6 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
           
           {/* Age */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Age (Years) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Age (Years) <span className="text-rose-600">*</span>
             </label>
             <input
               type="number"
@@ -143,20 +143,20 @@ export default function HeartPredictPage() {
               min="1"
               max="125"
               required
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             />
           </div>
 
           {/* Sex */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Biological Sex <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Biological Sex <span className="text-rose-600">*</span>
             </label>
             <select
               name="sex"
               value={formData.sex}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={1}>Male (1)</option>
               <option value={0}>Female (0)</option>
@@ -165,14 +165,14 @@ export default function HeartPredictPage() {
 
           {/* Chest Pain Type (cp) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Chest Pain Type (cp) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Chest Pain Type (cp) <span className="text-rose-600">*</span>
             </label>
             <select
               name="cp"
               value={formData.cp}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={1}>1: Typical Angina</option>
               <option value={2}>2: Atypical Angina</option>
@@ -183,8 +183,8 @@ export default function HeartPredictPage() {
 
           {/* Resting BP (trestbps) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Resting BP (mm Hg) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Resting BP (mm Hg) <span className="text-rose-600">*</span>
             </label>
             <input
               type="number"
@@ -194,14 +194,14 @@ export default function HeartPredictPage() {
               min="50"
               max="260"
               required
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             />
           </div>
 
           {/* Cholesterol (chol) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Serum Cholesterol (mg/dL) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Serum Cholesterol (mg/dL) <span className="text-rose-600">*</span>
             </label>
             <input
               type="number"
@@ -211,20 +211,20 @@ export default function HeartPredictPage() {
               min="80"
               max="650"
               required
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             />
           </div>
 
           {/* Fasting Blood Sugar (fbs) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Fasting Blood Sugar &gt; 120 mg/dL
             </label>
             <select
               name="fbs"
               value={formData.fbs}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={0}>False / Normal (0)</option>
               <option value={1}>True / Elevated (1)</option>
@@ -233,14 +233,14 @@ export default function HeartPredictPage() {
 
           {/* Resting ECG (restecg) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Resting ECG Result
             </label>
             <select
               name="restecg"
               value={formData.restecg}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={0}>0: Normal</option>
               <option value={1}>1: ST-T wave abnormality</option>
@@ -250,8 +250,8 @@ export default function HeartPredictPage() {
 
           {/* Max Heart Rate (thalach) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
-              Max Heart Rate Achieved (bpm) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Max Heart Rate Achieved (bpm) <span className="text-rose-600">*</span>
             </label>
             <input
               type="number"
@@ -261,20 +261,20 @@ export default function HeartPredictPage() {
               min="50"
               max="250"
               required
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             />
           </div>
 
           {/* Exercise Induced Angina (exang) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Exercise Induced Angina
             </label>
             <select
               name="exang"
               value={formData.exang}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={0}>No (0)</option>
               <option value={1}>Yes (1)</option>
@@ -283,7 +283,7 @@ export default function HeartPredictPage() {
 
           {/* ST Depression (oldpeak) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               ST Depression (oldpeak)
             </label>
             <input
@@ -294,20 +294,20 @@ export default function HeartPredictPage() {
               min="0.0"
               max="10.0"
               step="0.1"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             />
           </div>
 
           {/* ST Slope (slope) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Peak Exercise ST Slope
             </label>
             <select
               name="slope"
               value={formData.slope}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={1}>1: Upsloping</option>
               <option value={2}>2: Flat</option>
@@ -317,14 +317,14 @@ export default function HeartPredictPage() {
 
           {/* Major Vessels (ca) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">
+            <label className="block text-xs font-semibold text-slate-800">
               Major Vessels Colored (0–3)
             </label>
             <select
               name="ca"
               value={formData.ca}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={0}>0 Vessels</option>
               <option value={1}>1 Vessel</option>
@@ -335,14 +335,14 @@ export default function HeartPredictPage() {
 
           {/* Thalassemia (thal) */}
           <div className="space-y-1.5 lg:col-span-3">
-            <label className="block text-xs font-semibold text-slate-200">
-              Thalassemia Status (thal) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-800">
+              Thalassemia Status (thal) <span className="text-rose-600">*</span>
             </label>
             <select
               name="thal"
               value={formData.thal}
               onChange={handleChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-rose-600 focus:bg-white font-mono"
             >
               <option value={3}>3: Normal Blood Flow</option>
               <option value={6}>6: Fixed Defect (Non-Reversible)</option>
@@ -357,7 +357,7 @@ export default function HeartPredictPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-8 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition shadow-lg shadow-rose-600/25 flex items-center gap-2 disabled:opacity-50"
+            className="px-8 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition shadow-md shadow-rose-600/20 flex items-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               <>
