@@ -84,7 +84,7 @@ export default function HeartPredictPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 space-y-8">
+    <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-8">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">

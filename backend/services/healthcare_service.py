@@ -70,89 +70,89 @@ def calculate_health_score(systolic, diastolic, heart_rate, glucose, spo2=98, te
 DIET_PLANS = [
     {
         "id": "diabetic",
-        "title": "Diabetic-Friendly Low GI Diet",
-        "marathi_title": "मधुमेह नियंत्रण आहार",
+        "title": "Diabetic-Friendly Low Glycemic Diet",
+        "subtitle": "Blood Sugar Stabilization & Insulin Sensitivity",
         "target_calories": "1,500 - 1,700 kcal",
         "macros": {"carbs": "45%", "protein": "25%", "fats": "30%"},
-        "breakfast": "Oats / Methi Paratha with curd (कमी तेलाचा मेथी पराठा आणि दही), sprouted moong",
-        "lunch": "2 Multigrain Rotis, Palak Dal, salad with cucumber & tomato, roasted chana",
-        "dinner": "Brown rice / Jowar bhakri (ज्वारीची भाकरी), mix vegetable sabzi, curd",
-        "tips": "Avoid refined sugar, fruit juices, and fried snacks. Drink 3L water daily."
+        "breakfast": "Oatmeal with chia seeds, low-fat Greek yogurt, and sprouted lentils",
+        "lunch": "2 Multigrain flatbreads, spinach dal, cucumber & tomato salad, roasted chickpeas",
+        "dinner": "Brown rice with steamed seasonal vegetables, grilled tofu, and low-fat curd",
+        "tips": "Avoid refined sugar, commercial fruit juices, and deep-fried foods. Maintain 3L water intake."
     },
     {
         "id": "cardiac",
         "title": "Heart-Healthy Low Sodium Diet",
-        "marathi_title": "हृदय निरोगी आहार",
+        "subtitle": "Cardiovascular Health & BP Management",
         "target_calories": "1,800 - 2,000 kcal",
         "macros": {"carbs": "50%", "protein": "25%", "fats": "25%"},
-        "breakfast": "Poha with peanuts and veggies (पोहे), green tea, 4 soaked almonds & 2 walnuts",
-        "lunch": "Jowar / Bajra roti, steamed leafy greens, soybean curry / grilled fish, beetroot salad",
-        "dinner": "Light Moong Dal Khichdi (मुगाची डाळ खिचडी) with bottle gourd soup",
-        "tips": "Limit daily salt intake under 1 teaspoon. Use olive or mustard oil."
+        "breakfast": "Whole grain toast with avocado/veggies, green tea, 4 soaked almonds & 2 walnuts",
+        "lunch": "Millet roti, steamed leafy greens, soybean curry / grilled fish, beetroot salad",
+        "dinner": "Light lentil soup with zucchini and steamed brown rice",
+        "tips": "Limit daily sodium intake to under 2,000 mg. Use olive or mustard oil."
     },
     {
         "id": "wellness",
         "title": "Balanced Everyday Vitality Diet",
-        "marathi_title": "संतुलित दैनंदिन आहार",
+        "subtitle": "Optimal Energy, Digestion & Longevity",
         "target_calories": "2,000 - 2,200 kcal",
         "macros": {"carbs": "55%", "protein": "20%", "fats": "25%"},
-        "breakfast": "Idli Sambar (इडली सांबार) / Upma with coconut chutney, fresh seasonal fruit",
-        "lunch": "Whole wheat rotis, Dal Tadka, paneer bhurji, curd, fresh cucumber salad",
-        "dinner": "Vegetable dalia / Roti with seasonal sabzi, warm turmeric milk before bed",
-        "tips": "Include rich antioxidants and at least 30 minutes of brisk walking."
+        "breakfast": "Steamed vegetable dumplings / whole grain porridge with fruit and nuts",
+        "lunch": "Whole wheat rotis, mixed dal, cottage cheese (paneer), fresh garden salad",
+        "dinner": "Vegetable dalia with seasonal herbs and warm chamomile/turmeric tea",
+        "tips": "Incorporate antioxidant-rich foods and at least 30 minutes of daily moderate exercise."
     }
 ]
 
 
 def process_ai_chat(message: str) -> dict:
     """
-    Processes user health queries with medical reasoning and bilingual English/Marathi capabilities.
+    Processes user health queries with medical reasoning in English.
     """
     m = message.lower().strip()
     
     # Emergency / SOS triggers
-    if any(k in m for k in ['chest pain', 'heart attack', 'cannot breathe', 'unconscious', 'bleeding', 'हृदयविकार', 'श्वास']):
+    if any(k in m for k in ['chest pain', 'heart attack', 'cannot breathe', 'unconscious', 'bleeding', 'severe pain', 'stroke']):
         return {
-            "reply": "⚠️ **URGENT EMERGENCY ALERT / तातडीचा इशारा**:\nIf you or someone is experiencing severe chest pain, shortness of breath, or loss of consciousness, please call **108 (Ambulance)** or **112 (National Emergency)** immediately. Do not delay medical assistance!",
+            "reply": "⚠️ **URGENT EMERGENCY ALERT**:\nIf you or someone nearby is experiencing severe chest pain, shortness of breath, or loss of consciousness, please call **108 (Ambulance)** or **112 (National Emergency)** immediately. Do not delay professional medical assistance!",
             "is_emergency": True,
             "category": "emergency"
         }
 
     # Diabetes inquiries
-    if any(k in m for k in ['diabetes', 'sugar', 'glucose', 'मधुमेह', 'साखर']):
+    if any(k in m for k in ['diabetes', 'sugar', 'glucose', 'insulin', 'a1c']):
         return {
-            "reply": "🩸 **Diabetes & Blood Glucose Management**:\n• Fasting blood glucose normal range is 70–99 mg/dL; post-meal should be under 140 mg/dL.\n• Recommended foods: Bitter gourd (कारले), methi seeds, sprouted grains, jowar bhakri.\n• You can use our **Diabetes Risk Calculator** in the menu for a full machine learning assessment based on your biomarkers.",
+            "reply": "🩸 **Diabetes & Blood Glucose Management**:\n• Fasting blood glucose normal range is 70–99 mg/dL; post-prandial (2 hours post-meal) should remain under 140 mg/dL.\n• Recommended foods: High-fiber leafy greens, fenugreek, sprouted legumes, and complex whole grains.\n• Launch our **Diabetes Risk Assessment** from the navigation menu for a complete ML evaluation.",
             "is_emergency": False,
             "category": "diabetes"
         }
 
     # Blood pressure / Hypertension
-    if any(k in m for k in ['bp', 'blood pressure', 'hypertension', 'रक्तदाब']):
+    if any(k in m for k in ['bp', 'blood pressure', 'hypertension', 'systolic', 'diastolic']):
         return {
-            "reply": "💓 **Blood Pressure & Cardiovascular Health**:\n• Optimal BP is around 120/80 mm Hg. Stage 1 Hypertension begins at 130/80+.\n• Reduce dietary sodium/salt, avoid stress, and take prescribed antihypertensives regularly.\n• Log your daily readings in our **Vitals Tracker** to monitor your score.",
+            "reply": "💓 **Blood Pressure & Cardiovascular Health**:\n• Optimal resting BP is 120/80 mm Hg. Stage 1 Hypertension begins at 130/80 mm Hg or higher.\n• Recommended actions: Reduce sodium/salt intake, manage daily stress, engage in aerobic exercise, and monitor readings regularly in our **Vitals Tracker**.",
             "is_emergency": False,
             "category": "hypertension"
         }
 
     # Fever / Headache / Cold / Infection
-    if any(k in m for k in ['fever', 'headache', 'cold', 'cough', 'ताप', 'डोकेदुखी', 'खोकला']):
+    if any(k in m for k in ['fever', 'headache', 'cold', 'cough', 'flu', 'infection']):
         return {
-            "reply": "🌡️ **Fever & Common Symptoms Support**:\n• Ensure proper hydration (warm water, electrolytes/ORS).\n• Rest well and monitor temperature with a thermometer.\n• For mild fever: Paracetamol 500mg/650mg after food can be taken if not contraindicated.\n• If fever exceeds 102°F or persists > 48 hrs, please visit an OPD clinic.",
+            "reply": "🌡️ **Fever & Symptom Management**:\n• Ensure proper oral hydration with electrolyte solutions and warm water.\n• Rest and monitor body temperature regularly.\n• For mild fever: Paracetamol 500mg/650mg after food can provide symptomatic relief if clinically indicated.\n• If fever exceeds 102°F or persists longer than 48 hours, please consult a physician at an OPD clinic.",
             "is_emergency": False,
             "category": "general"
         }
 
     # Hospital / Doctor search
-    if any(k in m for k in ['hospital', 'doctor', 'clinic', 'रुग्णालय', 'दवाखाना']):
+    if any(k in m for k in ['hospital', 'doctor', 'clinic', 'icu', 'beds']):
         return {
-            "reply": "🏥 **Find Nearby Hospitals**:\nUse our **Hospital Finder** tab to view 24/7 emergency centers, live bed availability, ICU vacancies, and direct emergency contact numbers in Kolhapur, Pune, Mumbai, and nationwide.",
+            "reply": "🏥 **Hospital & Emergency Services Directory**:\nVisit our **Hospitals Directory** tab to view 24/7 emergency centers, live ICU and general bed vacancies, contact numbers, and direct location routes.",
             "is_emergency": False,
             "category": "hospital"
         }
 
     # Default friendly AI health response
     return {
-        "reply": f"Hello! I am your **HealthCare+ AI Assistant**. I can assist you with:\n1. 🩺 Chronic disease risk explanations (Diabetes, Heart Disease)\n2. 📊 Vitals evaluation and health score analysis\n3. 💊 Medicine schedules and precautions\n4. 🥗 Personalized diet & nutrition advice (English & मराठी)\n\nWhat health question or symptom would you like help with today?",
+        "reply": "Hello! I am your **HealthCare+ Clinical Assistant**. I can assist you with:\n1. 🩺 Chronic disease risk screening (Type 2 Diabetes & Heart Disease)\n2. 📊 Vitals evaluation and daily health score tracking\n3. 💊 Medication schedules and dosage reminders\n4. 🥗 Personalized clinical diet and nutrition planning\n\nHow can I help with your health today?",
         "is_emergency": False,
         "category": "general"
     }

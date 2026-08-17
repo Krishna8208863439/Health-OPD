@@ -3,8 +3,8 @@ import { Activity } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-slate-200 text-slate-600 font-sans text-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <footer className="bg-white border-t border-slate-200 text-slate-600 font-sans text-xs w-full">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center">
             <Activity className="w-3.5 h-3.5 text-white" />

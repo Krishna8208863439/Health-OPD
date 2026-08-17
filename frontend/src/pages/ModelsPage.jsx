@@ -25,7 +25,7 @@ export default function ModelsPage() {
   const heartMetrics = metrics.filter(m => m.disease === 'heart');
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 space-y-10 animate-fade-in">
+    <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-10 animate-fade-in">
       
       {/* Header */}
       <div className="border-b border-slate-200 pb-6 space-y-1">

@@ -65,7 +65,7 @@ export default function MedsPage() {
   const completedCount = medicines.filter(m => m.taken_today).length;
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4 space-y-8 animate-fade-in">
+    <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-8 animate-fade-in">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
@@ -75,16 +75,16 @@ export default function MedsPage() {
             <span>DAILY PHARMACY & PRESCRIPTION REMINDERS</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Medication Manager / औषधे व्यवस्थापन
+            Medication Schedule & Adherence Manager
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Track daily dosages, meal instructions, refill stock alerts, and mark doses as taken.
+            Track daily dosages, meal timing guidelines, refill inventory counts, and mark prescribed doses as taken.
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-cyan-600/20 transition self-start sm:self-auto"
+          className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-cyan-600/20 transition self-start sm:self-auto"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Add New Prescription</span>
@@ -92,18 +92,18 @@ export default function MedsPage() {
       </div>
 
       {/* Adherence Progress Card */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-cyan-600 to-blue-700 text-white shadow-lg space-y-3">
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-cyan-600 to-blue-700 text-white shadow-lg space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs uppercase font-mono text-cyan-200">Today's Adherence Schedule</div>
-            <div className="text-2xl font-black">{completedCount} of {medicines.length} Doses Taken</div>
+            <div className="text-xs uppercase font-mono text-cyan-200 font-semibold">Today's Adherence Schedule</div>
+            <div className="text-2xl sm:text-3xl font-black">{completedCount} of {medicines.length} Doses Completed</div>
           </div>
-          <div className="text-right font-mono text-xs text-cyan-100">
-            {medicines.length > 0 ? `${Math.round((completedCount / medicines.length) * 100)}% Complete` : '0%'}
+          <div className="text-right font-mono text-sm text-cyan-100 font-bold">
+            {medicines.length > 0 ? `${Math.round((completedCount / medicines.length) * 100)}% Completed` : '0%'}
           </div>
         </div>
 
-        <div className="w-full h-3 rounded-full bg-white/20 overflow-hidden">
+        <div className="w-full h-3.5 rounded-full bg-white/20 overflow-hidden">
           <div
             className="h-full bg-white rounded-full transition-all duration-500"
             style={{ width: medicines.length > 0 ? `${(completedCount / medicines.length) * 100}%` : '0%' }}
@@ -113,19 +113,19 @@ export default function MedsPage() {
 
       {/* Medicines List */}
       {loading ? (
-        <div className="py-16 text-center text-xs text-slate-500 font-mono">Loading active prescriptions...</div>
+        <div className="py-20 text-center text-xs text-slate-500 font-mono">Loading active prescriptions...</div>
       ) : medicines.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
+        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
           <Pill className="w-8 h-8 text-slate-400 mx-auto" />
           <h3 className="text-sm font-bold text-slate-800">No Medications Scheduled</h3>
           <p className="text-xs text-slate-500">Click "Add New Prescription" to set up your medicine alerts.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {medicines.map((med) => (
             <div
               key={med.id}
-              className={`p-5 rounded-2xl border transition shadow-sm flex items-center justify-between gap-4 ${
+              className={`p-5 rounded-3xl border transition shadow-sm flex items-center justify-between gap-4 ${
                 med.taken_today
                   ? 'bg-emerald-50/60 border-emerald-200'
                   : 'bg-white border-slate-200 hover:border-cyan-300'
@@ -134,7 +134,7 @@ export default function MedsPage() {
               <div className="flex items-start gap-3.5">
                 <button
                   onClick={() => handleToggle(med.id, med.taken_today)}
-                  className="mt-0.5 transition hover:scale-110"
+                  className="mt-0.5 transition hover:scale-110 shrink-0"
                   title="Toggle Taken Status"
                 >
                   {med.taken_today ? (
@@ -145,7 +145,7 @@ export default function MedsPage() {
                 </button>
 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h4 className={`font-bold text-sm ${med.taken_today ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
                       {med.name}
                     </h4>
@@ -156,7 +156,7 @@ export default function MedsPage() {
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-mono">
                     <span className="flex items-center gap-1 text-cyan-800 font-medium">
-                      <Clock className="w-3 h-3" /> {med.timing}
+                      <Clock className="w-3.5 h-3.5" /> {med.timing}
                     </span>
                     <span>•</span>
                     <span className="text-slate-600">{med.meal_instruction}</span>
@@ -170,7 +170,7 @@ export default function MedsPage() {
 
               <button
                 onClick={() => handleDelete(med.id)}
-                className="p-2 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition"
+                className="p-2 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition"
                 title="Delete Medicine"
               >
                 <Trash2 className="w-4 h-4" />
@@ -183,31 +183,31 @@ export default function MedsPage() {
       {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-200">
-            <h3 className="font-bold text-slate-900 text-base">Add Medication Reminder</h3>
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200">
+            <h3 className="font-bold text-slate-900 text-base">Add Medication Prescription</h3>
             
-            <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Medicine Name (औषधाचे नाव) *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Medicine Name *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Paracetamol / Metformin"
+                  placeholder="e.g. Metformin / Atorvastatin"
                   value={newMed.name}
                   onChange={(e) => setNewMed({ ...newMed, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:bg-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Dosage (मात्रा)</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Dosage</label>
                   <input
                     type="text"
                     placeholder="e.g. 500 mg"
                     value={newMed.dosage}
                     onChange={(e) => setNewMed({ ...newMed, dosage: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:bg-white"
                   />
                 </div>
 
@@ -217,23 +217,23 @@ export default function MedsPage() {
                     type="number"
                     value={newMed.stock_count}
                     onChange={(e) => setNewMed({ ...newMed, stock_count: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:bg-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Frequency / Timing</label>
+                <label className="block font-semibold text-slate-700 mb-1">Frequency & Timing</label>
                 <select
                   value={newMed.timing}
                   onChange={(e) => setNewMed({ ...newMed, timing: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white font-mono"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:bg-white font-mono"
                 >
-                  <option value="Morning">Morning (सकाळी)</option>
-                  <option value="Afternoon">Afternoon (दुपारी)</option>
-                  <option value="Night">Night (रात्री)</option>
-                  <option value="Morning & Night">Morning & Night (सकाळी आणि रात्री)</option>
-                  <option value="Three Times a Day">Three Times a Day (दिवसातून ३ वेळा)</option>
+                  <option value="Morning">Morning</option>
+                  <option value="Afternoon">Afternoon</option>
+                  <option value="Night">Night</option>
+                  <option value="Morning & Night">Morning & Night</option>
+                  <option value="Three Times a Day">Three Times a Day</option>
                 </select>
               </div>
 
@@ -242,11 +242,11 @@ export default function MedsPage() {
                 <select
                   value={newMed.meal_instruction}
                   onChange={(e) => setNewMed({ ...newMed, meal_instruction: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white font-mono"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-slate-900 focus:bg-white font-mono"
                 >
-                  <option value="After Meal">After Meal (जेवणानंतर)</option>
-                  <option value="Before Meal">Before Meal (जेवणापूर्वी)</option>
-                  <option value="With Meal">With Meal (जेवणासोबत)</option>
+                  <option value="After Meal">After Meal</option>
+                  <option value="Before Meal">Before Meal</option>
+                  <option value="With Meal">With Meal</option>
                 </select>
               </div>
 
@@ -262,7 +262,7 @@ export default function MedsPage() {
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
                 >
-                  Add Medicine
+                  Save Prescription
                 </button>
               </div>
             </form>

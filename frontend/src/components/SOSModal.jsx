@@ -48,9 +48,9 @@ export default function SOSModal({ isOpen, onClose }) {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-rose-700 tracking-tight">
-              EMERGENCY SOS / आपत्कालीन मदत
+              EMERGENCY SOS RESPONSE
             </h2>
-            <p className="text-xs text-slate-500 font-mono">Instant Medical Response & Helplines</p>
+            <p className="text-xs text-slate-500 font-mono">Instant Medical Helplines & Location Dispatch</p>
           </div>
         </div>
 
@@ -58,21 +58,21 @@ export default function SOSModal({ isOpen, onClose }) {
         {!sent ? (
           <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-center space-y-3">
             <p className="text-xs text-rose-950 font-medium">
-              Clicking below broadcasts your live GPS coordinates to emergency responders and family contacts.
+              Click below to broadcast your live coordinates to emergency medical responders and notification centers.
             </p>
             <button
               onClick={handleTrigger}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-sm shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2 transition"
             >
               <AlertTriangle className="w-5 h-5" />
-              <span>TRIGGER EMERGENCY ALERT (प्रसारण करा)</span>
+              <span>DISPATCH EMERGENCY SOS NOW</span>
             </button>
           </div>
         ) : (
           <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
             <div className="flex items-center justify-center gap-2 text-emerald-800 font-bold text-sm">
               <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span>SOS Alert Broadcasted! / मदत संदेश पाठवला गेला!</span>
+              <span>Emergency Signal Broadcasted Successfully!</span>
             </div>
             {location && (
               <p className="text-[11px] text-slate-600 font-mono flex items-center justify-center gap-1">
@@ -95,7 +95,7 @@ export default function SOSModal({ isOpen, onClose }) {
             >
               <div className="flex items-center gap-2.5">
                 <PhoneCall className="w-4 h-4" />
-                <span className="font-bold text-xs">Ambulance (रुग्णवाहिका)</span>
+                <span className="font-bold text-xs">Ambulance Dispatch</span>
               </div>
               <span className="font-mono font-extrabold text-sm">108</span>
             </a>
@@ -128,7 +128,7 @@ export default function SOSModal({ isOpen, onClose }) {
             >
               <div className="flex items-center gap-2.5">
                 <PhoneCall className="w-4 h-4 text-purple-600" />
-                <span className="font-bold text-xs">Senior / Helpline</span>
+                <span className="font-bold text-xs">Senior Citizen Line</span>
               </div>
               <span className="font-mono font-extrabold text-sm">1091</span>
             </a>

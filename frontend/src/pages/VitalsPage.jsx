@@ -15,7 +15,7 @@ export default function VitalsPage() {
     glucose: 95,
     spo2: 98,
     temperature: 98.6,
-    notes: 'Routine morning check'
+    notes: 'Routine clinical check'
   });
 
   const fetchData = async () => {
@@ -43,7 +43,7 @@ export default function VitalsPage() {
     try {
       setSubmitting(true);
       await logVitals(form);
-      setSuccessMsg("Vitals logged and Daily Health Score updated!");
+      setSuccessMsg("Vitals logged and Daily Health Score updated successfully!");
       setTimeout(() => setSuccessMsg(null), 4000);
       fetchData();
     } catch (err) {
@@ -58,38 +58,38 @@ export default function VitalsPage() {
   const scoreBg = score >= 80 ? 'bg-emerald-50 border-emerald-200' : (score >= 60 ? 'bg-amber-50 border-amber-200' : 'bg-rose-50 border-rose-200');
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 space-y-8 animate-fade-in">
+    <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-8 animate-fade-in">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center gap-2 text-cyan-700 text-xs font-mono font-semibold">
             <Activity className="w-4 h-4 text-cyan-600" />
-            <span>DAILY BIOMETRIC MONITORING</span>
+            <span>DAILY BIOMETRIC MONITORING & SCORING</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Patient Vitals & Health Score / दैनंदिन आरोग्य ट्रॅकर
+            Patient Vitals Tracker & Health Score
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm">
-            Log your blood pressure, pulse, glucose, and oxygen saturation for automated health score analytics.
+            Record blood pressure, pulse, glucose, oxygen saturation, and body temperature for automated clinical risk analytics.
           </p>
         </div>
       </div>
 
       {/* Top Banner: Health Score Card */}
-      <div className={`p-6 rounded-3xl border ${scoreBg} flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm`}>
-        <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center">
-            <span className={`text-3xl font-black ${scoreColor}`}>{score}</span>
-            <span className="text-[10px] text-slate-500 font-mono">/ 100</span>
+      <div className={`p-6 sm:p-8 rounded-3xl border ${scoreBg} flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm`}>
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white border border-slate-200 shadow-md flex flex-col items-center justify-center shrink-0">
+            <span className={`text-3xl sm:text-4xl font-black ${scoreColor}`}>{score}</span>
+            <span className="text-[10px] text-slate-500 font-mono font-semibold uppercase">Score</span>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" />
-              <h2 className="text-lg font-bold text-slate-900">Your Daily Health Score (दैनिक आरोग्य स्कोअर)</h2>
+              <Award className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Your Daily Health Score</h2>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
               {score >= 80 
                 ? "Excellent! Your biometric parameters are in the optimal physiological range. Keep up the active routine!"
                 : (score >= 60 
@@ -99,15 +99,15 @@ export default function VitalsPage() {
           </div>
         </div>
 
-        <div className="text-center sm:text-right font-mono text-xs text-slate-500">
-          <div>Status: <span className="font-bold text-slate-800">{score >= 80 ? 'Optimal (उत्कृष्ट)' : 'Monitoring Advised'}</span></div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Updated in Real-Time</div>
+        <div className="text-left sm:text-right font-mono text-xs text-slate-500 space-y-1">
+          <div>Status: <span className="font-bold text-slate-900">{score >= 80 ? 'Optimal Performance' : 'Monitoring Advised'}</span></div>
+          <div className="text-[11px] text-slate-400">Automated Multi-Metric Evaluation</div>
         </div>
       </div>
 
       {/* Toast */}
       {successMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-600" />
           <span>{successMsg}</span>
         </div>
@@ -117,13 +117,13 @@ export default function VitalsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Form Card */}
-        <div className="lg:col-span-1 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="lg:col-span-1 p-6 sm:p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <PlusCircle className="w-4 h-4 text-cyan-600" />
             <h3 className="font-bold text-slate-900 text-sm">Log New Measurement</h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Systolic BP (mm Hg)</label>
@@ -132,7 +132,7 @@ export default function VitalsPage() {
                   name="systolic"
                   value={form.systolic}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -144,7 +144,7 @@ export default function VitalsPage() {
                   name="diastolic"
                   value={form.diastolic}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -158,7 +158,7 @@ export default function VitalsPage() {
                   name="heart_rate"
                   value={form.heart_rate}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -170,7 +170,7 @@ export default function VitalsPage() {
                   name="glucose"
                   value={form.glucose}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -184,7 +184,7 @@ export default function VitalsPage() {
                   name="spo2"
                   value={form.spo2}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -197,7 +197,7 @@ export default function VitalsPage() {
                   name="temperature"
                   value={form.temperature}
                   onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-slate-900 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 font-mono text-slate-900 focus:bg-white"
                   required
                 />
               </div>
@@ -210,15 +210,15 @@ export default function VitalsPage() {
                 name="notes"
                 value={form.notes}
                 onChange={handleChange}
-                placeholder="e.g. After morning walk"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:bg-white"
+                placeholder="e.g. After aerobic exercise"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 focus:bg-white"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold transition shadow-md shadow-cyan-600/20"
+              className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold transition shadow-md shadow-cyan-600/20"
             >
               {submitting ? 'Saving...' : 'Save Vitals Record'}
             </button>
@@ -226,16 +226,16 @@ export default function VitalsPage() {
         </div>
 
         {/* Logs Table */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="lg:col-span-2 p-6 sm:p-7 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-900 text-sm">Recent Vitals Log History</h3>
-            <span className="text-[11px] font-mono text-slate-500">Live Database Logs</span>
+            <h3 className="font-bold text-slate-900 text-sm">Recent Biometric History</h3>
+            <span className="text-[11px] font-mono text-slate-500">Persistent SQLite Registry</span>
           </div>
 
           {loading ? (
-            <div className="py-12 text-center text-xs text-slate-500 font-mono">Loading vitals history...</div>
+            <div className="py-16 text-center text-xs text-slate-500 font-mono">Loading vitals history...</div>
           ) : vitalsData.logs.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-500 font-mono">
+            <div className="py-16 text-center text-xs text-slate-500 font-mono">
               No measurements logged yet. Use the form on the left to record your first vital sign.
             </div>
           ) : (
@@ -243,28 +243,28 @@ export default function VitalsPage() {
               <table className="w-full text-left text-xs font-sans">
                 <thead>
                   <tr className="text-slate-500 uppercase font-mono text-[10px] border-b border-slate-200">
-                    <th className="py-2.5 px-3">BP (Sys/Dia)</th>
-                    <th className="py-2.5 px-3">Pulse</th>
-                    <th className="py-2.5 px-3">Glucose</th>
-                    <th className="py-2.5 px-3">SpO2</th>
-                    <th className="py-2.5 px-3">Temp</th>
-                    <th className="py-2.5 px-3">Score</th>
-                    <th className="py-2.5 px-3">Date</th>
+                    <th className="py-3 px-3">BP (Sys/Dia)</th>
+                    <th className="py-3 px-3">Heart Rate</th>
+                    <th className="py-3 px-3">Glucose</th>
+                    <th className="py-3 px-3">SpO2</th>
+                    <th className="py-3 px-3">Temp</th>
+                    <th className="py-3 px-3">Score</th>
+                    <th className="py-3 px-3">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-mono">
                   {vitalsData.logs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50 transition">
                       <td className="py-3 px-3 font-bold text-slate-900">
-                        {log.systolic}/{log.diastolic}
+                        {log.systolic}/{log.diastolic} mm Hg
                       </td>
                       <td className="py-3 px-3 text-rose-600 font-bold">{log.heart_rate} bpm</td>
                       <td className="py-3 px-3 text-cyan-700">{log.glucose} mg/dL</td>
                       <td className="py-3 px-3 text-emerald-700">{log.spo2}%</td>
                       <td className="py-3 px-3 text-slate-700">{log.temperature}°F</td>
                       <td className="py-3 px-3">
-                        <span className="px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-800 border border-slate-200 text-[10px]">
-                          {log.health_score}
+                        <span className="px-2.5 py-0.5 rounded font-bold bg-slate-100 text-slate-800 border border-slate-200 text-[10px]">
+                          {log.health_score} / 100
                         </span>
                       </td>
                       <td className="py-3 px-3 text-slate-400 text-[11px]">
